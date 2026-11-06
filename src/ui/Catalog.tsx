@@ -427,17 +427,36 @@ export function CatalogPage({
       const data = JSON.parse(await file.text()) as { templates?: unknown[] };
       const list = Array.isArray(data.templates) ? data.templates : [];
       let ok = 0,
-        bad = 0;
-      for (const tpl of list) {
-        if (validateLocalTemplate(tpl).length) {
+        bad = 0,
+        kept = 0;
+      for (const raw of list) {
+        if (validateLocalTemplate(raw).length) {
           bad++;
           continue;
         }
-        await useTemplates.getState().save(tpl as LocalTemplate);
+        const tpl = raw as LocalTemplate;
+        // A family already edited on this device, or earlier in this file (saved by then), is asked about: Keep mine
+        // (the default, also Esc) skips the imported one; only Use the imported one replaces the edit (ADR-203, G-363).
+        const store = useTemplates.getState();
+        const edited = tpl.shadows ? store.locals.filter((l) => l.shadows === tpl.shadows) : [];
+        if (edited.length) {
+          const use = await askConfirm(
+            t('“{name}” is already edited on this device. Keep yours or use the imported one?', {
+              name: tr(tpl.family.name),
+            }),
+            { confirmLabel: t('Use the imported one'), cancelLabel: t('Keep mine') },
+          );
+          if (!use) {
+            kept++;
+            continue;
+          }
+          for (const l of edited) if (l.id !== tpl.id) await store.remove(l.id);
+        }
+        await store.save(tpl);
         ok++;
       }
       setMsg(
-        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}.`,
+        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}${kept ? t(', {n} kept as they were', { n: kept }) : ''}.`,
       );
     } catch {
       setMsg(t('That file could not be read as a templates file.'));

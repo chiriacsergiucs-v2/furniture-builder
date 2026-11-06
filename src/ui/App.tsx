@@ -1,3 +1,4 @@
+import { parentOf } from '../core/selectPath';
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   lastDesignId,
@@ -486,7 +487,8 @@ export function App() {
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
-        else st.select(null);
+        // In the piece editor Esc goes up one level: a space → the one around it → the whole piece → nothing (ADR-203).
+        else st.select(parentOf(st.model, st.selectedId));
       }
     };
     window.addEventListener('keydown', onKey);

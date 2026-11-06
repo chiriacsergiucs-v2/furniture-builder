@@ -263,4 +263,5 @@ export const ru_inspector = {
   'Doors on each bay': 'Дверцы на каждой секции',
   One: 'Одна',
   Pair: 'Пара',
+  'Set by Handles for this run': 'Задано в «Ручки для этого ряда»',
 } satisfies Record<string, string>;

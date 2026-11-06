@@ -96,7 +96,7 @@ import { useModelResize, useResizePreview, type HandleAxis } from './modelResize
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
-import type { Box, MaterialImage, Panel } from '../core/types';
+import type { Box, MaterialImage, Panel, Yaw } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
 const SELECT = '#2d5b4c';
@@ -304,6 +304,17 @@ export default function Viewer3D() {
       : null,
   );
   const turnItem = useDesign((s) => s.turnItem);
+  // A selected display-only model turns too (ADR-203, G-105).
+  const modelTurnId = useDesign((s) =>
+    inProject && s.selectedItemId && s.project?.models?.some((m) => m.id === s.selectedItemId)
+      ? s.selectedItemId
+      : null,
+  );
+  const turnModel = useDesign((s) => s.turnModel);
+  const turnSelected = (dir: 1 | -1) => {
+    if (turnId) turnItem(turnId, dir);
+    else if (modelTurnId) turnModel(modelTurnId, dir);
+  };
   const [moveToOpen, setMoveToOpen] = useState(false);
   // Several pieces selected: Move to moves them as one block (ADR-182).
   const pieceItems = useDesign((s) => s.project?.items);
@@ -399,7 +410,7 @@ export default function Viewer3D() {
           </>
         )}
         {view.mode === 'project' && !exploded && !isolating && (
-          <ModelItems plain={rendering} moving={moving} />
+          <ModelItems plain={rendering} moving={moving} snapOn={snapOn} />
         )}
         {view.mode === 'project' && !exploded && !rendering && !preview && (
           <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
@@ -502,14 +513,14 @@ export default function Viewer3D() {
               {t('Snap')}
             </button>
           )}
-          {turnId && !tapping && (
+          {(turnId || modelTurnId) && !tapping && (
             <>
               <button
                 type="button"
                 className="btn sm outline"
                 aria-label={t('Turn 90° anticlockwise about its centre')}
                 title={t('Turn about its centre (R)')}
-                onClick={() => turnItem(turnId, 1)}
+                onClick={() => turnSelected(1)}
               >
                 {t('Turn 90° ↺')}
               </button>
@@ -518,7 +529,7 @@ export default function Viewer3D() {
                 className="btn sm outline"
                 aria-label={t('Turn 90° clockwise about its centre')}
                 title={t('Turn about its centre (Shift+R)')}
-                onClick={() => turnItem(turnId, -1)}
+                onClick={() => turnSelected(-1)}
               >
                 {t('Turn 90° ↻')}
               </button>
@@ -863,9 +874,19 @@ function Occlusion() {
 }
 
 /** Display-only 3D models of the project (ADR-076): shown and selectable; in Move mode the selected one is resized (ADR-102). */
-function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
+function ModelItems({
+  plain,
+  moving,
+  snapOn,
+}: {
+  plain: boolean;
+  moving: boolean;
+  snapOn: boolean;
+}) {
   const models = useDesign((s) => s.projectModel?.models);
   const preview = useResizePreview();
+  // In Move mode a model drags across the floor as a piece does (ADR-203, G-105).
+  const drag = usePieceDrag(moving, snapOn);
   if (!models?.length) return null;
   return (
     <>
@@ -880,6 +901,7 @@ function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
             box={box}
             plain={plain}
             handles={moving ? m.item : null}
+            drag={drag}
           />
         );
       })}
@@ -893,12 +915,15 @@ function ModelItemMesh({
   box,
   plain,
   handles,
+  drag,
 }: {
   item: ModelItem;
   box: Box;
   plain: boolean;
   /** In Move mode, the saved item whose size the handles change when it is selected (ADR-102). */
   handles: ModelItem | null;
+  /** Move mode's drag (ADR-203): pressing the model drags it. */
+  drag: ReturnType<typeof usePieceDrag>;
 }) {
   const [loaded, setLoaded] = useState<{ id: string; scene: ModelScene | null } | null>(null);
   useEffect(() => {
@@ -936,8 +961,11 @@ function ModelItemMesh({
       <group
         position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
         rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
+        onPointerDown={(e) => drag.press(e, item.id)}
         onClick={(e) => {
           e.stopPropagation();
+          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203).
+          if (drag.clicked()) return;
           selectItem(item.id);
         }}
       >
@@ -1558,10 +1586,13 @@ function Panels({
     <group>
       {outline && !exploded && (
         // Keyed by the box: drei's segment line does not pick up changed points.
-        <SelectionOutline
-          key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
-          box={outline}
-        />
+        // An angled piece's outline turns with its panels (ADR-121, ADR-203).
+        <YawGroup yaw={outline.yaw}>
+          <SelectionOutline
+            key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
+            box={outline}
+          />
+        </YawGroup>
       )}
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
       {panels
@@ -1729,6 +1760,16 @@ function Panels({
  * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
  * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
  */
+/** Children turned as an angled piece's panels are (ADR-121): the selection outline and the Move ghost (ADR-203). */
+function YawGroup({ yaw, children }: { yaw?: Yaw; children: ReactNode }) {
+  if (!yaw) return <>{children}</>;
+  return (
+    <group position={[yaw.cx * S, 0, yaw.cz * S]} rotation={[0, (yaw.deg * Math.PI) / 180, 0]}>
+      <group position={[-yaw.cx * S, 0, -yaw.cz * S]}>{children}</group>
+    </group>
+  );
+}
+
 function yawed(p: Panel, el: ReactElement): ReactElement {
   const y = p.box.yaw;
   if (!y) return el;
@@ -1746,9 +1787,27 @@ function yawed(p: Panel, el: ReactElement): ReactElement {
 function MoveGhost({ panels, showFronts }: { panels: Panel[]; showFronts: boolean }) {
   const ghost = useGhost();
   // A locked piece does not follow the pointer (ADR-095): no ghost, the note says why.
-  return ghost && !ghost.blocked ? (
-    <GhostBoxes ghost={ghost} panels={panels} showFronts={showFronts} />
-  ) : null;
+  if (!ghost || ghost.blocked) return null;
+  // A display-only model (ADR-203): its box where it would land.
+  if (ghost.model) {
+    const b = ghost.target.box;
+    return (
+      <mesh
+        position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+        raycast={() => null}
+        renderOrder={5}
+      >
+        <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+        <meshBasicMaterial
+          color={ghost.target.snap ? '#2e7d4f' : SELECT}
+          transparent
+          opacity={0.28}
+          depthWrite={false}
+        />
+      </mesh>
+    );
+  }
+  return <GhostBoxes ghost={ghost} panels={panels} showFronts={showFronts} />;
 }
 
 function GhostBoxes({
@@ -1764,7 +1823,11 @@ function GhostBoxes({
     () =>
       panels
         .filter((p) => p.nodeId.startsWith(`${ghost.id}:`) && (showFronts || !FRONT.has(p.role)))
-        .map(aabbOf),
+        // An angled piece's boards are drawn unturned, then turned with it (ADR-121, ADR-203).
+        .map((p) => {
+          const { yaw, ...flat } = p.box;
+          return { box: aabbOf({ ...p, box: flat }), yaw };
+        }),
     [panels, ghost.id, showFronts],
   );
   const item = useDesign((s) => s.project?.items.find((i) => i.id === ghost.id));
@@ -1776,16 +1839,17 @@ function GhostBoxes({
   const color = ghost.target.snap ? '#2e7d4f' : SELECT;
   return (
     <group position={[dx * S, dy * S, dz * S]}>
-      {own.map((b, i) => (
-        <mesh
-          key={i}
-          position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-          raycast={() => null}
-          renderOrder={5}
-        >
-          <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-          <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} />
-        </mesh>
+      {own.map(({ box: b, yaw }, i) => (
+        <YawGroup key={i} yaw={yaw}>
+          <mesh
+            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            raycast={() => null}
+            renderOrder={5}
+          >
+            <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+            <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} />
+          </mesh>
+        </YawGroup>
       ))}
     </group>
   );

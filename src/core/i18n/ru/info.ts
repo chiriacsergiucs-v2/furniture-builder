@@ -414,4 +414,31 @@ export const ru_info = {
   'Project assembly order': 'Порядок сборки проекта',
   'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.':
     'Вкладка «Сборка» проекта и печатный лист начинаются с порядка его изделий: угловые шкафы, нижние изделия по стенам от угла, навесные изделия, затем детали ряда; как рекомендация.',
+  'Reopen a project piece in the wizard': 'Открыть изделие проекта в мастере',
+  'Open in wizard in its Settings; Update piece replaces it in the project only.':
+    '«Открыть в мастере» в его настройках; «Обновить изделие» заменяет его только в проекте.',
+  'Esc selects one level up': 'Esc выбирает уровень выше',
+  'In the piece editor: a space, then the space around it, then the whole piece, then nothing.':
+    'В редакторе изделия: отсек, затем отсек вокруг него, затем всё изделие, затем ничего.',
+  'Outline turns with an angled piece': 'Контур поворачивается с изделием под углом',
+  'The 3D selection outline and the Move ghost are turned like its boards.':
+    'Контур выбора в 3D и призрак перемещения повёрнуты так же, как его детали.',
+  'A locked piece on a base keeps the base from being resized':
+    'Закреплённое изделие на основании не даёт изменить размер основания',
+  'Unlock it to resize the piece under it; unlocked pieces on it follow.':
+    'Снимите закрепление, чтобы изменить размер изделия под ним; незакреплённые изделия на нём следуют за ним.',
+  'Run handle shown in the piece editor': 'Ручка ряда видна в редакторе изделия',
+  'Its kind and hole centres, read-only, under Set by Handles for this run.':
+    'Её вид и межосевое расстояние, только для чтения, под «Задано в „Ручки для этого ряда“».',
+  'Move and turn a model in 3D': 'Перемещать и поворачивать модель в 3D',
+  'Drag it in Move mode, with Snap, and turn it 90° about its centre.':
+    'Перетаскивайте её в режиме перемещения, с привязкой, и поворачивайте на 90° вокруг центра.',
+  'Ask about kept versions when deleting a project':
+    'Вопрос о сохранённых версиях при удалении проекта',
+  'Keep them is the default; only readable versions are deleted.':
+    '«Оставить их» — по умолчанию; удаляются только читаемые версии.',
+  'Choose which edit to keep on template import':
+    'Выбор, какую правку оставить при импорте шаблона',
+  'An imported template for a family you edited asks; Keep mine is the default.':
+    'Импортированный шаблон для изменённого вами семейства спрашивает; «Оставить мой» — по умолчанию.',
 } satisfies Record<string, string>;

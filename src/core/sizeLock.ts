@@ -7,6 +7,7 @@
 import { t } from './i18n';
 import { buildModel } from './build';
 import {
+  carriedBy,
   isLocked,
   isTurnLocked,
   pieceName,
@@ -101,33 +102,46 @@ export function sameSize(a: Design, b: Design, axes: readonly SizeAxis[] = SIZE_
   );
 }
 
-/** Why a size-locked piece may not take `next` as its design, or null. */
+/**
+ * Why piece `id` may not take `next` as its design, or null: it is size-locked (ADR-122), or a locked piece sits on it
+ * and the change would resize it (ADR-203, G-106, as `moveBlocked` refuses a move); unlocked pieces on it still follow.
+ */
 export function resizeBlocked(project: Project, id: string, next: Design): string | null {
   const it = project.items.find((i) => i.id === id);
+  if (!it || it.design === next) return null;
   const axes = lockedAxes(it);
-  if (!it || !axes.length || sameSize(it.design, next, axes)) return null;
-  if (isSizeLocked(it))
-    return t('{name} has its size locked — unlock its size to change it.', {
+  if (axes.length && !sameSize(it.design, next, axes)) {
+    if (isSizeLocked(it))
+      return t('{name} has its size locked — unlock its size to change it.', {
+        name: pieceName(project, id),
+      });
+    return t('{name} has its {axes} locked — unlock it to change it.', {
       name: pieceName(project, id),
+      axes: axesText(axes),
     });
-  return t('{name} has its {axes} locked — unlock it to change it.', {
-    name: pieceName(project, id),
-    axes: axesText(axes),
-  });
+  }
+  const held = carriedBy(project, id, (c) => !!c.locked).find((c) => c.locked);
+  if (held && !sameSize(it.design, next))
+    return t('{name} sits on {base} and is locked — unlock it to resize {base}.', {
+      name: pieceName(project, held.id),
+      base: pieceName(project, id),
+    });
+  return null;
 }
 
 /**
- * Why the change from `before` to `after` is refused (ADR-122), or null: a piece that was size-locked before would
- * come out a different outside size. Only pieces whose design changed are built.
+ * Why the change from `before` to `after` is refused (ADR-122, ADR-203), or null: a piece that was size-locked before,
+ * or that carries a locked piece, would come out a different outside size. Only those pieces whose design changed are
+ * built.
  */
 export function sizeLockBlocked(before: Project | null, after: Project): string | null {
   if (!before) return null;
   const was = new Map(before.items.map((i) => [i.id, i]));
   for (const it of after.items) {
     const old = was.get(it.id);
-    const axes = lockedAxes(old);
-    if (!old || !axes.length || old.design === it.design) continue;
-    if (!sameSize(old.design, it.design, axes)) return resizeBlocked(before, it.id, it.design);
+    if (!old || old.design === it.design) continue;
+    const why = resizeBlocked(before, it.id, it.design);
+    if (why) return why;
   }
   return null;
 }

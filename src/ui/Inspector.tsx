@@ -23,7 +23,7 @@ import {
 import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
-import { materialKey } from '../core/project';
+import { materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../persist/db';
 import type { Selection } from '../core/selectPath';
 import type {
@@ -403,6 +403,13 @@ function SpaceEditor({
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
   const set = (fn: (s: Space) => Space) => update(space.id, fn);
   const parent = parentOf(root, space.id);
+  // A run handle reaching this project piece (ADR-125) sets its handles: shown read-only (ADR-203, G-211).
+  const project = useDesign((s) => s.project);
+  const pieceId = useDesign((s) => s.editingItemId ?? s.drillItemId);
+  const runHandle = useMemo(
+    () => (project && pieceId ? runHandleFor(project, pieceId) : undefined),
+    [project, pieceId],
+  );
   // Doors and handles go on the outside only: a space inside other doors gets none (N109).
   const behindDoors = insideDoors(root, space.id);
 
@@ -586,7 +593,9 @@ function SpaceEditor({
               </p>
             )}
             <FrontEditor space={space} onChange={set} />
-            {space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
+            {runHandle && (space.front || (space.kind === 'drawers' && !behindDoors)) ? (
+              <RunHandleNote handle={runHandle.handle} />
+            ) : space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
               <HandleEditor space={space} onChange={set} />
             ) : (
               <p className="hint">{t('Handles appear once there are doors or drawers.')}</p>
@@ -608,6 +617,29 @@ function SpaceEditor({
 }
 
 const BAR_SPACINGS = [96, 128, 160, 192, 224, 256, 320];
+
+/** The run handle's kind and hole spacing, read-only: the run sets them, the piece's own stay in its design (ADR-203). */
+function RunHandleNote({ handle }: { handle: RunHandle['handle'] }) {
+  const kind =
+    handle.kind === 'bar' ? t('Bar') : handle.kind === 'knob' ? t('Knob') : t('Push to open');
+  return (
+    <div className="run-handle-note">
+      <p className="hint">{t('Set by Handles for this run')}</p>
+      <dl className="dims2">
+        <div>
+          <dt>{t('Handles')}</dt>
+          <dd>{kind}</dd>
+        </div>
+        {handle.kind === 'bar' && (
+          <div>
+            <dt>{t('Hole centres')}</dt>
+            <dd>{t('{n} mm', { n: handle.holeSpacing ?? 128 })}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
+}
 
 function HandleEditor({
   space,

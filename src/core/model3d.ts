@@ -60,6 +60,25 @@ export function modelBox(m: ModelItem): Box {
   };
 }
 
+/**
+ * The model turned a quarter (ADR-203, G-105), `dir` 1 as a piece's Turn ↺ (ADR-069): its turn changes by 90° and its
+ * box keeps its centre, in whole mm rounded the way a piece's turn rounds it so turning back returns it exactly.
+ */
+export function turnModelItem(m: ModelItem, dir: 1 | -1): ModelItem {
+  const b = modelBox(m);
+  const rotationY = ((((m.rotationY + dir * 90) % 360) + 360) % 360) as ModelTurn;
+  const half = (n: number) => (rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
+  return {
+    ...m,
+    rotationY,
+    position: {
+      ...m.position,
+      x: m.position.x + half(b.w - b.d),
+      z: m.position.z + half(b.d - b.w),
+    },
+  };
+}
+
 /** The largest side a model can be given by typing or dragging (mm), as the size fields allow. */
 export const MODEL_SIDE_MAX: Mm = 10_000;
 

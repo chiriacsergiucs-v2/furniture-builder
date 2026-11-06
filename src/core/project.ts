@@ -1806,6 +1806,16 @@ export function runHandleMembers(project: Project, rh: RunHandle): string[] {
 }
 
 /**
+ * The run handle that reaches piece `itemId` (ADR-203, G-211), or undefined: the first run handle whose run holds the
+ * piece and that the piece does not keep its own handles against, as `applyRunHandles` applies them.
+ */
+export function runHandleFor(project: Project, itemId: string): RunHandle | undefined {
+  return project.runHandles?.find(
+    (rh) => !rh.own?.includes(itemId) && runHandleMembers(project, rh).includes(itemId),
+  );
+}
+
+/**
  * The project as built with its run handles (ADR-125): each piece of a handled run gets the run's handle on every
  * front, its line converted to the piece's own height. Pieces in `own` keep theirs; the first run handle wins.
  * The same project when there are none. Never saved: the pieces' designs keep their own handles.

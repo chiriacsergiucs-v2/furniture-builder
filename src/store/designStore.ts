@@ -1,3 +1,4 @@
+import { turnModelItem } from '../core/model3d';
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
 import {
@@ -256,6 +257,11 @@ interface State {
    * undo step. Returns what to tell the user: why nothing changed, or the pieces that kept their size; '' otherwise.
    */
   resizeGroup: (groupId: string, key: SizeField['key'], value: Mm, split: WidthSplit) => string;
+  /**
+   * Replace the open piece's design as one edit (ADR-203, G-359: Update piece from the wizard on a project piece), so
+   * it stays in the project's own copy; size locks and a locked piece on it refuse it (the reason comes back).
+   */
+  replaceDesign: (d: Design) => string | null;
   /** Catalog metadata and guidance settings (ADR-028, ADR-035). */
   updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void;
   editTemplateVariant: (template: LocalTemplate, variantId: string) => void;
@@ -383,6 +389,8 @@ interface State {
   removeVariableSet: (id: string) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
+  /** Turn a display-only 3D model a quarter about its centre (ADR-203, G-105); one undo step. */
+  turnModel: (id: string, dir: 1 | -1) => void;
   /**
    * Turn a piece to whole degrees 0–359 about its centre (ADR-121); one undo step. Returns why not (a locked piece,
    * a number outside 0–359), or null. Nothing is clamped (ADR-008).
@@ -1080,6 +1088,14 @@ export const useDesign = create<State>((rawSet, get) => {
       set({ selectedItemId: res.id });
     },
     setLinkAll: (v) => set({ linkAll: v }),
+    turnModel: (id, dir) => {
+      const p = get().project;
+      if (!p?.models?.some((m) => m.id === id)) return;
+      commitProject({
+        ...p,
+        models: p.models.map((m) => (m.id === id ? turnModelItem(m, dir) : m)),
+      });
+    },
     turnItem: (id, dir) => {
       const p = get().project;
       if (!p) return null;
@@ -1754,6 +1770,11 @@ export const useDesign = create<State>((rawSet, get) => {
       if (res.reason) return res.reason;
       if (res.project !== p) commitProject(res.project, t('Resize {name}', { name: g.name }));
       return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
+    },
+    replaceDesign: (d) => {
+      const before = get().design;
+      commit(d);
+      return get().design === before && d !== before ? get().notice : null;
     },
     updateMeta: (patch) => commit({ ...get().design, ...patch }),
     editTemplateVariant: (template, variantId) => {

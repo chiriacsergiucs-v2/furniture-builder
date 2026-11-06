@@ -220,4 +220,12 @@ export const ru_catalog = {
     'Не удалось сохранить шаблон в хранилище этого браузера.',
   'Templates saved on this device could not be read.':
     'Не удалось прочитать шаблоны, сохранённые на этом устройстве.',
+  'Also delete its {n|# kept version|# kept versions}?':
+    'Удалить и его {n|# сохранённую версию|# сохранённые версии|# сохранённых версий}?',
+  'Delete versions': 'Удалить версии',
+  'Keep them': 'Оставить их',
+  '“{name}” is already edited on this device. Keep yours or use the imported one?':
+    '«{name}» уже изменён на этом устройстве. Оставить ваш вариант или взять импортированный?',
+  'Use the imported one': 'Взять импортированный',
+  ', {n} kept as they were': ', {n} оставлено как было',
 } satisfies Record<string, string>;

@@ -591,6 +591,15 @@ function Wizard({
   const create = async () => {
     const res = createPiece(a, new Date().toISOString(), from ?? undefined);
     if (!res.ok) return;
+    // A project piece reopened from its Settings (ADR-203, G-359): Update piece replaces that piece in the project's own
+    // copy as one edit, never the library; a size lock or a locked piece on it refuses it.
+    const st = useDesign.getState();
+    if (from && st.project && st.editingItemId) {
+      const refused = st.replaceDesign(res.design);
+      if (refused) setSaveError(refused);
+      else onCreated();
+      return;
+    }
     try {
       await saveDesign(res.design);
       if (toProject) addPiece(res.design, res.design.id);

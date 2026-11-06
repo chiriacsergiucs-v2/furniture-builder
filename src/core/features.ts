@@ -54,6 +54,11 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Reopen a project piece in the wizard',
+        detail: 'Open in wizard in its Settings; Update piece replaces it in the project only.',
+        adrs: ['ADR-203'],
+      },
+      {
         name: 'Create a project',
         detail: 'Several pieces placed in one room.',
         adrs: ['ADR-022', 'ADR-078'],
@@ -186,6 +191,17 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-088', 'ADR-090'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Esc selects one level up',
+            detail:
+              'In the piece editor: a space, then the space around it, then the whole piece, then nothing.',
+            adrs: ['ADR-203'],
+          },
+          {
+            name: 'Outline turns with an angled piece',
+            detail: 'The 3D selection outline and the Move ghost are turned like its boards.',
+            adrs: ['ADR-203'],
+          },
         ],
       },
     ],
@@ -244,6 +260,11 @@ export const FEATURES: FeatureDomain[] = [
           'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.',
         adrs: ['ADR-095', 'ADR-122', 'ADR-171'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'A locked piece on a base keeps the base from being resized',
+        detail: 'Unlock it to resize the piece under it; unlocked pieces on it follow.',
+        adrs: ['ADR-203'],
       },
     ],
   },
@@ -444,6 +465,11 @@ export const FEATURES: FeatureDomain[] = [
           },
           { name: 'Crown, pelmet and ceiling filler', adrs: ['ADR-075'], checked: '2026-11-05' },
           { name: 'Handles for a whole run', adrs: ['ADR-125'], checked: '2026-11-05' },
+          {
+            name: 'Run handle shown in the piece editor',
+            detail: 'Its kind and hole centres, read-only, under Set by Handles for this run.',
+            adrs: ['ADR-203'],
+          },
           { name: 'Sink cut-out in the run worktop', adrs: ['ADR-125'], checked: '2026-11-05' },
         ],
       },
@@ -721,6 +747,11 @@ export const FEATURES: FeatureDomain[] = [
             checked: '2026-11-05',
           },
           { name: 'Width, height and depth of a model', adrs: ['ADR-102'], checked: '2026-11-05' },
+          {
+            name: 'Move and turn a model in 3D',
+            detail: 'Drag it in Move mode, with Snap, and turn it 90° about its centre.',
+            adrs: ['ADR-203'],
+          },
         ],
       },
     ],
@@ -847,6 +878,11 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-078'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Ask about kept versions when deleting a project',
+        detail: 'Keep them is the default; only readable versions are deleted.',
+        adrs: ['ADR-203'],
+      },
       { name: 'Add a piece from a list with pictures', adrs: ['ADR-094'], checked: '2026-11-05' },
       { name: 'Tap the plan to place', adrs: ['ADR-056'], checked: '2026-11-05' },
       { name: 'Drag a catalog item onto the plan', adrs: ['ADR-094'], checked: '2026-11-05' },
@@ -914,6 +950,11 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       { name: 'Save a design as a template', adrs: ['ADR-034'], checked: '2026-11-05' },
+      {
+        name: 'Choose which edit to keep on template import',
+        detail: 'An imported template for a family you edited asks; Keep mine is the default.',
+        adrs: ['ADR-203'],
+      },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
       {

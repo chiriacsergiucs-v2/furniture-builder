@@ -19,8 +19,9 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
   const setOpen = useUi((s) => s.setSettingsOpen);
   const inProject = useDesign((s) => !!s.project && !s.editingItemId);
   const name = useDesign((s) => (s.project && !s.editingItemId ? s.project.name : s.design.name));
+  // A wizard-made piece, also one opened from a project (ADR-203, G-359): Update piece then replaces that project piece.
   const wizard = useDesign(
-    (s) => !s.project && !s.templateEdit && !s.editingItemId && !!s.design.wizard,
+    (s) => (!s.project || !!s.editingItemId) && !s.templateEdit && !!s.design.wizard,
   );
   const close = () => setOpen(false);
   return (

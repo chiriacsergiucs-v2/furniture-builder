@@ -276,6 +276,12 @@ export async function listProjectVersions(
 /** Only on the user's Delete (ADR-123, G-156: nothing removes versions automatically). */
 export const deleteProjectVersion = (id: string, database = db) =>
   database.projectVersions.delete(id);
+/**
+ * Only on the user's Delete versions when a project is deleted (ADR-203, G-190): the rows `listProjectVersions`
+ * returned, by id; rows the app cannot read are never in that list and stay (ADR-012).
+ */
+export const deleteProjectVersions = (ids: readonly string[], database = db) =>
+  database.projectVersions.bulkDelete([...ids]);
 
 export async function saveTemplate(t: LocalTemplate, database = db): Promise<void> {
   await database.templates.put({ id: t.id, updatedAt: t.updatedAt, template: t });
