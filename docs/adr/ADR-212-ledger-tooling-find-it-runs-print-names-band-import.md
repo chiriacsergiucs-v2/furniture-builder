@@ -13,7 +13,7 @@ accepted the first 50 gaps' suggested picks, the user accepted these too, so eac
 Requests: G-076 follows from "mark implemented ones" (not a quote); G-100 "Mark + hand to Claude"; G-049 "Configure
 the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps""; G-041
 "Import 3D models and model libraries"; G-371 "all of these 4 + Suggestions A(all) and B(all)", then "Stop 193";
-G-372 follows from G-370's pick (not a quote); G-381 translate with the print (user 2026-11-05); G-038 "Check the
+G-377 follows from G-370's pick (not a quote); G-381 translate with the print (user 2026-11-05); G-038 "Check the
 European standards for ABS, apply them accordingly".
 
 Change control: [ADR-076](../adr-done/ADR-076-import-3d-models-from-the-device-as-display-only-items.md) says
@@ -47,7 +47,7 @@ gets its own. Ship pull requests merge without CI on them (user rule 2026-10-29)
    than `vi.resetModules()`. Apply a lever only if it saves at least 5 % and every find-it file passes three
    consecutive full runs. `renderApp` keeps the bare-app start (fresh modules, IndexedDB, URL; ADR-108). Numbers
    go in N217.
-6. **Rapier devDependency removed (G-372).** `pnpm remove @dimforge/rapier3d-compat` in the change that deletes
+6. **Rapier devDependency removed (G-377).** `pnpm remove @dimforge/rapier3d-compat` in the change that deletes
    `tests/rapier-trial.test.ts` (ADR-201, G-370), else as this ADR's first commit; `@types/three`'s 0.12.0 copy stays.
 7. **Print names in the parts CSV and shopping title (G-381).** `cutlistCsvRo(rows, pieceNames?)` takes a map from
    stored piece name to `printPieceName(design)` (ADR-202) and swaps the `Piece:` prefix of each label; Output and
@@ -88,7 +88,7 @@ gets its own. Ship pull requests merge without CI on them (user rule 2026-10-29)
 - [ ] Export marks and Import marks round-trip, keep the newer mark and count skipped rows (tests) (G-100)
 - [ ] Old backlog gap notes and pending ADR open questions name their G ids; `pnpm docs:check` passes (G-049, G-041)
 - [ ] Each find-it lever's measured time is in N217; applied ones pass three consecutive full runs (G-371)
-- [ ] `@dimforge/rapier3d-compat` is gone from `package.json`; install, test and build pass (G-372)
+- [ ] `@dimforge/rapier3d-compat` is gone from `package.json`; install, test and build pass (G-377)
 - [ ] A catalog piece's parts CSV labels and shopping title follow the print language in ro, ru, en (tests) (G-381)
 - [ ] `parseBandList` reads tenths, skips bad rows with problems; old storage rows load after the upgrade (G-038)
 - [ ] jsdom find-it at 390 and 1280 px finds Export marks, Import band list (CSV) and Matching bands

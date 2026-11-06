@@ -2259,7 +2259,67 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
 - Conflicts: none
 
-### G-372: Remove the Rapier devDependency once its trial test is gone
+### G-372: Wall picture: stale notice on a deliberate change or leaving the page
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/WallBackground.tsx pick(): the 'prepared picture was not applied' error notice fires when the user switches the wall to None/Colour during an upload, or leaves the page (global notice shows on another page).
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Show the stale notice only when the wall or background changed outside this control?
+- Suggested pick: Only notify when the operation was not cancelled by this control or unmount (closest to ADR-200's intent; est. +5 % work, removes a false error).
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+
+### G-373: Size-lock note shows unrelated design notices
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/Inspector.tsx SizeLockNote now renders any design-store notice (move refused, plan notices) in the size-lock info box, even for unlocked pieces.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Is showing every refusal notice in the inspector intended, or only size-lock refusals?
+- Suggested pick: Show the note only when an axis is locked or the notice is a size-lock refusal (matches ADR-122/199 wording; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-374: Escape on More may not close it in Safari
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/shell/MoreMenu.tsx listens for Escape on the menu element only; Safari does not focus <summary> on click, so Escape likely does nothing while editor shortcuts stay blocked. Not tested in Safari.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Listen on window again but only act when More is open?
+- Suggested pick: Window listener gated on details.open, keeping preventDefault/stopPropagation (keeps ADR-198 behaviour in all browsers; est. small change).
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+
+### G-375: Template list refresh skipped while a read is pending
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/ProjectTemplates.tsx refresh() returns early when a read is in flight, so a delete or rename finishing during a Retry read can leave a stale row.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Queue one follow-up read instead of dropping it?
+- Suggested pick: Mark a pending re-read and run it after the current read (fixes the race fully; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-376: Include the room starts ticked in Save as project template
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: ADR-200 approved an explicit Include room checkbox; the default (ticked) was chosen by the implementer, not the user.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Should Include the room start ticked or unticked?
+- Suggested pick: No recommendation until the user picks: ticked keeps the room (most complete template); unticked matches the old Cancel-path result. Both are a one-line change.
+- Work: Low
+- Impact: Low
+- Necessity: Medium
+
+### G-377: Remove the Rapier devDependency once its trial test is gone
 
 - Status: ADR-212
 - Origin: ADR-201, 2026-11-06; agent scoped it out

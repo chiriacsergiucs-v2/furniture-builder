@@ -69,7 +69,7 @@ No UI text is added; a fix that adds text goes through `t()` with its Russian en
 ## Scope
 
 - In scope: the eight items above, their scripts, tests, the CI `test` job and N206.
-- Out of scope: removing the Rapier devDependency once the trial test is gone (G-372); cheaper find-it mounts
+- Out of scope: removing the Rapier devDependency once the trial test is gone (G-377); cheaper find-it mounts
   (G-371).
 
 ## Consequences
