@@ -1,7 +1,8 @@
 # ADR-194: Fix the eight remaining findings of the New-piece wizard
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Merged in PR #183 (52bf431))
 - Depends on: ADR-044, ADR-045, ADR-046, ADR-118, ADR-164, ADR-191
 - Design: docs/ui-design.md (New-piece wizard)
 - Backlog: N199
