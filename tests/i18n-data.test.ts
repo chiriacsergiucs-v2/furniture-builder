@@ -32,8 +32,24 @@ function designTexts(d: Design): string[] {
   return out;
 }
 
+/**
+ * A text with numbers in it is covered by one key with `{placeholders}` (ADR-202: the number-specific literal entries
+ * of the hardware notes were deleted); `tr()` fills the key's placeholders with the text's numbers.
+ */
+function byPlaceholders(s: string): boolean {
+  if (!/\d/.test(s) || s.includes(': ')) return false;
+  setLang('ru');
+  try {
+    return tr(s) !== s;
+  } finally {
+    setLang('en');
+  }
+}
+
 const missing = (texts: (string | undefined)[]) =>
-  [...new Set(texts.filter((s): s is string => !!s && !!s.trim()))].filter((s) => !hasRu(s));
+  [...new Set(texts.filter((s): s is string => !!s && !!s.trim()))].filter(
+    (s) => !hasRu(s) && !byPlaceholders(s),
+  );
 
 describe('Russian text for built-in data (ADR-155)', () => {
   let safety = false;
