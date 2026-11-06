@@ -2958,3 +2958,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-201 Decision for G-368: measure, and ask the user if the saving is under 10 %.
 - Questions: Keep the core-only selection (it saves little for widely imported files), or drop it and keep the full suite on every PR?
 - Suggested pick: Keep it: it saves 70 to 90 % on narrow core changes and costs nothing otherwise. Record a CI run id once a core-only PR runs. (estimate: effort +0 %, value +3 %)
+
+### G-473: Mirrored copies can still drift 1 mm at the outer reveal
+
+- Status: Open
+- Origin: ADR-205 tests, 2026-11-06; agent found it
+- Missing: After Mirror, a front placed by the outer reveal (half-overlay or inset fronts with an odd gap) can sit 1 mm off with the same size. This rounding predates ADR-205; the fuzz therefore accepts reflection within 1 mm and requires exact sizes. ADR-205 promises mirrored copies match to the mm.
+- Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
+- Questions: Make the outer reveal round symmetrically too, which changes the 1 mm position of such fronts in new mirrored copies only?
+- Suggested pick: Yes: apply the remainderFirst rounding to the outer reveal, for new mirrored copies only. (estimate: effort +5 %, value +4 %)
