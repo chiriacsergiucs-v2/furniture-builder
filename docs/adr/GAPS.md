@@ -2931,3 +2931,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; ADR-203 Decision: Keep is the default and nothing is deleted without the user's explicit choice (ADR-012).
 - Questions: Should Enter on these two dialogs choose the Keep button?
 - Suggested pick: Focus the Keep button first in both dialogs, so Enter keeps. (estimate: effort +2 %, value +4 %)
+
+### G-470: Client sheet: occasional second page and table at the page edge
+
+- Status: Open
+- Origin: ADR-206 tests, 2026-11-06; agent found it
+- Missing: The client sheet (Parts > Client sheet) came out as 2 PDF pages on one run; every later run gave 1 page; cause not found. Also, in the 390 px PDF the sheet's table reaches the right page edge.
+- Request: Not asked; ADR-206 Done when says the client sheet prints one A4 page.
+- Questions: None; it is a bug.
+- Suggested pick: Reproduce with tools/prints-exports/find-it.mjs on repeated runs, find the layout race (the sheet prints 50 ms after it is asked for), and give the table a page margin. (estimate: effort +4 %, value +4 %)
