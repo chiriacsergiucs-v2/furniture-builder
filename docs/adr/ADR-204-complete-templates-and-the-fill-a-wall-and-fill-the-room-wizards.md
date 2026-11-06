@@ -13,7 +13,7 @@ implementation". User accepted the gaps' suggested picks on 2026-11-06. Requests
 G-210 "Accept default, /batch all ready (ADR-125: run sinks and handles)"; G-348 "Fill the room"; G-117 "allow with
 a warning items like tall cabinets, above this height"; G-123 "Wall cabinets above"; G-118 "So basically a mix and
 match"; G-116 "6 equal front panels, what's behind is to be configured"; G-104 "New adr 3". No gap conflicts with an
-implemented ADR. Pending [ADR-193](ADR-193-fix-the-start-something-new-fill-a-wall-and-fill-the-room-fl.md) rewrites
+implemented ADR. Pending [ADR-193](../adr-done/ADR-193-fix-the-start-something-new-fill-a-wall-and-fill-the-room-fl.md) rewrites
 the same wizard steps (forms, Walls-step depths, the Room hint); this ADR builds on it and does not repeat its fixes.
 
 ## Decision
