@@ -76,7 +76,6 @@ import {
   wallAgainst,
 } from '../src/core/connections';
 import { templates as designTemplates } from '../src/core/design';
-import { buildProjectModel, validateProject, type Project } from '../src/core/project';
 import { moveItems } from '../src/core/selection';
 
 let seed = Number(process.env.SEED ?? 12345);
