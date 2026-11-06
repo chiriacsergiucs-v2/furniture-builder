@@ -6878,6 +6878,17 @@ p > .info-tip {
 .version-row .split-actions {
   flex-wrap: nowrap;
 }
+/* A deleted project's version names the project and has the long Restore as a new project: the actions go under the
+   text when the row is narrow, so neither squeezes the other (ADR-211). */
+.version-row.orphan {
+  flex-wrap: wrap;
+}
+.version-row.orphan > span:first-child {
+  flex: 1 1 12rem;
+}
+.version-row.orphan .split-actions {
+  grid-template-columns: auto auto;
+}
 .steps-log .row-btn.undone {
   opacity: 0.6;
 }
