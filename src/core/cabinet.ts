@@ -1209,13 +1209,16 @@ export function buildCabinet(
         if (s.axis === 'x') {
           let x = ip.x;
           let prevFrontX = inner.front.x0;
+          // A mirrored split (ADR-205) also rounds the half divider and half gap the other way, so the fronts on each
+          // side of a divider match the original's to the mm.
+          const [near, far] = s.remainderFirst ? [hi, lo] : [lo, hi];
           parts.forEach((w, i) => {
             const last = i === k - 1;
-            const mid = x + w + lo(t);
+            const mid = x + w + near(t);
             const fz: FrontZone = {
               ...inner.front,
               x0: prevFrontX,
-              x1: last ? inner.front.x1 : mid - lo(g),
+              x1: last ? inner.front.x1 : mid - near(g),
             };
             visit(s.children[i], { ...inner, opening: { ...ip, x, w }, front: fz }, level + 1);
             if (!last) {
@@ -1230,7 +1233,7 @@ export function buildCabinet(
                 ['+z'],
                 i,
               );
-              prevFrontX = mid + hi(g);
+              prevFrontX = mid + far(g);
             }
             x += w + t;
           });

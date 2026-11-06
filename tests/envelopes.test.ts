@@ -149,7 +149,8 @@ describe('Clearances overlay zones (ADR-073)', () => {
     const chest = item('chest', { position: { x: 0, y: 0, z: b.z + b.d + 300 } });
     const pm = buildProjectModel(project([desk, chest]));
     const kinds = new Set(pm.zones.map((z) => z.kind));
-    expect(kinds).toEqual(new Set(['body', 'drawer', 'chair']));
+    // ADR-205: the chest stands up from lying on its back, so its installation zone is listed too.
+    expect(kinds).toEqual(new Set(['body', 'drawer', 'chair', 'installation']));
     expect(pm.zones.find((z) => z.kind === 'chair')!.severity).toBe('warning');
     const clear = buildProjectModel(
       project([desk, { ...chest, position: { x: 0, y: 0, z: b.z + b.d + 1500 } }]),
@@ -163,6 +164,22 @@ describe('Clearances overlay zones (ADR-073)', () => {
       'error',
       'error',
     ]);
+  });
+  it('the installation zone carries the tip-up strip in front of the piece, as deep as it is high, and its arc (ADR-205)', () => {
+    const chest = item('chest', { position: { x: 0, y: 0, z: 0 } });
+    const pm = buildProjectModel(project([chest]));
+    const inst = pm.zones.find((z) => z.kind === 'installation')!;
+    expect(inst).toBeDefined();
+    const body = pm.zones.find((z) => z.kind === 'body')!.box;
+    const tip = inst.tipUp!;
+    expect(tip.radius).toBe(body.h);
+    expect(tip.strip.d).toBe(body.h);
+    expect(tip.strip.w).toBe(body.w);
+    expect(tip.strip.z).toBe(body.z + body.d);
+    expect(tip.hinge).toEqual([body.x, body.z + body.d]);
+    expect(tip.from).toEqual([body.x, body.z + body.d + body.h]);
+    expect(tip.to).toEqual([body.x + body.h, body.z + body.d]);
+    for (const v of [...tip.hinge, ...tip.from, ...tip.to]) expect(Number.isInteger(v)).toBe(true);
   });
   it('a door swing that hits something shows as a warning zone', () => {
     const a = item('base-door', { position: { x: 0, y: 0, z: 0 } });
