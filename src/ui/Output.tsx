@@ -16,6 +16,7 @@ import { useView } from './useView';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
+import { printPieceNames } from '../core/catalog/printName';
 import { download, fileName } from './shell/files';
 import { useUi } from './shell/uiStore';
 import { captureStill } from '../viewer/renderBridge';
@@ -91,6 +92,7 @@ export function Output() {
 
 function Parts() {
   const view = useView();
+  const project = useDesign((s) => s.project);
   const setHighlight = useDesign((s) => s.setHighlight);
   const highlight = useDesign((s) => s.highlight);
   const rows = view.rows;
@@ -124,7 +126,13 @@ function Parts() {
           onClick={() =>
             download(
               `${fileName(view.title)}-parts.csv`,
-              cutlistCsvRo(view.rows),
+              cutlistCsvRo(
+                view.rows,
+                // Project labels start with the piece name, printed in the print language (ADR-212).
+                view.mode === 'project' && project
+                  ? printPieceNames(project.items.map((i) => i.design))
+                  : undefined,
+              ),
               'text/csv;charset=utf-8',
             )
           }

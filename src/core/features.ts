@@ -608,6 +608,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Band list import',
+        detail:
+          'Import your band list (CSV); each board’s edge band offers matching bands first, then the others by colour.',
+        adrs: ['ADR-212'],
+      },
+      {
         name: 'Own board for any single part',
         detail: 'In Material, scope Part; a part the piece no longer builds is listed to clear.',
         adrs: ['ADR-151', 'ADR-163'],
@@ -1163,6 +1169,12 @@ export const FEATURES: FeatureDomain[] = [
           'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.',
         adrs: ['ADR-101', 'ADR-187'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Gap marks in a file',
+        detail:
+          'Export marks and Import marks move your gap marks between devices; the newer mark wins.',
+        adrs: ['ADR-212'],
       },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'], checked: '2026-11-05' },
       {

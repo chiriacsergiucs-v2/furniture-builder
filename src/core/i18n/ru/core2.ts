@@ -401,6 +401,10 @@ export const ru_core2 = {
   'Row {row}: {maker} {code} {mm} mm is listed twice; the first is kept.':
     'Строка {row}: {maker} {code} {mm} мм указан дважды; оставлен первый.',
   'The file has a header row but no decors.': 'В файле есть строка заголовков, но нет декоров.',
+  'thickness "{v}" is not mm from 0.1 to 10 with one decimal':
+    'толщина «{v}» — не мм от 0,1 до 10 с одним знаком после запятой',
+  'width "{v}" is not whole mm from 1 to {max}': 'ширина «{v}» — не целое число мм от 1 до {max}',
+  'The file has a header row but no bands.': 'В файле есть строка заголовков, но нет кромок.',
   '{name} stands on the floor; Top and Bottom move wall units and stacked pieces.':
     '«{name}» стоит на полу; «Верх» и «Низ» двигают навесные модули и изделия, стоящие на других.',
   '{name} would go below the floor.': '«{name}» ушло бы ниже пола.',

@@ -36,6 +36,7 @@ import {
 } from '../core/shopping';
 import { t, tr } from '../core/i18n';
 import { pt } from '../core/i18n/print';
+import { printPieceName } from '../core/catalog/printName';
 import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { usePrices } from './priceStore';
@@ -92,6 +93,7 @@ function save(name: string, text: string, type: string) {
  */
 export function ShoppingList() {
   const view = useView();
+  const design = useDesign((s) => s.design);
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
   const projectView = !!shownProject;
   const addSellerItem = useDesign((s) => s.addSellerItem);
@@ -152,7 +154,10 @@ export function ShoppingList() {
             .join('')}</table>`
         : '';
     }).join('');
-    const title = esc(pt('Listă de cumpărături — {name}', { name: view.title }));
+    // A single piece's title follows the print language (ADR-212, ADR-202); a project name prints as typed.
+    const name =
+      view.mode === 'design' && view.title === design.name ? printPieceName(design) : view.title;
+    const title = esc(pt('Listă de cumpărături — {name}', { name }));
     const estimate = esc(
       t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length

@@ -465,4 +465,11 @@ export const ru_info = {
   'Your own assembly steps': 'Свои шаги сборки',
   'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.':
     'Перемещайте шаги вверх и вниз и переименовывайте их; вкладка и печать следуют за этим; «Сбросить шаги» возвращает созданные.',
+  // ADR-212
+  'Band list import': 'Импорт списка кромок',
+  'Import your band list (CSV); each board’s edge band offers matching bands first, then the others by colour.':
+    'Импортируйте свой список кромок (CSV); кромка каждой плиты предлагает сначала подходящие кромки, затем остальные по цвету.',
+  'Gap marks in a file': 'Отметки пробелов в файле',
+  'Export marks and Import marks move your gap marks between devices; the newer mark wins.':
+    '«Экспорт отметок» и «Импорт отметок» переносят ваши отметки пробелов между устройствами; побеждает более новая отметка.',
 } satisfies Record<string, string>;

@@ -360,9 +360,16 @@ export const csvHeaders = (): string[] => CSV_HEADERS_RO.map((h) => pt(h));
 /**
  * Parts CSV for panel shops: semicolon-separated (Romanian Excel's list separator), UTF-8 with BOM so
  * diacritics and Cyrillic open correctly, formula-leading cells escaped. Sizes are finished sizes (ADR-009).
- * Words in the print language (ADR-157).
+ * Words in the print language (ADR-157). `pieceNames` maps a stored piece name to its printed name
+ * (`printPieceNames`, ADR-212): the `Piece:` prefix of each label is swapped for it.
  */
-export function cutlistCsvRo(rows: CutRow[]): string {
+export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, string>): string {
+  const label = (l: string) => {
+    if (pieceNames)
+      for (const [stored, printed] of pieceNames)
+        if (l.startsWith(`${stored}: `)) return `${printed}: ${partRo(l.slice(stored.length + 2))}`;
+    return partRo(l);
+  };
   const esc = (v: string | number) => {
     const s = String(v);
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
@@ -371,7 +378,7 @@ export function cutlistCsvRo(rows: CutRow[]): string {
   const lines = [
     csvHeaders(),
     ...rows.map((r) => [
-      [...new Set(r.labels.map(partRo))].join(' / '),
+      [...new Set(r.labels.map(label))].join(' / '),
       r.materialName,
       r.thickness,
       r.length,

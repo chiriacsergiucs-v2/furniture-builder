@@ -3,7 +3,7 @@ import { validateDesign } from '../core/design';
 import { validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
-import type { Decor } from '../core/materials';
+import { validateBand, type Band, type Decor } from '../core/materials';
 import type { ModelFormat, ModelSize } from '../core/model3d';
 import { validatePrice, type PriceEntry } from '../core/prices';
 import { validFastenerChoice, type FastenerChoice, type JointType } from '../core/fasteners';
@@ -90,6 +90,7 @@ class FurnitureDb extends Dexie {
   projectVersions!: Table<ProjectVersion, string>;
   settings!: Table<SettingRow, string>;
   accountLinks!: Table<AccountLink, [string, string, string]>;
+  bands!: Table<Band, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -204,6 +205,24 @@ class FurnitureDb extends Dexie {
       // link never travels in exported files or design codes.
       accountLinks: '[accountId+table+localId], accountId, remoteId',
     });
+    // v12 (ADR-212, G-038): the band list the user imported. Earlier tables untouched (additive).
+    this.version(12).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
+      gapMarks: 'gapId, updatedAt',
+      projectVersions: 'id, projectId, savedAt',
+      settings: 'key',
+      accountLinks: '[accountId+table+localId], accountId, remoteId',
+      bands: 'id',
+    });
     // Every user table reports its changes after the write (backup, account upload; src/persist/events.ts).
     for (const [name] of BACKUP_TABLES) {
       const t = this.table(name);
@@ -313,6 +332,10 @@ export async function listResearchMarks(database = db): Promise<ResearchMark[]> 
 export async function saveGapMark(mark: GapMark, database = db): Promise<void> {
   await database.gapMarks.put(mark);
 }
+/** Marks read from a gap-marks file (ADR-212), already merged newer-wins by `readGapMarksFile`. */
+export async function saveGapMarks(marks: GapMark[], database = db): Promise<void> {
+  await database.gapMarks.bulkPut(marks);
+}
 /** Gap marks that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listGapMarks(database = db): Promise<GapMark[]> {
   const rows = await database.gapMarks.toArray();
@@ -342,6 +365,19 @@ export async function replaceDecors(decors: Decor[], database = db): Promise<voi
 }
 export const listDecors = (database = db): Promise<Decor[]> => database.decors.toArray();
 export const clearDecors = (database = db) => database.decors.clear();
+
+/** A new band-list import replaces the list (ADR-212), as the decor list does. */
+export async function replaceBands(bands: Band[], database = db): Promise<void> {
+  await database.transaction('rw', database.bands, async () => {
+    await database.bands.clear();
+    await database.bands.bulkPut(bands);
+  });
+}
+/** The band list; unreadable rows are skipped and kept (ADR-012). */
+export async function listBands(database = db): Promise<Band[]> {
+  const rows = await database.bands.toArray();
+  return rows.filter(validateBand);
+}
 
 export async function saveProjectTemplate(t: ProjectTemplate, database = db): Promise<void> {
   await database.projectTemplates.put({

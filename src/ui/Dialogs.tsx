@@ -3,15 +3,25 @@ import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
 import { t } from '../core/i18n';
 import {
+  BAND_COLUMNS,
   DECOR_COLUMNS,
   decorPatch,
   KINDS,
   MAKERS,
+  parseBandList,
   parseDecorList,
+  type Band,
   type Decor,
 } from '../core/materials';
 import { newProject } from '../core/project';
-import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/db';
+import {
+  clearDecors,
+  listBands,
+  listDecors,
+  replaceBands,
+  replaceDecors,
+  saveProject,
+} from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -271,6 +281,42 @@ export function MaterialsPanel() {
       .then(setDecors)
       .catch(() => setDecors([]));
   }, []);
+  // The user's band list (ADR-212, G-038): offered in each board's band editor once imported.
+  const [bands, setBands] = useState<Band[]>([]);
+  const [bandMsg, setBandMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => {
+    listBands()
+      .then(setBands)
+      .catch(() => setBands([]));
+  }, []);
+  const importBands = async (f: File) => {
+    let text: string;
+    try {
+      text = await f.text();
+    } catch {
+      setBandMsg({ ok: false, text: t('{file} could not be read.', { file: f.name }) });
+      return;
+    }
+    const r = parseBandList(text, f.name);
+    if (!r.bands.length) {
+      setBandMsg({
+        ok: false,
+        text: t('No bands imported. {problems}', { problems: r.problems.slice(0, 4).join(' ') }),
+      });
+      return;
+    }
+    try {
+      await replaceBands(r.bands);
+    } catch {
+      setBandMsg({ ok: false, text: t('The band list could not be saved on this device.') });
+      return;
+    }
+    setBands(r.bands);
+    setBandMsg({
+      ok: r.problems.length === 0,
+      text: `${t('{n|# band|# bands} imported from {file}.', { n: r.bands.length, file: f.name })}${r.problems.length ? ` ${t('{n|# row|# rows} skipped: {problems}', { n: r.problems.length, problems: r.problems.slice(0, 4).join(' ') })}` : ''}`,
+    });
+  };
   const importDecors = async (f: File) => {
     let text: string;
     try {
@@ -410,6 +456,47 @@ export function MaterialsPanel() {
           </p>
         )}
       </div>
+      <div className="decor-list">
+        <p className="hint">
+          {bands.length
+            ? t('Band list: {list}, {n|# band|# bands}.', {
+                list: bands[0].list,
+                n: bands.length,
+              })
+            : t('Band list: none.')}{' '}
+          <InfoTip label={t('About the band list')} align="start">
+            {t(
+              'Import your own CSV with the columns {columns} (thickness in mm with one decimal, width whole mm, #rrggbb; decor optional) to pick bands in each board’s edge band.',
+              { columns: BAND_COLUMNS },
+            )}
+          </InfoTip>
+        </p>
+        <div className="mat-picture-row">
+          <label className="btn sm outline file-btn">
+            <Icon name="upload" className="sm" />
+            {t('Import band list (CSV)')}
+            <input
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              aria-label={t('Import band list (CSV)')}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importBands(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+        {bandMsg && (
+          <p
+            className={`alert ${bandMsg.ok ? 'info' : 'error'}`}
+            role={bandMsg.ok ? 'status' : 'alert'}
+          >
+            <Icon name={bandMsg.ok ? 'info' : 'alert-circle'} className="sm" />
+            <span>{bandMsg.text}</span>
+          </p>
+        )}
+      </div>
       <ul className="materials">
         {materials.map((m: Material) => (
           <li key={m.id}>
@@ -511,7 +598,7 @@ export function MaterialsPanel() {
                 }
               />
             </div>
-            <BoardBand key={`${m.id}-band`} m={m} />
+            <BoardBand key={`${m.id}-band`} m={m} bands={bands} />
             <MaterialPicture m={m} />
             <div className="mat-actions">
               <button

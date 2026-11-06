@@ -3,6 +3,8 @@ import ledger from '../../docs/adr/GAPS.md?raw';
 import {
   decisionsText,
   filterGaps,
+  gapMarksFile,
+  readGapMarksFile,
   gapCounts,
   hasConflict,
   isMarked,
@@ -20,7 +22,8 @@ import {
   type RatingFilter,
   type RatingKey,
 } from '../core/gaps';
-import { listGapMarks, saveGapMark } from '../persist/db';
+import { listGapMarks, saveGapMark, saveGapMarks } from '../persist/db';
+import { download } from './shell/files';
 import { Icon } from './icons';
 
 /** The ledger as it was when this app was built (ADR-101); the file in the repo stays the source of truth. */
@@ -29,6 +32,7 @@ const actionable = (g: Gap) => g.kind === 'open' || g.kind === 'adr';
 /** How long a note waits after the last key before it is written to the device. */
 const NOTE_SAVE_MS = 400;
 const DEFAULT_KINDS: GapStatusKind[] = ['open'];
+const GAP_IDS = new Set(GAPS.map((g) => g.id));
 
 /**
  * The Gaps page (ADR-101): the gaps ledger (ADR-082) with counts, search, a status filter and every field of each
@@ -113,6 +117,54 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
     setKinds(DEFAULT_KINDS);
     setRatings({});
   };
+  // Marks in a file (ADR-212, G-100): the page is not translated (user 2026-10-29).
+  const [fileMsg, setFileMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const exportMarks = () => {
+    const now = new Date().toISOString();
+    const file = gapMarksFile(Object.values(marks), now);
+    download(
+      `gap-marks-${now.slice(0, 10)}.json`,
+      JSON.stringify(file, null, 2),
+      'application/json',
+    );
+  };
+  const importMarks = async (f: File) => {
+    let text: string;
+    try {
+      text = await f.text();
+    } catch {
+      setFileMsg({ ok: false, text: `${f.name} could not be read.` });
+      return;
+    }
+    const r = readGapMarksFile(text, GAP_IDS, marks);
+    if (r.problem) {
+      setFileMsg({ ok: false, text: r.problem });
+      return;
+    }
+    try {
+      if (r.apply.length) await saveGapMarks(r.apply);
+    } catch {
+      setFileMsg({ ok: false, text: 'The marks could not be saved on this device.' });
+      return;
+    }
+    for (const m of r.apply) {
+      const queued = pending.current.get(m.gapId);
+      if (queued) {
+        window.clearTimeout(queued.timer);
+        pending.current.delete(m.gapId);
+      }
+    }
+    setMarks((cur) => {
+      const next = { ...cur };
+      for (const m of r.apply)
+        if (!next[m.gapId] || m.updatedAt > next[m.gapId].updatedAt) next[m.gapId] = m;
+      return next;
+    });
+    setFileMsg({
+      ok: r.skipped === 0,
+      text: `Imported ${r.imported} ${r.imported === 1 ? 'mark' : 'marks'}, skipped ${r.skipped}.`,
+    });
+  };
   const copy = () => {
     setShowDecisions(true);
     if (decisions) navigator.clipboard?.writeText(decisions).catch(() => undefined);
@@ -138,6 +190,12 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
         <p className="alert warning" role="status">
           <Icon name="alert-triangle" className="sm" />
           <span>{error}</span>
+        </p>
+      )}
+      {fileMsg && (
+        <p className={`alert ${fileMsg.ok ? 'info' : 'warning'}`} role="status">
+          <Icon name={fileMsg.ok ? 'info' : 'alert-triangle'} className="sm" />
+          <span>{fileMsg.text}</span>
         </p>
       )}
       <section className="tiles" aria-label="Totals">
@@ -181,6 +239,31 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
             <Icon name="copy" className="sm" />
             Copy decisions ({markedCount})
           </button>
+          <button
+            type="button"
+            className="btn outline"
+            onClick={exportMarks}
+            disabled={!ready}
+            title="Download your marks as a file, to import on another device"
+          >
+            <Icon name="download" className="sm" />
+            Export marks
+          </button>
+          <label className={`btn outline file-btn${ready ? '' : ' disabled'}`}>
+            <Icon name="upload" className="sm" />
+            Import marks
+            <input
+              type="file"
+              accept=".json,application/json"
+              aria-label="Import marks"
+              disabled={!ready}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importMarks(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
         </div>
       </div>
       <section className="gaps-filters" aria-label="Rough ratings">

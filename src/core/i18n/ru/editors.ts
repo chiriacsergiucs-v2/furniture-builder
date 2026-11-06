@@ -268,6 +268,9 @@ export const ru_editors = {
   'Ungroup {name}': 'Разгруппировать «{name}»',
   'Edge band for {name}': 'Кромка для «{name}»',
   'Edge band': 'Кромка',
+  'From your band list': 'Из вашего списка кромок',
+  'Matching bands': 'Подходящие кромки',
+  'Other bands in your list': 'Другие кромки из списка',
   "Not named: the shopping list puts this board's banding under To choose before buying.":
     'Не указана: список покупок помещает кромку этой плиты в «Выбрать перед покупкой».',
   'Fronts banded differently': 'Другая кромка на фасадах',

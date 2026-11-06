@@ -27,6 +27,21 @@ function defaultName(catalogId: string, variantId: string): string | null {
   return name;
 }
 
+/**
+ * Stored piece name → printed name, for the pieces whose printed name differs (ADR-212, G-381). Feeds
+ * `cutlistCsvRo`, whose project labels start with the stored name.
+ */
+export function printPieceNames(
+  designs: readonly Pick<Design, 'name' | 'catalog'>[],
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const d of designs) {
+    const printed = printPieceName(d);
+    if (printed !== d.name && !out.has(d.name)) out.set(d.name, printed);
+  }
+  return out;
+}
+
 export function printPieceName(design: Pick<Design, 'name' | 'catalog'>): string {
   const o = design.catalog?.origin;
   if (!o?.variantId) return design.name;

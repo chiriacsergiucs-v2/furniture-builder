@@ -4,22 +4,26 @@ import {
   BAND_MAX_ALLOWANCE,
   BAND_MAX_CODE,
   BAND_MAX_WIDTH,
+  bandFromList,
+  bandsForBoard,
   bandText,
   COMMON_BAND_THICKNESS,
   parseTenths,
   tenthsText,
+  type Band,
 } from '../core/materials';
 import { t, tr } from '../core/i18n';
 import type { EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { Segmented, Select, Toggle } from './controls';
 import { BandProduct } from './SellerLinks';
+import { useImageUrls } from '../persist/images';
 
 /**
  * ADR-077: the edge band on a board, named by the user from the supplier's datasheet. Nothing is filled in: the
  * common thicknesses are choices only. A separate band for doors and drawer fronts when switched on.
  */
-export function BoardBand({ m }: { m: Material }) {
+export function BoardBand({ m, bands = [] }: { m: Material; bands?: readonly Band[] }) {
   const update = useDesign((s) => s.updateMaterial);
   const [front, setFront] = useState(!!m.frontBand);
   const [had, setHad] = useState(!!m.frontBand);
@@ -37,6 +41,8 @@ export function BoardBand({ m }: { m: Material }) {
       <BandFields
         title={t('Edge band')}
         value={m.band}
+        board={m}
+        bands={bands}
         onChange={(band) => update(m.id, { band })}
         empty={t(
           "Not named: the shopping list puts this board's banding under To choose before buying.",
@@ -55,6 +61,8 @@ export function BoardBand({ m }: { m: Material }) {
         <BandFields
           title={t('Front edge band')}
           value={m.frontBand}
+          board={m}
+          bands={bands}
           onChange={(frontBand) => update(m.id, { frontBand })}
           empty={t(
             "Doors and drawer fronts of this board use the board's band until this one is complete.",
@@ -131,11 +139,15 @@ function parse(d: Draft): { band?: EdgeBand; missing: string[]; bad: Set<keyof D
 function BandFields({
   title,
   value,
+  board,
+  bands,
   onChange,
   empty,
 }: {
   title: string;
   value: EdgeBand | undefined;
+  board: Material;
+  bands: readonly Band[];
   onChange: (b: EdgeBand | undefined) => void;
   empty: string;
 }) {
@@ -208,6 +220,19 @@ function BandFields({
         ]}
         onChange={(v) => set({ kind: v as EdgeBandKind | '' }, true)}
       />
+      {bands.length > 0 && (
+        <BandListPick
+          board={board}
+          bands={bands}
+          onPick={(b) =>
+            // A pick fills kind, thickness, width and code (ADR-212); the trim allowance stays the user's.
+            onChange({
+              ...bandFromList(b),
+              ...(value?.allowance ? { allowance: value.allowance } : {}),
+            })
+          }
+        />
+      )}
       {draft.kind && (
         <>
           <Segmented
@@ -248,6 +273,71 @@ function BandFields({
             </p>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+const bandLabel = (b: Band) => `${b.makerText} ${b.code} ${b.name} · ${bandText(bandFromList(b))}`;
+
+/**
+ * ADR-212 (G-038): the user's band list for this board. Matching bands (decor or code equals the board's decor code,
+ * at least as wide as the board) first, beside the board's picture (ADR-048); then the others by closeness to the
+ * board's colour. Only what the band file holds is used (ADR-010).
+ */
+function BandListPick({
+  board,
+  bands,
+  onPick,
+}: {
+  board: Material;
+  bands: readonly Band[];
+  onPick: (b: Band) => void;
+}) {
+  const { matching, others } = bandsForBoard(bands, board);
+  const urls = useImageUrls(board.image?.id ?? '');
+  const url = board.image ? urls.get(board.image.id) : undefined;
+  const byId = new Map(bands.map((b) => [b.id, b]));
+  return (
+    <div className="band-list-pick" role="group" aria-label={t('From your band list')}>
+      <p className="band-title">
+        <strong>{t('From your band list')}</strong>
+      </p>
+      <div className="mat-picture-row">
+        {url && url !== 'missing' && (
+          <img className="mat-thumb" src={url} alt={t('Picture of {name}', { name: board.name })} />
+        )}
+        <div className="band-matching">
+          <p className="hint">{t('Matching bands')}</p>
+          {matching.length ? (
+            <ul className="band-matches">
+              {matching.map((b) => (
+                <li key={b.id}>
+                  <button type="button" className="btn sm outline" onClick={() => onPick(b)}>
+                    <span className="swatch" style={{ background: b.color }} aria-hidden="true" />
+                    {bandLabel(b)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="hint">{t('None.')}</p>
+          )}
+        </div>
+      </div>
+      {others.length > 0 && (
+        <Select
+          label={t('Other bands in your list')}
+          value=""
+          options={[
+            { value: '', label: t('Not from the list') },
+            ...others.map((b) => ({ value: b.id, label: bandLabel(b) })),
+          ]}
+          onChange={(id) => {
+            const b = byId.get(id);
+            if (b) onPick(b);
+          }}
+        />
       )}
     </div>
   );

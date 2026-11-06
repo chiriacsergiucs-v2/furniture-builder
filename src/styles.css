@@ -2667,6 +2667,38 @@ table.buy {
 .mat-actions {
   justify-items: start;
 }
+/* The user's band list beside the board's picture (ADR-212). */
+.band-list-pick {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.band-matching {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.band-matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+}
+.band-matches .btn {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+.band-matches .swatch {
+  flex: none;
+  width: 12px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
 .decor-list {
   display: grid;
   gap: var(--s-2);
@@ -6411,6 +6443,12 @@ p > .info-tip {
   flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
+}
+/* Copy decisions, Export marks and Import marks (ADR-212) wrap at phone width. */
+.gaps-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
 }
 .gaps-toolbar .search {
   flex: 1 1 240px;
