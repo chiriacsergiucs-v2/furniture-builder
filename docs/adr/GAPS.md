@@ -494,7 +494,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-038: Band-list import and colour matching
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-077, 2026-10-25 00:15 UTC; agent scoped it out
 - Missing: Bands from the bundled seller catalog are matched to the board decor code (ADR-161); remaining: importing a supplier band list as CSV, tolerances and edgebander settings.
 - Request: “Check the European standards for ABS, apply them accordingly”.
@@ -507,6 +507,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Import a band list as CSV like decors, matching each band to the board's decor code and picture.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-212 takes over only the band-list CSV import and its match to the board's decor code; tolerances and edgebander settings moved to G-460.
 
 ### G-039: ADR-077 open decisions
 
@@ -541,7 +542,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-041: ADR-076 models list
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-076, 2026-10-25 00:16 UTC; agent default, accepted by the user
 - Missing: Models are stored in a separate Project.models list, not on project items as the ADR says.
 - Request: “Import 3D models and model libraries”.
@@ -640,7 +641,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-049: G ids on pre-ADR-082 notes
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-082, 2026-10-25; agent scoped it out
 - Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
 - Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
@@ -718,7 +719,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-076: Research app records go stale as ADRs ship
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-092 (2026-10-26, Claude: not asked for)
 - Missing: The research app records (src/core/research/ensemble-2026-10-23.app.ts) are refreshed only by one-off re-check ADRs (ADR-149, ADR-152); ship-adr/next-adr still do not update them when an ADR ships.
 - Request: Text that is not a quote: follows from "mark implemented ones" (2026-10-26).
@@ -826,7 +827,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-100: Gap marks not in a file
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-101, 2026-10-26; agent scoped it out
 - Missing: Marks made on the gaps page cannot be exported or imported as a file; they live on one device. Copy decisions is the only way out.
 - Request: “Mark + hand to Claude”
@@ -2245,7 +2246,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-371: Cheaper find-it runs (stopped before it was built)
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
 - Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
@@ -2260,7 +2261,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-372: Remove the Rapier devDependency once its trial test is gone
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-201, 2026-11-06; agent scoped it out
 - Missing: ADR-201 deletes tests/rapier-trial.test.ts (G-370), the only file that imports @dimforge/rapier3d-compat; the devDependency and its lockfile entry would stay, unused. ADR-125 added it as a devDependency for the trial only.
 - Request: Not a quote: follows from G-370's pick, "Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial" (accepted 2026-11-06).
@@ -2290,7 +2291,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-381: Piece names in the parts CSV and shopping list title
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-202, 2026-11-06; agent scoped it out
 - Missing: ADR-202 prints untouched catalog piece names in the print language on the assembly sheet and the cut sheet's pieces table only; the parts CSV ("Piece: part" names) and the shopping list title keep the name as stored.
 - Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
@@ -2761,4 +2762,17 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Kept versions of deleted projects need an open project to be reached.
 - Fix: The same list on the Projects page.
+### G-460: Band tolerances and edgebander settings
+
+- Status: Open
+- Origin: ADR-212, 2026-11-06; agent scoped it out (remainder of G-038)
+- Missing: No band tolerances (thickness or width deviation, overhang to trim) and no edgebander settings; ADR-212 takes over only the band-list CSV import and its decor match.
+- Request: “Check the European standards for ABS, apply them accordingly”.
+- Questions: Add fields for tolerances and edgebander settings, filled only from values you type or your band list holds?
+- Suggested pick: Add them only as fields you fill, labelled guidance, nothing shipped (ADR-010). (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Band tolerances and edgebander settings are not recorded anywhere.
+- Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
 - Conflicts: none
