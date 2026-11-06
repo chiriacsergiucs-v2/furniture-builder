@@ -7382,6 +7382,8 @@ ul.plain {
   border-radius: var(--r-sm);
   background: var(--surface);
   box-shadow: var(--shadow-1);
+  /* As wide as its longest button: the 32 px ⋯ button it hangs from would clip the labels (ADR-208). */
+  width: max-content;
   max-width: calc(100vw - 32px);
 }
 /* The AR overlay (dom-overlay): the hint at the top, Turn and Exit at the bottom. */

@@ -762,29 +762,34 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Wall colour bands on the plan',
         detail: "A 50 mm band inside each wall with a background, in the wall's colour.",
         adrs: ['ADR-208'],
+        checked: '2026-11-06',
       },
       {
         name: 'Floor colour or picture',
         detail:
           'Set under Walls in the room; shown on the floor in 3D and under the pieces on the plan.',
         adrs: ['ADR-208'],
+        checked: '2026-11-06',
       },
       {
         name: 'Wall behind a single piece',
         detail:
           'A piece opened from a project with a room shows the wall its back stands against in its own front view.',
         adrs: ['ADR-208'],
+        checked: '2026-11-06',
       },
       {
         name: 'Board pictures on the plan',
         detail: "Each piece on the plan shows the picture of its highest panel's board.",
         adrs: ['ADR-208'],
+        checked: '2026-11-06',
       },
       {
         name: 'Trace a plan picture',
         detail:
           'Add a picture of the floor plan, set its scale from two taps and a known length, and draw the room over it.',
         adrs: ['ADR-208'],
+        checked: '2026-11-06',
       },
       {
         name: 'Opening clearances',
@@ -918,6 +923,7 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'On the floor, on the wall or on a piece; dragged with snapping on the plan and in Move mode; kept in project templates.',
             adrs: ['ADR-208'],
+            checked: '2026-11-06',
           },
         ],
       },
