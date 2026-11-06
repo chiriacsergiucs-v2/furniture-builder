@@ -30,7 +30,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-001: Board pictures only in 3D
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-048, 2026-10-24 06:54 UTC; agent scoped it out
 - Missing: Front-view carcass panels already show the board picture; still plain colour or outline: door/drawer fronts in the front view, the front-view SVG download (patterns stripped, src/ui/shell/files.ts:31), catalog snapshots (src/core/snapshot.ts:273,312), the plan and cut sheets.
 - Request: “Render the furniture according to the selected material's color and structure”, then “any image as color/background for the material”.
@@ -44,6 +44,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: ADR-048: decided catalog pictures and cut sheets use the picture's average colour.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong. The front view already fills carcass panels with the picture, rotated with the grain (src/ui/Elevation.tsx:51-61, :147-164, since 009173a). Still plain colour: fronts in the front view (outlines), the SVG download (patterns stripped, src/ui/shell/files.ts:30-34), catalog snapshots (src/core/snapshot.ts:266), the plan and cut sheets.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over fronts in the front view and the front-view SVG download; the plan, catalog pictures and cut sheets moved to G-413 (ADR-048 decided the average colour for catalog pictures and cut sheets).
 
 ### G-003: Materials fields overlap at 375 px
 
@@ -255,7 +256,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-020: Appliances, sinks, edge profiles, client sheet
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-067/068, 2026-10-24 19:55 UTC; agent default, accepted by the user
 - Missing: Remaining: a client sheet with render and price, worktop edge profiles, bundled CC0 appliance models.
 - Request: “To sell designed kitchens”.
@@ -269,10 +270,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. Appliances and sinks can be imported as .glb (ADR-076); appliance niches (ADR-036) and a sink base exist. Remaining: client sheet, worktop edge profiles, bundled CC0 models (licence question).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over the printable client sheet (render, piece list, price); worktop edge profiles and bundled CC0 appliance models moved to G-412.
 
 ### G-021: Blender / glTF export
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-068, 2026-10-24 19:55 UTC; agent default, accepted by the user
 - Missing: No Blender or glTF export.
 - Request: High-quality renders (context, not a quote)
@@ -1723,7 +1725,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-314: Fasteners and run parts not matched
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-161, 2026-10-30; agent scoped it out
 - Missing: Screws, dowels, cams (fasteners, ADR-074) and run parts (plinths, fillers, cornices) are not matched to seller products.
 - Request: Match products to parts in app
@@ -1753,7 +1755,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-316: Seller pictures not seen before shipping
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-162, 2026-10-30; agent scoped it out
 - Missing: The board pictures are now downloaded and shipped (public/sellers/regency, 1 453 files) and a 16-picture sample was checked by eye, but none has been seen as a board texture in 3D in a browser.
 - Request: You didnt use the image i provided to render
@@ -1769,7 +1771,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-324: Formula functions
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-166, 2026-10-30; agent scoped it out
 - Missing: Formulas know only + − × ÷ and parentheses: no min, max, round, floor or conditions.
 - Request: Formulas too (user answer 2026-10-30).
@@ -1889,7 +1891,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-340: No price change report between exports
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-172, 2026-11-04; agent scoped it out
 - Missing: A refreshed seller export replaces prices silently: no report of what changed between two exports.
 - Request: “You upload a new export; the workflow converts it” (user 2026-11-04)
@@ -1934,7 +1936,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-343: No per-step pictures in the assembly print
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-174, 2026-11-04; agent scoped it out
 - Missing: The printed assembly sheet shows one front view of the piece and a table of steps (src/ui/Assembly.tsx:218-261); no step has a picture or marked parts.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
@@ -2412,4 +2414,47 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Worktop joints have no fixing line in the shopping list.
 - Fix: Add one user-chosen shopping line per worktop joint.
+### G-412: Worktop edge profiles and bundled appliance models
+
+- Status: Open
+- Origin: ADR-206, 2026-11-06; split from G-020 by the coordinator (ADR-206 takes only the client sheet)
+- Missing: Worktops have no edge profile choice; no appliance models are bundled (appliances come only as .glb imports, ADR-076).
+- Request: “To sell designed kitchens”.
+- Questions: Which three edge profiles? Which licence for bundled appliance models (CC0)?
+- Suggested pick: Three profile choices drawn on the worktop; a few CC0 appliance models once you pick that licence. (estimate: effort +30%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Worktops cannot show an edge profile and no appliance models ship with the app.
+- Fix: Add three drawn worktop edge profiles; bundle a few CC0 appliance models once the licence is chosen.
+- Conflicts: none
+
+### G-413: Board pictures in the plan, catalog pictures and cut sheets
+
+- Status: Open
+- Origin: ADR-206, 2026-11-06; split from G-001 by the coordinator
+- Missing: The plan, catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in plain colour.
+- Request: “Render the furniture according to the selected material's color and structure”.
+- Questions: Fill the plan and catalog pictures with the board picture, against ADR-048's average colour for catalog pictures and cut sheets?
+- Suggested pick: Fill the plan with the picture pattern; keep the average colour on catalog pictures and cut sheets as ADR-048 decided. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The plan, catalog pictures and cut sheets show boards as plain colour, not their picture.
+- Fix: Fill the plan with the board picture pattern; a new ADR if catalog pictures or cut sheets should change.
+- Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+
+### G-414: Formula conditions and stepped rounding
+
+- Status: Open
+- Origin: ADR-206, 2026-11-06; agent scoped it out (G-324's pick names min, max, floor, ceil and round only)
+- Missing: Formulas have no conditions (if) and no rounding to a step such as a sheet thickness.
+- Request: Formulas too (user answer 2026-10-30).
+- Questions: Add if(condition, a, b) and round(x, step)?
+- Suggested pick: Add them when a real project needs one. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Formulas cannot branch or round to a step.
+- Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
