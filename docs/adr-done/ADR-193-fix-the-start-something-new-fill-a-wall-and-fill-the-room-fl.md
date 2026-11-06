@@ -1,7 +1,8 @@
 # ADR-193: Fix the Start something new, Fill a wall and Fill the room flows
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Merged in PR #182 (bf1b609))
 - Depends on: ADR-008, ADR-078, ADR-103, ADR-104, ADR-153, ADR-173, ADR-177
 - Design: docs/ui-design.md (section 4, Screens: dialogs and wizards)
 - Backlog: N198
