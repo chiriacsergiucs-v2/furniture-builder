@@ -18,6 +18,7 @@ import {
   boardDefault,
   boardOptions,
   boardsVersion,
+  ownBoardValue,
   stepById,
   str,
 } from './steps';
@@ -283,9 +284,26 @@ const shape = (d: Design) =>
 export const storedAnswers = (d: Design): Answers | null =>
   d.wizard ? (structuredClone(d.wizard.answers) as Answers) : null;
 
-/** True when the piece was changed in the editor after the wizard made it (reopening would replace those changes). */
-export function editedSinceWizard(d: Design): boolean {
+/**
+ * The answers a reopened piece starts from (ADR-194): the stored ones, with a `decor:` board answered by the piece's
+ * own board among the offered ones (call after `setWizardBoards` with the piece's boards). The answer stays a string;
+ * the stored shape is unchanged (ADR-046).
+ */
+export function reopenAnswers(d: Design): Answers | null {
   const a = storedAnswers(d);
+  if (!a) return null;
+  if (typeof a.board === 'string' && a.board.startsWith('decor:')) {
+    const own = ownBoardValue(d);
+    if (own) a.board = own;
+  }
+  return a;
+}
+
+/**
+ * True when the piece was changed in the editor after the wizard made it (reopening would replace those changes).
+ * `a`: the answers it is reopened with (default: the stored ones).
+ */
+export function editedSinceWizard(d: Design, a: Answers | null = storedAnswers(d)): boolean {
   if (!a) return false;
   const built = check(a).design;
   return !built || shape(built) !== shape(d);
