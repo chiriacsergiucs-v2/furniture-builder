@@ -125,8 +125,8 @@ export const ru_viewer = {
   'Both ends': 'По краям',
   Centre: 'По центру',
   'Suggested mixes': 'Предложенные наборы',
-  '{width} mm wall · best {n}, checked by the model':
-    'Стена {width} мм · лучшие {n}, проверены моделью',
+  '{width} mm wall · best {n}, each checked for problems':
+    'Стена {width} мм · лучшие {n}, каждый проверен на проблемы',
   'Show suggestions': 'Показать варианты',
   'Suggest again': 'Предложить снова',
 
@@ -270,6 +270,14 @@ export const ru_viewer = {
   'Fill the room steps': 'Шаги заполнения комнаты',
   'A ready shape and its sizes, in mm, with its doors, windows and other features.':
     'Готовая форма и её размеры в мм, с дверями, окнами и другими элементами.',
+  // ADR-193: the room sizes checked on Next, the cabinet depths on the Walls step.
+  'Cut width {a} mm must be less than the width, {w} mm.':
+    'Ширина выреза {a} мм должна быть меньше ширины, {w} мм.',
+  'Cut depth {b} mm must be less than the depth, {d} mm.':
+    'Глубина выреза {b} мм должна быть меньше глубины, {d} мм.',
+  'Cut offset {o} mm plus cut width {a} mm must be less than the width, {w} mm.':
+    'Смещение выреза {o} мм плюс ширина выреза {a} мм должны быть меньше ширины, {w} мм.',
+  Cabinets: 'Шкафы',
   Shape: 'Форма',
   Rectangle: 'Прямоугольник',
   L: 'Г',
@@ -291,8 +299,8 @@ export const ru_viewer = {
   'Blind corner': 'Глухой угол',
   'L corner': 'Г-образный угол',
   'Suggested room mixes': 'Предложенные наборы для комнаты',
-  '{n|# wall|# walls} · best {k}, checked as a project':
-    '{n|# стена|# стены|# стен} · лучшие {k}, проверены как проект',
+  '{n|# wall|# walls} · best {k}, each checked for problems':
+    '{n|# стена|# стены|# стен} · лучшие {k}, каждый проверен на проблемы',
   'Room mix: {summary}': 'Набор для комнаты: {summary}',
   'Wall {n}: {w} mm': 'Стена {n}: {w} мм',
   '{summary} · {n|# corner cabinet|# corner cabinets}':

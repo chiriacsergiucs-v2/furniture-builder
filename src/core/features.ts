@@ -38,20 +38,20 @@ export const FEATURES: FeatureDomain[] = [
         name: 'New-piece wizard',
         detail:
           "Answer the size, construction and contents questions; only the chosen type's questions are asked.",
-        adrs: ['ADR-044', 'ADR-046', 'ADR-191'],
-        checked: '2026-11-05',
+        adrs: ['ADR-044', 'ADR-046', 'ADR-191', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Suggested combinations in the wizard',
         detail: 'Cards with variations of your answers, kept only when they build without errors.',
-        adrs: ['ADR-045'],
-        checked: '2026-11-05',
+        adrs: ['ADR-045', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Reopen a piece in the wizard',
         detail: 'The answers stay with the piece, so you can change them later.',
-        adrs: ['ADR-046'],
-        checked: '2026-11-05',
+        adrs: ['ADR-046', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Keep a closed wizard as a draft',
@@ -67,8 +67,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Create a project',
         detail: 'Several pieces placed in one room.',
-        adrs: ['ADR-022', 'ADR-078'],
-        checked: '2026-11-05',
+        adrs: ['ADR-022', 'ADR-078', 'ADR-193'],
+        checked: '2026-11-06',
       },
       {
         name: 'Create a project from a project template',
@@ -80,14 +80,14 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Fill a wall',
         detail:
           'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.',
-        adrs: ['ADR-103', 'ADR-104', 'ADR-204'],
+        adrs: ['ADR-103', 'ADR-104', 'ADR-193', 'ADR-204'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'], checked: '2026-11-05' },
       {
         name: 'Fill the room',
         detail:
           'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.',
-        adrs: ['ADR-173', 'ADR-177', 'ADR-204', 'ADR-210'],
+        adrs: ['ADR-173', 'ADR-177', 'ADR-193', 'ADR-204', 'ADR-210'],
       },
       {
         name: 'Room presets',

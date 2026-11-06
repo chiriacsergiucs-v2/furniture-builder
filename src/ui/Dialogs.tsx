@@ -165,9 +165,38 @@ export function NewDialog({
 }) {
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // A failed save is said only while the dialog stays open: each opening starts without it.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSaveError(null);
+  }
+  // Set from the tap that saves a new project until the dialog closes or the save fails.
+  const saving = useRef(false);
+  useEffect(() => {
+    if (open) saving.current = false;
+  }, [open]);
   const opened = () => {
     onClose();
     onOpened?.();
+  };
+  // ADR-193: the new project is saved before it opens; a storage failure is said here and nothing opens. Another
+  // tap while it saves, or before the dialog has closed, does nothing, so one tap makes one project.
+  const newProjectOpened = async () => {
+    if (saving.current) return;
+    saving.current = true;
+    const p = newProject();
+    try {
+      await saveProject(p);
+    } catch {
+      saving.current = false;
+      setSaveError(t('The project could not be saved in this browser’s storage.'));
+      return;
+    }
+    setSaveError(null);
+    openProject(p);
+    opened();
   };
   return (
     <Dialog
@@ -196,16 +225,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
-      <button
-        type="button"
-        className="row-btn"
-        onClick={() => {
-          const p = newProject();
-          void saveProject(p);
-          openProject(p);
-          opened();
-        }}
-      >
+      <button type="button" className="row-btn" onClick={() => void newProjectOpened()}>
         <span className="glyph">
           <Icon name="project" />
         </span>
@@ -219,6 +239,12 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
+      {saveError && (
+        <p className="alert error" role="alert">
+          <Icon name="alert-circle" className="sm" />
+          <span>{saveError}</span>
+        </p>
+      )}
       {onFillWall && (
         <button type="button" className="row-btn" onClick={onFillWall}>
           <span className="glyph">

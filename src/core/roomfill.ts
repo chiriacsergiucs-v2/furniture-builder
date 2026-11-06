@@ -24,7 +24,15 @@ import {
   type QuarterTurn,
   placedBounds,
 } from './project';
-import { inside, wallBox, wallInward, wallLength, type Room } from './room';
+import {
+  checkRoomSizes,
+  inside,
+  wallBox,
+  wallInward,
+  wallLength,
+  type Room,
+  type RoomSizeField,
+} from './room';
 import type { PriceEntry, SellerLookup, Estimate } from './prices';
 import { projectEstimate } from './projectEstimate';
 import { applyStyle, type Style } from './styles';
@@ -42,9 +50,10 @@ import {
   type Candidate,
   type Slot,
   type WallInput,
+  type WallField,
   type WallSlot,
 } from './wallfill';
-import type { CornerParams, Design, Diagnostic, Mm } from './types';
+import type { Box, CornerParams, Design, Diagnostic, Mm } from './types';
 
 export type CornerKind = CornerParams['variant'] | 'none';
 
@@ -410,6 +419,8 @@ export function wallRowParts(
 }
 
 interface Placed {
+  /** What it is, for the memo (ADR-193). */
+  key: string;
   design: Design;
   wall: number;
   from: Mm;
@@ -429,9 +440,18 @@ export function cornerWalls(input: RoomInput, walls: number[]): number[] {
   return walls.filter((i) => set.has((i + 1) % n) && insideCorner(input.room, i));
 }
 
-/** Problems with the input: the room's outline and the per-wall answers. */
-export function checkRoom(input: RoomInput): Diagnostic[] {
-  const out: Diagnostic[] = [];
+/** A problem with the input; `field` names the answer or room size it is about (ADR-193). */
+export type RoomIssue = Diagnostic & { field?: WallField | RoomSizeField };
+
+/**
+ * Problems with the input: the ready shape's sizes (ADR-193), the room's outline, the ticked walls and the per-wall
+ * answers. The wall width comes from the room, so Fill a wall's width check is left out; with a ready shape its
+ * "Room height" stands for the height.
+ */
+export function checkRoom(input: RoomInput): RoomIssue[] {
+  const out: RoomIssue[] = [];
+  const shape = input.room.shape;
+  if (shape) out.push(...checkRoomSizes(shape.kind, shape.sizes, input.room.height));
   if (input.room.outline.length < 3)
     out.push(err('room-input', t('The room needs at least three walls.')));
   const walls = input.walls ?? input.room.outline.map((_, i) => i);
@@ -439,7 +459,10 @@ export function checkRoom(input: RoomInput): Diagnostic[] {
   if (walls.some((i) => !Number.isInteger(i) || i < 0 || i >= input.room.outline.length))
     out.push(err('room-input', t('A ticked wall is not a wall of this room.')));
   const probe: WallInput = { ...input, width: 1000, height: input.height ?? input.room.height };
-  out.push(...checkWall(probe).filter((d) => d.code !== 'wall-input' || !/Width/.test(d.message)));
+  const sized = !!shape && input.height === undefined;
+  out.push(
+    ...checkWall(probe).filter((d) => d.field !== 'width' && !(sized && d.field === 'height')),
+  );
   // An island (ADR-210): the user's walkway width, in a rectangle room.
   if (input.island) {
     const w = input.island.walkway;
@@ -551,6 +574,20 @@ function islandItems(p: Project, room: Room, plan: IslandPlan): ProjectItem[] {
 }
 
 /**
+ * ADR-193: the same candidate with its one tall cabinet at the right end of the stretch instead of the left (auto
+ * puts it on the left, ADR-103); null when it has no single tall cabinet or the tall is already last.
+ */
+export function tallAtRight(c: Candidate): Candidate | null {
+  const talls = c.slots.filter((s) => s.kind === 'tall');
+  if (talls.length !== 1 || c.slots[c.slots.length - 1].kind === 'tall') return null;
+  return {
+    ...c,
+    slots: [...c.slots.filter((s) => s.kind !== 'tall'), talls[0]],
+    signature: `${c.signature}|right`,
+  };
+}
+
+/**
  * The mixes for the whole room, best first, at most `limit`. Every wall stretch gets its own candidates (the best
  * `PER_STRETCH`), combined best-first; each combination is one project with the room, kept only without errors.
  */
@@ -597,7 +634,7 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     return { mixes: [], problems };
   }
   // The best candidates per stretch.
-  const lists: Candidate[][] = stretches.map((s) => {
+  let lists: Candidate[][] = stretches.map((s) => {
     const list = candidates({ ...perWall, width: s.to - s.from })
       .sort(
         (a, b) =>
@@ -623,6 +660,67 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     );
     return { mixes: [], problems };
   }
+  // Each combination is built once, whether to choose a side (below) or to offer it.
+  const keyOf = (picks: Candidate[]) =>
+    picks.map((c, k) => `${stretches[k].wall}:${c.signature}`).join('/');
+  const memo = roomMemo();
+  const builds = new Map<
+    string,
+    { project: Project; model: ProjectModel; warnings: Diagnostic[] }
+  >();
+  const build = (picks: Candidate[]) => {
+    const key = keyOf(picks);
+    let b = builds.get(key);
+    if (!b) {
+      let project = roomProject(
+        input,
+        stretches,
+        picks,
+        cabinets,
+        corner,
+        perWall,
+        undefined,
+        memo,
+      );
+      if (island)
+        project = { ...project, items: [...project.items, ...islandItems(project, room, island)] };
+      // A style goes on every piece before the checks (ADR-210).
+      if (input.style && project.items.length)
+        project = applyStyle(project, project.items[0].id, input.style, 'project').project;
+      const model = buildProjectModel(project);
+      b = { project, model, warnings: warningsOf(model, height) };
+      builds.set(key, b);
+    }
+    return b;
+  };
+  const errors = (b: { model: ProjectModel }) =>
+    b.model.diagnostics.some((d) => d.severity === 'error');
+  // ADR-193: on auto the tall cabinet is tried at both ends of each stretch (two signatures). Starting from the best
+  // combination with every tall on the left (ADR-103's auto), each stretch in turn moves its tall to the right end
+  // and keeps it there when the room then has fewer warnings. Each list puts the kept side's candidates first and
+  // the other side's after them.
+  if (input.tallPosition === undefined) {
+    const twins = lists.map((l) => l.map(tallAtRight));
+    if (twins.some((l) => l[0])) {
+      const right = lists.map(() => false);
+      const count = () => {
+        const b = build(lists.map((l, k) => (right[k] ? twins[k][0]! : l[0])));
+        return errors(b) ? Infinity : b.warnings.length;
+      };
+      let best = count();
+      for (let k = 0; k < lists.length; k++) {
+        if (!twins[k][0]) continue;
+        right[k] = true;
+        const c = count();
+        if (c < best) best = c;
+        else right[k] = false;
+      }
+      lists = lists.map((l, k) => {
+        const other = l.flatMap((c, r) => (twins[k][r] ? [right[k] ? c : twins[k][r]!] : []));
+        return [...(right[k] ? l.map((c, r) => twins[k][r] ?? c) : l), ...other];
+      });
+    }
+  }
   // Combinations by the sum of ranks, best first, bounded.
   const combos: number[][] = [];
   const maxRank = lists.reduce((a, l) => a + l.length - 1, 0);
@@ -645,38 +743,21 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   for (const combo of combos) {
     if (mixes.length >= limit) break;
     const picks = combo.map((r, k) => lists[k][r]);
-    const key = picks.map((c, k) => `${stretches[k].wall}:${c.signature}`).join('/');
+    const key = keyOf(picks);
     if (seen.has(key)) continue;
     seen.add(key);
-    let project = roomProject(input, stretches, picks, cabinets, corner, perWall);
-    if (island)
-      project = { ...project, items: [...project.items, ...islandItems(project, room, island)] };
-    // A style goes on every piece before the checks (ADR-210).
-    if (input.style && project.items.length)
-      project = applyStyle(project, project.items[0].id, input.style, 'project').project;
-    const model = buildProjectModel(project);
-    if (model.diagnostics.some((d) => d.severity === 'error')) {
+    const built = build(picks);
+    if (errors(built)) {
       failed++;
       continue;
     }
-    const tallWarn: Diagnostic[] = [];
-    for (const pc of model.pieces) {
-      const top = pc.bounds.y + pc.bounds.h;
-      if (top > height)
-        tallWarn.push({
-          severity: 'warning',
-          code: 'wall-too-tall',
-          message: t('{name} is {top} mm tall, {over} mm above the {h} mm height.', {
-            name: pc.item.design.name,
-            top,
-            over: top - height,
-            h: height,
-          }),
-          itemIds: [pc.item.id],
-        });
-    }
     // Its estimate (ADR-210); a mix above the ceiling is hidden and counted.
-    const estimate = projectEstimate(project, model, input.prices ?? [], input.seller).est;
+    const estimate = projectEstimate(
+      built.project,
+      built.model,
+      input.prices ?? [],
+      input.seller,
+    ).est;
     if (input.ceiling !== undefined && estimate.total > input.ceiling) {
       overBudget++;
       cheapest = Math.min(cheapest ?? estimate.total, estimate.total);
@@ -694,11 +775,11 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     mixes.push({
       key,
       walls: byWall,
-      summary: byWall.map((w) => t('wall {n}: {s}', { n: w.wall + 1, s: w.summary })).join('; '),
+      summary: byWall.map((w) => t('Wall {n}: {s}', { n: w.wall + 1, s: w.summary })).join('; '),
       corners: cabinets.length,
-      project,
-      model,
-      warnings: [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')],
+      project: built.project,
+      model: built.model,
+      warnings: built.warnings,
       estimate,
       ...(island ? { island: summaryOf(island.slots) } : {}),
     });
@@ -722,6 +803,27 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   return { mixes, problems, ...(overBudget ? { overBudget, cheapest } : {}) };
 }
 
+/** A built mix's warnings: every piece above the height, then the project's own warnings. */
+function warningsOf(model: ProjectModel, height: Mm): Diagnostic[] {
+  const tallWarn: Diagnostic[] = [];
+  for (const pc of model.pieces) {
+    const top = pc.bounds.y + pc.bounds.h;
+    if (top > height)
+      tallWarn.push({
+        severity: 'warning',
+        code: 'wall-too-tall',
+        message: t('{name} is {top} mm tall, {over} mm above the {h} mm height.', {
+          name: pc.item.design.name,
+          top,
+          over: top - height,
+          h: height,
+        }),
+        itemIds: [pc.item.id],
+      });
+  }
+  return [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')];
+}
+
 const summaryOf = (slots: Slot[]): string => {
   const count = { tall: 0, shelves: 0, drawers: 0, door: 0 };
   for (const s of slots) count[s.kind]++;
@@ -739,6 +841,17 @@ const summaryOf = (slots: Slot[]): string => {
     .join(', ');
 };
 
+/**
+ * Pieces and footprints already made for one input (ADR-193): the mixes of one call share most pieces, so each is
+ * made and measured once. A piece taken from it gets a new design id, as a duplicated piece does.
+ */
+export interface RoomMemo {
+  /** Null: the catalog has none (a wall corner of that kind), remembered too. */
+  designs: Map<string, Design | null>;
+  feet: Map<string, Box>;
+}
+export const roomMemo = (): RoomMemo => ({ designs: new Map(), feet: new Map() });
+
 /** One mix as a project with the room: pieces along their walls, corner cabinets at the inside corners. */
 export function roomProject(
   input: RoomInput,
@@ -748,23 +861,42 @@ export function roomProject(
   corner: CornerKind,
   perWall: WallInput,
   name = t('Room {w} × {d}', { w: roomSize(input.room).w, d: roomSize(input.room).d }),
+  memo: RoomMemo = roomMemo(),
 ): Project {
   const room = input.room;
   const p = newProject(name);
   p.room = structuredClone(room);
   const placed: Placed[] = [];
+  const design = (key: string, make: () => Design): Design => {
+    let d = memo.designs.get(key);
+    if (!d) memo.designs.set(key, (d = make()));
+    return { ...d, id: newId() };
+  };
+  // Its real footprint once turned (fronts included), at the origin.
+  const footOf = (key: string, item: ProjectItem): Box => {
+    const k = `${key}|${item.rotationY}`;
+    let f = memo.feet.get(k);
+    if (!f) memo.feet.set(k, (f = placedBounds({ ...item, position: { x: 0, y: 0, z: 0 } })));
+    return f;
+  };
   const height = perWall.height;
   const n = room.outline.length;
   const rowOn = (input.wallRow ?? 'always') !== 'never';
   const mount = height - (input.wallHeight ?? WALL_HEIGHT);
   // Wall corner cabinets above the base corners when the wall row is on (ADR-177).
-  const wallCorner = rowOn && corner !== 'none' ? wallCornerPiece(corner, input) : null;
+  const wallCorner =
+    rowOn && corner !== 'none'
+      ? memoOr(memo, 'wall-corner', () => wallCornerPiece(corner, input))
+      : null;
   const wtake = wallCorner ? wallCornerTake(wallCorner) : { along: 0, across: 0 };
   const wallCorners = new Set<number>();
   if (wallCorner && corner !== 'none') {
-    const baseTop = placedBounds({
-      ...makeItem(newProject('c'), cornerPiece(corner, input)),
-      position: { x: 0, y: 0, z: 0 },
+    const baseTop = footOf('corner', {
+      ...makeItem(
+        newProject('c'),
+        design('corner', () => cornerPiece(corner, input)),
+      ),
+      rotationY: 0,
     }).h;
     // It hangs above the base corner, on both walls clear of windows, doors and obstacles, within the walls.
     const fits = (i: number) => {
@@ -795,10 +927,12 @@ export function roomProject(
     let at = s.from;
     const baseIds: string[] = [];
     for (const slot of c.slots) {
-      const d = piece(slot, widthInput);
+      const key = `piece|${slot.kind}|${slot.width}|${slot.fronts ?? 0}`;
+      const d = design(key, () => piece(slot, widthInput));
       const id = newId();
       baseIds.push(id);
       placed.push({
+        key,
         design: d,
         wall: s.wall,
         from: at,
@@ -817,8 +951,10 @@ export function roomProject(
       : [];
     for (const ws of row) {
       // A top box stands on its tall cabinet.
-      const d = wallPiece(ws, widthInput);
+      const key = `wall|${ws.variant}|${ws.width}|${ws.height}`;
+      const d = design(key, () => wallPiece(ws, widthInput));
       placed.push({
+        key,
         design: d,
         wall: s.wall,
         from: ws.from,
@@ -835,7 +971,7 @@ export function roomProject(
     const h = made.position.y;
     const rotationY = turnFor(wallInward(room, pl.wall));
     // Its real footprint once turned (fronts included): the back sits on the wall, nothing pokes through it.
-    const foot = placedBounds({ ...made, rotationY, position: { x: 0, y: 0, z: 0 } });
+    const foot = footOf(pl.key, { ...made, rotationY });
     const along = rotationY % 180 === 0 ? foot.w : foot.d;
     const across = rotationY % 180 === 0 ? foot.d : foot.w;
     const box = wallBox(room, pl.wall, pl.from, along, across, 0, 1);
@@ -852,17 +988,16 @@ export function roomProject(
   // Corner cabinets, their backs on the wall whose end holds the corner.
   if (corner !== 'none')
     for (const i of corners) {
-      const d = cornerPiece(corner, input);
+      const d = design('corner', () => cornerPiece(corner, input));
       if (d.product.kind !== 'corner') continue;
       const side = cornerSide(room, i);
-      const design: Design = {
+      const made = makeItem(p, {
         ...d,
         product: { ...d.product, params: { ...d.product.params, side } },
-      };
-      const made = makeItem(p, design);
+      });
       const len = wallLength(room, i);
       const rotationY = turnFor(wallInward(room, i));
-      const foot = placedBounds({ ...made, rotationY, position: { x: 0, y: 0, z: 0 } });
+      const foot = footOf(`corner|${side}`, { ...made, rotationY });
       const along = rotationY % 180 === 0 ? foot.w : foot.d;
       const across = rotationY % 180 === 0 ? foot.d : foot.w;
       const box = wallBox(room, i, len - along, along, across, 0, 1);
@@ -871,20 +1006,20 @@ export function roomProject(
   // Wall corner cabinets, hung with their tops at the wall row's height (ADR-177).
   if (corner !== 'none')
     for (const i of corners) {
-      const d = wallCorners.has(i) ? wallCornerPiece(corner, input) : null;
+      const d = wallCorners.has(i) && wallCorner ? { ...wallCorner, id: newId() } : null;
       if (d?.product.kind !== 'corner') continue;
-      const design: Design = {
+      const side = cornerSide(room, i);
+      const made = makeItem(p, {
         ...d,
         // Hung by its template (ADR-177): its underside at the wall row's.
         product: {
           ...d.product,
-          params: { ...d.product.params, side: cornerSide(room, i), mountHeight: mount },
+          params: { ...d.product.params, side, mountHeight: mount },
         },
-      };
-      const made = makeItem(p, design);
+      });
       const len = wallLength(room, i);
       const rotationY = turnFor(wallInward(room, i));
-      const foot = placedBounds({ ...made, rotationY, position: { x: 0, y: 0, z: 0 } });
+      const foot = footOf(`wall-corner|${side}`, { ...made, rotationY });
       const along = rotationY % 180 === 0 ? foot.w : foot.d;
       const across = rotationY % 180 === 0 ? foot.d : foot.w;
       const box = wallBox(room, i, len - along, along, across, 0, 1);
@@ -899,6 +1034,12 @@ export function roomProject(
   void height;
   void inside;
   return p;
+}
+
+/** A memo entry that may be absent (the catalog has no wall corner of this kind). */
+function memoOr(memo: RoomMemo, key: string, make: () => Design | null): Design | null {
+  if (!memo.designs.has(key)) memo.designs.set(key, make());
+  return memo.designs.get(key) ?? null;
 }
 
 /** A wall cabinet's depth, from its design. */

@@ -53,7 +53,9 @@ Project: **Furniture Builder** — offline PWA for designing casework.
      Ship pull requests merge without CI on them, so before the ship commit run `pnpm typecheck` and the research
      tests: `pnpm exec vitest run tests/research-built-rows.test.ts tests/i18n-research*.test.ts`.
 5. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
-   Tick the `Done when` boxes you verified. Run `pnpm docs:check`.
+   Tick the `Done when` boxes you verified. Run `pnpm docs:check`, `pnpm format:check` and
+   `pnpm exec vitest run tests/sync-pending.test.ts` (user rule 2026-11-06: an ADR with no feature line
+   fails it once shipped; add it to the exemptions in `scripts/sync-pending.mjs` only when it has no feature).
 6. **Commit and push:**
    ```bash
    git add -A

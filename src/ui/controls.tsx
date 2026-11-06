@@ -262,6 +262,7 @@ export function Counter({
   max,
   onChange,
   info,
+  name,
 }: {
   label: string;
   value: number;
@@ -269,14 +270,17 @@ export function Counter({
   max: number;
   onChange: (v: number) => void;
   info?: ReactNode;
+  /** What the − and + buttons name when the visible label is shared, e.g. one counter per compartment (ADR-194). */
+  name?: string;
 }) {
+  const what = (name ?? label).toLowerCase();
   return (
     <div className="field">
       {withInfo(<span className="field-label">{label}</span>, info)}
       <div className="counter">
         <button
           type="button"
-          aria-label={t('Fewer {label}', { label: label.toLowerCase() })}
+          aria-label={t('Fewer {label}', { label: what })}
           disabled={value <= min}
           onClick={() => onChange(value - 1)}
         >
@@ -285,7 +289,7 @@ export function Counter({
         <output aria-live="polite">{value}</output>
         <button
           type="button"
-          aria-label={t('More {label}', { label: label.toLowerCase() })}
+          aria-label={t('More {label}', { label: what })}
           disabled={value >= max}
           onClick={() => onChange(value + 1)}
         >

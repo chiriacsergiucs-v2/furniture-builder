@@ -4,7 +4,7 @@
  */
 import type { FurnitureModel, Design } from '../types';
 import { check, resolve, stepsWriting, typeOf, visibleSteps } from './engine';
-import { stepById } from './steps';
+import { boardsVersion, stepById } from './steps';
 import type { Answers, Generator as Family } from './types';
 
 export const SUGGEST_CAP = 64;
@@ -20,6 +20,8 @@ export interface Suggestion {
   design: Design;
   model: FurnitureModel;
   warnings: number;
+  /** The warnings' messages, listed on the card (ADR-194). */
+  notes: string[];
   isDefault: boolean;
 }
 
@@ -85,27 +87,35 @@ export function rankByVariety<T extends { picks: number[] }>(list: T[]): T[] {
 const memo = new Map<string, Suggestion[]>();
 const MEMO_SIZE = 32;
 
-/** Every valid suggestion for a step, ranked. Memoised by (type, step, answers). */
+/**
+ * Every valid suggestion for a step, ranked. Memoised by (step, answers). A card's answers are the user's answers plus
+ * only the keys its axes write (ADR-194): the type's other defaults stay defaults, so a later type change still
+ * follows the new type.
+ */
 export function suggestions(a: Answers, stepId: string, cap = SUGGEST_CAP): Suggestion[] {
   const gen = generatorAt(a, stepId);
   if (!gen) return [];
   const base = resolve(a);
-  const key = JSON.stringify([stepId, cap, base]);
+  // The offered boards are part of what the answers build (ADR-164); `base` follows from `a` and them.
+  const key = JSON.stringify([stepId, cap, boardsVersion(), a]);
   const hit = memo.get(key);
   if (hit) return hit;
 
   const sizes = gen.axes.map((ax) => ax.values.length);
   const typeDefaults = resolve({ type: a.type });
   const first = gen.axes.map((ax) => Math.max(0, ax.values.indexOf(ax.current(typeDefaults))));
-  const covered = stepsWriting(
-    base,
-    gen.axes.flatMap((ax) => ax.writes),
-  );
+  const writes = gen.axes.flatMap((ax) => ax.writes);
+  const covered = stepsWriting(base, writes);
   const seen = new Set<string>();
   const found: Suggestion[] = [];
   let isFirst = true;
   for (const p of candidatePicks(sizes, first, cap)) {
-    const answers = gen.axes.reduce((acc, ax, k) => ax.apply(acc, ax.values[p[k]]), base);
+    // The axes work on the resolved answers; only the keys they write are kept.
+    const full = gen.axes.reduce((acc, ax, k) => ax.apply(acc, ax.values[p[k]]), base);
+    const answers: Answers = { ...a };
+    for (const k of writes)
+      if (full[k] === undefined) delete answers[k];
+      else answers[k] = full[k];
     const c = check(answers);
     const wasFirst = isFirst;
     isFirst = false;
@@ -127,6 +137,7 @@ export function suggestions(a: Answers, stepId: string, cap = SUGGEST_CAP): Sugg
       design: c.design,
       model: c.model,
       warnings: c.warnings,
+      notes: c.problems.filter((x) => x.severity === 'warning').map((x) => x.message),
       isDefault: wasFirst,
     });
   }

@@ -1,10 +1,12 @@
 # ADR-194: Fix the eight remaining findings of the New-piece wizard
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Merged in PR #183 (52bf431))
 - Depends on: ADR-044, ADR-045, ADR-046, ADR-118, ADR-164, ADR-191
 - Design: docs/ui-design.md (New-piece wizard)
 - Backlog: N199
+- Acceptance: browser
 
 ## Context
 
@@ -75,13 +77,57 @@ Every text added or changed gets its Russian entry (ADR-153).
 
 ## Done when
 
-- [ ] Cabinet → card → Type → Wardrobe: name "Wardrobe", 1200 × 2100 × 600 (test, 1).
-- [ ] A piece made with a decor board reopens with no edited warning and no Board error, also after the decor is
+- [x] Cabinet → card → Type → Wardrobe: name "Wardrobe", 1200 × 2100 × 600 (test, 1).
+- [x] A piece made with a decor board reopens with no edited warning and no Board error, also after the decor is
       removed from the list (test, 2).
-- [ ] At 390 px the Type footer shows Next on the first row; the defaults button hides once a type is chosen
+- [x] At 390 px the Type footer shows Next on the first row; the defaults button hides once a type is chosen
       (find-it, 3 and 4).
-- [ ] Card buttons are named "Use this: <label>"; a card with warnings lists their messages (find-it, 5).
-- [ ] Width "abc" marks the Width box `aria-invalid` with the error under it, once (find-it, 6).
-- [ ] Counters read "Fewer shelves in compartment 2"; Next moves focus to the step heading; arrow keys move between
+- [x] Card buttons are named "Use this: <label>"; a card with warnings lists their messages (find-it, 5).
+- [x] Width "abc" marks the Width box `aria-invalid` with the error under it, once (find-it, 6).
+- [x] Counters read "Fewer shelves in compartment 2"; Next moves focus to the step heading; arrow keys move between
       types (find-it, 7).
-- [ ] The cards' second button reads "Continue by hand" (Russian "Продолжить вручную") and keeps the answers (find-it, 8).
+- [x] The cards' second button reads "Continue by hand" (Russian "Продолжить вручную") and keeps the answers (find-it, 8).
+
+## Implementation evidence
+
+Built 2026-11-06 on branch `adr-194-wizard-findings`; all eight fixes as approved on 2026-11-06. Not merged, not
+deployed, not live-verified.
+
+1. `suggestions()` (`src/core/wizard/suggest.ts`) applies the axes to the resolved answers, then keeps the user's
+   answers plus only the keys the axes write; the card is checked on those answers. The memo key is the step, the
+   answers and `boardsVersion()`. Cards carry their warning messages (`notes`).
+2. `setWizardBoards(choices, def, piece)` also offers the reopened piece's own board (`pieceBoard`), once: it takes
+   the place of a decor entry with the same `materialKey`. `reopenAnswers()` answers a stored `decor:` board with that
+   own board's value (still a string; the stored shape is unchanged); `editedSinceWizard(d, a)` compares with those
+   answers and runs on every render, after the boards are set, through the `check()` memo keyed by `boardsVersion()`.
+   Built note: only the piece's board is added, not every material of the piece (`boardChoices(project, from, …)`
+   would offer the 3 mm back board for every part), so the Board list gains one entry, as the Consequences say.
+3. `.wz-footer` (the New-piece wizard only; Fill a wall and Fill the room keep their footer) is a two-column grid at
+   ≤ 760 px; the defaults button (`.wz-defaults`) takes `order: 1` and the full row. DOM order unchanged.
+4. On the Type step the defaults button shows only while no type is chosen.
+5. Card buttons have `aria-label` "Use this: {label}"; warnings are listed under the badge (`.wf-warnings`, up to 3,
+   then "…and {n} more on Review."); the wizard card is a column with its button at the foot. The badge tooltip text
+   and its Russian entry are deleted.
+6. `IntInput` takes the field's problem: `.field-error` under the box, `aria-invalid`, `aria-describedby`; every other
+   field kind shows its own problems under it; the step list keeps only problems without a shown field.
+7. `Counter` takes `name` ("Shelves in compartment {n}", also "Drawers in compartment {n}"); `go()` focuses the step
+   heading (`tabIndex=-1`); the choice radios (Type) have a roving tabindex. Arrow keys, Home and End move the focus;
+   Space or Enter chooses, since choosing a type drops answers it cannot use (ADR-191). User decision 2026-11-06 (G-463): "arrows only move focus".
+8. "Start blank" renamed "Continue by hand" (Russian "Продолжить вручную"); behaviour unchanged; the old entry is
+   deleted. `tools/wizard/find-it.mjs` uses the new names.
+
+Executed locally 2026-11-06 (not CI): `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`,
+`pnpm docs:check` passed; `pnpm test` 150 files passed, 1 skipped (1212 tests passed, 1 skipped).
+
+| Done when                       | Evidence (executed)                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1 Cabinet → card → Wardrobe     | `tests/wizard-findings.test.ts` (each of the first six cabinet cards); jsdom find-it step 1             |
+| 2 Reopened decor piece          | `tests/wizard-findings.test.ts`: before the list loads, after it loads (listed once), after removal     |
+| 3, 4 Footer and defaults button | `tools/wizard-findings/find-it.mjs` at 390 px: Back and Next on row 1, defaults full width under; hides |
+| 5 Named cards, warnings listed  | jsdom find-it at 1280 and 390 px; browser script at both widths, buttons of a card row line up          |
+| 6 Width "abc"                   | jsdom find-it (aria-invalid, described by the error in the same field, once); browser script            |
+| 7 Counters, focus, arrow keys   | jsdom find-it: "Fewer shelves in compartment 2", heading focus after Next, ArrowDown/ArrowUp/End        |
+| 8 Continue by hand              | jsdom find-it (keeps width 1000 after it; Russian entry); browser script                                |
+
+Browser acceptance: `tools/wizard-findings/find-it.mjs` on the production build (`pnpm preview`), 31/31 at
+390 × 844 and 1280 × 900, no horizontal page scroll, no page errors; screenshots inspected.

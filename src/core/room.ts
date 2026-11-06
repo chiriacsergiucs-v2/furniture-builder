@@ -205,6 +205,54 @@ export function shapeOutline(shape: RoomShape, s: ShapeSizes): Pt[] {
   }
 }
 
+/** The size a problem names (ADR-193), so the form can mark that field. */
+export type RoomSizeField = keyof ShapeSizes | 'height';
+export type RoomSizeIssue = Diagnostic & { field: RoomSizeField };
+
+/**
+ * Problems with a ready shape's sizes (ADR-193): every size it uses is a whole number of mm above 0, and the cut-out
+ * (L), notch (U) or alcove lies inside the room's width (and, for L and U, its depth), not on or past its edge,
+ * where a wall would have no length. Diagnostics, never a clamp (ADR-008).
+ */
+export function checkRoomSizes(shape: RoomShape, s: ShapeSizes, height: Mm): RoomSizeIssue[] {
+  const out: RoomSizeIssue[] = [];
+  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v > 0;
+  const pos = (field: RoomSizeField, v: unknown, label: string) => {
+    if (!ok(v))
+      out.push({
+        severity: 'error',
+        code: 'room-size',
+        field,
+        message: t('{label} must be a whole number of mm above 0.', { label }),
+      });
+  };
+  const outside = (field: RoomSizeField, message: string) =>
+    out.push({ severity: 'error', code: 'room-size', field, message });
+  pos('width', s.width, t('Width'));
+  pos('depth', s.depth, t('Depth'));
+  pos('height', height, t('Room height'));
+  if (shape === 'rectangle') return out;
+  pos('cutWidth', s.cutWidth, t('Cut width'));
+  pos('cutDepth', s.cutDepth, t('Cut depth'));
+  if (shape !== 'l-shape') pos('offset', s.offset, t('Cut offset'));
+  const { width: W, depth: D, cutWidth: a, cutDepth: b, offset: o } = s;
+  // The cut's width is checked on its own, so it is named even while the offset is wrong.
+  if (ok(W) && ok(a) && a >= W)
+    outside('cutWidth', t('Cut width {a} mm must be less than the width, {w} mm.', { a, w: W }));
+  if (shape !== 'alcove' && ok(D) && ok(b) && b >= D)
+    outside('cutDepth', t('Cut depth {b} mm must be less than the depth, {d} mm.', { b, d: D }));
+  if (shape !== 'l-shape' && ok(W) && ok(a) && a < W && ok(o) && o + a >= W)
+    outside(
+      'offset',
+      t('Cut offset {o} mm plus cut width {a} mm must be less than the width, {w} mm.', {
+        o,
+        a,
+        w: W,
+      }),
+    );
+  return out;
+}
+
 export const wallCount = (r: Room) => r.outline.length;
 export function wallEnds(r: Room, i: number): [Pt, Pt] {
   const n = r.outline.length;

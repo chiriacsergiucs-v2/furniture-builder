@@ -213,6 +213,7 @@ on restores it unchanged.
   `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
   on its branch (`ship-adr`) and merged once green, without asking again. Ship pull requests are always merged
   straight after the ship commit is pushed, without waiting for CI on it (user rule 2026-10-29); run
-  `pnpm docs:check` and `pnpm format:check` locally first. CI skips `verify` on a pull request whose latest commit
+  `pnpm docs:check`, `pnpm format:check` and `pnpm exec vitest run tests/sync-pending.test.ts` locally first (the last
+  added by the user on 2026-11-06, after a ship broke it on main: "Add sync-pending test"). CI skips `verify` on a pull request whose latest commit
   starts with `Ship ADR-` (`ship-check` job in `ci.yml`); pushes to `main` always run it.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
