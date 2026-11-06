@@ -532,3 +532,47 @@ describe('ADR-193: tall side and room sizes', () => {
     ]);
   });
 });
+
+// ADR-204: the wall cabinet depth and the tall cabinet height from Refine apply to the whole room.
+describe('Refine in Fill the room (ADR-204)', () => {
+  const depth = (it: ProjectItem) => (it.design.product.params as { depth: number }).depth;
+  it('wallDepth 350: every wall cabinet and every wall corner cabinet is 350 deep', () => {
+    for (const corner of ['blind', 'l-shape'] as const) {
+      const r = suggestRoomMixes(input(lRoom(), { corner, wallDepth: 350 }));
+      expect(r.mixes.length).toBeGreaterThan(0);
+      for (const m of r.mixes) {
+        expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+        const wc = wallCorners(m.project.items);
+        expect(wc.length).toBeGreaterThan(0);
+        expect(wc).toHaveLength(m.corners);
+        const row = wallRow(m.project.items).filter((i) => !i.design.name.startsWith('Top box'));
+        expect(row.length).toBeGreaterThan(0);
+        for (const it of [...wc, ...row]) expect(depth(it)).toBe(350);
+      }
+    }
+  });
+  it('tallHeight 2000: every tall cabinet stands 2000 high, no above-height warning in a 2100 room', () => {
+    const r = suggestRoomMixes(
+      input({ ...rect(), height: 2100 }, { tallHeight: 2000, tallCount: 1, wallRow: 'never' }),
+    );
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) {
+      const talls = m.model.pieces.filter((p) => p.item.design.name.startsWith('Tall'));
+      expect(talls.length).toBeGreaterThan(0);
+      for (const p of talls) expect(p.bounds.y + p.bounds.h).toBe(2000);
+      expect(m.warnings.map((w) => w.code)).not.toContain('wall-too-tall');
+    }
+  });
+  it('a wrong wall depth or tall height is named, no mixes', () => {
+    const r = suggestRoomMixes(input(rect(), { wallDepth: Number('abc') }));
+    expect(r.mixes).toEqual([]);
+    expect(r.problems.map((p) => p.message)).toContain(
+      'Wall cabinet depth must be a whole number of mm above 0.',
+    );
+    const t = suggestRoomMixes(input(rect(), { tallHeight: 0 }));
+    expect(t.mixes).toEqual([]);
+    expect(t.problems.map((p) => p.message)).toContain(
+      'Tall cabinet height must be a whole number of mm above 0.',
+    );
+  });
+});
