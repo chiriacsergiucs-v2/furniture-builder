@@ -41,7 +41,9 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
    built gets a new gap (`pnpm gaps add`) before shipping, never a silent Done.
 4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
-   Tick the `Done when` boxes you verified. Run `pnpm docs:check`.
+   Tick the `Done when` boxes you verified. Run `pnpm docs:check`, `pnpm format:check` and
+   `pnpm exec vitest run tests/sync-pending.test.ts` (user rule 2026-11-06: an ADR with no feature line
+   fails it once shipped; add it to the exemptions in `scripts/sync-pending.mjs` only when it has no feature).
 5. **Commit and push:**
    ```bash
    git add -A
