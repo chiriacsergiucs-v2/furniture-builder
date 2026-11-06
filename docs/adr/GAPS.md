@@ -2257,6 +2257,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Deleting the Rapier trial test leaves an unused devDependency in package.json and the lockfile.
 - Fix: pnpm remove @dimforge/rapier3d-compat in the change that deletes tests/rapier-trial.test.ts.
+
 ### G-380: Project fasteners panel and drilling positions
 
 - Status: Open
@@ -2285,6 +2286,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: The parts CSV and shopping list title show English catalog piece names on a Romanian or Russian export.
 - Fix: Route those names through printPieceName() too.
+
 ### G-388: Go up one selection level on a phone
 
 - Status: Open
@@ -2313,6 +2315,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Versions of projects deleted before ADR-203 take space and cannot be reached.
 - Fix: List versions with no project in History, each with Restore and Delete.
+
 ### G-396: No repair for the family warning
 
 - Status: Open
@@ -2326,6 +2329,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: The family warning names pieces from rooms that do not belong together but offers no fix.
 - Fix: Offer a previewed move that takes one piece clear of the other.
+
 ### G-404: Hand side for the lounger and daybed, multi-select gesture
 
 - Status: Open
@@ -2414,6 +2418,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Worktop joints have no fixing line in the shopping list.
 - Fix: Add one user-chosen shopping line per worktop joint.
+
 ### G-412: Worktop edge profiles and bundled appliance models
 
 - Status: Open
