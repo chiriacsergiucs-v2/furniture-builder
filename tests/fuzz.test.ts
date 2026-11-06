@@ -38,6 +38,22 @@ import type {
   FrameParams,
   Front,
 } from '../src/core/types';
+// ADR-207: typed connections, mirror and merge.
+import { mirrorRun } from '../src/core/arrange';
+import {
+  alongWalls,
+  connect,
+  connectionCheck,
+  connectWall,
+  mergeConnections,
+  movingSet,
+  pruneConnections,
+  settleConnections,
+  wallAgainst,
+} from '../src/core/connections';
+import { templates as designTemplates } from '../src/core/design';
+import { buildProjectModel, validateProject, type Project } from '../src/core/project';
+import { moveItems } from '../src/core/selection';
 
 let seed = Number(process.env.SEED ?? 12345);
 const rnd = () => {
@@ -787,4 +803,90 @@ it(
     expect(probs.slice(0, 5)).toEqual([]);
   },
   FUZZ_TIMEOUT * 3,
+);
+
+it(
+  'random typed connections, moves along walls, run mirrors and merges keep valid projects (seeded fuzz, ADR-207)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 20);
+    const make = (id: string) => designTemplates.find((x) => x.id === id)!.create();
+    const kinds = ['base-door', 'base-door', 'wall-cabinet', 'base-door', 'wall-cabinet'];
+    const room = {
+      height: 2500,
+      features: [],
+      outline: [
+        [0, 0],
+        [6000, 0],
+        [6000, 4000],
+        [0, 4000],
+      ] as [number, number][],
+    };
+    const probs: string[] = [];
+    const check = (p: Project, what: string) => {
+      const v = validateProject(p);
+      if (v.length) probs.push(`${what} invalid ${v.join('; ')}`);
+      if (pruneConnections(p) !== p) probs.push(`${what} prunable`);
+      const keys = (p.connections ?? []).map((c) =>
+        c.kind === 'wall' ? `w:${c.itemIds[0]}:${c.wall}` : [...c.itemIds].sort().join('|'),
+      );
+      if (new Set(keys).size !== keys.length) probs.push(`${what} duplicate`);
+      const m = buildProjectModel(p);
+      if (m.diagnostics.some((d) => d.code === 'connection-broken' && d.severity !== 'warning'))
+        probs.push(`${what} broken is not a warning`);
+    };
+    for (let n = 0; n < N && probs.length < 5; n++) {
+      let p: Project = { ...newProject('Fuzz 207'), room };
+      const count = ri(2, 5);
+      for (let k = 0; k < count; k++) {
+        const it = makeItem(p, make(kinds[ri(0, kinds.length - 1)]));
+        // Some pieces turn a quarter (corner joins), some hang over the previous piece (stacked joins).
+        const turned = rnd() < 0.25 ? { ...it, rotationY: 90 as const } : it;
+        const prev = p.items.at(-1);
+        const over =
+          prev && rnd() < 0.3
+            ? { ...turned, position: { ...turned.position, x: prev.position.x } }
+            : turned;
+        p = { ...p, items: [...p.items, over] };
+      }
+      const all = p.items.map((i) => i.id);
+      const pick = () => all[ri(0, all.length - 1)];
+      try {
+        for (let k = 0; k < 4; k++) {
+          const a = pick(),
+            b = pick();
+          const found = connectionCheck(p, a, b);
+          if (rnd() < 0.6 && found.reason === null) p = connect(p, a, b, found.kind);
+          const w = pick();
+          const wall = wallAgainst(p, w).wall;
+          if (rnd() < 0.5 && wall !== null) p = connectWall(p, w, wall);
+          const id = pick();
+          const alone = rnd() < 0.2;
+          const unit = movingSet(p, [id], !alone);
+          const d = alone
+            ? { dx: ri(-200, 200), dz: ri(-200, 200) }
+            : alongWalls(p, unit, ri(-200, 200), ri(-200, 200));
+          const moved = moveItems(p, unit, d.dx, d.dz, 1);
+          if (!moved.reason) p = settleConnections(moved.project, unit, rnd() < 0.5);
+          check(p, 'move');
+        }
+        const mirrored = mirrorRun(p, pick());
+        if (!mirrored.refused) check(mirrored.project, 'mirror');
+        const [x, y] = [pick(), pick()];
+        if (x !== y) {
+          const merged = mergeConnections(
+            { ...p, items: p.items.filter((i) => i.id !== y) },
+            [x, y],
+            x,
+          );
+          check(merged, 'merge');
+          if ((merged.connections ?? []).some((c) => c.itemIds.includes(y)))
+            probs.push('merge kept a removed piece');
+        }
+      } catch (e) {
+        probs.push(`throws ${(e as Error).message}`);
+      }
+    }
+    expect(probs).toEqual([]);
+  },
+  FUZZ_TIMEOUT,
 );

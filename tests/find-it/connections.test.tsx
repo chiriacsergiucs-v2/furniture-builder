@@ -64,7 +64,9 @@ describe.each(WIDTHS)('connections at %ipx (find-it, ADR-168)', (width) => {
     const toggle = within(apart).getByRole('checkbox', { name: 'Connected' }) as HTMLInputElement;
     expect(toggle.checked).toBe(false);
     expect(toggle.disabled).toBe(true);
-    expect(within(apart).getByText(/do not stand side by side/)).toBeTruthy();
+    expect(
+      within(apart).getByText(/are not side by side, in a corner or one over the other/),
+    ).toBeTruthy();
 
     // Part the connected pair by typing: Checks warns, never an error.
     await user.click(sw);

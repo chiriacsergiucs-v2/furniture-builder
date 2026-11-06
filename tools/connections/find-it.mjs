@@ -272,14 +272,15 @@ for (const width of [1440, 390]) {
   );
   const why =
     (await apartCard
-      .getByText(/do not stand side by side/)
+      .getByText(/are not side by side, in a corner or one over the other/)
       .first()
       .textContent()
       .catch(() => '')) ?? '';
   check(
     width,
-    'the card says why: "… do not stand side by side."',
-    /do not stand side by side/.test(why),
+    // ADR-207: two pieces in no position of a kind say so for every kind.
+    'the card says why: "… are not side by side, in a corner or one over the other."',
+    /are not side by side, in a corner or one over the other/.test(why),
     why,
   );
   await shot('apart-reason');
