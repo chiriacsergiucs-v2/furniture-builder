@@ -56,8 +56,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Create a project',
         detail: 'Several pieces placed in one room.',
-        adrs: ['ADR-022', 'ADR-078'],
-        checked: '2026-11-05',
+        adrs: ['ADR-022', 'ADR-078', 'ADR-193'],
+        checked: '2026-11-06',
       },
       {
         name: 'Create a project from a project template',
@@ -70,16 +70,16 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Fill a wall',
         detail:
           'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly.',
-        adrs: ['ADR-103', 'ADR-104'],
-        checked: '2026-11-05',
+        adrs: ['ADR-103', 'ADR-104', 'ADR-193'],
+        checked: '2026-11-06',
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'], checked: '2026-11-05' },
       {
         name: 'Fill the room',
         detail:
           'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.',
-        adrs: ['ADR-173', 'ADR-177'],
-        checked: '2026-11-05',
+        adrs: ['ADR-173', 'ADR-177', 'ADR-193'],
+        checked: '2026-11-06',
       },
     ],
   },

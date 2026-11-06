@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { RULE_DEFAULTS } from '../src/core/rules';
 import {
+  checkWall,
   MAX_PIECES,
   WALL_HEIGHT,
   WALL_VARIANTS,
@@ -308,4 +309,23 @@ describe('fuzz', () => {
       }
     }
   }, 600_000);
+});
+
+describe('checkWall fields (ADR-193)', () => {
+  it('each problem names the answer it is about, so the wizard can mark that field', () => {
+    const r = checkWall({
+      width: Number('abc'),
+      depth: 560,
+      height: 2400,
+      minWidth: 800,
+      maxWidth: 600,
+      tallCount: -1,
+    });
+    expect(r.map((d) => [d.field, d.message])).toEqual([
+      ['width', 'Width must be a whole number of mm above 0.'],
+      ['minWidth', 'Min piece width 800 mm is more than the max, 600 mm.'],
+      ['tallCount', 'Tall cabinets must be 0 or more.'],
+    ]);
+    expect(r.every((d) => d.severity === 'error')).toBe(true);
+  });
 });
