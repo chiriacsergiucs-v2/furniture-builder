@@ -9,6 +9,12 @@ export const ru_info = {
   // The feature tree (ADR-158).
   Creating: 'Создание',
   'Start a new single piece': 'Начать новое отдельное изделие',
+  'Fill the room in L and U rooms': 'Заполнить комнату в Г- и П-образных комнатах',
+  'A wall too short for a corner cabinet at both ends keeps one and leaves the other corner empty, both ends tried; runs stay out of the corner cabinets and of a narrow arm already filled.':
+    'На стене, слишком короткой для угловых шкафов с обоих концов, остаётся один, а другой угол пуст (пробуются оба конца); ряды не заходят на угловые шкафы и в узкое крыло, уже заполненное.',
+  'Template descriptions in Start from': 'Описания шаблонов в «Начать с»',
+  'New… → Start from shows each built-in template’s description under its row.':
+    'Создать… → «Начать с» показывает описание каждого встроенного шаблона под его строкой.',
   'Pick a template from the catalog to start from.':
     'Выберите шаблон из каталога, с которого начать.',
   'New-piece wizard': 'Мастер нового изделия',

@@ -10,6 +10,9 @@
  * ADR-210: a style put on every piece of each mix before its checks; each mix's estimate, with a budget ceiling that
  * hides costlier mixes; and an island of base cabinets in a rectangle room, its fronts facing the longest filled wall's
  * run across a walkway the user types (no prefilled clearance, ADR-010).
+ * ADR-216: a corner cabinet only where its footprint fits both walls; a wall too short for one at both ends keeps one
+ * of them and leaves the other corner empty (each choice is filled, ranked together); runs stay off floor a corner
+ * cabinet or an earlier wall's run already takes (the narrow arm of a U).
  */
 import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
@@ -580,9 +583,134 @@ export function tallAtRight(c: Candidate): Candidate | null {
   };
 }
 
+/** Corner plans tried at most per call (ADR-216): each is a full fill of the room, so the work stays bounded. */
+const MAX_PLANS = 4;
+
+/** Whether two plan boxes share floor (touching edges do not count). */
+const clash = (a: Box, b: Box) =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.z < b.z + b.d && b.z < a.z + a.d;
+
+/** The floor a corner cabinet at the end of wall `i` takes, placed as `roomProject` places it. */
+function cornerBox(room: Room, i: number, take: { along: Mm; across: Mm }): Box {
+  const len = wallLength(room, i);
+  return wallBox(room, i, len - take.along, take.along, take.across, 0, 1);
+}
+
+/**
+ * ADR-216: which inside corners get a corner cabinet. A corner cabinet stands only where its own footprint fits both
+ * walls (its length on the wall holding it, its depth on the next one). Two whose footprints share floor (a wall too
+ * short for a corner cabinet at both ends) never stand together: each plan keeps one of them and leaves the other
+ * corner empty. The plans are the largest such sets, first the one keeping the earlier corners, at most `MAX_PLANS`;
+ * every plan is filled and the mixes are ranked together (fewest warnings first).
+ */
+export function cornerPlans(
+  room: Room,
+  corners: number[],
+  take: { along: Mm; across: Mm },
+): number[][] {
+  const n = room.outline.length;
+  const fit = corners.filter(
+    (i) => take.along <= wallLength(room, i) && take.across <= wallLength(room, (i + 1) % n),
+  );
+  const boxes = new Map(fit.map((i) => [i, cornerBox(room, i, take)]));
+  const hits = (a: number, b: number) => a !== b && clash(boxes.get(a)!, boxes.get(b)!);
+  const out: number[][] = [];
+  const walk = (k: number, kept: number[]) => {
+    if (out.length >= MAX_PLANS) return;
+    if (k === fit.length) {
+      // Only the largest sets: every corner left out clashes with one kept.
+      if (fit.every((c) => kept.includes(c) || kept.some((d) => hits(c, d)))) out.push(kept);
+      return;
+    }
+    const c = fit[k];
+    if (!kept.some((d) => hits(c, d))) walk(k + 1, [...kept, c]);
+    // Leaving it out is only worth trying when it clashes with another corner.
+    if (fit.some((d) => hits(c, d))) walk(k + 1, kept);
+  };
+  walk(0, []);
+  return out;
+}
+
+/** The floor a stretch's run takes: its length along the wall, a run's depth into the room. */
+const stretchBox = (room: Room, s: { wall: number; from: Mm; to: Mm }, depth: Mm): Box =>
+  wallBox(room, s.wall, s.from, s.to - s.from, depth, 0, 1);
+
+/** The range along wall `i` (from its start corner) that a plan box covers. */
+function alongRange(room: Room, i: number, b: Box): [Mm, Mm] {
+  const n = room.outline.length;
+  const a = room.outline[i],
+    e = room.outline[(i + 1) % n];
+  const len = wallLength(room, i);
+  const dx = (e[0] - a[0]) / len,
+    dz = (e[1] - a[1]) / len;
+  const at = [
+    [b.x, b.z],
+    [b.x + b.w, b.z],
+    [b.x, b.z + b.d],
+    [b.x + b.w, b.z + b.d],
+  ].map(([x, z]) => (x - a[0]) * dx + (z - a[1]) * dz);
+  return [Math.floor(Math.min(...at)), Math.ceil(Math.max(...at))];
+}
+
+/**
+ * ADR-216: every stretch loses the part of the wall whose run would stand on floor already taken, by a corner
+ * cabinet or by an earlier wall's run (a narrow arm of a U, the run past an empty corner), so tall cabinets, their
+ * top boxes and base units stay out of the corner zones. Parts shorter than `min` are dropped. A room where nothing
+ * meets keeps its stretches as they were.
+ */
+export function trimStretches(
+  room: Room,
+  stretches: Stretch[],
+  taken: Box[],
+  depth: Mm,
+  min: Mm,
+): Stretch[] {
+  const out: Stretch[] = [];
+  for (const s of stretches) {
+    const others = [
+      ...taken,
+      ...out.filter((o) => o.wall !== s.wall).map((o) => stretchBox(room, o, depth)),
+    ];
+    const own = stretchBox(room, s, depth);
+    let parts: [Mm, Mm][] = [[s.from, s.to]];
+    for (const b of others) {
+      if (!clash(own, b)) continue;
+      const [x, y] = alongRange(room, s.wall, b);
+      parts = parts.flatMap(([p, q]): [Mm, Mm][] =>
+        y <= p || x >= q
+          ? [[p, q]]
+          : (
+              [
+                [p, Math.min(x, q)],
+                [Math.max(y, p), q],
+              ] as [Mm, Mm][]
+            ).filter(([u, v]) => v > u),
+      );
+    }
+    const rows = s.noWallRow.map(([a, b]) => [a + s.from, b + s.from] as [Mm, Mm]);
+    for (const [p, q] of parts) {
+      if (q - p < min) continue;
+      const { fromCorner, toCorner, ...rest } = s;
+      out.push({
+        ...rest,
+        from: p,
+        to: q,
+        noWallRow: rows
+          .map(([a, b]) => [Math.max(a, p) - p, Math.min(b, q) - p] as [Mm, Mm])
+          .filter(([a, b]) => b > a),
+        ...(fromCorner && p === s.from ? { fromCorner } : {}),
+        ...(toCorner && q === s.to ? { toCorner } : {}),
+      });
+    }
+  }
+  return out;
+}
+
 /**
  * The mixes for the whole room, best first, at most `limit`. Every wall stretch gets its own candidates (the best
  * `PER_STRETCH`), combined best-first; each combination is one project with the room, kept only without errors.
+ * ADR-216: a wall too short for a corner cabinet at both ends keeps one of them; each corner plan is filled and the
+ * mixes of all plans are ranked together.
  */
 export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFill {
   const bad = checkRoom(input);
@@ -595,44 +723,119 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     : null;
   if (island && 'severity' in island) return { mixes: [], problems: [island] };
   const corner = input.corner ?? 'blind';
-  const n = room.outline.length;
-  const min = input.minWidth ?? 400;
   const height = input.height ?? room.height;
   const perWall: WallInput = { ...input, width: 0, height };
   const take = cornerTake(corner, input, perWall);
   // Inside corners between two filled walls: a corner cabinet, or (none) the first wall's run reaching the corner.
   const corners = cornerWalls(input, walls);
-  const cabinets = corner === 'none' ? [] : corners;
-  const problems: Diagnostic[] = [];
+  const plans = corner === 'none' ? [[]] : cornerPlans(room, corners, take);
+  const depth = runDepth(input, perWall);
+  const memo = roomMemo();
+  const ctx: PlanContext = { input, walls, corner, corners, take, depth, perWall, island, memo };
+  const results = plans.map((kept) =>
+    fillPlan(ctx, kept, plans.length > 1 ? `c${kept.join(',')}#` : '', limit),
+  );
+  const mixes = results
+    .flatMap((r) => r.mixes)
+    .sort(
+      (a, b) =>
+        a.warnings.length - b.warnings.length || a.project.items.length - b.project.items.length,
+    )
+    .slice(0, limit);
+  const overBudget = results.reduce((a, r) => a + r.overBudget, 0);
+  const prices = results.flatMap((r) => (r.cheapest === undefined ? [] : [r.cheapest]));
+  const cheapest = prices.length ? Math.min(...prices) : undefined;
+  // The problems of the plan that gave the best mix, else of the first plan.
+  const from = results.find((r) => mixes[0] && r.mixes.includes(mixes[0])) ?? results[0];
+  const problems = [...from.problems];
+  if (!mixes.length && !overBudget && !problems.some((p) => p.severity === 'error')) {
+    const failed = results.reduce((a, r) => a + r.failed, 0);
+    problems.push(
+      err(
+        'room-no-mix',
+        failed
+          ? t(
+              'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.',
+              { n: failed },
+            )
+          : t('No mix could be built.'),
+      ),
+    );
+  }
+  return { mixes, problems, ...(overBudget ? { overBudget, cheapest } : {}) };
+}
 
-  // Stretches per wall, after the corners' reservations.
-  const stretches: Stretch[] = [];
+/** What every corner plan of one call shares (ADR-216). */
+interface PlanContext {
+  input: RoomInput;
+  walls: number[];
+  corner: CornerKind;
+  corners: number[];
+  take: { along: Mm; across: Mm };
+  /** A run's depth, fronts included. */
+  depth: Mm;
+  perWall: WallInput;
+  island: IslandPlan | null;
+  memo: RoomMemo;
+}
+
+/** One corner plan filled: its mixes (at most `limit`), its problems, and how many builds had an error. */
+function fillPlan(
+  ctx: PlanContext,
+  kept: number[],
+  prefix: string,
+  limit: number,
+): {
+  mixes: RoomMix[];
+  problems: Diagnostic[];
+  failed: number;
+  overBudget: number;
+  cheapest?: number;
+} {
+  const { input, walls, corner, corners, take, depth, perWall, island, memo } = ctx;
+  const room = input.room;
+  const n = room.outline.length;
+  const min = input.minWidth ?? 400;
+  const height = perWall.height;
+  const has = new Set(kept);
+  const problems: Diagnostic[] = [];
+  const none = { mixes: [], problems, failed: 0, overBudget: 0 };
+
+  // Stretches per wall, after the corners' reservations; an empty corner is reserved as `none` reserves it (ADR-216).
+  let stretches: Stretch[] = [];
   for (const i of walls) {
+    const prev = (i - 1 + n) % n;
     const reserve = {
-      start: corners.includes((i - 1 + n) % n) ? take.across : 0,
-      end: corners.includes(i) ? take.along : 0,
+      start: corners.includes(prev) ? (has.has(prev) ? take.across : depth) : 0,
+      end: has.has(i) ? take.along : 0,
     };
-    const st = freeStretches(input, i, reserve, min);
-    if (!st.length)
+    stretches.push(...freeStretches(input, i, reserve, min));
+  }
+  stretches = trimStretches(
+    room,
+    stretches,
+    kept.map((i) => cornerBox(room, i, take)),
+    depth,
+    min,
+  );
+  for (const i of walls)
+    if (!stretches.some((s) => s.wall === i))
       problems.push(
         note(
           'room-wall-empty',
           t('Wall {n} has no stretch of {min} mm or more to fill.', { n: i + 1, min }),
         ),
       );
-    stretches.push(...st);
-  }
-  if (!stretches.length && !corners.length) {
+  if (!stretches.length && !kept.length) {
     problems.push(err('room-empty', t('Nothing fits: every wall is too short or blocked.')));
-    return { mixes: [], problems };
+    return none;
   }
   // The best candidates per stretch.
-  let lists: Candidate[][] = stretches.map((s) => {
-    const list = candidates({ ...perWall, width: s.to - s.from })
+  let lists: Candidate[][] = stretches.map((s) =>
+    candidates({ ...perWall, width: s.to - s.from })
       .sort(compareCandidates)
-      .slice(0, PER_STRETCH);
-    return list;
-  });
+      .slice(0, PER_STRETCH),
+  );
   if (lists.some((l) => !l.length)) {
     const empty = stretches[lists.findIndex((l) => !l.length)];
     problems.push(
@@ -644,12 +847,11 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
         }),
       ),
     );
-    return { mixes: [], problems };
+    return none;
   }
   // Each combination is built once, whether to choose a side (below) or to offer it.
   const keyOf = (picks: Candidate[]) =>
-    picks.map((c, k) => `${stretches[k].wall}:${c.signature}`).join('/');
-  const memo = roomMemo();
+    prefix + picks.map((c, k) => `${stretches[k].wall}:${c.signature}`).join('/');
   const builds = new Map<
     string,
     { project: Project; model: ProjectModel; warnings: Diagnostic[] }
@@ -658,16 +860,7 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     const key = keyOf(picks);
     let b = builds.get(key);
     if (!b) {
-      let project = roomProject(
-        input,
-        stretches,
-        picks,
-        cabinets,
-        corner,
-        perWall,
-        undefined,
-        memo,
-      );
+      let project = roomProject(input, stretches, picks, kept, corner, perWall, undefined, memo);
       if (island)
         project = { ...project, items: [...project.items, ...islandItems(project, room, island)] };
       // A style goes on every piece before the checks (ADR-210).
@@ -749,20 +942,19 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
       cheapest = Math.min(cheapest ?? estimate.total, estimate.total);
       continue;
     }
-    const byWall = walls.map((w) => {
+    // A wall left empty (too short, or its floor taken by a corner, ADR-216) is named by its note, not as "Wall n: ".
+    const byWall = walls.flatMap((w) => {
       const ks = stretches.map((s, k) => (s.wall === w ? k : -1)).filter((k) => k >= 0);
       const slots = ks.flatMap((k) => picks[k].slots);
-      return {
-        wall: w,
-        widths: slots.map((s) => s.width).join(' · '),
-        summary: summaryOf(slots),
-      };
+      return slots.length
+        ? [{ wall: w, widths: slots.map((s) => s.width).join(' · '), summary: summaryOf(slots) }]
+        : [];
     });
     mixes.push({
       key,
       walls: byWall,
       summary: byWall.map((w) => t('Wall {n}: {s}', { n: w.wall + 1, s: w.summary })).join('; '),
-      corners: cabinets.length,
+      corners: kept.length,
       project: built.project,
       model: built.model,
       warnings: built.warnings,
@@ -770,23 +962,7 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
       ...(island ? { island: summaryOf(island.slots) } : {}),
     });
   }
-  mixes.sort(
-    (a, b) =>
-      a.warnings.length - b.warnings.length || a.project.items.length - b.project.items.length,
-  );
-  if (!mixes.length && !overBudget)
-    problems.push(
-      err(
-        'room-no-mix',
-        failed
-          ? t(
-              'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.',
-              { n: failed },
-            )
-          : t('No mix could be built.'),
-      ),
-    );
-  return { mixes, problems, ...(overBudget ? { overBudget, cheapest } : {}) };
+  return { mixes, problems, failed, overBudget, ...(cheapest !== undefined ? { cheapest } : {}) };
 }
 
 /** A built mix's warnings: every piece above the height, then the project's own warnings. */

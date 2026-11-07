@@ -1,7 +1,4 @@
-import type { ReactNode } from 'react';
-import type { Template } from '../core/design';
-import { Icon, type IconName } from './icons';
-import { tr } from '../core/i18n';
+import type { IconName } from './icons';
 
 const GLYPH: Record<string, IconName> = {
   chest: 'chest',
@@ -66,29 +63,5 @@ export function familyGlyph(f: { id: string; function: string; root: string }): 
         : f.root === 'frame'
           ? 'table'
           : templateGlyph(f.root))
-  );
-}
-
-/** A starting piece as a selectable row: glyph, name, one-line description. */
-export function TemplateButton({
-  t,
-  onPick,
-  sub,
-}: {
-  t: Template;
-  onPick: () => void;
-  sub?: ReactNode;
-}) {
-  return (
-    <button type="button" className="row-btn" onClick={onPick}>
-      <span className="glyph">
-        <Icon name={templateGlyph(t.id)} />
-      </span>
-      <span>
-        <strong>{tr(t.name)}</strong>
-        <span className="sub">{sub ?? tr(t.description)}</span>
-      </span>
-      <Icon name="chevron-right" className="chev sm" />
-    </button>
   );
 }

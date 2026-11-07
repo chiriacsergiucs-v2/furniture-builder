@@ -38,7 +38,7 @@ import {
 } from '../core/catalog/local';
 import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
-import { newId } from '../core/design';
+import { newId, templates } from '../core/design';
 import type { Design } from '../core/types';
 import { listDecors, listDesigns, type StoredDesign } from '../persist/db';
 import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
@@ -221,6 +221,9 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
   );
 }
 
+/** Each built-in template's description by its id, shown under the Start from row of that id (ADR-216). */
+const TEMPLATE_TEXT = new Map(templates.map((x) => [x.id, x.description]));
+
 /**
  * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
  * search. Picking one makes an independent copy with its origin recorded.
@@ -299,6 +302,10 @@ export function StartFrom({
                         {tr(f.name)}: {tr(v.name)}
                       </strong>
                       <span className="sub">{tr(v.summary)}</span>
+                      {/* The built-in template's description, under the row of the same id (ADR-216). */}
+                      {TEMPLATE_TEXT.get(v.id) && (
+                        <span className="sub">{tr(TEMPLATE_TEXT.get(v.id)!)}</span>
+                      )}
                       {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (
                         <span className="sub ro-line" lang="ro">

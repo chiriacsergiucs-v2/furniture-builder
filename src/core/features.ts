@@ -95,6 +95,19 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-06',
       },
       {
+        name: 'Fill the room in L and U rooms',
+        detail:
+          'A wall too short for a corner cabinet at both ends keeps one and leaves the other corner empty, both ends tried; runs stay out of the corner cabinets and of a narrow arm already filled.',
+        adrs: ['ADR-216'],
+        checked: '2026-11-07',
+      },
+      {
+        name: 'Template descriptions in Start from',
+        detail: 'New… → Start from shows each built-in template’s description under its row.',
+        adrs: ['ADR-216'],
+        checked: '2026-11-07',
+      },
+      {
         name: 'Room presets',
         detail:
           'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.',
