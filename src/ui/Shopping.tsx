@@ -37,13 +37,13 @@ import {
 import { t, tr } from '../core/i18n';
 import { pt } from '../core/i18n/print';
 import { printPieceName } from '../core/catalog/printName';
-import { savePrices } from '../persist/db';
+import { savePrices } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { usePrices } from '../store/priceStore';
 import { useEstimate } from './useEstimate';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'boards', title: 'Boards' },

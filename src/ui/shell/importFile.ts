@@ -2,7 +2,7 @@ import { newId, validateDesign } from '../../core/design';
 import { t } from '../../core/i18n';
 import type { Design } from '../../core/types';
 import { validateProject, type Project } from '../../core/project';
-import { saveDesign, saveProject, saveProjectTemplate } from '../../persist/db';
+import { saveDesign, saveProject, saveProjectTemplate } from '../../store/libraryStore';
 import { readProjectTemplateFile } from '../../persist/projectTemplateFile';
 import { takePictures } from '../../persist/images';
 import { takeModels } from '../../persist/models';

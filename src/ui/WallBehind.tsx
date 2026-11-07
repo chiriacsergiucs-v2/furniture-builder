@@ -6,7 +6,7 @@ import { wallBehind } from '../core/roomSurfaces';
 import { pictureRect } from '../core/wallPicture';
 import type { Box } from '../core/types';
 import { useDesign } from '../store/designStore';
-import { pictureKey, useWallPictureUrls } from './wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 
 const NONE: WallFinish[] = [];
 

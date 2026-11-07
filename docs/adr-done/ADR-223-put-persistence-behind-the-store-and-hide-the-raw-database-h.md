@@ -1,7 +1,8 @@
 # ADR-223: Put persistence behind the store and hide the raw database handle
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N228
@@ -56,12 +57,18 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `tests/layering.test.ts`: no `src/ui` import of `persist/db` and no `db` import outside
-      `src/persist` (offenders printed on failure); red before, green after.
-- [ ] (test first) `persist.test.ts` with a spy on `emitSavedChange`: each library action fires it exactly as the old
-      direct call did.
-- [ ] (test first) jsdom find-it at 390 and 1280 px: history, variables, wall-fill, room-fill and the projects page
-      still save (the saved name is listed after a reload of the store).
-- [ ] `src/persist` imports no `react`; `useImageUrls` lives in `src/ui`.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) `tests/layering.test.ts`: no `src/ui` import of `persist/db` and no `db` import outside
+      `src/persist` (offenders printed on failure); red before, green after. Evidence: "no src/ui import of
+      persist/db, no raw db outside src/persist, no React in src/persist" listed 27 offenders before the change and
+      none after; the allowlist `UI_PERSIST_DB_ALLOWED` is empty.
+- [x] (test first) `persist.test.ts` with a spy on `emitSavedChange`: each library action fires it exactly as the old
+      direct call did. Evidence: "library writes report their changes like the direct calls (ADR-223)" (a
+      `onSavedChange` listener, the module's public spy; each of the 20 library writes run directly and through the
+      library from an empty database, same changes); red before (no `libraryStore`), green after.
+- [x] (test first) jsdom find-it at 390 and 1280 px: history, variables, wall-fill, room-fill and the projects page
+      still save (the saved name is listed after a reload of the store). Evidence:
+      `tests/find-it/library-saves.test.tsx`, 10 tests, green before and after the change.
+- [x] `src/persist` imports no `react`; `useImageUrls` lives in `src/ui`. Evidence: `tests/layering.test.ts`
+      "useImageUrls lives in src/ui" and the React rule of the scan.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42357588326 (PR #202) green on every job.

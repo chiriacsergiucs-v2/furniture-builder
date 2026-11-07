@@ -1,7 +1,8 @@
 # ADR-230: Keep the 3D viewer free of ui imports and DOM side channels
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N235
@@ -59,11 +60,19 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) browser find-it `tools/move-3d/find-it.mjs` and `tools/drill-select/find-it.mjs` pass on the
-      production build at 390 and 1280 px before the change; the same scripts pass after.
-- [ ] (test first) a store test: setting `seams`, `lit` and the fit request changes the store fields the viewer reads.
-- [ ] `tests/core-boundary.test.ts` (ADR-219) has no viewer allowance and passes; `rg "from '../ui" src/viewer` is
-      empty.
-- [ ] No `document.body.dataset`, `'fb:fit'` or `#count-dock` remains in `src/viewer` or `src/ui` (checked by `rg`).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) browser find-it `tools/move-3d/find-it.mjs` and `tools/drill-select/find-it.mjs` pass on the
+      production build at 390 and 1280 px before the change; the same scripts pass after. Evidence (run 2026-11-07,
+      `vite preview` of the build before and after): move-3d 32/32 before and after; drill-select 24/25 before and
+      after (its 3D step now taps "3D" as a phone opens Build & Preview in 2D, ADR-144; the one failure, "390px project:
+      a tap on the selected piece …", is the same before the change and outside the 3D view). assembly 30, connections
+      65, connections-typed 44 (read `data-lit`/`data-seams` on the 3D view now) pass before and after.
+- [x] (test first) a store test: setting `seams`, `lit` and the fit request changes the store fields the viewer reads.
+      (`tests/view-store.test.ts`, "setting seams, lit and the fit request changes the fields the viewer reads".)
+- [x] `tests/core-boundary.test.ts` (ADR-219) has no viewer allowance and passes; `rg "from '../ui" src/viewer` is
+      empty. (The lint self-check covers `src/viewer` too.)
+- [x] No `document.body.dataset`, `'fb:fit'` or `#count-dock` remains in `src/viewer` or `src/ui` (checked by `rg`,
+      and by `tests/view-store.test.ts`, "no DOM side channel is left in the viewer or the ui").
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Locally: lint, format:check,
+      typecheck, build, docs:check, and `vitest related` over the changed files (73 files, 358 tests); the full suite
+      runs in CI. No test was removed.

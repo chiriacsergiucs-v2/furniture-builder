@@ -34,26 +34,10 @@ const APP = [
       'The app reaches the nesting engine through core/nesting, not place or validate (ADR-219).',
   },
 ];
-// Allowance until ADR-230 moves them: the ui modules the viewer imports today, by name. A new one fails.
-const VIEWER_UI = [
-  'Clearances',
-  'CountStepper',
-  'MoveTo',
-  'ProblemBanner',
-  'keepProportions',
-  'planDrag',
-  'renderSupport',
-  'useLook',
-  'useMediaQuery',
-  'useSnap',
-  'useSolidWalls',
-  'useTheme',
-  'useView',
-  'wallPictures',
-];
+// The 3D viewer imports nothing from src/ui (ADR-230): ui pieces come in as render props.
 const VIEWER = {
-  regex: `^\\.\\./ui/(?!(${VIEWER_UI.join('|')})$)`,
-  message: 'The 3D viewer imports no new ui module (ADR-014, ADR-219, ADR-230).',
+  regex: '^(\\.\\./)+ui(/|$)',
+  message: 'The 3D viewer imports nothing from src/ui (ADR-014, ADR-219, ADR-230).',
 };
 const restrict = (patterns) => ({ 'no-restricted-imports': ['error', { patterns }] });
 

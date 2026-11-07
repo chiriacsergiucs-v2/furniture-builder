@@ -13,7 +13,7 @@ import {
   RENDER_SIZES,
   renderFileName,
   type RenderSize,
-} from './renderSupport';
+} from '../shared/renderSupport';
 
 type State =
   | { kind: 'idle' }

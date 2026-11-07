@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { buildModel } from '../core/build';
-import { PHONE, useMediaQuery } from './useMediaQuery';
+import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import {
   catalogFamilies,
   FUNCTION_LABEL,
@@ -35,7 +35,7 @@ import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
 import { newId } from '../core/design';
 import type { Design } from '../core/types';
-import { listDecors, listDesigns, type StoredDesign } from '../persist/db';
+import { listDecors, listDesigns, type StoredDesign } from '../store/libraryStore';
 import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
 import { kindName, type Decor } from '../core/materials';
 import { useDesign } from '../store/designStore';

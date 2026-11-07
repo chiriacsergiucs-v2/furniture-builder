@@ -22,7 +22,7 @@ import {
   type RatingFilter,
   type RatingKey,
 } from '../core/gaps';
-import { listGapMarks, saveGapMark, saveGapMarks } from '../persist/db';
+import { listGapMarks, saveGapMark, saveGapMarks } from '../store/libraryStore';
 import { download } from './shell/files';
 import { Icon } from './icons';
 

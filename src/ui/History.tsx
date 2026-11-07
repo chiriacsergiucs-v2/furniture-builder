@@ -9,7 +9,7 @@ import {
   listProjects,
   listProjectVersions,
   saveProject,
-} from '../persist/db';
+} from '../store/libraryStore';
 import { newId } from '../core/design';
 import { onSavedChange } from '../persist/events';
 import { useDesign } from '../store/designStore';

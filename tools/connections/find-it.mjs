@@ -5,7 +5,7 @@
 // Select two → "Connected" toggle → a tick on the plan and "Connected to …" on the card; a snapped drag connects
 // the third; dragging one moves the connected ones along (Alt moves it alone, desktop); a resized member →
 // Checks warns "connected but no longer joined"; the toggle disconnects. ADR-179: the room front view shows the
-// tick too, and Build & Preview › 3D draws a seam line (counted in `document.body.dataset.seams`) that is gone while
+// tick too, and Build & Preview › 3D draws a seam line (counted in `data-seams` on the 3D view, ADR-230) that is gone while
 // exploded and after Disconnect. ADR-201 (G-346): in Build & Preview › 3D with Move on, dragging a connected piece moves
 // the connected set along, and on a desktop an Alt drag moves that piece alone (then one Undo). Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
@@ -195,7 +195,8 @@ for (const width of [1440, 390]) {
     `${await frontTicks.count()}`,
   );
   await shot('front-tick');
-  const seams = () => page.evaluate(() => document.body.dataset.seams ?? null);
+  const seams = () =>
+    page.evaluate(() => document.querySelector('.view.three[data-seams]')?.dataset.seams ?? null);
   const waitSeams = async (want) => {
     for (let i = 0; i < 40; i++) {
       if ((await seams()) === want) return want;

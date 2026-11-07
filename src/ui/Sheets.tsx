@@ -4,7 +4,7 @@ import { t, tr } from '../core/i18n';
 import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 

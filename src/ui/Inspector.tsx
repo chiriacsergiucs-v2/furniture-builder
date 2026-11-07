@@ -25,9 +25,9 @@ import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { materialKey, runHandleFor, type RunHandle } from '../core/project';
-import { listDecors } from '../persist/db';
+import { listDecors } from '../store/libraryStore';
 import { parentOf as parentSel, type Selection } from '../core/selectPath';
-import { useMediaQuery } from './useMediaQuery';
+import { useMediaQuery } from '../store/useMediaQuery';
 import { usePieceLockHint } from './pieceLockHint';
 import type {
   CabinetParams,

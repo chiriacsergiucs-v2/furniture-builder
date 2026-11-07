@@ -46,7 +46,7 @@ import {
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest';
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
 import { t, tr } from '../core/i18n';
-import { listDecors, saveDesign } from '../persist/db';
+import { listDecors, saveDesign } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';

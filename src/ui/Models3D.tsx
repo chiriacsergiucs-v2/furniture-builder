@@ -13,12 +13,17 @@ import { frontEdge } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
-import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '../persist/db';
+import {
+  deleteModelIfUnused,
+  listModels,
+  loadModel,
+  type StoredModel,
+} from '../store/libraryStore';
 import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { InfoTip, MmField, Segmented, Select, Toggle } from './controls';
-import { useKeepProportions } from './keepProportions';
+import { useKeepProportions } from '../store/keepProportions';
 import { Icon } from './icons';
 import {
   arrowMove,
@@ -27,8 +32,8 @@ import {
   releasePointer,
   type DragGesture,
   type PointerAt,
-} from './planDrag';
-import { useSnap } from './useSnap';
+} from '../shared/planDrag';
+import { useSnap } from '../store/useSnap';
 import { modelDrop } from '../core/modelPlace';
 import { placementBases } from '../core/project';
 import type { ModelPlacement } from '../core/model3d';

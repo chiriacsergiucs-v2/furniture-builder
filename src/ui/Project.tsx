@@ -49,14 +49,19 @@ import {
 } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
-import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
+import {
+  listDesigns,
+  listProjectTemplates,
+  loadDesign,
+  type StoredDesign,
+} from '../store/libraryStore';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { WallBackground } from './WallBackground';
 import { RoomFeatures } from './RoomFeatures';
 import { pictureRect } from '../core/wallPicture';
-import { pictureKey, useWallPictureUrls } from './wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 import {
   arrowMove,
   bracketTurn,
@@ -73,8 +78,8 @@ import {
   releasePointer,
   type DragGesture,
   type PointerAt,
-} from './planDrag';
-import { useSnap } from './useSnap';
+} from '../shared/planDrag';
+import { useSnap } from '../store/useSnap';
 import { MoveToButtons } from './MoveTo';
 import { keepSheetClosedOnce, useUi } from '../store/uiStore';
 import { CompatRules } from './CompatRules';
@@ -119,16 +124,13 @@ import {
   WorktopOverhang,
 } from './RunRequests';
 import { FastenersPanel } from './Fasteners';
-import { ClearanceFields, useClearances, ZoneOverlay, ZoneToolbar } from './Clearances';
-import { useMediaQuery } from './useMediaQuery';
+import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import { useClearances } from '../store/clearances';
+import { useMediaQuery } from '../store/useMediaQuery';
 import { ViewOptions } from './ViewOptions';
 import { inOptions } from './viewChoice';
-import {
-  ProblemBanner,
-  ProblemOutline,
-  useFocusedProblem,
-  type FocusedProblem,
-} from './ProblemBanner';
+import { ProblemBanner, ProblemOutline } from './ProblemBanner';
+import { useFocusedProblem, type FocusedProblem } from '../store/focusedProblem';
 import { useProblem } from '../store/problemStore';
 import { ReplaceDialog } from './Replace';
 import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';

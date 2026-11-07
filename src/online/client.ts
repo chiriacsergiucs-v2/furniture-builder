@@ -24,12 +24,19 @@ import {
 } from '../core/sync';
 import { zipStore } from '../core/zip';
 import {
-  db,
+  accountLinksOf,
+  allAccountLinks,
+  deleteAccountLink,
   deleteDesign,
   deleteTemplate,
+  designRows,
+  imageRows,
+  loadAccountLink,
+  saveAccountLink,
   saveDesign,
   saveImage,
   saveTemplate,
+  templateRows,
   type StoredImage,
 } from '../persist/db';
 import { onSavedChange } from '../persist/events';
@@ -112,7 +119,7 @@ const imageBody = (img: StoredImage): unknown => JSON.parse(encodeRow(img));
 export async function localItems(): Promise<LocalItem[]> {
   const items: LocalItem[] = [];
   const pics = new Set<string>();
-  for (const r of await db.designs.toArray()) {
+  for (const r of await designRows()) {
     if (validateDesign(r.design).length) continue;
     items.push({
       table: 'designs',
@@ -124,7 +131,7 @@ export async function localItems(): Promise<LocalItem[]> {
     });
     imageIdsIn(r.design, pics);
   }
-  for (const r of await db.templates.toArray()) {
+  for (const r of await templateRows()) {
     if (validateLocalTemplate(r.template).length) continue;
     items.push({
       table: 'templates',
@@ -136,7 +143,7 @@ export async function localItems(): Promise<LocalItem[]> {
     });
     imageIdsIn(r.template, pics);
   }
-  for (const img of await db.images.bulkGet([...pics])) {
+  for (const img of await imageRows([...pics])) {
     if (!img) continue;
     const body = imageBody(img);
     items.push({
@@ -151,9 +158,9 @@ export async function localItems(): Promise<LocalItem[]> {
   return items;
 }
 
-const links = (accountId: string) => db.accountLinks.where('accountId').equals(accountId).toArray();
-const putLink = (l: AccountLink) => db.accountLinks.put(l);
-const dropLink = (l: AccountLink) => db.accountLinks.delete([l.accountId, l.table, l.localId]);
+const links = (accountId: string) => accountLinksOf(accountId);
+const putLink = (l: AccountLink) => saveAccountLink(l);
+const dropLink = (l: AccountLink) => deleteAccountLink(l);
 
 /** Store a downloaded body as a local row; validated first, never thrown. Returns the stored body or null. */
 async function storeLocal(
@@ -177,7 +184,7 @@ async function storeLocal(
   const img = decodeRow(JSON.stringify(body)) as StoredImage;
   if (!img || typeof img !== 'object' || !(img.bytes instanceof ArrayBuffer)) return null;
   // Pictures keep their id: designs refer to them by it. One already here is never overwritten.
-  if (!(await db.images.get(img.id))) await saveImage(img);
+  if (!(await imageRows([img.id]))[0]) await saveImage(img);
   return JSON.parse(encodeRow(img));
 }
 
@@ -380,7 +387,7 @@ export async function setDeviceOnly(
   localId: string,
   on: boolean,
 ): Promise<void> {
-  const cur = await db.accountLinks.get([accountId, table, localId]);
+  const cur = await loadAccountLink(accountId, table, localId);
   if (on) {
     if (cur?.remoteId) await (await getBackend()).trashRecord(cur.remoteId, true);
     await putLink({ accountId, table, localId, deviceOnly: true });
@@ -482,7 +489,7 @@ export async function signOut(accountId: string, removeCopies = false): Promise<
 
 /** Local items that belong to another account than this one (ADR-142): hidden, never removed. */
 export async function otherAccountsItems(accountId: string | null): Promise<Set<string>> {
-  const all = await db.accountLinks.toArray();
+  const all = await allAccountLinks();
   const mine = new Set(
     all.filter((l) => l.accountId === accountId).map((l) => `${l.table}:${l.localId}`),
   );
@@ -505,10 +512,10 @@ export async function createShare(
   const b = await getBackend();
   const user = await b.currentUser();
   if (!user) return { ok: false, error: t('Sign in to share a link.') };
-  let link = await db.accountLinks.get([user.id, table, localId]);
+  let link = await loadAccountLink(user.id, table, localId);
   if (!link?.remoteId) {
     await sync();
-    link = await db.accountLinks.get([user.id, table, localId]);
+    link = await loadAccountLink(user.id, table, localId);
   }
   if (!link?.remoteId) return { ok: false, error: t('Save to account first to share a link.') };
   try {
@@ -528,7 +535,7 @@ export const stopShare = async (id: string) => (await getBackend()).stopShare(id
 /** The local item's record id in the current account, for "Shared links" per item. */
 export async function remoteIdOf(table: LocalTable, localId: string): Promise<string | undefined> {
   const user = await currentUser();
-  return user ? (await db.accountLinks.get([user.id, table, localId]))?.remoteId : undefined;
+  return user ? (await loadAccountLink(user.id, table, localId))?.remoteId : undefined;
 }
 
 /** Open a shared item (anyone with the link, G-236): what the server returns, not yet stored. */

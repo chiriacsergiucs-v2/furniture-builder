@@ -12,7 +12,7 @@ import {
   saveProject,
   type StoredDesign,
   type StoredProject,
-} from '../../persist/db';
+} from '../../store/libraryStore';
 import { useDesign } from '../../store/designStore';
 import { askConfirm, askText } from '../Confirm';
 import { ProjectTemplateList } from '../ProjectTemplates';
@@ -29,7 +29,7 @@ import { useUi } from '../../store/uiStore';
 import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
-import { useMediaQuery } from '../useMediaQuery';
+import { useMediaQuery } from '../../store/useMediaQuery';
 import { t } from '../../core/i18n';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */

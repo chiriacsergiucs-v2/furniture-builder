@@ -9,12 +9,12 @@ import { kerfOf, newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import { frontSvg } from '../core/snapshot';
 import type { Design } from '../core/types';
-import { saveDesign, saveTemplate } from '../persist/db';
+import { saveDesign, saveTemplate } from '../store/libraryStore';
 import { online, useAccount } from '../store/accountStore';
 import { useDesign } from '../store/designStore';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
-import { ViewOverride, type ViewData } from './useView';
+import { ViewOverride, type ViewData } from '../store/useView';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 const appBase = () => `${location.origin}${location.pathname}`;

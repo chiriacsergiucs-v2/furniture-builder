@@ -9,7 +9,7 @@ import {
   movePointer,
   pressPiece,
   releasePointer,
-} from '../src/ui/planDrag';
+} from '../src/shared/planDrag';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
 const st = () => useDesign.getState();
@@ -181,7 +181,7 @@ import {
   releaseTurn,
   turnAngle,
   turnedFootprint,
-} from '../src/ui/planDrag';
+} from '../src/shared/planDrag';
 import { makeItem, placeItem, rotationOf } from '../src/core/project';
 import { describeChange } from '../src/core/history';
 

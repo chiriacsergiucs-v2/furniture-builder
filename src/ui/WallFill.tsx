@@ -21,7 +21,7 @@ import {
   type WallRow,
   type WallInput,
 } from '../core/wallfill';
-import { saveProject } from '../persist/db';
+import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
