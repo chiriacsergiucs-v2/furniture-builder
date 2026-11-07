@@ -37,7 +37,7 @@ import {
 import { t, tr } from '../core/i18n';
 import { pt } from '../core/i18n/print';
 import { printPieceName } from '../core/catalog/printName';
-import { savePrices } from '../persist/db';
+import { savePrices } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { usePrices } from '../store/priceStore';
 import { useEstimate } from './useEstimate';

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { WallFinish, WallImage } from '../core/room';
 import { fitWithin } from '../core/surface';
 import { project, straightenMap } from '../core/wallPicture';
-import { imageKey, useImageUrls, type ImageUrl } from '../persist/images';
+import { imageKey, useImageUrls, type ImageUrl } from './useImageUrls';
 
 /**
  * Wall pictures as drawn (ADR-146): the stored picture, or for a straightened one the part of the photo inside the

@@ -5,8 +5,9 @@ import { newPlanPicture, planPictureRect, planScale, type PlanPicture } from '..
 import { topBoard } from '../core/roomSurfaces';
 import type { PlacedPiece } from '../core/project';
 import type { Material } from '../core/types';
-import { loadImage } from '../persist/db';
-import { imageKey, importImage, useImageUrls } from '../persist/images';
+import { loadImage } from '../store/libraryStore';
+import { importImage } from '../persist/images';
+import { imageKey, useImageUrls } from './useImageUrls';
 import { useDesign } from '../store/designStore';
 import { MmField, Select, Toggle } from './controls';
 import { askConfirm } from './Confirm';

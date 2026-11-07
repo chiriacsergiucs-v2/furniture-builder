@@ -9,7 +9,7 @@ import { kerfOf, newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import { frontSvg } from '../core/snapshot';
 import type { Design } from '../core/types';
-import { saveDesign, saveTemplate } from '../persist/db';
+import { saveDesign, saveTemplate } from '../store/libraryStore';
 import { online, useAccount } from '../store/accountStore';
 import { useDesign } from '../store/designStore';
 import { Dialog } from './Dialogs';

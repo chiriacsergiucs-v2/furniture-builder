@@ -1,6 +1,6 @@
 import { bytesToBase64 } from '../../core/surface';
 import type { Design } from '../../core/types';
-import { loadImage } from '../../persist/db';
+import { loadImage } from '../../store/libraryStore';
 
 export function download(name: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }));

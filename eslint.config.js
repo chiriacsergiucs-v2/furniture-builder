@@ -35,6 +35,7 @@ const APP = [
   },
 ];
 // Allowance until ADR-230 moves them: the ui modules the viewer imports today, by name. A new one fails.
+// useImageUrls moved from src/persist/images to src/ui (ADR-223); the viewer's import of it followed.
 const VIEWER_UI = [
   'Clearances',
   'CountStepper',
@@ -43,6 +44,7 @@ const VIEWER_UI = [
   'keepProportions',
   'planDrag',
   'renderSupport',
+  'useImageUrls',
   'useLook',
   'useMediaQuery',
   'useSnap',

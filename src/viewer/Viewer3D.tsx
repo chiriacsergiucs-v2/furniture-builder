@@ -81,7 +81,7 @@ import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
-import { imageKey, useImageUrls } from '../persist/images';
+import { imageKey, useImageUrls } from '../ui/useImageUrls';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';

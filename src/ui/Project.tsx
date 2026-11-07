@@ -49,7 +49,12 @@ import {
 } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
-import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
+import {
+  listDesigns,
+  listProjectTemplates,
+  loadDesign,
+  type StoredDesign,
+} from '../store/libraryStore';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';

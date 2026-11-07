@@ -23,7 +23,7 @@ import {
   replaceBands,
   replaceDecors,
   saveProject,
-} from '../persist/db';
+} from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -31,7 +31,8 @@ import { BoardBand } from './BoardBand';
 import { BoardProduct } from './SellerLinks';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
-import { importImage, useImageUrls } from '../persist/images';
+import { importImage } from '../persist/images';
+import { useImageUrls } from './useImageUrls';
 import { FINISHES, MAX_TILE } from '../core/surface';
 import { usePieceLockHint } from './pieceLockHint';
 
