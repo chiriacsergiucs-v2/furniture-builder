@@ -101,7 +101,17 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
-import { ARBridge, enterAR, exitAR, exportUsdz, turnAR, useARState, useARSupported } from './AR';
+import {
+  ARBridge,
+  enterAR,
+  exitAR,
+  exportUsdz,
+  keepTapsForButtons,
+  turnAR,
+  useARFloorFound,
+  useARState,
+  useARSupported,
+} from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
@@ -367,6 +377,8 @@ export default function Viewer3D() {
   // A render (ADR-068) always uses the realistic look.
   const rendering = useRendering();
   const realistic = rendering || look === 'realistic';
+  // In AR, drei's contact shadows would render their depth pass through the XR camera: a wrong blob under the pieces.
+  const arOn = useARState() !== 'off';
   // Stage colours come from the stylesheet tokens so the canvas matches the light or dark theme.
   const bg = useMemo(() => {
     void theme;
@@ -550,17 +562,19 @@ export default function Viewer3D() {
             <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
             <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
             <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-            <ContactShadows
-              position={[
-                bounds.x * S + (bounds.w * S) / 2,
-                -0.0005,
-                bounds.z * S + (bounds.d * S) / 2,
-              ]}
-              scale={Math.max(bounds.w, bounds.d) * S * 2.2}
-              blur={2.4}
-              opacity={0.38}
-              far={1.2}
-            />
+            {!arOn && (
+              <ContactShadows
+                position={[
+                  bounds.x * S + (bounds.w * S) / 2,
+                  -0.0005,
+                  bounds.z * S + (bounds.d * S) / 2,
+                ]}
+                scale={Math.max(bounds.w, bounds.d) * S * 2.2}
+                blur={2.4}
+                opacity={0.38}
+                far={1.2}
+              />
+            )}
           </>
         )}
         <Panels
@@ -835,18 +849,26 @@ export default function Viewer3D() {
 function ThreeMore({ name }: { name: string }) {
   const canAR = useARSupported();
   const ar = useARState();
+  const floorFound = useARFloorFound();
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const overlay = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDetailsElement>(null);
-  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect').
+  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect'); taps elsewhere must.
   useEffect(() => {
     const el = overlay.current;
     if (!el) return;
-    const stop = (e: Event) => e.preventDefault();
-    el.addEventListener('beforexrselect', stop);
-    return () => el.removeEventListener('beforexrselect', stop);
+    el.addEventListener('beforexrselect', keepTapsForButtons);
+    return () => el.removeEventListener('beforexrselect', keepTapsForButtons);
   }, []);
+  const hint =
+    ar === 'placing'
+      ? floorFound
+        ? t('Tap the screen to place the furniture on the ring.')
+        : t('Point the phone at the floor and move it slowly until a white ring appears.')
+      : ar === 'placed'
+        ? t('Placed at full size. Walk around it; Turn 90° ↻ turns it, Exit AR goes back.')
+        : '';
   return (
     <>
       <details className="menu three-more" ref={menu}>
@@ -886,7 +908,7 @@ function ThreeMore({ name }: { name: string }) {
       )}
       <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
         <p className="ar-hint" role="status">
-          {ar === 'placing' ? t('Tap the floor to place') : ''}
+          {hint}
         </p>
         <div className="ar-actions">
           {ar === 'placed' && (
@@ -1147,8 +1169,9 @@ function Occlusion() {
     composer.setSize(size.width, size.height);
   }, [composer, gl, size.width, size.height]);
   useEffect(() => () => composer.dispose(), [composer]);
-  // Priority 1 takes over drawing from the default renderer.
-  useFrame(() => composer.render(), 1);
+  // Priority 1 takes over drawing from the default renderer. In AR the composer's passes would draw through the XR
+  // camera into its own targets and show nothing, so AR draws the scene directly.
+  useFrame(() => (gl.xr.isPresenting ? gl.render(scene, camera) : composer.render()), 1);
   return null;
 }
 

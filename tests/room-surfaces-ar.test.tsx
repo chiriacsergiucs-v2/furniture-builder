@@ -21,10 +21,15 @@ vi.hoisted(() => {
 });
 
 // The AR bridge lives inside the 3D canvas; here it gets a stand-in renderer and scene.
-const three = vi.hoisted(() => ({ state: null as unknown }));
+const three = vi.hoisted(() => ({
+  state: null as unknown,
+  frame: null as null | ((s: unknown, d: number, f: unknown) => void),
+}));
 vi.mock('@react-three/fiber', () => ({
   useThree: (sel: (s: unknown) => unknown) => sel(three.state),
-  useFrame: () => {},
+  useFrame: (f: (s: unknown, d: number, frame: unknown) => void) => {
+    three.frame = f;
+  },
   invalidate: () => {},
 }));
 
@@ -142,6 +147,80 @@ describe('View in AR (ADR-208 item 7)', () => {
       msg = await ar.enterAR(null);
     });
     expect(msg).toBe('AR could not start on this device.');
+  });
+});
+
+describe('AR taps and hints (fix: nothing happened on taps)', () => {
+  beforeEach(() => vi.resetModules());
+
+  it('the overlay keeps only taps on its buttons; a tap anywhere else still reaches the session as select', async () => {
+    const ar = await import('../src/viewer/AR');
+    const overlay = document.createElement('div');
+    const hint = overlay.appendChild(document.createElement('p'));
+    const exit = overlay.appendChild(document.createElement('button'));
+    const label = exit.appendChild(document.createElement('span'));
+    overlay.addEventListener('beforexrselect', ar.keepTapsForButtons);
+    const tap = (el: Element) => {
+      const e = new Event('beforexrselect', { bubbles: true, cancelable: true });
+      el.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    // The overlay covers the whole screen: a tap on it or its hint is a tap on the floor.
+    expect(tap(overlay)).toBe(false);
+    expect(tap(hint)).toBe(false);
+    expect(tap(exit)).toBe(true);
+    expect(tap(label)).toBe(true);
+  });
+
+  it('the hint follows the floor ring; a tap with no floor places nothing, a tap with the ring places', async () => {
+    const selects = new Set<() => void>();
+    const { session } = stubXR(true);
+    const add = session.addEventListener;
+    session.addEventListener = (type: string, f: () => void) =>
+      type === 'select' ? selects.add(f) : add(type, f);
+    const scene = new Scene();
+    scene.add(new Mesh(new BoxGeometry(1, 1, 1), new MeshStandardMaterial()));
+    const ref = {};
+    const gl = {
+      xr: {
+        enabled: false,
+        setReferenceSpaceType: vi.fn(),
+        setSession: vi.fn(async () => {}),
+        getCamera: () => ({ position: new Vector3(0, 1.5, 2) }),
+        getReferenceSpace: () => ref,
+      },
+    };
+    three.state = { gl, scene };
+    const ar = await import('../src/viewer/AR');
+    render(<ar.ARBridge bounds={{ x: 0, y: 0, z: 0, w: 600, h: 870, d: 560 }} />);
+    const st = renderHook(() => [ar.useARState(), ar.useARFloorFound()] as const);
+    await act(async () => {
+      await ar.enterAR(document.createElement('div'));
+    });
+    const floor = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.2, 0, -1, 1]);
+    const frame = (hit: boolean) =>
+      act(() =>
+        three.frame!(null, 0, {
+          getHitTestResults: () =>
+            hit ? [{ getPose: () => ({ transform: { matrix: floor } }) }] : [],
+        }),
+      );
+    const tap = () => act(() => selects.forEach((f) => f()));
+    frame(false);
+    expect(st.result.current).toEqual(['placing', false]);
+    tap();
+    expect(st.result.current[0]).toBe('placing');
+    frame(true);
+    expect(st.result.current).toEqual(['placing', true]);
+    // The ring went away again (phone moved off the floor): the last spot is not used.
+    frame(false);
+    tap();
+    expect(st.result.current[0]).toBe('placing');
+    frame(true);
+    tap();
+    expect(st.result.current[0]).toBe('placed');
+    await act(async () => ar.exitAR());
+    expect(st.result.current).toEqual(['off', false]);
   });
 });
 

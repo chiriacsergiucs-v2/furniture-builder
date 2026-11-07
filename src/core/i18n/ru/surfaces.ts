@@ -34,7 +34,12 @@ export const ru_surfaces = {
   '3D view tools': 'Инструменты 3D-вида',
   'More 3D actions': 'Другие действия в 3D',
   'View in AR': 'Посмотреть в AR',
-  'Tap the floor to place': 'Нажмите на пол, чтобы разместить',
+  'Tap the screen to place the furniture on the ring.':
+    'Нажмите на экран, чтобы поставить мебель на кольцо.',
+  'Point the phone at the floor and move it slowly until a white ring appears.':
+    'Направьте телефон на пол и медленно ведите его, пока не появится белое кольцо.',
+  'Placed at full size. Walk around it; Turn 90° ↻ turns it, Exit AR goes back.':
+    'Размещено в натуральную величину. Обойдите вокруг; «Повернуть на 90° ↻» поворачивает, «Выйти из AR» возвращает назад.',
   'Exit AR': 'Выйти из AR',
   'Export for AR (.usdz)': 'Экспорт для AR (.usdz)',
   'AR is not available on this device.': 'AR недоступна на этом устройстве.',
