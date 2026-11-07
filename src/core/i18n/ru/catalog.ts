@@ -88,8 +88,6 @@ export const ru_catalog = {
   'Keep mine': 'Оставить мой',
   'Replace your edits with the shipped template?': 'Заменить ваши изменения встроенным шаблоном?',
   'Use shipped': 'Взять встроенный',
-  'Name of the new template': 'Название нового шаблона',
-  'Saved as a template': 'Сохранено как шаблон',
   'Save this piece as a template': 'Сохранить это изделие как шаблон',
   'Loading…': 'Загрузка…',
   'Nothing saved on this device yet.': 'На этом устройстве пока ничего не сохранено.',
@@ -214,8 +212,8 @@ export const ru_catalog = {
   'open something else first': 'сначала откройте что-нибудь другое',
   'The piece is no longer in the project.': 'Этого изделия больше нет в проекте.',
   'Give the template a name.': 'Дайте шаблону название.',
-  'This piece cannot be saved as a template: {why}.':
-    'Это изделие нельзя сохранить как шаблон: {why}.',
+  'This piece cannot be saved as a template. {why}':
+    'Это изделие нельзя сохранить как шаблон. {why}',
   'The template could not be saved in this browser’s storage.':
     'Не удалось сохранить шаблон в хранилище этого браузера.',
   'Templates saved on this device could not be read.':
@@ -245,4 +243,43 @@ export const ru_catalog = {
   'Saved pieces with a {brand} board': 'Сохранённые изделия с плитой {brand}',
   'No saved piece has a board of this maker yet.':
     'Пока ни одно сохранённое изделие не имеет плиты этого производителя.',
+  // ADR-195: catalog and template flows.
+  '{n|# item|# items}': '{n|# изделие|# изделия|# изделий}',
+  'The template could not be removed from this browser’s storage.':
+    'Не удалось удалить шаблон из хранилища этого браузера.',
+  'Designs saved on this device could not be read.':
+    'Не удалось прочитать проекты изделий, сохранённые на этом устройстве.',
+  'A new template on this device, in Catalog › Templates and in Add a piece.':
+    'Новый шаблон на этом устройстве — в Каталог › Шаблоны и в «Добавить изделие».',
+  'Show “{name}”': 'Показать «{name}»',
+  'Safety-regulated: you check it against the standards yourself':
+    'Требования безопасности: вы сами проверяете его по стандартам',
+  'I check it myself': 'Проверяю сам',
+  'This is not a template.': 'Это не шаблон.',
+  'The template is missing its id, revision or date.':
+    'У шаблона нет идентификатора, ревизии или даты.',
+  'The shipped template this one replaces could not be read.':
+    'Не удалось прочитать встроенный шаблон, который заменяет этот.',
+  'The shipped revision you kept your copy over could not be read.':
+    'Не удалось прочитать ревизию встроенного шаблона, вместо которой вы оставили свою копию.',
+  'The template has no family.': 'У шаблона нет семейства.',
+  'The template family has no id.': 'У семейства шаблона нет идентификатора.',
+  'Shorten the name to 200 characters or fewer.': 'Сократите название до 200 символов.',
+  'Pick a type.': 'Выберите тип.',
+  'Tick at least one room.': 'Отметьте хотя бы одну комнату.',
+  'A room in the template is not one the app knows.':
+    'Одна из комнат шаблона неизвестна приложению.',
+  'Keep each other name to 1–100 characters.':
+    'Каждое другое название должно быть длиной 1–100 символов.',
+  'Keep each line of what can be changed to 1–300 characters.':
+    'Каждая строка «что можно изменить» должна быть длиной 1–300 символов.',
+  'Shorten the default structure to 1000 characters or fewer.':
+    'Сократите структуру по умолчанию до 1000 символов.',
+  'A template has 1 to 5 variants.': 'В шаблоне от 1 до 5 вариантов.',
+  'Give every variant a name of up to 200 characters.':
+    'Дайте каждому варианту название длиной до 200 символов.',
+  'A variant could not be read.': 'Не удалось прочитать вариант.',
+  'Two variants share one id (“{name}”).': 'У двух вариантов один идентификатор («{name}»).',
+  'The design of variant “{name}” could not be read.':
+    'Не удалось прочитать проект варианта «{name}».',
 } satisfies Record<string, string>;
