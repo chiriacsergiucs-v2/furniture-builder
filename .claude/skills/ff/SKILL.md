@@ -10,15 +10,15 @@ and the pull request for that one request. Every hard rule in `CLAUDE.md` (Engin
 
 ## Steps
 
-1. **Understand.** Write the request down in the user's words. If something is unclear, ask before building.
-   An open question still blocks the part it affects; never build a recommended option the user has not picked.
+1. **Understand.** Write the request down in the user's words. Ask only when confidence is low (one batch, `build`
+   skill step 3); decide the obvious and list it under **Decided**.
 2. **Start from main.** `git fetch origin main` and work on a local copy of `origin/main`
    (`git checkout -B <session branch> origin/main`).
 3. **Implement** the smallest change that does what was asked. No refactors or polish beyond it.
 4. **Bookkeeping, same change:**
    - one row in `docs/backlog.md` (next free `N` id), status `Partially done`, the request in the user's words,
-     and the gap `find-it pending (light, ADR-066)` naming the visible text a later find-it should look for;
-   - a gap in `docs/adr/GAPS.md` (`pnpm gaps add`) for anything asked but not built. No ADR is written.
+     and the gap `find-it pending (light, ADR-066)` naming the visible text a later find-it should look for.
+     No ADR or gap entry is written (gaps optional, user 2026-11-07).
 5. **Checks:** run only `pnpm typecheck` and `pnpm build` (main deploys once CI on main passes, ADR-197; a broken build must not land).
    Run `pnpm format` so CI's format check passes, and `pnpm docs:check` for the bookkeeping. Do not run
    `pnpm test`, lint or any find-it. If typecheck or build fails, fix the cause; never push red.
@@ -28,7 +28,7 @@ and the pull request for that one request. Every hard rule in `CLAUDE.md` (Engin
 8. **Push only on explicit approval:** `git push origin HEAD:main` (fast-forward only; if main moved, rebase the
    local commit on `origin/main`, re-run typecheck and build, and ask again). Never force-push main.
 9. **Report:** the commit sha on main and the `CI` and `Deploy GitHub Pages` run ids once they appear. Pushed ≠
-   deployed ≠ live-verified; say which is true. End with the backlog table and **Skipped this iteration**.
+   deployed ≠ live-verified; say which is true. End with **Decided** and **Skipped this iteration**.
 
 ## Not in ff
 

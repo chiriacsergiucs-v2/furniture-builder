@@ -30,7 +30,7 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    browser script, ADR-108). The backlog row has that evidence.
    An `Acceptance: light` ADR may ship without the find-it result; its backlog row keeps
    `find-it pending (light, ADR-066)` and stays Partially done until the catch-up run (ADR-066).
-   If an item is not met, stop and tell the user rather than shipping (R1, R2).
+   If an item is not met, stop and tell the user rather than shipping (R2).
 3. **Run the helper:**
    ```bash
    bash .claude/skills/ship-adr/ship-adr.sh <NUMBER> ["optional implemented note"]
@@ -39,11 +39,11 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    links across `docs/adr*/`, sets the README row to `✅ Implemented`, marks the gaps in
    `docs/adr/GAPS.md` that moved into this ADR `Done (ADR-NNN)` (ADR-082), and warns about
    unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
-   built gets a new gap (`pnpm gaps add`) before shipping, never a silent Done.
+   built is listed under **Skipped this iteration** (a gap only if the user asks), never a silent Done.
    The helper stops before changing anything when the ADR's optional `- Research: <feature id>, …` header
    names an id that is not a feature in `src/core/research/ensemble-2026-10-23.features.ts` (ADR-212), and
    otherwise lists the named ids.
-4. **Update the research record (ADR-212).** Only when the helper listed research features:
+4. **Research record (ADR-212) — only when the user asks** (optional since 2026-11-07). When asked and the helper listed research features:
    - a feature the ADR built is deleted as ADR-149/152/184 did: its `F('<slug>', …)` row in
      `ensemble-2026-10-23.features.ts`, its `ENSEMBLE_APP_STATUS` entry and any `ENSEMBLE_MERGES` reference to it
      in `ensemble-2026-10-23.app.ts`, and its Russian entries in `src/core/i18n/ru/data-research*.ts`;
@@ -54,18 +54,16 @@ Project: **Furniture Builder** — offline PWA for designing casework.
      tests: `pnpm exec vitest run tests/research-built-rows.test.ts tests/i18n-research*.test.ts`.
 5. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
    Tick the `Done when` boxes you verified. Run `pnpm docs:check`, `pnpm format:check` and
-   `pnpm exec vitest run tests/sync-pending.test.ts` (user rule 2026-11-06: an ADR with no feature line
-   fails it once shipped; add it to the exemptions in `scripts/sync-pending.mjs` only when it has no feature).
+   `pnpm exec vitest run tests/sync-pending.test.ts` (feature lines are optional after ADR-218).
 6. **Commit and push:**
    ```bash
    git add -A
    git commit -m "Ship ADR-NNN: <short title> — mark implemented"
    git push -u origin <branch>
    ```
-   Never push to `main` directly or force-push it; merge only on the user's instruction (or
-   when green under the `babysit` skill), then cite the `Deploy GitHub Pages` run id. A ship pull
-   request is merged straight after the ship commit is pushed, without waiting for CI on it
-   (user rule 2026-10-29).
+   The ship commit goes on the ADR's build branch, in the same pull request (user rule 2026-11-07).
+   Never push to `main` directly or force-push it; merge only on the user's instruction, then cite the
+   `Deploy GitHub Pages` run id.
 
 ## Notes
 

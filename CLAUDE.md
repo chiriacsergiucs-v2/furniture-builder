@@ -28,8 +28,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   its translations in the same change. Text written in code goes through `t()` (`src/core/i18n`) with its Russian
   entry in `src/core/i18n/ru/<area>.ts` (a key without one fails `pnpm typecheck`); text from built-in data goes
   through `tr()` with its entry in `src/core/i18n/ru/data-*.ts`; print and CSV text goes through `pt()` with its
-  Russian and English entries in `src/core/i18n/print-text.ts`. A deleted text deletes its entries. A new feature
-  also adds its line to the feature tree (`src/core/features.ts`, ADR-158). The Gaps page is not translated (user
+  Russian and English entries in `src/core/i18n/print-text.ts`. A deleted text deletes its entries. The feature tree
+  (`src/core/features.ts`, ADR-158) is updated only when the user asks (user 2026-11-07). The Gaps page is not translated (user
   2026-10-29).
 
 ## Repository layout
@@ -56,8 +56,9 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 
 ## Commands
 
-CI is the source of truth. Before saying work is done, run the same checks CI runs
-(`.github/workflows/ci.yml`; scripts are defined in `package.json`). `pnpm format` fixes formatting.
+CI is the source of truth (`.github/workflows/ci.yml`; scripts in `package.json`). Locally, run only typecheck,
+format and the related tests (_How we build_, step 3); the full table runs on request (`verify` skill) and in CI.
+`pnpm format` fixes formatting.
 
 | Check      | Command                          |
 | ---------- | -------------------------------- |
@@ -73,41 +74,36 @@ Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
 `tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
 
-## How we plan and build: ADRs
+## How we build (user rule 2026-11-07, replaces the 2026-10-27/29 flow)
 
-An ADR here is a self-contained unit of work: a decision plus everything needed to
-implement it. Read `docs/adr/README.md` for the conventions and the index.
+Default flow for every request (`build` skill):
 
-- File name: `ADR-NNN-short-kebab-title.md` (3-digit number).
-- Status: `Pending`, `Deferred (<reason>)` or `Implemented`. Never set `Implemented` by hand.
-- An ADR is agreed by the user. Unconfirmed defaults stay under _Open questions_ in the ADR.
-- Never auto-accept a recommended or default option. Treat it as accepted only when the user says so explicitly
-  (e.g. "accept defaults", "proceed with the recommended"); otherwise ask (user rule 2026-10-25).
-- A recommended option is only a suggestion (user rule 2026-10-27). Never apply it by default: do not write it
-  into the Decision, code, tests or data, and do not build with it, until the user picks it. An unanswered open
-  question blocks building the part it affects; ask.
-- Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one.
-- Check `docs/adr/` and `docs/adr-done/` before proposing an alternative to a settled choice.
+1. **Questions — only when confidence is low.** One batch up front with the interactive question tool, at most ~4,
+   only on choices that change what gets built. Short options, no +N % estimates. Decide the obvious ones yourself
+   and list them under **Decided** in the reply so the user can override. Never invent physical facts (ADR-010).
+2. **Build** on the session branch (or `<short-title>`), smallest slice that does what was asked.
+3. **Check locally:** `pnpm typecheck`, `pnpm format`, and the tests related to the touched files
+   (`pnpm exec vitest related --run <files>`); fuzz after geometry changes. CI runs the full suite.
+4. **Bookkeeping:** one row in `docs/backlog.md`. Nothing else is mandatory: no ADR, no gap entry, no feature-tree
+   line, no research-record update, no requirement ledger.
+5. **Push** the branch. Open a pull request or merge only when the user asks.
+6. **Reply:** where to click and whether it is live (R4), **Decided**, **Skipped this iteration**.
+
+### ADRs — only for model, data and network changes
+
+An ADR is required only for a change to `src/core/types.ts`, the design document or model shape (ADR-011), the Dexie
+schema (ADR-012) or the network boundary (ADR-002), or when the user asks for one. Then:
+
+- File name `ADR-NNN-short-kebab-title.md`; Status `Pending`, `Deferred (<reason>)`, `Rejected` or `Implemented`.
+  Read `docs/adr/README.md` for the conventions and the index.
+- `new-adr` writes it (questions as in step 1 above), `next-adr` builds it on the same branch, `ship-adr` marks it
+  implemented in the same pull request (no separate ship pull request).
+- Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one. Check `docs/adr/` and
+  `docs/adr-done/` before proposing an alternative to a settled choice.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
 
-Lifecycle, one skill per step:
-
-1. `new ADR` — create and register an ADR (`new-adr` skill)
-2. `next ADR` — pick and implement the next ready ADR (`next-adr` skill)
-3. `ship ADR-NNN` — mark it implemented, move it, fix links (`ship-adr` skill)
-
-New and next together (user rule 2026-10-27, changed 2026-10-29): ask every question that defines an ADR the moment it
-arises, while writing it, with the interactive question tool: each option with its reasoning (what it delivers, the
-work it costs, labelled estimates) and the recommended one per the rule below. Do not leave a question only in the
-ADR file for later. Once every question is answered, record the answers in the ADR and build that same ADR straight
-away with `next-adr`, on the same branch and in the same pull request; the answers are the approval. Questions that
-arise while building are asked the same way, at once. Never treat silence or a recommended default as an answer; an
-unanswered question leaves the ADR `Deferred` for a later `next ADR`.
-
-Fast forward, `ff` (user rule 2026-10-27, `ff` skill): on "ff" the request is built without an ADR, branch or pull
-request, with light acceptance: no tests, lint or find-it, only `pnpm typecheck` and `pnpm build`. One backlog row
-(`find-it pending (light, ADR-066)`) and gaps for anything not built. Before pushing straight to `main`, list what
-changed and push only on the user's explicit approval. Model, document, storage and network changes still need an ADR.
+Fast forward, `ff` (`ff` skill): on "ff" the request is built without a branch or pull request, only `pnpm typecheck`
+and `pnpm build`, and pushed straight to `main` after the user approves the list of changes.
 
 ## Engineering conventions (hard rules)
 
@@ -135,13 +131,10 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - No dependency with an unknown licence or telemetry. Lockfile committed; base path `/furniture-builder/`.
 - Never renumber ADR or F/N/D ids.
 
-## Delivery (hard, auto-failing — user rule 2026-10-23, `docs/retros/2026-10-23-catalog.md`)
+## Delivery (user rule 2026-10-23; R1 requirement ledger dropped by the user 2026-11-07)
 
-- **R1 Requirement ledger:** list every requirement in the user's own words; each needs evidence from the
-  running app the user will use. Unreachable or unchecked = not done, and the whole delivery fails. A light ADR
-  (below) marks each visible requirement _not checked in a browser_ instead.
-- **R2 No avoidance:** never drop or relabel a requirement ("reference", "waits", "gap", "deferred") to skip
-  building it; ask instead.
+- **R2 No avoidance:** never drop or relabel a requirement to skip building it; if one cannot be built, say so
+  under **Skipped this iteration**.
 - **R3 Find-it test:** UI acceptance starts from the bare app and finds features by role and visible text at
   phone and desktop widths. Default find-it mode (toggle `find-it-jsdom-default`; while it is off the default is the
   browser script): **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
@@ -165,7 +158,7 @@ on restores it unchanged.
 | ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
 | `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
 | `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
-| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | off   | 2026-11-07, user dropped "Babysit + auto PR"                                                                          |
 
 ## Process (standing user rules)
 
@@ -181,39 +174,23 @@ on restores it unchanged.
   run id). Label evidence from documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
   only if someone opened the published URL and checked it.
-- Every implementation reply ends with the backlog status table (including every row still marked
-  `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
+- Every implementation reply ends with **Decided** and **Skipped this iteration** (no backlog status table, user
+  2026-11-07).
 - Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
   sets `checked` (the date) on the feature lines it verifies (`src/core/features.ts`); Done gaps live in
   `docs/adr/GAPS-archive.md` and are never re-checked.
-- Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
-  change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add`
-  with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
-  below). Cite the G ids in the reply. Only the user acknowledges a gap. A gap moved into an ADR has Status
-  `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
-  `Stop` hook (`.claude/settings.json`) enforce it.
+- Gaps ledger (ADR-082): optional since 2026-11-07. Record a gap with `pnpm gaps add` only when the user asks;
+  skipped items are listed in the reply.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
-- Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
-  option as recommended because it is the simplest. Recommend the option closest to what the user asked to
-  build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
-  much more of the request it delivers (+N % of value), labelled as estimates. "Smallest slice" applies to how
-  a chosen option is built, not to which option is recommended.
+- Recommended options: recommend the option closest to what the user asked, not the simplest. Never build a
+  recommended option the user has not picked when the question was asked; obvious choices are decided, not asked
+  (step 1 of _How we build_).
 
 ## Git
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
-- Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
-  in the same run (new and next together, above) shares one branch and one pull request with its implementation.
-- Open the pull request automatically (user rule 2026-10-29; toggle `auto-open-pr` — while it is off, ask before
-  opening): as soon as an implementation is done (its checks pass
-  and it is pushed to its branch), open the pull request without asking, using the repo's template if one exists.
-  Not for `ff` (no pull request) or an ADR-only change that is not approved for building. Merging still waits for the
-  user's instruction.
+- Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
+- Open a pull request only when the user asks (toggle `auto-open-pr` is off). Never auto-babysit.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
-  on its branch (`ship-adr`) and merged once green, without asking again. Ship pull requests are always merged
-  straight after the ship commit is pushed, without waiting for CI on it (user rule 2026-10-29); run
-  `pnpm docs:check`, `pnpm format:check` and `pnpm exec vitest run tests/sync-pending.test.ts` locally first (the last
-  added by the user on 2026-11-06, after a ship broke it on main: "Add sync-pending test"). CI skips `verify` on a pull request whose latest commit
-  starts with `Ship ADR-` (`ship-check` job in `ci.yml`); pushes to `main` always run it.
-- Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
+  `main`.
+- Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.
