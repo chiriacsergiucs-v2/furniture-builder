@@ -14,9 +14,10 @@ describe.each(WIDTHS)('Start from template descriptions at %ipx (find-it, ADR-21
     await user.click(await screen.findByRole('button', { name: /New…/ }));
     const start = await screen.findByRole('dialog', { name: 'Start something new' });
     expect(within(start).getByRole('heading', { name: /^Start from/ })).toBeTruthy();
+    // The size is the one the row builds (G-484: 820 mm with the plinth), the blind section the template's default.
     const c = cornerDefaults('blind');
-    const text = `${c.width} × ${c.height} × ${c.depth}, ${c.blindWidth} mm blind section on the left, one door`;
-    expect(text).toContain('610 mm blind section');
+    const text = `${c.width} × 820 × ${c.depth}, ${c.blindWidth} mm blind section on the left, one door`;
+    expect(text).toBe('1000 × 820 × 560, 610 mm blind section on the left, one door');
     const [blind] = within(start).getAllByRole('button', {
       name: /^Blind corner: Blind left \+ shelf/,
     });
@@ -30,5 +31,12 @@ describe.each(WIDTHS)('Start from template descriptions at %ipx (find-it, ADR-21
     // Another built-in template's row: the chest of drawers.
     const [chest] = within(start).getAllByRole('button', { name: /^Chest of drawers: / });
     expect(within(chest).getByText('800 × 900 × 450, four drawers on a plinth')).toBeTruthy();
+    // G-484: the base door row states the 820 mm it builds, the desk its width × height × depth.
+    const [baseDoor] = within(start).getAllByRole('button', {
+      name: /^Base cabinet, doors: 1 door \+ shelf/,
+    });
+    expect(within(baseDoor).getByText('600 × 820 × 560, one shelf behind a door')).toBeTruthy();
+    expect(start.textContent).not.toMatch(/600 × 720 × 560|1000 × 720 × 560|1400 × 700 × 750/);
+    expect(start.textContent).toContain('1400 × 750 × 700, three-drawer pedestal left');
   });
 });

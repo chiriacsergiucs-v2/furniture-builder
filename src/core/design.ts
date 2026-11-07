@@ -331,6 +331,20 @@ function blindDescription(): string {
   return `${c.width} × ${c.height} × ${c.depth}, ${c.blindWidth} mm blind section on the ${c.side}, one door`;
 }
 
+/**
+ * A template description stated with the size the piece really has (ADR-216, G-484): the leading
+ * "W × H × D" of `text` (English or translated) becomes the piece's own width × height × depth, so the
+ * text under a Start from row never contradicts the piece that row builds. Text without a leading size,
+ * or a piece without the three sizes, is returned unchanged.
+ */
+export function withPieceSize(text: string, design: Design): string {
+  const p = (design.product as { params?: { width?: unknown; height?: unknown; depth?: unknown } })
+    .params;
+  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v > 0;
+  if (!p || !ok(p.width) || !ok(p.height) || !ok(p.depth)) return text;
+  return text.replace(/^\d+ × \d+ × \d+/, `${p.width} × ${p.height} × ${p.depth}`);
+}
+
 export interface Template {
   id: string;
   name: string;

@@ -38,7 +38,7 @@ import {
 } from '../core/catalog/local';
 import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
-import { newId, templates } from '../core/design';
+import { newId, templates, withPieceSize } from '../core/design';
 import type { Design } from '../core/types';
 import { listDecors, listDesigns, type StoredDesign } from '../persist/db';
 import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
@@ -225,6 +225,15 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
 const TEMPLATE_TEXT = new Map(
   templates.filter((x) => x.description).map((x) => [x.id, x.description]),
 );
+/** The piece each such row builds, made once, so the description states its real size (ADR-216, G-484). */
+const ROW_PIECE = new Map<string, Design | null>();
+function templateText(v: { id: string; create?: () => Design }): string | null {
+  const text = TEMPLATE_TEXT.get(v.id);
+  if (!text) return null;
+  if (!ROW_PIECE.has(v.id)) ROW_PIECE.set(v.id, v.create ? v.create() : null);
+  const piece = ROW_PIECE.get(v.id);
+  return piece ? withPieceSize(tr(text), piece) : tr(text);
+}
 
 /**
  * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
@@ -305,9 +314,7 @@ export function StartFrom({
                       </strong>
                       <span className="sub">{tr(v.summary)}</span>
                       {/* The built-in template's description, under the row of the same id (ADR-216). */}
-                      {TEMPLATE_TEXT.has(v.id) && (
-                        <span className="sub">{tr(TEMPLATE_TEXT.get(v.id) ?? '')}</span>
-                      )}
+                      {templateText(v) && <span className="sub">{templateText(v)}</span>}
                       {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (
                         <span className="sub ro-line" lang="ro">

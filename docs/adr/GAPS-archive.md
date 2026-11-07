@@ -3322,3 +3322,15 @@ highest id in either file.
 - Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
+
+### G-484: Start from shows template sizes that differ from the row they sit under
+
+- Status: Done (ADR-216)
+- Origin: ADR-216, 2026-11-07; agent found it while building G-470
+- Missing: Start from now shows each built-in template's description under the catalog row of the same id. For base-door, corner-blind and corner-l the catalog row builds a different piece than the template: 820 mm high (plinth included, buildModel bounds) while the template description says 720 (600 x 720 x 560, 1000 x 720 x 560, 900 x 900 x 720). The desk-pedestal and desk-gables rows build the same piece as their templates, but their summary gives W x H x D (1400 x 750 x 700, 1200 x 750 x 600) while the template text right under it gives W x D x H (1400 x 700 x 750, 1200 x 600 x 750).
+- Request: Show them in Start from (user's answer for G-470, 2026-11-07)
+- Questions: Should the three template descriptions be changed to the catalog rows' 820 mm height, should the templates' own height change to 820, or should the description stay the template's as built now? Should the two desk texts be written in W x H x D like the summaries?
+- Suggested pick: Ask the user; closest to the request is to keep showing the descriptions and make the three texts state the height the row builds (820), read from the catalog piece, and write the desk texts as W x H x D. (estimate: effort +5% of ADR-216, value +5%)
+- Work: Low
+- Impact: Low-medium
+- Fix: Start from states the size of the piece each row builds (`withPieceSize`, read from the piece's own width, height and depth): 820 mm for base-door, corner-blind and corner-l, W × H × D for the desks (user 2026-11-07: "Read sizes from the piece").

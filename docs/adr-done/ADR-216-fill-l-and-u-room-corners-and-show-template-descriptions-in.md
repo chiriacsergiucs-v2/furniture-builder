@@ -55,8 +55,9 @@ Problems stay diagnostics (ADR-008); every offered mix is still built and checke
 ## Scope
 
 - In scope: corner plans, stretch trimming, card text for empty walls, Start from descriptions, feature lines.
-- Out of scope: template texts whose sizes differ from the row they sit under: 720 mm under three rows that build
-  820 mm, and the two desk texts in W × D × H under W × H × D summaries (G-484, found while building; asks the user).
+- Added before merge (user 2026-11-07, "Read sizes from the piece"): template texts whose sizes differed from the
+  row they sit under (720 mm under three rows that build 820 mm; the two desk texts in W × D × H under W × H × D
+  summaries, G-484) now state the piece's own width × height × depth (`withPieceSize` in `src/core/design.ts`).
 
 ## Consequences
 
@@ -77,3 +78,9 @@ Problems stay diagnostics (ADR-008); every offered mix is still built and checke
 - [x] Find-it at 390 and 1280 px: More → New… → Start from shows "1000 × 720 × 560, 610 mm blind section on the left,
       one door" under the Blind corner row (`tests/find-it/start-from-descriptions.test.tsx`).
 - [x] `TemplateButton` is deleted; feature lines added; G-461 and G-470 set to ADR-216.
+
+### G-484 follow-up evidence (2026-11-07, executed)
+
+`tests/template-size.test.ts` 2/2 (base-door 600 × 820 × 560, desk 1400 × 750 × 700, blind corner 1000 × 820 × 560,
+Russian text keeps its words with the new size); `tests/find-it/start-from-descriptions.test.tsx` 2/2 at 1280 and
+390 px (blind corner, base-door and desk rows; no 720 or W × D × H text left in Start from).
