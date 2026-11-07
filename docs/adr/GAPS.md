@@ -1501,7 +1501,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-477: AR corner snap does not detect walls automatically
 
-- Status: Open
+- Status: ADR-217
 - Origin: ADR-214, 2026-11-07
 - Missing: The room corner is set by two floor taps; walls are not found from WebXR wall hits.
 - Request: Enhance ar corners/floating/accuracy
@@ -1512,7 +1512,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-478: AR corner snap has no wall gap or skirting offset
 
-- Status: Open
+- Status: ADR-217
 - Origin: ADR-214, 2026-11-07
 - Missing: In a room corner the furniture's back and side touch the tapped lines exactly; no gap for skirting boards or uneven walls.
 - Request: Enhance ar corners/floating/accuracy
@@ -1523,7 +1523,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-479: AR has no depth occlusion or light estimation
 
-- Status: Open
+- Status: ADR-217
 - Origin: ADR-213, 2026-11-07
 - Missing: Real objects in front of the AR furniture do not hide it, and its lighting does not follow the room's light.
 - Request: Enhance ar corners/floating/accuracy
@@ -1534,7 +1534,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-480: AR has no finger drag to move the furniture
 
-- Status: Open
+- Status: ADR-217
 - Origin: ADR-215, 2026-11-07
 - Missing: After placing, the furniture moves only with the 1 cm / 10 cm buttons, not by dragging it across the floor.
 - Request: Enhance ar corners/floating/accuracy
@@ -1545,7 +1545,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-481: AR shows only overall dimensions, not per piece
 
-- Status: Open
+- Status: ADR-217
 - Origin: ADR-215, 2026-11-07
 - Missing: In a project, AR labels only the overall W x H x D of everything shown, not each piece.
 - Request: Enhance ar corners/floating/accuracy

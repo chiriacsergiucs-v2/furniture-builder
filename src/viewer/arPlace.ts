@@ -188,3 +188,135 @@ export function dimensionLabels(b: Box): DimLabel[] {
     { key: 'd', mm: b.d, at: [x0 - off, y0 + off, (z0 + z1) / 2] },
   ];
 }
+
+// ---------------------------------------------------------------------------
+// Walls, wall gap, drag, light and per-piece sizes (ADR-217)
+// ---------------------------------------------------------------------------
+
+/** A wall seen by a hit: a point on it and its face (unit, horizontal, pointing into the room). */
+export interface Wall {
+  x: number;
+  z: number;
+  nx: number;
+  nz: number;
+}
+
+/** True when a hit pose's surface is a wall: its up axis (the surface normal) is within `FLOOR_TILT` of horizontal. */
+export const isWallPose = (m: ArrayLike<number>) => Math.abs(m[5]) <= Math.sin(FLOOR_TILT);
+
+/** The wall of a wall hit pose (column-major 4×4): its position and its face from the pose's y axis. */
+export function wallOf(m: ArrayLike<number>): Wall {
+  const len = Math.hypot(m[4], m[6]) || 1;
+  return { x: m[12], z: m[14], nx: m[4] / len, nz: m[6] / len };
+}
+
+/** Two walls make a corner only when their faces differ by more than this. */
+export const CORNER_MIN_ANGLE = (60 * Math.PI) / 180;
+
+/**
+ * The room corner where two walls meet (ADR-217), at floor height `y`, with the wall the back goes against: the one
+ * the phone faces more squarely. `along` is a floor spot 1 m from the corner along that wall, away from the other
+ * wall, ready for `cornerPlacement`. Null when the walls are nearly parallel.
+ */
+export function wallsCorner(
+  a: Wall,
+  b: Wall,
+  y: number,
+  cam: { x: number; z: number },
+): { corner: Spot; along: Spot } | null {
+  const dot = a.nx * b.nx + a.nz * b.nz;
+  if (dot > Math.cos(CORNER_MIN_ANGLE) || dot < -Math.cos(CORNER_MIN_ANGLE)) return null;
+  // n_a · (p - a) = 0 and n_b · (p - b) = 0.
+  const det = a.nx * b.nz - a.nz * b.nx;
+  if (Math.abs(det) < 1e-9) return null;
+  const ca = a.nx * a.x + a.nz * a.z,
+    cb = b.nx * b.x + b.nz * b.z;
+  const x = (ca * b.nz - a.nz * cb) / det,
+    z = (a.nx * cb - ca * b.nx) / det;
+  // The back wall is the one whose face points most toward the phone.
+  const tx = cam.x - x,
+    tz = cam.z - z;
+  const tl = Math.hypot(tx, tz) || 1;
+  const facing = (w: Wall) => (w.nx * tx + w.nz * tz) / tl;
+  const [back, side] = facing(a) >= facing(b) ? [a, b] : [b, a];
+  let dx = -back.nz,
+    dz = back.nx;
+  // Along the back wall, away from the side wall: the side wall's face points into the room, the same way.
+  if (dx * side.nx + dz * side.nz < 0) {
+    dx = -dx;
+    dz = -dz;
+  }
+  return { corner: { x, y, z }, along: { x: x + dx, y, z: z + dz } };
+}
+
+/** Wall gap steps and limits (mm). */
+export const GAP_STEP = 5;
+export const GAP_MAX = 200;
+
+/**
+ * A corner placement moved off the walls by `gapMm` (ADR-217): forward from the back wall, and from the side wall
+ * toward the content's middle (right for a back-left corner, left for a back-right one).
+ */
+export function withWallGap(pl: Placement, corner: ARPoint, gapMm: number): Placement {
+  const g = gapMm * S;
+  return nudge(pl, corner === 'back-right' ? -g : g, g);
+}
+
+/** One-finger drag (ADR-217): the placement moved by the finger's floor movement, its turn kept. */
+export const dragTo = (start: Placement, from: Spot, to: Spot): Placement => ({
+  ...start,
+  cx: start.cx + to.x - from.x,
+  cz: start.cz + to.z - from.z,
+});
+
+/** A WebXR light estimate, as far as it is used here. */
+export interface LightEstimateLike {
+  sphericalHarmonicsCoefficients: Float32Array | number[];
+  primaryLightDirection: { x: number; y: number; z: number };
+  primaryLightIntensity: { x: number; y: number; z: number };
+}
+
+/** The main light from an estimate, as three's XREstimatedLight sets it: colour scaled to 0–1, intensity the scale. */
+export function mainLight(e: LightEstimateLike) {
+  const i = e.primaryLightIntensity;
+  const scale = Math.max(1, i.x, i.y, i.z);
+  return {
+    color: [i.x / scale, i.y / scale, i.z / scale] as [number, number, number],
+    intensity: scale,
+    direction: [
+      e.primaryLightDirection.x,
+      e.primaryLightDirection.y,
+      e.primaryLightDirection.z,
+    ] as [number, number, number],
+  };
+}
+
+/** What the Sizes switch shows (ADR-217). */
+export type ARSizes = 'overall' | 'piece' | 'off';
+export const nextARSizes = (s: ARSizes): ARSizes =>
+  s === 'overall' ? 'piece' : s === 'piece' ? 'off' : 'overall';
+
+/** One shown piece: its box in the scene (mm) and its own size. */
+export interface ARPiece {
+  box: Box;
+  w: number;
+  h: number;
+  d: number;
+}
+
+/** Per-piece labels: each piece's W × H × D, 6 cm above the middle of its top front edge (metres, content frame). */
+export function pieceLabels(pieces: readonly ARPiece[]) {
+  return pieces.map((p) => ({
+    w: p.w,
+    h: p.h,
+    d: p.d,
+    at: [(p.box.x + p.box.w / 2) * S, (p.box.y + p.box.h) * S + 0.06, (p.box.z + p.box.d) * S] as [
+      number,
+      number,
+      number,
+    ],
+  }));
+}
+
+/** Depth occlusion bias: the real surface is drawn this far behind what the phone measured (metres). */
+export const occlusionBias = (d: number) => Math.max(0.04, 0.03 * d);

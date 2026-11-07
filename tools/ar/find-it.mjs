@@ -24,9 +24,15 @@ const check = (width, name, ok, detail = '') => {
 function xrStub() {
   window.__xr = [];
   window.__hit = null;
+  // ADR-217: wall hits for the up-left and up-right rays, set by the script.
+  window.__walls = { left: null, right: null };
   const listeners = {};
   const session = {
-    enabledFeatures: ['hit-test', 'dom-overlay', 'anchors'],
+    enabledFeatures: ['hit-test', 'dom-overlay', 'anchors', 'depth-sensing', 'light-estimation'],
+    depthUsage: 'cpu-optimized',
+    depthDataFormat: 'luminance-alpha',
+    requestLightProbe: async () => ({}),
+    requestHitTestSourceForTransientInput: async () => ({ ray: 'touch', cancel() {} }),
     inputSources: [],
     renderState: {},
     addEventListener: (t, f) => (listeners[t] ??= new Set()).add(f),
@@ -34,17 +40,28 @@ function xrStub() {
     fire: (t) => listeners[t]?.forEach((f) => f({ type: t, inputSource: {} })),
     updateRenderState: (s) => Object.assign(session.renderState, s),
     requestReferenceSpace: async () => ({}),
-    requestHitTestSource: async () => ({ cancel() {} }),
+    requestHitTestSource: async (o) => ({
+      ray: !o?.offsetRay ? 'centre' : o.offsetRay.direction.x < 0 ? 'left' : 'right',
+      cancel() {},
+    }),
     requestAnimationFrame: (cb) =>
       setTimeout(
         () =>
           cb(performance.now(), {
             getViewerPose: () => null,
-            getHitTestResults: () =>
-              window.__hit
+            getHitTestResults: (src) =>
+              (src?.ray === 'centre' || !src?.ray ? window.__hit : window.__walls[src.ray])
                 ? [
                     {
-                      getPose: () => ({ transform: { matrix: new Float32Array(window.__hit) } }),
+                      getPose: () => ({
+                        transform: {
+                          matrix: new Float32Array(
+                            src?.ray === 'centre' || !src?.ray
+                              ? window.__hit
+                              : window.__walls[src.ray],
+                          ),
+                        },
+                      }),
                       createAnchor: async () => {
                         window.__anchors = (window.__anchors ?? 0) + 1;
                         return { anchorSpace: {}, delete() {} };
@@ -75,6 +92,13 @@ function xrStub() {
       },
     },
   });
+  if (!window.XRRay)
+    window.XRRay = class {
+      constructor(origin, direction) {
+        this.origin = origin;
+        this.direction = direction;
+      }
+    };
   // No layers API: three takes the XRWebGLLayer path.
   delete window.XRWebGLBinding;
   window.XRWebGLLayer = class {
@@ -99,6 +123,8 @@ function xrStub() {
 /** Column-major 4×4: a floor (up = +y) or a wall (up turned to +z) at (x, y, z). */
 const floorAt = (x, y, z) => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1];
 const wallAt = (x, y, z) => [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, x, y, z, 1];
+/** A wall facing (nx, 0, nz): its y axis (the surface normal) horizontal. */
+const wallFacing = (x, z, nx, nz) => [-nz, 0, nx, 0, nx, 0, nz, 0, 0, 1, 0, 0, x, 0.4, z, 1];
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -205,6 +231,20 @@ for (const width of [1280, 390]) {
     await hintIs('Tap the floor in the room corner.'),
   );
   check(width, '"Cancel corner" visible', await btn('Cancel corner').isVisible());
+  // ADR-217: the wall gap stepper in Room corner mode.
+  const gapText = page.locator('.ar-overlay .ar-gap-value');
+  check(
+    width,
+    '"Wall gap: 0 mm" in Room corner mode',
+    (await gapText.innerText()) === 'Wall gap: 0 mm',
+  );
+  check(width, '"Less wall gap" off at 0 mm', await btn('Less wall gap').isDisabled());
+  await btn('More wall gap').click();
+  check(
+    width,
+    '"More wall gap" → "Wall gap: 5 mm"',
+    (await gapText.innerText()) === 'Wall gap: 5 mm',
+  );
   await btn('Cancel corner').click();
   check(
     width,
@@ -222,7 +262,7 @@ for (const width of [1280, 390]) {
   await setHit(floorAt(1, -1.3, -1.5));
   await page.waitForTimeout(600);
   await tap();
-  const placed = 'Placed at full size. Fine-tune with the arrows, or Place again.';
+  const placed = 'Placed at full size. Drag it, fine-tune with the arrows, or Place again.';
   check(width, `second tap places it: hint "${placed}"`, await hintIs(placed));
   check(
     width,
@@ -241,9 +281,24 @@ for (const width of [1280, 390]) {
     'Step: 1 cm / 1°',
     'Turn 90° ↻',
     'Place again',
+    'Sizes: Overall',
+    'Hide behind real objects: On',
     'Exit AR',
   ])
     check(width, `"${name}" visible once placed`, await btn(name).isVisible());
+  // ADR-217: placed by a corner, so the wall gap shows; Sizes cycles; the occlusion switch.
+  check(width, 'the wall gap shows once placed by a corner', await gapText.isVisible());
+  await btn('Sizes: Overall').click();
+  check(width, 'Sizes → "Sizes: Per piece"', await btn('Sizes: Per piece').isVisible());
+  await btn('Sizes: Per piece').click();
+  check(width, 'Sizes → "Sizes: Off"', await btn('Sizes: Off').isVisible());
+  await btn('Sizes: Off').click();
+  await btn('Hide behind real objects: On').click();
+  check(
+    width,
+    'occlusion switch → "Hide behind real objects: Off"',
+    await btn('Hide behind real objects: Off').isVisible(),
+  );
   await btn('→ Right').click();
   await btn('Turn right by the step').click();
   await btn('Step: 1 cm / 1°').click();
@@ -252,7 +307,7 @@ for (const width of [1280, 390]) {
   check(width, 'no horizontal page scroll in AR', await noSideScroll());
   await page.screenshot({ path: `${out}/ar-placed-${width}.png` });
 
-  // 6. Place again, tap, Exit AR.
+  // 6. Place again, tap; the wall gap is not shown for a normal placement.
   await btn('Place again').click();
   check(
     width,
@@ -261,6 +316,22 @@ for (const width of [1280, 390]) {
   );
   await tap();
   check(width, 'a tap places it again', await hintIs(placed));
+  check(width, 'no wall gap for a normal placement', !(await gapText.isVisible()));
+
+  // 7. ADR-217: both walls seen → one tap places it in the corner.
+  await btn('Place again').click();
+  await hintIs('Tap to place it on the outline.');
+  await btn('Room corner').click();
+  await page.evaluate(({ l, r }) => (window.__walls = { left: l, right: r }), {
+    l: wallFacing(-0.6, -2, 1, 0),
+    r: wallFacing(0, -2.4, 0, 1),
+  });
+  const both = 'Both walls found — tap to place in the corner.';
+  check(width, `walls seen: hint "${both}"`, await hintIs(both));
+  await tap();
+  check(width, 'one tap places it in the corner', await hintIs(placed));
+  check(width, 'the wall gap shows after the auto corner', await gapText.isVisible());
+  await page.screenshot({ path: `${out}/ar-corner-${width}.png` });
   await btn('Exit AR').click();
   await page
     .locator('.ar-overlay')

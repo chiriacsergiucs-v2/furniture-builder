@@ -111,7 +111,10 @@ import {
   keepTapsForButtons,
   nudgeAR,
   placeARAgain,
+  cycleARSizes,
   startARCorner,
+  stepARWallGap,
+  toggleAROcclusion,
   toggleARStep,
   turnAR,
   turnARStep,
@@ -448,6 +451,19 @@ export default function Viewer3D() {
     [projectPieces],
   );
   const showLocks = !exploded && !rendering && locked.length > 0;
+  // AR per-piece sizes (ADR-217): each project piece's box and own size; a single design is one piece.
+  const arPieces = useMemo(
+    () =>
+      projectPieces
+        ? projectPieces.map((pc) => ({
+            box: pc.bounds,
+            w: pc.outline.w,
+            h: pc.outline.h,
+            d: pc.outline.d,
+          }))
+        : [{ box: bounds, w: bounds.w, h: bounds.h, d: bounds.d }],
+    [projectPieces, bounds],
+  );
   const lockBadges = useRef(new Map<string, HTMLSpanElement>());
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
@@ -612,7 +628,7 @@ export default function Viewer3D() {
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
-        {!preview && <ARBridge bounds={bounds} />}
+        {!preview && <ARBridge bounds={bounds} pieces={arPieces} />}
       </Canvas>
       {showLocks && (
         <div className="lock-badges" aria-hidden="true">
@@ -874,13 +890,19 @@ function ThreeMore({ name }: { name: string }) {
       ? !arUi.found
         ? t('Looking for the floor — move the phone slowly.')
         : arUi.corner === 'first'
-          ? t('Tap the floor in the room corner.')
+          ? arUi.walls
+            ? t('Both walls found — tap to place in the corner.')
+            : t('Tap the floor in the room corner.')
           : arUi.corner === 'second'
             ? t('Tap the floor along the wall the back goes against.')
             : t('Tap to place it on the outline.')
       : ar === 'placed'
-        ? t('Placed at full size. Fine-tune with the arrows, or Place again.')
+        ? t('Placed at full size. Drag it, fine-tune with the arrows, or Place again.')
         : '';
+  const sizesName =
+    arUi.sizes === 'overall' ? t('Overall') : arUi.sizes === 'piece' ? t('Per piece') : t('Off');
+  // The wall gap shows in Room corner mode and once placed by a corner (ADR-217).
+  const showGap = (ar === 'placing' && !!arUi.corner) || (ar === 'placed' && arUi.byCorner);
   const pointName =
     arUi.point === 'centre'
       ? t('Centre')
@@ -963,6 +985,29 @@ function ThreeMore({ name }: { name: string }) {
                 </button>
               </div>
             )}
+            {showGap && (
+              <div className="ar-row ar-gap" role="group" aria-label={t('Wall gap')}>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('Less wall gap')}
+                  disabled={arUi.gap <= 0}
+                  onClick={() => stepARWallGap(false)}
+                >
+                  −
+                </button>
+                <span className="ar-gap-value">{t('Wall gap: {mm} mm', { mm: arUi.gap })}</span>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('More wall gap')}
+                  disabled={arUi.gap >= 200}
+                  onClick={() => stepARWallGap(true)}
+                >
+                  +
+                </button>
+              </div>
+            )}
             <div className="ar-row">
               {ar === 'placing' && !arUi.corner && (
                 <>
@@ -990,6 +1035,16 @@ function ThreeMore({ name }: { name: string }) {
                   <button type="button" className="btn" onClick={placeARAgain}>
                     {t('Place again')}
                   </button>
+                  <button type="button" className="btn" onClick={cycleARSizes}>
+                    {t('Sizes: {name}', { name: sizesName })}
+                  </button>
+                  {arUi.depth && (
+                    <button type="button" className="btn" onClick={toggleAROcclusion}>
+                      {arUi.occlusion
+                        ? t('Hide behind real objects: On')
+                        : t('Hide behind real objects: Off')}
+                    </button>
+                  )}
                 </>
               )}
               <button type="button" className="btn solid" onClick={exitAR}>

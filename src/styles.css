@@ -7507,6 +7507,16 @@ ul.plain {
 .ar-overlay .ar-pad .btn {
   min-height: 44px;
 }
+/* ADR-217: the wall gap stepper. */
+.ar-overlay .ar-gap {
+  align-items: center;
+}
+.ar-overlay .ar-gap-value {
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
 
 /* ADR-205: sink and hob cut-outs and worktop corner joints on the plan. */
 .plan .kitchen-marks {
