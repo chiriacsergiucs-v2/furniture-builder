@@ -1,6 +1,6 @@
 ---
 name: new-adr
-description: Create a new ADR in docs/adr/ from the template — allocate the next free number, create the file, register it in the README index, then fill it in. Use when the user says "new ADR", "create an ADR", "add an ADR for X", "write an ADR about X", asks to turn a decision or request into an ADR, or gives an instruction that conflicts with an implemented ADR.
+description: Only for changes to the model, design document, Dexie schema or network boundary, or when the user asks for an ADR (user rule 2026-11-07). Create a new ADR in docs/adr/ from the template — allocate the next free number, create the file, register it in the README index, then fill it in. Use when the user says "new ADR", "create an ADR", "add an ADR for X", "write an ADR about X", asks to turn a decision or request into an ADR, or gives an instruction that conflicts with an implemented ADR.
 ---
 
 # Create a new ADR
@@ -17,7 +17,7 @@ Everything written to the repo is in **English**, whatever language the conversa
 
 1. **Understand the ADR.** Get the topic from the user, or draft it from the conversation.
    Write the user's request down **in their own words** (it becomes the Context and the
-   requirement ledger, R1 in `CLAUDE.md`). If the scope is unclear, ask at once (rule in step 6, **Open questions**).
+   Done when list). Ask only when confidence is low (step 6, **Open questions**).
    Check `docs/adr/README.md` and `docs/adr-done/` first so the new ADR does not duplicate
    or contradict an existing one.
 2. **Change control.** If the request conflicts with an implemented ADR, or touches
@@ -57,17 +57,10 @@ Everything written to the repo is in **English**, whatever language the conversa
      `- Acceptance: browser` under `- Backlog:` (ADR-108). If the user chose
      light acceptance, add `- Acceptance: light` under `- Backlog:`, mark those items
      `(light — catch-up)` and put `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
-   - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
-     `docs/adr/GAPS.md` (`pnpm gaps add`), cited by its G id; `pnpm docs:check` enforces it. When
-     the ADR takes over an existing gap, set that gap's Status to `ADR-NNN`.
-   - **Open questions** — every choice the user has not made, with the options and the
-     recommended one closest to the request (`CLAUDE.md`). The recommendation is a suggestion
-     only: never write it into the Decision or apply it until the user picks it. Never invent hardware specs, loads or supplier values (ADR-010);
-     ask instead.
-     **Ask each one the moment it arises (user rule 2026-10-29)** with the interactive question
-     tool (`AskUserQuestion`): every option with its reasoning — what it delivers, the work it
-     costs (+N %, estimate) — and the recommended one first, marked "(Recommended)". Do not
-     finish the file and leave questions for later. Record each answer in the ADR.
+   - **Open questions** — ask only low-confidence choices that change what gets built, in one
+     `AskUserQuestion` batch (at most ~4, short options, recommended one first, no estimates; user rule 2026-11-07).
+     Decide the obvious ones and record them in the Decision as decided by Claude. Never invent hardware specs,
+     loads or supplier values (ADR-010). Gaps in `docs/adr/GAPS.md` are optional.
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
    - Size stays within ~110 lines, ~6.5 KB and 8 `Done when` items. If it would be bigger,
@@ -75,12 +68,8 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Build (user rule 2026-10-29, `CLAUDE.md`).** When every open question is answered, record the
-   answers (Context, Decision, gaps moved to `ADR-NNN`), set Status `Pending` and continue with the
-   `next-adr` skill on **this ADR** (not the lowest-numbered one), on the same branch, in the same pull
-   request. The answers are the approval. Its dependencies must still be implemented; if one is not,
-   say so and stop. If a question stays unanswered, keep the ADR `Deferred`, suggest a branch named
-   `adr-NNN-slug`, and do not build. Never treat silence or a recommended default as an answer.
+9. **Build.** Once the questions are answered, record the answers and continue with `next-adr` on this ADR, on the
+   same branch. The answers are the approval. If a question stays unanswered, keep the ADR `Deferred`.
 
 ## Notes
 

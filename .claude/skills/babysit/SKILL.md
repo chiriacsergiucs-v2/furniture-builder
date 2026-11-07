@@ -1,6 +1,6 @@
 ---
 name: babysit
-description: Watch a pull request Claude opened in this repo and drive it to merged — CI failures, merge conflicts, review comments and bot findings — then ship its ADR and merge once it is green. Use when the user says "babysit", "watch the PR", "drive it to green", "autofix CI", or right after Claude opens a pull request and the user agrees to have it watched.
+description: Only when the user explicitly asks (no auto-babysit, user rule 2026-11-07). Watch a pull request Claude opened in this repo and drive it to merged — CI failures, merge conflicts, review comments and bot findings — then ship its ADR and merge once it is green. Use when the user says "babysit", "watch the PR", "drive it to green", "autofix CI", or right after Claude opens a pull request and the user agrees to have it watched.
 ---
 
 # Babysit a pull request

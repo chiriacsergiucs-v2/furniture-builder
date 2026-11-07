@@ -60,6 +60,9 @@ export const EXEMPT = [
   'ADR-237',
 ];
 
+/** Feature lines are optional for ADRs after this number (user 2026-11-07). */
+export const FEATURE_LINE_LAST = 218;
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** { "ADR-012": "2026-10-21", ... } from the "- Implemented:" line of each Implemented docs/adr-done file. */
@@ -127,7 +130,7 @@ export function pending(domains, implemented, exempt = EXEMPT, inProgress = pend
       );
   }
   const uncited = Object.keys(implemented)
-    .filter((a) => !cited.has(a) && !exempt.includes(a))
+    .filter((a) => !cited.has(a) && !exempt.includes(a) && Number(a.slice(4)) <= FEATURE_LINE_LAST)
     .sort();
   return { unchecked, stale, unknown, uncited };
 }

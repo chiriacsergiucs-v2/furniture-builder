@@ -60,38 +60,24 @@ ADRs are all in `docs/adr-done/`.
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
-   _Skipped this iteration_, and every skipped item gets a gap in `docs/adr/GAPS.md`
-   (`pnpm gaps add`, ADR-082) in the same change, cited by its G id. Non-trivial choices get a short Explore → Doubt → Compare.
+   _Skipped this iteration_ in the reply (gaps optional, user 2026-11-07).
 6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
    add a test for every new rule. Use the matching skill:
    - saved data or a new Dexie table → `add-storage-version`
    - a screen or component → `implement-design`
    - tests → `add-tests`
-7. **Verify.** Run the `verify` skill. Geometry changes also run
-   `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. Anything visible: write or extend
-   `tests/find-it/<feature>.test.tsx` (jsdom, `renderApp` from `tests/find-it/setup.tsx`, both
-   `WIDTHS`), run by `pnpm test` (R3, ADR-108). If the header says `- Acceptance: browser`, write
-   `tools/<feature>/find-it.mjs` instead and run it on the production build from the bare app at
-   phone (375–390 px) and desktop (1280–1440 px) widths. If the ADR header says
-   `- Acceptance: light`, skip the script, preview and browser; the backlog row stays
-   Partially done with the gap `find-it pending (light, ADR-066)` and the visible text to find (ADR-066).
-8. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the
-   evidence you ran. Write the requirement ledger (R1): every requirement in the user's
-   words → evidence in the running app. Any requirement without evidence fails the delivery;
-   for a light ADR, visible requirements are marked _not checked in a browser_.
-9. **Do not ship in this skill.** When the checklist is met, report (outcome first: where to
-   click, whether it is merged and deployed), end with the backlog table and
-   **Skipped this iteration**, and suggest `ship ADR-NNN` once it is merged.
-10. **Open the pull request** (user rule 2026-10-29): once the checks pass and the branch is
-    pushed, open the pull request for the branch without asking (one pull request with the ADR
-    file when it was created in the same run), and link it in the report. Do not merge it.
+7. **Check:** `pnpm typecheck`, `pnpm format`, `pnpm exec vitest related --run <changed files>`, `pnpm docs:check`;
+   fuzz after geometry changes. Visible changes get or extend a jsdom find-it test (R3); `Acceptance: browser` runs
+   `tools/<feature>/find-it.mjs` on the production build. Full `verify` only when the user asks; CI runs it.
+8. **Backlog:** update the row in `docs/backlog.md` with the evidence you ran.
+9. **Ship in the same branch:** run `ship-adr` for this ADR and commit it on the same branch (no separate ship pull
+   request). Push and open the pull request (toggle `auto-open-pr`). Merge only when the user asks.
+10. **Reply:** where to click and whether it is live, **Decided**, **Skipped this iteration**.
 
 ## Notes
 
-- **After `new-adr` (user rules 2026-10-27, 2026-10-29):** when the user answered every open
-  question of a just-created ADR (the answers are the approval), skip step 1's picker choice and build that ADR; keep the size gate and dependency check.
-  The ADR file and its implementation go in one branch and one pull request. A question that
-  arises while building is asked at once with the interactive question tool, options with reasoning.
+- **After `new-adr`:** build that ADR (not the lowest-numbered one) on the same branch; keep the dependency check.
+  Questions that arise while building follow the low-confidence rule (`build` skill, step 3).
 - Picking is read-only — the script never edits or moves anything.
 - A dependency still in `docs/adr/` counts as blocked even if its code exists. Ship it first
   (or the user can override).

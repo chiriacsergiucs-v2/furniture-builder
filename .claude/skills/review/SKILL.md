@@ -14,7 +14,7 @@ trust a claim you did not see run. Default mode is **read-only**: report, do not
    Identify the ADR from the branch name (`adr-NNN-...`), commit messages or the user, and
    the backlog ids it touches.
 2. **Read the plan.** The ADR and its `Depends on` ADRs. Build a table mapping every
-   `Done when` item **and every requirement in the user's words** (R1) to evidence: code,
+   `Done when` item and every requirement in the user's words to evidence: code,
    test, find-it result. Items with no evidence are unmet, and an unmet requirement fails
    the delivery. A requirement that was dropped or relabelled ("reference", "gap", "waits")
    instead of built is a blocking issue (R2).
