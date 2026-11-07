@@ -40,8 +40,20 @@ export const ru_surfaces = {
   'Tap the floor along the wall the back goes against.':
     'Нажмите на пол вдоль стены, к которой встанет задняя сторона.',
   'Tap to place it on the outline.': 'Нажмите, чтобы поставить по контуру.',
-  'Placed at full size. Fine-tune with the arrows, or Place again.':
-    'Размещено в натуральную величину. Уточните стрелками или разместите заново.',
+  'Placed at full size. Drag it, fine-tune with the arrows, or Place again.':
+    'Размещено в натуральную величину. Перетащите, уточните стрелками или разместите заново.',
+  // AR walls, wall gap, occlusion, light, drag and sizes (ADR-218)
+  'Both walls found — tap to place in the corner.':
+    'Обе стены найдены — нажмите, чтобы поставить в угол.',
+  'Wall gap': 'Зазор от стены',
+  'Less wall gap': 'Меньше зазор от стены',
+  'More wall gap': 'Больше зазор от стены',
+  'Wall gap: {mm} mm': 'Зазор от стены: {mm} мм',
+  'Sizes: {name}': 'Размеры: {name}',
+  Overall: 'Общие',
+  'Per piece': 'По предметам',
+  'Hide behind real objects: On': 'Скрывать за реальными предметами: вкл.',
+  'Hide behind real objects: Off': 'Скрывать за реальными предметами: выкл.',
   'Back-left': 'Сзади слева',
   'Back-right': 'Сзади справа',
   'Point: {name}': 'Точка: {name}',
@@ -94,6 +106,10 @@ export const ru_surfaces = {
   'A footprint outline, a Point switch (Centre, Back-left, Back-right) and Room corner by two floor taps.':
     'Контур основания, переключатель точки (центр, сзади слева, сзади справа) и угол комнаты двумя нажатиями на пол.',
   'Fine-tune in AR and see its size': 'Точная настройка в AR и размеры',
+  'AR walls, wall gap, real objects, room light, drag and per-piece sizes':
+    'Стены в AR, зазор от стены, реальные предметы, свет комнаты, перетаскивание и размеры по предметам',
+  'Room corner in one tap when both walls are seen, a wall gap, real objects hide it, the room light, one-finger drag, Sizes per piece.':
+    'Угол комнаты одним нажатием, когда видны обе стены, зазор от стены, реальные предметы закрывают мебель, свет комнаты, перетаскивание одним пальцем, размеры по предметам.',
   'Move 1 cm or 10 cm, turn 1° or 15°, Place again, and W × H × D labels in mm.':
     'Сдвиг на 1 или 10 см, поворот на 1° или 15°, повторное размещение и подписи Ш × В × Г в мм.',
   'From the 3D toolbar ⋯: View in AR on phones that offer it, and a .usdz file for AR Quick Look.':

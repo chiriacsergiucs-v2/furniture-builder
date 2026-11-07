@@ -3375,3 +3375,58 @@ highest id in either file.
 - Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
+
+### G-477: AR corner snap does not detect walls automatically
+
+- Status: Done (ADR-218)
+- Origin: ADR-214, 2026-11-07
+- Missing: The room corner is set by two floor taps; walls are not found from WebXR wall hits.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add automatic wall detection with the two-tap fallback?
+- Suggested pick: Leave it out until the two-tap snap is tried on a phone (estimate: work +60 %, value +5 %: plain walls are often not detected)
+- Work: Medium-high
+- Impact: Low
+
+### G-478: AR corner snap has no wall gap or skirting offset
+
+- Status: Done (ADR-218)
+- Origin: ADR-214, 2026-11-07
+- Missing: In a room corner the furniture's back and side touch the tapped lines exactly; no gap for skirting boards or uneven walls.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Should corner snap leave a gap from the walls, and how many mm?
+- Suggested pick: Use the fine-tune buttons (ADR-215) to move it off the wall; add an offset only if you ask (estimate: work +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+
+### G-479: AR has no depth occlusion or light estimation
+
+- Status: Done (ADR-218)
+- Origin: ADR-213, 2026-11-07
+- Missing: Real objects in front of the AR furniture do not hide it, and its lighting does not follow the room's light.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add WebXR depth-sensing occlusion and light-estimation where the phone offers them?
+- Suggested pick: Leave out for now (estimate: work +80 %, value +10 %; few phones offer depth sensing in the browser)
+- Work: High
+- Impact: Low-medium
+
+### G-480: AR has no finger drag to move the furniture
+
+- Status: Done (ADR-218)
+- Origin: ADR-215, 2026-11-07
+- Missing: After placing, the furniture moves only with the 1 cm / 10 cm buttons, not by dragging it across the floor.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add one-finger drag on top of the buttons?
+- Suggested pick: Leave out (user picked buttons only, 2026-11-07; estimate: work +45 %, value +10 %)
+- Work: Medium
+- Impact: Low
+
+### G-481: AR shows only overall dimensions, not per piece
+
+- Status: Done (ADR-218)
+- Origin: ADR-215, 2026-11-07
+- Missing: In a project, AR labels only the overall W x H x D of everything shown, not each piece.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add per-piece dimension labels in AR?
+- Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
+- Work: Medium
+- Impact: Low
