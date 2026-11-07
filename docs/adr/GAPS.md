@@ -1555,3 +1555,69 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
 - Questions: Should Mirror also reverse the door planes and the width remainder of a sliding set (a real mirror image), or keep the planes as the design convention?
 - Suggested pick: Reverse both for new mirrored copies: widths by remainderFirst, and the plane parity from the right. (estimate: effort +5 %, value +3 %)
+
+### G-477: AR corner snap does not detect walls automatically
+
+- Status: Open
+- Origin: ADR-214, 2026-11-07
+- Missing: The room corner is set by two floor taps; walls are not found from WebXR wall hits.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add automatic wall detection with the two-tap fallback?
+- Suggested pick: Leave it out until the two-tap snap is tried on a phone (estimate: work +60 %, value +5 %: plain walls are often not detected)
+- Work: Medium-high
+- Impact: Low
+
+### G-478: AR corner snap has no wall gap or skirting offset
+
+- Status: Open
+- Origin: ADR-214, 2026-11-07
+- Missing: In a room corner the furniture's back and side touch the tapped lines exactly; no gap for skirting boards or uneven walls.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Should corner snap leave a gap from the walls, and how many mm?
+- Suggested pick: Use the fine-tune buttons (ADR-215) to move it off the wall; add an offset only if you ask (estimate: work +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+
+### G-479: AR has no depth occlusion or light estimation
+
+- Status: Open
+- Origin: ADR-213, 2026-11-07
+- Missing: Real objects in front of the AR furniture do not hide it, and its lighting does not follow the room's light.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add WebXR depth-sensing occlusion and light-estimation where the phone offers them?
+- Suggested pick: Leave out for now (estimate: work +80 %, value +10 %; few phones offer depth sensing in the browser)
+- Work: High
+- Impact: Low-medium
+
+### G-480: AR has no finger drag to move the furniture
+
+- Status: Open
+- Origin: ADR-215, 2026-11-07
+- Missing: After placing, the furniture moves only with the 1 cm / 10 cm buttons, not by dragging it across the floor.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add one-finger drag on top of the buttons?
+- Suggested pick: Leave out (user picked buttons only, 2026-11-07; estimate: work +45 %, value +10 %)
+- Work: Medium
+- Impact: Low
+
+### G-481: AR shows only overall dimensions, not per piece
+
+- Status: Open
+- Origin: ADR-215, 2026-11-07
+- Missing: In a project, AR labels only the overall W x H x D of everything shown, not each piece.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add per-piece dimension labels in AR?
+- Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
+- Work: Medium
+- Impact: Low
+
+### G-482: Real-phone check of the AR grounding, corner and fine-tune work
+
+- Status: Open
+- Origin: ADR-213 to ADR-215, 2026-11-07; agent cannot run a real AR session
+- Missing: Floor grounding, anchors, shadow, corner placement, fine-tune and dimension labels were tested only with a simulated WebXR, not on a phone.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Can you try View in AR on your Android phone after the merge and report what you see?
+- Suggested pick: You run it after the deploy and tell Claude; Claude records it in the backlog (estimate: effort +0 % for Claude, value +15 %: the only proof AR works)
+- Work: Low
+- Impact: Medium-high
