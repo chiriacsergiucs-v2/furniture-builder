@@ -71,7 +71,7 @@ ADRs are all in `docs/adr-done/`.
    `tools/<feature>/find-it.mjs` on the production build. Full `verify` only when the user asks; CI runs it.
 8. **Backlog:** update the row in `docs/backlog.md` with the evidence you ran.
 9. **Ship in the same branch:** run `ship-adr` for this ADR and commit it on the same branch (no separate ship pull
-   request). Push. Open a pull request or merge only when the user asks.
+   request). Push and open the pull request (toggle `auto-open-pr`). Merge only when the user asks.
 10. **Reply:** where to click and whether it is live, **Decided**, **Skipped this iteration**.
 
 ## Notes

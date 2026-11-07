@@ -86,7 +86,7 @@ Default flow for every request (`build` skill):
    (`pnpm exec vitest related --run <files>`); fuzz after geometry changes. CI runs the full suite.
 4. **Bookkeeping:** one row in `docs/backlog.md`. Nothing else is mandatory: no ADR, no gap entry, no feature-tree
    line, no research-record update, no requirement ledger.
-5. **Push** the branch. Open a pull request or merge only when the user asks.
+5. **Push** the branch and open the pull request automatically (toggle `auto-open-pr`). Merge only when the user asks.
 6. **Reply:** where to click and whether it is live (R4), **Decided**, **Skipped this iteration**.
 
 ### ADRs — only for model, data and network changes
@@ -158,7 +158,7 @@ on restores it unchanged.
 | ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
 | `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
 | `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
-| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | off   | 2026-11-07, user dropped "Babysit + auto PR"                                                                          |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
 
 ## Process (standing user rules)
 
@@ -190,7 +190,8 @@ on restores it unchanged.
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
-- Open a pull request only when the user asks (toggle `auto-open-pr` is off). Never auto-babysit.
+- Open the pull request automatically once the checks pass and the branch is pushed (toggle `auto-open-pr`, on;
+  while off, ask first). Never auto-babysit.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.

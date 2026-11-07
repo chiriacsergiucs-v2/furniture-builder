@@ -18,6 +18,7 @@ description: Default implementation flow — ask only low-confidence questions i
    `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after geometry changes and `pnpm docs:check` if docs changed.
    Fix causes, never checks.
 6. **Backlog:** one row in `docs/backlog.md` (next free `N` id) with the evidence you ran.
-7. **Commit and push** the branch (`git push -u origin <branch>`). No pull request, babysit or merge unless asked.
+7. **Commit and push** the branch (`git push -u origin <branch>`), then open the pull request (toggle `auto-open-pr`;
+   while off, ask first). No babysit or merge unless asked.
 8. **Reply:** where to click and whether it is live (pushed ≠ merged ≠ deployed), **Decided**, **Skipped this
    iteration**.
