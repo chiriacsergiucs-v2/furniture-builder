@@ -1,3 +1,5 @@
+import { isHttpsOrigin } from '../core/origin';
+
 /**
  * The only runtime third-party origins the app may contact (ADR-126). Everything online lives in `src/online` and
  * is loaded lazily after the user opts in (G-215); the offline core never imports this folder statically.
@@ -6,13 +8,8 @@
 export function onlineOrigins(
   url: string | undefined = import.meta.env.VITE_SUPABASE_URL,
 ): string[] {
-  if (!url) return [];
-  try {
-    const u = new URL(url);
-    return u.protocol === 'https:' ? [u.origin] : [];
-  } catch {
-    return [];
-  }
+  // One https rule with the store's `backendConfigured` (ADR-233).
+  return url && isHttpsOrigin(url) ? [new URL(url).origin] : [];
 }
 
 /** Whether this build has a backend at all: online features are hidden when it does not. */
