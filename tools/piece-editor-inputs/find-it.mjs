@@ -1,14 +1,13 @@
 // Production acceptance for ADR-199: start from the bare app and use visible controls at both widths.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
-const url = process.argv[2] ?? 'http://127.0.0.1:4173/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-piece-editor-acceptance';
+const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
+const out = outDir('/tmp/furniture-piece-editor-acceptance');
 mkdirSync(out, { recursive: true });
 const schema = Number(
   /PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1],
 );
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

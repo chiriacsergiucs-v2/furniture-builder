@@ -9,11 +9,11 @@
 //   5. A display-only 3D model (a cube the script writes): in 3D Move mode a drag moves it and "Turn 90° ↺" turns it.
 //   6. Deleting a project with a kept version asks "Also delete its 1 kept version?"; Esc keeps it.
 // The script writes its own model file into <out dir>; no binary is committed. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 const widths = (process.argv[4] ?? '1280,390').split(',').map(Number);
 // ONLY=4,5 runs just those sections (2 always runs: the later ones use its project).
 const only = process.env.ONLY ? process.env.ONLY.split(',').map(Number) : null;
@@ -99,7 +99,7 @@ function cubeGlb(m = 0.6) {
 const cube = `${out}/Cube.glb`;
 writeFileSync(cube, cubeGlb());
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

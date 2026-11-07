@@ -8,13 +8,13 @@
 // ADR-201 (G-351): the piece card has no "Turn" radiogroup any more (the typed rotation is hidden, TYPED_ROTATION), so
 // the turn is read from the plan piece's name, "<name>, W by D mm", whose W and D swap after a quarter turn; and a
 // phone opens Build & Preview in 2D (ADR-144), so `to3d()` taps "3D" there too.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

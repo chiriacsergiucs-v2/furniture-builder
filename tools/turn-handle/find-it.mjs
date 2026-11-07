@@ -4,13 +4,13 @@
 // round "Turn …" handle; dragging it shows the angle and turns the piece to that whole degree; near a quarter turn
 // it snaps; Shift steps by 15°; [ and ] turn by 1°; Undo turns it back; Esc during a drag restores the angle and the
 // click that follows does not open the piece. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

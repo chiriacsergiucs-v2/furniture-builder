@@ -4,13 +4,13 @@
 // From the bare app at 1440 and 390 px, by visible text: two wall cabinets → select both → "Align bottom" →
 // "Lock size" → "Size locked" and "Size locked — unlock to change" → 3D, Move, the "Change height" handle dragged up →
 // "From floor … mm" → "Section" with "Width" / "Height" / "Depth" and "Cut at … mm" → "Isolate". Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

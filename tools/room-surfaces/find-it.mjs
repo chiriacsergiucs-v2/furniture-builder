@@ -10,11 +10,11 @@
 // "Export for AR (.usdz)" (a zip holding a .usda, no request leaves the device); Render › "Engine: {name}" and the
 // first 8 samples; and the wall behind the sideboard opened with "Edit this piece". Not part of `pnpm test`.
 // Not checked here: AR on a real phone (Android View in AR, iPhone AR Quick Look); that needs the devices.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
 
 /** A 0.6 m red cube as a GLB (12 triangles), written into <out dir>; no binary model is committed. */
@@ -91,7 +91,7 @@ function cubeGlb(m = 0.6) {
 const cube = `${out}/Cube.glb`;
 writeFileSync(cube, cubeGlb());
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

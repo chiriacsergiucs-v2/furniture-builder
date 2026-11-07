@@ -1,14 +1,10 @@
 // ADR-173: Fill the room — whole-room mixes over every wall, doors and windows kept free, corner cabinets at the
-// inside corners, every offered mix error-free, deterministic; random rooms never throw.
+// inside corners, every offered mix error-free, deterministic. The seeded random rooms (never throw) run in
+// tests/fuzz.test.ts under FUZZ_N (ADR-237).
 // ADR-177: a wall corner cabinet above each corner cabinet (blind → wall blind, L and diagonal → wall L), the wall
 // rows meeting it; a window splits the wall row into rows on both sides that stop at its edges.
 import { describe, expect, it } from 'vitest';
-import {
-  buildProjectModel,
-  placedBounds,
-  validateProject,
-  type ProjectItem,
-} from '../src/core/project';
+import { placedBounds, validateProject, type ProjectItem } from '../src/core/project';
 import {
   cornerPlans,
   cornerWalls,
@@ -202,73 +198,6 @@ describe('suggestRoomMixes (ADR-173)', () => {
     const r = suggestRoomMixes(input(rect(), { walls: [0], minWidth: 5000, maxWidth: 6000 }));
     expect(r.mixes).toEqual([]);
     expect(r.problems.length).toBeGreaterThan(0);
-  });
-  it('seeded random rooms never throw and never offer a mix with an error', () => {
-    let seed = 5;
-    const rnd = () => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
-    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 150);
-    for (let n = 0; n < N; n++) {
-      const shape = (['rectangle', 'l-shape', 'u-shape', 'alcove'] as const)[Math.floor(rnd() * 4)];
-      const width = 2500 + Math.floor(rnd() * 3000),
-        depth = 2500 + Math.floor(rnd() * 2000);
-      const room: Room = {
-        height: 2400 + Math.floor(rnd() * 400),
-        outline: shapeOutline(shape, {
-          width,
-          depth,
-          cutWidth: 800 + Math.floor(rnd() * 1000),
-          cutDepth: 800 + Math.floor(rnd() * 1000),
-          offset: Math.floor(rnd() * 500),
-        }),
-        features: [],
-      };
-      const walls = room.outline.map((_, i) => i).filter(() => rnd() < 0.7);
-      if (rnd() < 0.5)
-        room.features.push({
-          id: 'd',
-          kind: 'door',
-          label: 'Door',
-          wall: walls[0] ?? 0,
-          from: Math.floor(rnd() * 1000),
-          width: 800,
-          sill: 0,
-          height: 2050,
-          depth: 0,
-        });
-      // ADR-177: windows on the walls (high and low sills) and every corner kind, with and without a wall row.
-      if (rnd() < 0.6) {
-        const wall = walls[Math.floor(rnd() * walls.length)] ?? 0;
-        room.features.push({
-          id: 'w',
-          kind: 'window',
-          label: 'Window',
-          wall,
-          from: Math.floor(rnd() * Math.max(1, wallLength(room, wall) - 600)),
-          width: 600 + Math.floor(rnd() * 900),
-          sill: rnd() < 0.8 ? 1000 : 500,
-          height: 1200,
-          depth: 0,
-        });
-      }
-      const corner = (['blind', 'l-shape', 'diagonal', 'none'] as const)[Math.floor(rnd() * 4)];
-      const wallRow = rnd() < 0.85 ? 'always' : 'never';
-      const inp = input(room, { walls, corner, wallRow });
-      const r = suggestRoomMixes(inp);
-      for (const m of r.mixes) {
-        expect(validateProject(m.project)).toEqual([]);
-        expect(
-          buildProjectModel(m.project).diagnostics.filter((d) => d.severity === 'error'),
-        ).toEqual([]);
-        if (corner === 'none' || wallRow === 'never')
-          expect(wallCorners(m.project.items)).toEqual([]);
-      }
-      // Same input, same mixes.
-      if (n % 10 === 0)
-        expect(suggestRoomMixes(inp).mixes.map((m) => m.key)).toEqual(r.mixes.map((m) => m.key));
-    }
   });
 });
 
