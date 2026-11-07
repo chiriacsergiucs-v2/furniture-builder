@@ -98,7 +98,7 @@ export function planBackup(tables: Partial<Record<BackupTable, unknown[]>>): Bac
 }
 
 /** What a restore stores: whole documents for designs, projects and templates, stored rows for the rest. */
-export type RestoreAction =
+type RestoreAction =
   | { table: 'designs'; design: Design }
   | { table: 'projects'; project: Project }
   | { table: 'templates'; template: LocalTemplate }

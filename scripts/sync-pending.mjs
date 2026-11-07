@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * What a gap and feature sync must still check (CLAUDE.md, user rule 2026-11-05: "future syncs only check unmarked
- * ones, not entire list"). Prints, from the feature tree (`src/core/features.ts`, ADR-158) and the ADR folders:
+ * ones, not entire list"). Prints, from the feature tree (`src/ui/info/features.ts`, ADR-158) and the ADR folders:
  *
  *   - feature lines with no `checked` date;
  *   - feature lines whose `checked` date is older than the Implemented date of an ADR they cite;
@@ -124,7 +124,7 @@ export function pending(domains, implemented, exempt = EXEMPT, inProgress = pend
 }
 
 async function main() {
-  const { FEATURES } = await import(pathToFileURL(join(REPO, 'src/core/features.ts')).href);
+  const { FEATURES } = await import(pathToFileURL(join(REPO, 'src/ui/info/features.ts')).href);
   const p = pending(FEATURES, implementedDates());
   const sections = [
     ['Feature lines with no checked date', p.unchecked],

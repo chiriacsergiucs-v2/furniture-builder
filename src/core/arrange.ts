@@ -75,8 +75,7 @@ export function mirrorSpace(s: Space): Space {
   return out;
 }
 
-export type MirrorResult =
-  { ok: true; design: Design } | { ok: false; design: Design; reason: string };
+type MirrorResult = { ok: true; design: Design } | { ok: false; design: Design; reason: string };
 
 export const NOTHING_TO_MIRROR = t('Nothing to mirror in this piece');
 
@@ -314,7 +313,7 @@ const spans = (a0: number, a1: number, b0: number, b1: number) =>
   Math.min(a1, b1) > Math.max(a0, b0);
 
 /** The widest gap a run bridges, as for run parts and their fillers (ADR-036). */
-export const RUN_GAP = 150;
+const RUN_GAP = 150;
 
 /**
  * The run `id` is in: pieces at the same height and depth side by side along x, touching or with a filler gap of up

@@ -52,7 +52,7 @@ import { askConfirm } from './Confirm';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
-import { useUi, type WizardDraft } from './shell/uiStore';
+import { useUi, type WizardDraft } from '../store/uiStore';
 
 const picture = (model: FurnitureModel, materials: Material[], size: number) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(model, materials, size))}`;

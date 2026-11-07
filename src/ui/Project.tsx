@@ -76,15 +76,10 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { MoveToButtons } from './MoveTo';
-import { keepSheetClosedOnce, useUi } from './shell/uiStore';
+import { keepSheetClosedOnce, useUi } from '../store/uiStore';
 import { CompatRules } from './CompatRules';
-import {
-  consumeDragClick,
-  dragSource,
-  newPieceTarget,
-  registerPlanHit,
-  usePieceList,
-} from './pieceDrag';
+import { consumeDragClick, dragSource, newPieceTarget, registerPlanHit } from './pieceDrag';
+import { usePieceList } from '../store/pieceListStore';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -132,7 +127,7 @@ import {
   useFocusedProblem,
   type FocusedProblem,
 } from './ProblemBanner';
-import { useProblem } from './problemStore';
+import { useProblem } from '../store/problemStore';
 import { ReplaceDialog } from './Replace';
 import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';

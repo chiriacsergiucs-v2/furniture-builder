@@ -116,7 +116,7 @@ export interface RoomFill {
 }
 
 /** Candidates kept per stretch before combining (ADR-173: "cut to the best 6"). */
-export const PER_STRETCH = 6;
+const PER_STRETCH = 6;
 /** Whole-room projects built at most per call. */
 const MAX_BUILDS = 60;
 
@@ -276,7 +276,7 @@ const WALL_CORNER = {
  * The depth of the wall row's cabinets: the wall cabinet depth from Refine (ADR-204), else the deepest wall-cabinet
  * variant the row deals (ADR-104).
  */
-export const wallRowDepth = (input: Pick<WallInput, 'wallDepth'> = {}): Mm =>
+const wallRowDepth = (input: Pick<WallInput, 'wallDepth'> = {}): Mm =>
   input.wallDepth ??
   Math.max(
     ...WALL_VARIANTS.map((v) => {
@@ -290,10 +290,7 @@ export const wallRowDepth = (input: Pick<WallInput, 'wallDepth'> = {}): Mm =>
  * as deep as the wall row; its wings (or its blind section) keep the template's length beyond its depth. Null when
  * the catalog has none.
  */
-export function wallCornerPiece(
-  kind: Exclude<CornerKind, 'none'>,
-  input: RoomInput,
-): Design | null {
+function wallCornerPiece(kind: Exclude<CornerKind, 'none'>, input: RoomInput): Design | null {
   const v = kitchen.flatMap((f) => f.variants).find((x) => x.id === WALL_CORNER[kind]);
   if (!v?.create) return null;
   const d = v.create();
@@ -1020,15 +1017,15 @@ const summaryOf = (slots: Slot[]): string => {
  * Pieces and footprints already made for one input (ADR-193): the mixes of one call share most pieces, so each is
  * made and measured once. A piece taken from it gets a new design id, as a duplicated piece does.
  */
-export interface RoomMemo {
+interface RoomMemo {
   /** Null: the catalog has none (a wall corner of that kind), remembered too. */
   designs: Map<string, Design | null>;
   feet: Map<string, Box>;
 }
-export const roomMemo = (): RoomMemo => ({ designs: new Map(), feet: new Map() });
+const roomMemo = (): RoomMemo => ({ designs: new Map(), feet: new Map() });
 
 /** One mix as a project with the room: pieces along their walls, corner cabinets at the inside corners. */
-export function roomProject(
+function roomProject(
   input: RoomInput,
   stretches: Stretch[],
   picks: Candidate[],
@@ -1224,7 +1221,7 @@ function wallDepth(d: Design): Mm {
 }
 
 /** Width and depth of the room's bounding box. */
-export function roomSize(room: Room): { w: Mm; d: Mm } {
+function roomSize(room: Room): { w: Mm; d: Mm } {
   const xs = room.outline.map((p) => p[0]),
     zs = room.outline.map((p) => p[1]);
   return { w: Math.max(...xs) - Math.min(...xs), d: Math.max(...zs) - Math.min(...zs) };

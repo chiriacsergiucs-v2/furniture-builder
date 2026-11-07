@@ -79,7 +79,7 @@ export const ru_surfaces = {
   'Could not export for AR: {message}': 'Не удалось экспортировать для AR: {message}',
   'Engine: {name}': 'Движок: {name}',
 
-  // Feature tree (src/core/features.ts, ADR-158)
+  // Feature tree (src/ui/info/features.ts, ADR-158)
   'Wall colour bands on the plan': 'Цветные полосы стен на плане',
   "A 50 mm band inside each wall with a background, in the wall's colour.":
     'Полоса 50 мм у каждой стены с фоном, в цвет стены.',

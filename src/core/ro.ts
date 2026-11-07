@@ -347,7 +347,7 @@ const bandKindText = (k: EdgeBandKind): string => {
 };
 
 /** "ABS 0,8 × 22 mm, H1145" — the band on printed sheets and the parts CSV (ADR-077); "0.8" in English. */
-export const bandRo = (b: EdgeBand) =>
+const bandRo = (b: EdgeBand) =>
   `${bandKindText(b.kind)} ${tenthsText(b.thickness, getPrintLang() === 'en' ? '.' : ',')} × ${b.width} ${pt('mm')}${b.code ? `, ${b.code}` : ''}`;
 
 /** "cant ABS 0,8 × 22 mm · fronturi ABS 2 × 22 mm" for a board's printed header; null when nothing is banded. */
@@ -375,7 +375,7 @@ export const CSV_HEADERS_RO = [
   'Găurire',
 ] as const satisfies readonly PrintKey[];
 
-export const csvHeaders = (): string[] => CSV_HEADERS_RO.map((h) => pt(h));
+const csvHeaders = (): string[] => CSV_HEADERS_RO.map((h) => pt(h));
 
 /**
  * Parts CSV for panel shops: semicolon-separated (Romanian Excel's list separator), UTF-8 with BOM so

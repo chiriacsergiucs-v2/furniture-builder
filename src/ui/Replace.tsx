@@ -15,8 +15,8 @@ import { askConfirm } from './Confirm';
 import { InfoTip, Toggle } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
-import { useProblem } from './problemStore';
-import { useUi } from './shell/uiStore';
+import { useProblem } from '../store/problemStore';
+import { useUi } from '../store/uiStore';
 import { t, tr } from '../core/i18n';
 
 /**

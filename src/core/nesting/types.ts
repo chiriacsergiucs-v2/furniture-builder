@@ -93,7 +93,7 @@ export interface SheetLayout {
   placements: Placement[];
 }
 
-export type UnplacedReason = 'too-large' | 'no-sheet-left' | 'invalid-job';
+type UnplacedReason = 'too-large' | 'no-sheet-left' | 'invalid-job';
 
 export interface Unplaced {
   key: string;

@@ -106,7 +106,7 @@ export function envelopesOf(
 }
 
 /** What a check needs from each placed piece. */
-export interface EnvelopePiece {
+interface EnvelopePiece {
   id: string;
   name: string;
   bounds: Box;

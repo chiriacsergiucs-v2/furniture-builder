@@ -33,12 +33,12 @@ export interface Connection {
 }
 
 /** The kinds two pieces can be connected by; a wall connection holds one piece. */
-export const PAIR_KINDS: readonly ConnectionKind[] = ['side', 'corner', 'stacked'];
+const PAIR_KINDS: readonly ConnectionKind[] = ['side', 'corner', 'stacked'];
 
 export const kindOf = (c: Pick<Connection, 'kind'>): ConnectionKind => c.kind ?? 'side';
 
 /** The connection's two pieces, or null for a wall connection. */
-export function pairOf(c: Connection): [string, string] | null {
+function pairOf(c: Connection): [string, string] | null {
   return kindOf(c) !== 'wall' ? [c.itemIds[0], c.itemIds[1]] : null;
 }
 
@@ -50,7 +50,7 @@ const keyOf = (c: Connection) => {
 };
 
 /** The stored connection between `a` and `b`, if any (of any kind but wall). */
-export const connectionOf = (project: Project, a: string, b: string): Connection | undefined =>
+const connectionOf = (project: Project, a: string, b: string): Connection | undefined =>
   project.connections?.find((c) => {
     const pair = pairOf(c);
     return !!pair && pairKey(pair[0], pair[1]) === pairKey(a, b);
@@ -450,7 +450,7 @@ export function connectionDiagnostics(
  * plan, from (x1, z1) to (x2, z2) along one axis (x1 === x2 for pieces side by side along x), the heights both pieces
  * stand over (y1 bottom, y2 top) and the seam's end at the pieces' front face.
  */
-export interface ConnectionSeam {
+interface ConnectionSeam {
   /** The connection's id. */
   id: string;
   itemIds: [string, string];

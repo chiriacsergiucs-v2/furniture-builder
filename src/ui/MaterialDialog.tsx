@@ -23,7 +23,7 @@ import { useDesign } from '../store/designStore';
 import { InfoTip, MmField, rovingKeys, rovingTab, Select } from './controls';
 import { Dialog } from './Dialogs';
 import { StyleSuggestions } from './History';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 
 const ROLE_LABEL: Record<MaterialRole, () => string> = {
   front: () => t('Fronts@@role'),

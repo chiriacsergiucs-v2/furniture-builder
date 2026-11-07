@@ -263,7 +263,7 @@ export interface RunPart {
 
 /** Trims along a run of wall or tall units (ADR-075). */
 export type TrimKind = 'crown' | 'pelmet' | 'ceiling-filler';
-export const TRIM_KINDS: TrimKind[] = ['crown', 'pelmet', 'ceiling-filler'];
+const TRIM_KINDS: TrimKind[] = ['crown', 'pelmet', 'ceiling-filler'];
 
 /**
  * A run part the user asked for (ADR-075): a worktop over chosen adjacent base units (with its overhangs), or a
@@ -294,7 +294,7 @@ export interface RunRequest {
 }
 
 /** The fields of a run request that can follow a variable (ADR-209). */
-export const REQUEST_TARGETS = ['front', 'side', 'height'] as const;
+const REQUEST_TARGETS = ['front', 'side', 'height'] as const;
 export type RequestTarget = (typeof REQUEST_TARGETS)[number];
 /** The whole-mm range of a request field: the same limits as its field and the document check. */
 export const REQUEST_RANGE: Record<RequestTarget, { min: Mm; max: Mm }> = {
@@ -403,7 +403,7 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   20,
   PROJECT_SCHEMA,
 ];
-export type ProjectSchemaVersion =
+type ProjectSchemaVersion =
   | 1
   | 2
   | 3
@@ -666,7 +666,7 @@ export function resolvePlacements(project: Project): Project {
  * Where a model stands for its placement (ADR-208): on the floor, on the wall at its height, or on a piece (`baseBox`
  * gives that piece's placed box). The same position object when nothing changes; a missing base keeps it.
  */
-export function modelPosition(
+function modelPosition(
   position: ModelItem['position'],
   pl: ModelPlacement | undefined,
   baseBox: (id: string) => Box | undefined,
@@ -1125,7 +1125,7 @@ export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Bo
 }
 
 /** The yaw of an angled piece (ADR-121): about the centre of its quarter-turned outline `rb` placed at `position`. */
-export function yawOf(item: ProjectItem, rb: Pick<Box, 'w' | 'd'>): Yaw | undefined {
+function yawOf(item: ProjectItem, rb: Pick<Box, 'w' | 'd'>): Yaw | undefined {
   return item.angle
     ? { deg: item.angle, cx: item.position.x + rb.w / 2, cz: item.position.z + rb.d / 2 }
     : undefined;
@@ -1266,7 +1266,7 @@ export function placeItem(
  * and the holes left, or null when nothing or more than one piece is left (the cut-outs would split it). A cut-out that
  * reaches an edge makes a notch in the outline; one inside the board makes a hole.
  */
-export function cutOutline(
+function cutOutline(
   w: Mm,
   h: Mm,
   rects: { u: Mm; v: Mm; w: Mm; h: Mm }[],
@@ -1330,7 +1330,7 @@ export function cutOutline(
  * `own` the parts its outline is placed by (as `placeItem`). A piece typed at an angle is not cut (the repair says why);
  * neither is a back already shaped, nor one the cut-outs would split. `features`: the pipes and outlets cut round.
  */
-export function backCutsOf(
+function backCutsOf(
   item: ProjectItem,
   panels: Panel[],
   own: Panel[],
@@ -2075,7 +2075,7 @@ export const setGapLeft = (project: Project, id: string, gap: Mm, moveRight = tr
   trySetGap(project, id, gap, moveRight).project;
 
 /** Pieces whose own plinth is replaced by a run plinth (ADR-054). */
-export function plinthCovered(project: Project): Set<string> {
+function plinthCovered(project: Project): Set<string> {
   return new Set(
     (project.runParts ?? []).filter((r) => r.kind === 'plinth').flatMap((r) => r.from ?? []),
   );
@@ -2379,7 +2379,7 @@ export function pruneRunExtras(project: Project): Project {
 }
 
 /** The run worktop over a base unit, if any (ADR-125). */
-export const worktopOver = (project: Project, baseId: string): RunPart | undefined =>
+const worktopOver = (project: Project, baseId: string): RunPart | undefined =>
   (project.runParts ?? []).find((rp) => rp.kind === 'worktop' && rp.from?.includes(baseId));
 
 /** Sinks for the shopping list (ADR-125): the base each is over and its cut-out. */
@@ -2471,7 +2471,7 @@ const CUTOUT_AT_TEXT = {
 } as const satisfies Record<'sink' | 'hob', Record<'deep' | 'wide', Key>>;
 
 /** A sink or hob cut-out on the plan (ADR-205): dashed on its worktop, labelled with its size. */
-export interface CutoutOutline {
+interface CutoutOutline {
   id: string;
   kind: 'sink' | 'hob';
   /** Room mm. */
@@ -2550,7 +2550,7 @@ export function cutoutOutlines(project: Project, pieces: PlacedPiece[]): CutoutO
 // ---------------------------------------------------------------------------
 
 /** Two worktops at right angles that overlap or meet in plan: `a` along the back wall (x), `b` along a side wall (z). */
-export interface WorktopCorner {
+interface WorktopCorner {
   a: RunPart;
   b: RunPart;
   /** The joint the user chose; absent = none yet (the corner is an error until one is chosen). */
@@ -3155,7 +3155,7 @@ export function requestName(r: RunRequest, project: Project): string {
 }
 
 /** Wall units, and tall units standing on the floor, facing the room: the pieces a trim runs along (ADR-075). */
-export const takesTrim = (pc: PlacedPiece) =>
+const takesTrim = (pc: PlacedPiece) =>
   pc.item.rotationY === 0 &&
   !pc.item.angle &&
   (pc.item.design.product.kind === 'cabinet' || pc.item.design.product.kind === 'corner') &&
@@ -3511,7 +3511,7 @@ function followUpNotes(project: Project, rp: RunPart): string[] {
 }
 
 /** A worktop's rounded or bevelled front edge as made (ADR-209): null when square, not typed or too big (warned). */
-export function worktopEdgeOf(
+function worktopEdgeOf(
   project: Project,
   rp: RunPart,
 ): { kind: 'rounded' | 'bevel'; size: Mm } | null {

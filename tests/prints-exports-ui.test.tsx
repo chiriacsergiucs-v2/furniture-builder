@@ -19,7 +19,7 @@ import { useDesign } from '../src/store/designStore';
 import { Elevation } from '../src/ui/Elevation';
 import { PrintClient } from '../src/ui/PrintClient';
 import { downloadFrontSvg } from '../src/ui/shell/files';
-import { useUi } from '../src/ui/shell/uiStore';
+import { useUi } from '../src/store/uiStore';
 
 /**
  * The pictures on this device. Kept in a map here: fake-indexeddb clones `bytes` into another realm's ArrayBuffer

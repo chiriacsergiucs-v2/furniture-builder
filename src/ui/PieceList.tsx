@@ -3,7 +3,8 @@ import { t } from '../core/i18n';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
-import { endPieceDrag, pieceDragActive, usePieceList } from './pieceDrag';
+import { endPieceDrag, pieceDragActive } from './pieceDrag';
+import { usePieceList } from '../store/pieceListStore';
 
 /** The list panel or sheet; rendered only while open. */
 export function PieceList({

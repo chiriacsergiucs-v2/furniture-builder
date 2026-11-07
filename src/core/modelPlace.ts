@@ -10,7 +10,7 @@ import { DRAG_STEP, type PlacedPiece, type Project } from './project';
 import { mountOf, pieceConnectors, roomConnectors, SNAP_RANGE, type Axis } from './snap';
 import type { Box, Mm } from './types';
 
-export interface ModelDrop {
+interface ModelDrop {
   position: ModelItem['position'];
   /** Its box there, for the preview. */
   box: Box;
@@ -26,8 +26,7 @@ export function liftModel(pl: ModelPlacement | undefined): ModelPlacement | unde
 }
 
 /** The height a dragged model lands at: 0 when lifted off a piece, else where it is. */
-export const modelLandingY = (m: ModelItem): Mm =>
-  m.placement?.kind === 'above' ? 0 : m.position.y;
+const modelLandingY = (m: ModelItem): Mm => (m.placement?.kind === 'above' ? 0 : m.position.y);
 
 interface Face {
   axis: Axis;

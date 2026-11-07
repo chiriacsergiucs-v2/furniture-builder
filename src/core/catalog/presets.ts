@@ -7,7 +7,7 @@ import { newId } from '../design';
 import type { Space } from '../types';
 import { insertable, type CatalogFamily } from './types';
 
-export interface LayoutPreset {
+interface LayoutPreset {
   id: string;
   family: string;
   name: string;

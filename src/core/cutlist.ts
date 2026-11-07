@@ -190,7 +190,7 @@ export function boardBands(rows: CutRow[]): {
 }
 
 /** Words of a board's band header: English on screen, Romanian on printed sheets (ADR-020). */
-export interface BandWords {
+interface BandWords {
   prefix: string;
   band: (b: EdgeBand) => string;
   fronts: string;
@@ -219,12 +219,12 @@ export function boardBandText(rows: CutRow[], w: BandWords = BAND_WORDS_EN): str
 }
 
 /** One bought length and the parts cut from it. */
-export interface StockBar {
+interface StockBar {
   stock: Mm;
   parts: { length: Mm; label: string }[];
   waste: Mm;
 }
-export interface LengthsGroup {
+interface LengthsGroup {
   materialId: string;
   materialName: string;
   section: string;

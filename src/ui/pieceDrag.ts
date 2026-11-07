@@ -1,9 +1,9 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { create } from 'zustand';
 import type { Design } from '../core/types';
-import { makeItem, placeItem, type PlacedPiece } from '../core/project';
+import { makeItem, placeItem } from '../core/project';
 import { dropNewPiece } from '../core/snap';
 import { useDesign } from '../store/designStore';
+import { usePieceList, type NewPieceDrag } from '../store/pieceListStore';
 import { DRAG_THRESHOLD_PX } from './planDrag';
 import { snapIsOn } from './useSnap';
 
@@ -16,31 +16,6 @@ import { snapIsOn } from './useSnap';
 
 /** How long a touch must rest on an item before it lifts into a drag (ADR-094). */
 export const LONG_PRESS_MS = 300;
-
-/** A catalog item being dragged from the list. */
-export interface NewPieceDrag {
-  design: Design;
-  libraryId?: string;
-  /** The piece as it would be built (ADR-004): its footprint is the outline. */
-  me: PlacedPiece;
-  /** The room point under the pointer, or null while it is off the plan. */
-  room: { x: number; z: number } | null;
-  alt: boolean;
-}
-
-interface PieceListState {
-  open: boolean;
-  drag: NewPieceDrag | null;
-  setOpen: (open: boolean) => void;
-  setDrag: (drag: NewPieceDrag | null) => void;
-}
-
-export const usePieceList = create<PieceListState>((set) => ({
-  open: false,
-  drag: null,
-  setOpen: (open) => set(open ? { open } : { open, drag: null }),
-  setDrag: (drag) => set({ drag }),
-}));
 
 /** Screen point → plan room point; registered by the plan while it is on screen. */
 type PlanHit = (clientX: number, clientY: number) => { x: number; z: number } | null;

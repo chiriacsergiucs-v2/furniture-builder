@@ -16,7 +16,7 @@ import {
 import { projectSellerChoices } from './sellers/choices';
 import { shoppingList, type ShopLine } from './shopping';
 
-export interface ProjectEstimate {
+interface ProjectEstimate {
   lines: ShopLine[];
   est: Estimate;
 }

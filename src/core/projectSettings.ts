@@ -79,7 +79,7 @@ export function settingOf(d: Design, key: SettingKey): unknown {
 }
 
 /** The project's value of a setting, in the same form as `settingOf`; undefined when not set. */
-export function projectValue(s: ProjectSettings | undefined, key: SettingKey): unknown {
+function projectValue(s: ProjectSettings | undefined, key: SettingKey): unknown {
   const v = s?.[key];
   if (v === undefined) return undefined;
   if (key === 'body' || key === 'front' || key === 'back') return boardKey(v as Material);
@@ -88,7 +88,7 @@ export function projectValue(s: ProjectSettings | undefined, key: SettingKey): u
 }
 
 /** The design with the project's value of `key`; unchanged when it has no such part or the value is not set. */
-export function withSetting(d: Design, key: SettingKey, s: ProjectSettings): Design {
+function withSetting(d: Design, key: SettingKey, s: ProjectSettings): Design {
   const v = s[key];
   if (v === undefined || settingOf(d, key) === undefined) return d;
   const p = d.product;
@@ -171,7 +171,7 @@ export function settingText(d: Design | null, key: SettingKey, s?: ProjectSettin
   return mm === undefined || mm === null ? '—' : t('{v} mm', { v: String(mm) });
 }
 
-export interface SettingResult {
+interface SettingResult {
   project: Project;
   /** Names of the pieces that took the new value. */
   applied: string[];

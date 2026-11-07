@@ -11,7 +11,7 @@ import { applyFinish, finishTargets, roleBoard, type FinishScope } from './finis
 import { materialKey, type Project } from './project';
 import type { Design, Handle, Material, Product, Space } from './types';
 
-export type HandleKind = Handle['kind'];
+type HandleKind = Handle['kind'];
 
 export interface Style {
   id: string;
@@ -131,7 +131,7 @@ export function yourStyles(projects: readonly Project[], max = 5): Style[] {
 const styleKey = (s: Pick<Style, 'front' | 'body' | 'handle'>) =>
   `${materialKey(s.front)}|${materialKey(s.body)}|${s.handle ?? '-'}`;
 
-export interface StyleResult {
+interface StyleResult {
   project: Project;
   /** Names of the pieces the style changed. */
   applied: string[];

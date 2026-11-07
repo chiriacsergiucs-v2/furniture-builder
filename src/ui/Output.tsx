@@ -19,10 +19,10 @@ import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { printPieceNames } from '../core/catalog/printName';
 import { download, fileName } from './shell/files';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { captureStill } from '../viewer/renderBridge';
 import { mayRepair, problemPanels } from '../core/repairs';
-import { useProblem } from './problemStore';
+import { useProblem } from '../store/problemStore';
 import { PHONE, useMediaQuery } from './useMediaQuery';
 
 export function Output() {

@@ -1715,3 +1715,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
 - Work: Low
 - Impact: Low
+
+### G-503: The Gaps page still imports the gaps ledger with ?raw
+
+- Status: Open
+- Origin: ADR-219
+- Missing: src/ui/Gaps.tsx imports docs/adr/GAPS.md?raw, outside the three data-loader folders ADR-219 allows; eslint.config.js and tests/core-boundary.test.ts carry it as a named allowance so the tree stays green
+- Request: User, 2026-11-07: "No regressions shall be introduced"; ADR-219: ?raw imports outside catalog/brands, sellers and research fail
+- Questions: Move the ledger import into a loader under src/core (or generated data) so the allowance can go, or keep the Gaps page's ?raw import as an accepted exception?
+- Suggested pick: Keep the allowance until the research data leaves ?raw (review section 6 step 5), then move the ledger the same way: it is closest to ADR-219's rule without a behaviour change now
+- Work: Low
+- Impact: Low
+- Necessity: Low

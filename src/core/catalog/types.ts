@@ -80,7 +80,7 @@ export const CAPABILITY_WAITS: Partial<Record<Capability, string>> = {
     'covered by safety standards: switch on "I check safety-regulated items myself" in the Catalog to use it',
 };
 
-export type VariantKind = 'interior' | 'construction';
+type VariantKind = 'interior' | 'construction';
 
 export interface CatalogVariant {
   id: string;

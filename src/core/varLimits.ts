@@ -8,7 +8,7 @@ export const MAX_VARIABLES = 100;
 export const SPLIT_TARGET = /^split:([^:]+):(\d+)$/;
 export const NAME_RE = /^[\p{L}][\p{L}\p{N} _]*$/u;
 /** What a piece's own binding may drive (ADR-210): its sizes and divisions, never a position. */
-export const DESIGN_TARGETS = ['width', 'height', 'depth', 'mountHeight'] as const;
+const DESIGN_TARGETS = ['width', 'height', 'depth', 'mountHeight'] as const;
 export const isDesignTarget = (s: unknown): s is string =>
   typeof s === 'string' &&
   ((DESIGN_TARGETS as readonly string[]).includes(s) || SPLIT_TARGET.test(s));

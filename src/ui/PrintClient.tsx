@@ -3,7 +3,7 @@ import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import { formatMoney } from '../core/prices';
 import { useDesign } from '../store/designStore';
 import { PieceElevation } from './Elevation';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { useEstimate } from './useEstimate';
 import { useView } from './useView';
 

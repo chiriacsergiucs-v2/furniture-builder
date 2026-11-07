@@ -51,7 +51,7 @@ interface Ctx {
   behindDoors: boolean;
 }
 
-export interface BuildOptions {
+interface BuildOptions {
   /** Prefix for panel ids so several cabinets can live in one model (desk pedestals). */
   idPrefix?: string;
   /** Translation applied to every generated box. */
@@ -78,10 +78,10 @@ export interface PartialModel {
 }
 
 /** 32 mm system (ADR-023). */
-export const PIN_PITCH = 32;
-export const PIN_DIAMETER = 5;
-export const DEFAULT_SHELF_CLEARANCE = 1;
-export const DEFAULT_PIN_ROW_SETBACK = 37;
+const PIN_PITCH = 32;
+const PIN_DIAMETER = 5;
+const DEFAULT_SHELF_CLEARANCE = 1;
+const DEFAULT_PIN_ROW_SETBACK = 37;
 
 /** Minimum gap between closed doors and internal drawer boxes (hinge arm clearance). */
 export const INTERNAL_DRAWER_SETBACK = 20;
@@ -90,8 +90,8 @@ export const INTERNAL_DRAWER_SETBACK = 20;
 export const DEFAULT_SLIDING_OVERLAP = 30;
 export const DEFAULT_SLIDING_TRACK = 80;
 /** Clear gap between the two planes of sliding doors. */
-export const SLIDING_PLANE_GAP = 2;
-export const DEFAULT_RAIL_DEPTH = 100;
+const SLIDING_PLANE_GAP = 2;
+const DEFAULT_RAIL_DEPTH = 100;
 
 /** Deepest sliding-door track anywhere in a space tree (0 when none), for the front envelope. */
 export function slidingTrackDepth(s: Space): Mm {
@@ -102,7 +102,7 @@ export function slidingTrackDepth(s: Space): Mm {
 const lo = (g: Mm) => Math.floor(g / 2);
 const hi = (g: Mm) => g - Math.floor(g / 2);
 
-export type HandlePosition = NonNullable<Handle['position']>;
+type HandlePosition = NonNullable<Handle['position']>;
 
 /**
  * The error for fronts left with no size (ADR-196): a gap names itself and the area the fronts were to cover; with

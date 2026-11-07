@@ -22,7 +22,7 @@ import type { Design, Mm } from './types';
 export type WidthSplit = 'proportional' | 'equal';
 
 /** One size of the group: its current value and whether its pieces differ (height and depth). */
-export interface GroupSizeField {
+interface GroupSizeField {
   key: SizeField['key'];
   label: string;
   value: Mm;
@@ -30,7 +30,7 @@ export interface GroupSizeField {
   differs: boolean;
 }
 
-export interface GroupResizeResult {
+interface GroupResizeResult {
   project: Project;
   /** Why nothing changed. */
   reason?: string;
@@ -54,7 +54,7 @@ function fixed(it: ProjectItem, key: SizeField['key']): boolean {
 }
 
 /** The design with one outside size changed; a brand's product is no longer that brand's (ADR-028), as in ADR-106. */
-export function resizedDesign(design: Design, key: SizeField['key'], value: Mm): Design {
+function resizedDesign(design: Design, key: SizeField['key'], value: Mm): Design {
   const product = resizeProduct(design.product, key, value);
   if (product === design.product) return design;
   const catalog =

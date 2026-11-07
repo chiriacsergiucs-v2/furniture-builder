@@ -36,7 +36,7 @@ import {
 import type { ItemZones } from './envelopes';
 import type { Design, Mm, SellerItem } from './types';
 
-export interface TemplateItem {
+interface TemplateItem {
   /** Id inside the template, so placements can point at their base. */
   ref: string;
   design: Design;
@@ -60,14 +60,14 @@ export interface TemplateItem {
  * seller items (ADR-210). An older app refuses a version it does not know.
  */
 export const TEMPLATE_SCHEMA = 3 as const;
-export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
+type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
 /** The version that first stores variables, bindings and connections (ADR-170). */
 const VARS_SINCE = 2;
 /** The version that first stores run handles and sinks (ADR-204), connection kinds and wall connections (ADR-207). */
 const RUN_EXTRAS_SINCE = 3;
 
 /** A display-only 3D model kept in a template (ADR-208): a project's model item with an offset; `ref` is its id. */
-export interface TemplateModel {
+interface TemplateModel {
   ref: string;
   modelId: string;
   name: string;
@@ -80,12 +80,12 @@ export interface TemplateModel {
 }
 
 /** A run handle kept in a template (ADR-204): `from` and `own` are template refs; a new id is given on use. */
-export type TemplateRunHandle = Omit<RunHandle, 'id'>;
+type TemplateRunHandle = Omit<RunHandle, 'id'>;
 /** A sink kept in a template (ADR-204): `baseId` is a template ref; a new id is given on use. */
-export type TemplateSink = Omit<RunSink, 'id'>;
+type TemplateSink = Omit<RunSink, 'id'>;
 
 /** A connection in a template, over template refs (ADR-168); its kind and wall since version 3 (ADR-207). */
-export interface TemplateConnection {
+interface TemplateConnection {
   /** A wall connection holds its one piece twice, as in a project. */
   itemIds: [string, string];
   kind?: ConnectionKind;

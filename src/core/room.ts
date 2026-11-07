@@ -15,8 +15,8 @@ export type Pt = [Mm, Mm];
 /** Starting height for a new room; the user sets their own (the field says so). */
 export const DEFAULT_ROOM_HEIGHT = 2500;
 
-export const ROOM_FEATURE_KINDS = ['door', 'window', 'obstacle', 'pipe', 'outlet'] as const;
-export type RoomFeatureKind = (typeof ROOM_FEATURE_KINDS)[number];
+const ROOM_FEATURE_KINDS = ['door', 'window', 'obstacle', 'pipe', 'outlet'] as const;
+type RoomFeatureKind = (typeof ROOM_FEATURE_KINDS)[number];
 /** Pipes and outlets (ADR-072): service zones on a wall, checked against backs, plinths and worktops. */
 export const isService = (k: RoomFeatureKind): k is 'pipe' | 'outlet' =>
   k === 'pipe' || k === 'outlet';
@@ -207,7 +207,7 @@ export function shapeOutline(shape: RoomShape, s: ShapeSizes): Pt[] {
 
 /** The size a problem names (ADR-193), so the form can mark that field. */
 export type RoomSizeField = keyof ShapeSizes | 'height';
-export type RoomSizeIssue = Diagnostic & { field: RoomSizeField };
+type RoomSizeIssue = Diagnostic & { field: RoomSizeField };
 
 /**
  * Problems with a ready shape's sizes (ADR-193): every size it uses is a whole number of mm above 0, and the cut-out
@@ -253,7 +253,6 @@ export function checkRoomSizes(shape: RoomShape, s: ShapeSizes, height: Mm): Roo
   return out;
 }
 
-export const wallCount = (r: Room) => r.outline.length;
 export function wallEnds(r: Room, i: number): [Pt, Pt] {
   const n = r.outline.length;
   return [r.outline[i % n], r.outline[(i + 1) % n]];
@@ -673,7 +672,7 @@ export function movesInside(outline: Pt[], b: Box): { dx: Mm; dz: Mm }[] {
  * A tall unit for the outlet check (ADR-072): at least as high as the smallest tall cabinet in the catalog (ADR-036
  * dims). A default to confirm, listed under the ADR's open questions.
  */
-export const TALL_UNIT_HEIGHT = 1600;
+const TALL_UNIT_HEIGHT = 1600;
 
 /**
  * A pipe or outlet zone against a piece (ADR-072), warnings only: an outlet whose whole zone (width and height) a
@@ -775,7 +774,7 @@ export function snapCorner(prev: Pt | undefined, x: number, z: number, step = 10
     ? [near(x, 0), prev[1]]
     : [prev[0], near(z, 1)];
 }
-export const CLOSE_SNAP = 50;
+const CLOSE_SNAP = 50;
 
 /** Close a drawn outline: when the last corner does not line up with the first, one corner is added to square it. */
 export function closeOutline(points: Pt[]): Pt[] {
