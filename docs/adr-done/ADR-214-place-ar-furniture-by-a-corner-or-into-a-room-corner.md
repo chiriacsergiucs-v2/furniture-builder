@@ -1,7 +1,8 @@
 # ADR-214: Place AR furniture by a corner or into a room corner
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-208, ADR-213
 - Design: docs/ui-design.md (3D view, AR overlay)
 - Backlog: N219
@@ -53,9 +54,9 @@ content's floor centre and the front turns to the phone; nothing lines up with a
 
 ## Done when
 
-- [ ] The footprint preview has the content's width × depth and its chosen point on the hit (unit test)
-- [ ] Point switch cycles Centre → Back-left → Back-right and the placed content puts that point on the hit (unit test)
-- [ ] Two taps place the back along the tapped wall line with the right corner in the room corner, for a wall
+- [x] The footprint preview has the content's width × depth and its chosen point on the hit (unit test)
+- [x] Point switch cycles Centre → Back-left → Back-right and the placed content puts that point on the hit (unit test)
+- [x] Two taps place the back along the tapped wall line with the right corner in the room corner, for a wall
       running either way (unit test)
-- [ ] Cancel corner returns to normal placing (unit test)
-- [ ] Browser find-it at 390 and 1280 px finds "Point: Centre", "Room corner" and both corner hints
+- [x] Cancel corner returns to normal placing (unit test)
+- [x] Browser find-it at 390 and 1280 px finds "Point: Centre", "Room corner" and both corner hints

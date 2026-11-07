@@ -1,7 +1,8 @@
 # ADR-213: Ground AR furniture on the real floor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-208
 - Design: docs/ui-design.md (3D view, ⋯ menu, AR overlay)
 - Backlog: N218
@@ -60,9 +61,9 @@ as closer, so bigger. This ADR does not change ADR-208's decisions; it adds to h
 
 ## Done when
 
-- [ ] A wall or sloped hit-test result never shows the ring (unit test with simulated WebXR frames)
-- [ ] The ring shows only after 6 steady floor frames; jittery heights keep "Looking for the floor" (unit test)
-- [ ] With `anchors` offered, placing makes an anchor and the content follows its moved pose (unit test)
-- [ ] The grounding shadow is in the scene only while AR is placed, sized to the footprint (unit test)
-- [ ] A 600 mm piece spans 0.6 m in AR (unit test)
-- [ ] Browser find-it (`tools/ar/find-it.mjs`, stubbed WebXR) at 390 and 1280 px finds View in AR and the new hints
+- [x] A wall or sloped hit-test result never shows the ring (unit test with simulated WebXR frames)
+- [x] The ring shows only after 6 steady floor frames; jittery heights keep "Looking for the floor" (unit test)
+- [x] With `anchors` offered, placing makes an anchor and the content follows its moved pose (unit test)
+- [x] The grounding shadow is in the scene only while AR is placed, sized to the footprint (unit test)
+- [x] A 600 mm piece spans 0.6 m in AR (unit test)
+- [x] Browser find-it (`tools/ar/find-it.mjs`, stubbed WebXR) at 390 and 1280 px finds View in AR and the new hints
