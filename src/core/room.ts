@@ -161,6 +161,35 @@ export interface ShapeSizes {
   offset: Mm;
 }
 
+/** Smallest side of a suggested new room (ADR-232, moved from the Room section): a starting size the user edits. */
+const SUGGESTED_ROOM_MIN: Mm = 3000;
+/** Free floor a suggested new room leaves in front of the deepest piece (ADR-232): a starting size, not a rule. */
+const SUGGESTED_ROOM_FRONT: Mm = 1000;
+/** Starting cut-out, notch or alcove width, depth and offset of a new shaped room (ADR-232); the user edits them. */
+const SUGGESTED_ROOM_CUT: Mm = 1000;
+/** Suggested sizes are rounded up to this step. */
+const SUGGESTED_ROOM_STEP: Mm = 100;
+
+/**
+ * The starting size of a new room for these pieces (ADR-232): wide enough for the rightmost piece and deep enough
+ * for the deepest one plus free floor in front, rounded up to 100 mm, never under 3000 mm. A suggestion the user
+ * edits; the room checks judge it.
+ */
+export function suggestRoomSize(
+  pieces: readonly { bounds: Pick<Box, 'x' | 'z' | 'w' | 'd'> }[],
+): ShapeSizes {
+  const right = pieces.length ? Math.max(...pieces.map((pc) => pc.bounds.x + pc.bounds.w)) : 0;
+  const deep = pieces.length ? Math.max(...pieces.map((pc) => pc.bounds.z + pc.bounds.d)) : 0;
+  const up = (v: number) => Math.ceil(v / SUGGESTED_ROOM_STEP) * SUGGESTED_ROOM_STEP;
+  return {
+    width: Math.max(SUGGESTED_ROOM_MIN, up(right)),
+    depth: Math.max(SUGGESTED_ROOM_MIN, up(deep + SUGGESTED_ROOM_FRONT)),
+    cutWidth: SUGGESTED_ROOM_CUT,
+    cutDepth: SUGGESTED_ROOM_CUT,
+    offset: SUGGESTED_ROOM_CUT,
+  };
+}
+
 export function shapeOutline(shape: RoomShape, s: ShapeSizes): Pt[] {
   const { width: W, depth: D, cutWidth: a, cutDepth: b, offset: o } = s;
   switch (shape) {

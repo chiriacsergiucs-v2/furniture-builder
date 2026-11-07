@@ -19,6 +19,44 @@ const RUNG_PITCH = 250;
 const RUNG_HEIGHT = 30;
 const LADDER_WIDTH = 400;
 
+/**
+ * Starting values of the seating options (ADR-232, moved from the frame editor; ADR-040 defaults, labelled as
+ * defaults, edited by the user): the bought mechanism's seat-to-back positions, the footrest length, the arm rest
+ * height above the seat, the seat height assumed with no back, and the longest lifting backrest.
+ */
+const DEFAULT_RECLINE_POSITIONS = [100, 120, 150];
+const DEFAULT_FOOTREST_LENGTH: Mm = 380;
+const DEFAULT_FOOTREST_ANGLES = [0, 45, 90];
+const ARM_ABOVE_SEAT: Mm = 220;
+const DEFAULT_SEAT_HEIGHT: Mm = 450;
+const BACKREST_MAX_LENGTH: Mm = 650;
+
+/**
+ * The defaults the frame editor sets when a seating option is switched on (ADR-232): a reclining back, a footrest
+ * for the recline's positions (spread from hanging, 0°, to level, 90°), arm rests above the seat and a lifting
+ * backrest of a third of the width, at most 650 mm. Fresh objects on every call.
+ */
+export function seatingDefaults(width: Mm, seatHeight?: Mm, reclinePositions?: readonly number[]) {
+  const positions = reclinePositions ?? DEFAULT_RECLINE_POSITIONS;
+  return {
+    recline: {
+      positions: [...DEFAULT_RECLINE_POSITIONS],
+      at: 0,
+      footrest: { length: DEFAULT_FOOTREST_LENGTH, angles: [...DEFAULT_FOOTREST_ANGLES] },
+    },
+    footrest: {
+      length: DEFAULT_FOOTREST_LENGTH,
+      angles: positions.map((_, i, a) => Math.round((90 * i) / Math.max(1, a.length - 1))),
+    },
+    arms: { height: (seatHeight ?? DEFAULT_SEAT_HEIGHT) + ARM_ABOVE_SEAT },
+    backrest: {
+      length: Math.min(BACKREST_MAX_LENGTH, Math.floor(width / 3)),
+      positions: [...DEFAULT_RECLINE_POSITIONS],
+      at: 2,
+    },
+  };
+}
+
 const axes: Axis[] = ['x', 'y', 'z'];
 const dim = (b: Box, a: Axis) => (a === 'x' ? b.w : a === 'y' ? b.h : b.d);
 

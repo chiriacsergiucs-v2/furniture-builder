@@ -89,6 +89,7 @@ import {
   roomFrontView,
   setWallLength,
   shapeOutline,
+  suggestRoomSize,
   wallEnds,
   wallFinish,
   type WallFinish,
@@ -98,6 +99,7 @@ import {
   type ShapeSizes,
 } from '../core/room';
 import { Dim, DimV, outlinePoints } from './Elevation';
+import { frontEdge } from '../core/geometry';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
 import { PieceSize } from './PieceSize';
@@ -1799,14 +1801,6 @@ function RoomPlan({
           (x) => x.item.id === selectedIds[0] && !isLocked(x.item) && !isTurnLocked(x.item),
         )
       : undefined;
-  const frontLine = (b: { x: number; z: number; w: number; d: number }, r: QuarterTurn) =>
-    r === 0
-      ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
-      : r === 90
-        ? [b.x + b.w, b.z, b.x + b.w, b.z + b.d]
-        : r === 180
-          ? [b.x, b.z, b.x + b.w, b.z]
-          : [b.x, b.z, b.x, b.z + b.d];
   return (
     <figure
       className="plan with-tools"
@@ -1971,7 +1965,7 @@ function RoomPlan({
         )}
         {pm.pieces.map((pc) => {
           const b = pc.bounds;
-          const [fx1, fz1, fx2, fz2] = frontLine(b, pc.item.rotationY);
+          const [fx1, fz1, fx2, fz2] = frontEdge(b, pc.item.rotationY);
           const on = selectedIds.includes(pc.item.id);
           // Pieces stacked on the same floor area (a wall run above a base run) get their names on separate lines.
           const stack = pm.pieces.filter(
@@ -3184,19 +3178,7 @@ function RoomSection() {
   const room = project.room;
   const [shapeChoice, setShape] = useState<RoomShape>('rectangle');
   const shape = room?.shape?.kind ?? shapeChoice;
-  const right = pm?.pieces.length
-    ? Math.max(...pm.pieces.map((pc) => pc.bounds.x + pc.bounds.w))
-    : 0;
-  const deep = pm?.pieces.length
-    ? Math.max(...pm.pieces.map((pc) => pc.bounds.z + pc.bounds.d))
-    : 0;
-  const [sizes, setSizes] = useState<ShapeSizes>(() => ({
-    width: Math.max(3000, Math.ceil(right / 100) * 100),
-    depth: Math.max(3000, Math.ceil((deep + 1000) / 100) * 100),
-    cutWidth: 1000,
-    cutDepth: 1000,
-    offset: 1000,
-  }));
+  const [sizes, setSizes] = useState<ShapeSizes>(() => suggestRoomSize(pm?.pieces ?? []));
   const make = (sh: RoomShape, sz: ShapeSizes) =>
     setRoom({
       height: room?.height ?? DEFAULT_ROOM_HEIGHT,

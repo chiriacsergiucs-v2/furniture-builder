@@ -23,6 +23,23 @@ export function yawPoint(y: Yaw, x: number, z: number): [number, number] {
   return [y.cx + dx * c + dz * s, y.cz - dx * s + dz * c];
 }
 
+/**
+ * The edge of a box its front faces on the plan (ADR-232; x right, z away from the back wall), as x1, z1, x2, z2, for a
+ * quarter turn: 0 the far side, 90 the right, 180 the back, 270 the left.
+ */
+export function frontEdge(
+  b: Pick<Box, 'x' | 'z' | 'w' | 'd'>,
+  yaw: 0 | 90 | 180 | 270,
+): [number, number, number, number] {
+  return yaw === 0
+    ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
+    : yaw === 90
+      ? [b.x + b.w, b.z, b.x + b.w, b.z + b.d]
+      : yaw === 180
+        ? [b.x, b.z, b.x + b.w, b.z]
+        : [b.x, b.z, b.x, b.z + b.d];
+}
+
 /** The floor outline of a box (ADR-121): its four corners in order, turned when it carries a yaw. */
 export function footprintOf(b: Box): [number, number][] {
   const pts: [number, number][] = [
