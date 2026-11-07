@@ -42,7 +42,7 @@ export const ru_surfaces = {
   'Tap to place it on the outline.': 'Нажмите, чтобы поставить по контуру.',
   'Placed at full size. Drag it, fine-tune with the arrows, or Place again.':
     'Размещено в натуральную величину. Перетащите, уточните стрелками или разместите заново.',
-  // AR walls, wall gap, occlusion, light, drag and sizes (ADR-217)
+  // AR walls, wall gap, occlusion, light, drag and sizes (ADR-218)
   'Both walls found — tap to place in the corner.':
     'Обе стены найдены — нажмите, чтобы поставить в угол.',
   'Wall gap': 'Зазор от стены',

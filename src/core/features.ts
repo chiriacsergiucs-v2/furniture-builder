@@ -980,7 +980,7 @@ export const FEATURES: FeatureDomain[] = [
             name: 'AR walls, wall gap, real objects, room light, drag and per-piece sizes',
             detail:
               'Room corner in one tap when both walls are seen, a wall gap, real objects hide it, the room light, one-finger drag, Sizes per piece.',
-            adrs: ['ADR-217'],
+            adrs: ['ADR-218'],
             checked: '2026-11-07',
           },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },

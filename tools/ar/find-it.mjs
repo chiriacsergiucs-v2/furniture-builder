@@ -24,7 +24,7 @@ const check = (width, name, ok, detail = '') => {
 function xrStub() {
   window.__xr = [];
   window.__hit = null;
-  // ADR-217: wall hits for the up-left and up-right rays, set by the script.
+  // ADR-218: wall hits for the up-left and up-right rays, set by the script.
   window.__walls = { left: null, right: null };
   const listeners = {};
   const session = {
@@ -231,7 +231,7 @@ for (const width of [1280, 390]) {
     await hintIs('Tap the floor in the room corner.'),
   );
   check(width, '"Cancel corner" visible', await btn('Cancel corner').isVisible());
-  // ADR-217: the wall gap stepper in Room corner mode.
+  // ADR-218: the wall gap stepper in Room corner mode.
   const gapText = page.locator('.ar-overlay .ar-gap-value');
   check(
     width,
@@ -286,7 +286,7 @@ for (const width of [1280, 390]) {
     'Exit AR',
   ])
     check(width, `"${name}" visible once placed`, await btn(name).isVisible());
-  // ADR-217: placed by a corner, so the wall gap shows; Sizes cycles; the occlusion switch.
+  // ADR-218: placed by a corner, so the wall gap shows; Sizes cycles; the occlusion switch.
   check(width, 'the wall gap shows once placed by a corner', await gapText.isVisible());
   await btn('Sizes: Overall').click();
   check(width, 'Sizes → "Sizes: Per piece"', await btn('Sizes: Per piece').isVisible());
@@ -318,7 +318,7 @@ for (const width of [1280, 390]) {
   check(width, 'a tap places it again', await hintIs(placed));
   check(width, 'no wall gap for a normal placement', !(await gapText.isVisible()));
 
-  // 7. ADR-217: both walls seen → one tap places it in the corner.
+  // 7. ADR-218: both walls seen → one tap places it in the corner.
   await btn('Place again').click();
   await hintIs('Tap to place it on the outline.');
   await btn('Room corner').click();

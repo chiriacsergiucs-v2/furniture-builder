@@ -1,10 +1,11 @@
-# ADR-217: AR walls, wall gap, occlusion, light, finger drag and per-piece sizes
+# ADR-218: AR walls, wall gap, occlusion, light, finger drag and per-piece sizes
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-213, ADR-214, ADR-215
 - Design: docs/ui-design.md (3D view, AR overlay)
-- Backlog: N222
+- Backlog: N223
 - Acceptance: browser
 
 ## Context
@@ -13,7 +14,7 @@ User, 2026-11-07: "Implement what was skipped, all in 1 adr/pr, single test run"
 [ADR-213](../adr-done/ADR-213-ground-ar-furniture-on-the-real-floor.md),
 [ADR-214](../adr-done/ADR-214-place-ar-furniture-by-a-corner-or-into-a-room-corner.md) and
 [ADR-215](../adr-done/ADR-215-fine-tune-ar-placement-and-show-its-dimensions.md): G-477 to G-481. G-482 (the
-real-phone check) is the user's to run and stays open. Answers to the questions asked the same day:
+real-phone check) is the user's to run and stays open. Written as ADR-217 / N222; renumbered to ADR-218 / N223 before merging, when `main` took both ids. Answers to the questions asked the same day:
 
 - Walls (G-477): "Auto corner + fallback".
 - Wall gap (G-478): "Stepper ±5 mm".
@@ -63,11 +64,11 @@ real-phone check) is the user's to run and stays open. Answers to the questions 
 
 ## Done when
 
-- [ ] Two wall hits meeting at more than 60° give the corner and the back wall; fewer walls keep the two-tap fallback
+- [x] Two wall hits meeting at more than 60° give the corner and the back wall; fewer walls keep the two-tap fallback
       (unit test)
-- [ ] The wall gap moves the back and the wall side by the gap, also after placing (unit test)
-- [ ] With depth offered, the occluder gets each frame's depth; the switch hides it (unit test)
-- [ ] A light estimate sets the light's colour, intensity and direction and hides the view's lights (unit test)
-- [ ] A one-finger drag moves the placement by the finger's floor movement, keeping its turn (unit test)
-- [ ] Sizes cycles Overall → Per piece → Off with the right labels (unit test)
-- [ ] Browser find-it at 390 and 1280 px finds the walls hint, the wall gap stepper, Sizes and the occlusion switch
+- [x] The wall gap moves the back and the wall side by the gap, also after placing (unit test)
+- [x] With depth offered, the occluder gets each frame's depth; the switch hides it (unit test)
+- [x] A light estimate sets the light's colour, intensity and direction and hides the view's lights (unit test)
+- [x] A one-finger drag moves the placement by the finger's floor movement, keeping its turn (unit test)
+- [x] Sizes cycles Overall → Per piece → Off with the right labels (unit test)
+- [x] Browser find-it at 390 and 1280 px finds the walls hint, the wall gap stepper, Sizes and the occlusion switch

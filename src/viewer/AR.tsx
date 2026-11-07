@@ -149,15 +149,15 @@ export interface ARUi {
   corner: null | 'first' | 'second';
   /** Fine-tune step (ADR-215): 1 cm / 1° when true, 10 cm / 15° when false. */
   fine: boolean;
-  /** Room corner mode: both walls are seen, so one tap places it (ADR-217). */
+  /** Room corner mode: both walls are seen, so one tap places it (ADR-218). */
   walls: boolean;
-  /** Wall gap in mm (ADR-217). */
+  /** Wall gap in mm (ADR-218). */
   gap: number;
-  /** Placed by a room corner, so the wall gap applies (ADR-217). */
+  /** Placed by a room corner, so the wall gap applies (ADR-218). */
   byCorner: boolean;
-  /** What the Sizes switch shows (ADR-217). */
+  /** What the Sizes switch shows (ADR-218). */
   sizes: ARSizes;
-  /** The phone gives depth (ADR-217), and whether real objects hide the furniture. */
+  /** The phone gives depth (ADR-218), and whether real objects hide the furniture. */
   depth: boolean;
   occlusion: boolean;
 }
@@ -258,7 +258,7 @@ const m0 = new Matrix4();
 const q = new Quaternion();
 const UP = new Vector3(0, 1, 0);
 const ONE = new Vector3(1, 1, 1);
-/** ADR-217: the up-left and up-right rays that look for the two walls, and the walls they saw lately. */
+/** ADR-218: the up-left and up-right rays that look for the two walls, and the walls they saw lately. */
 let wallSources: (XRHitSource | null)[] = [];
 let wallsSeen: ({ wall: Wall; age: number } | undefined)[] = [];
 const WALL_FRAMES = 30;
@@ -266,10 +266,10 @@ const WALL_FRAMES = 30;
 let autoCorner: { corner: Spot; along: Spot } | null = null;
 /** The corner of the content the wall gap applies to, when placed by a room corner. */
 let placedCorner: ARPoint | null = null;
-/** One-finger drag (ADR-217): the transient-input hit source, and the drag under way. */
+/** One-finger drag (ADR-218): the transient-input hit source, and the drag under way. */
 let touchSource: XRHitSource | null = null;
 let drag: { start: Placement; from: Vector3 | null } | null = null;
-/** Depth occlusion and light estimation (ADR-217). */
+/** Depth occlusion and light estimation (ADR-218). */
 let depthOn = false;
 let occluder: Mesh<PlaneGeometry, ShaderMaterial> | null = null;
 let lightProbe: unknown = null;
@@ -371,7 +371,7 @@ function place(pl: Placement, a: AnchorWait | null) {
   setUi({ state: 'placed', corner: null, found: false, byCorner: !!placedCorner });
 }
 
-/** The size labels the Sizes switch asks for (ADR-215, ADR-217). */
+/** The size labels the Sizes switch asks for (ADR-215, ADR-218). */
 function rebuildLabels() {
   const l = live;
   if (!l) return;
@@ -414,7 +414,7 @@ function onTap(cam: Vector3) {
   const pose = hitPose(hitNow);
   if (!pose) return;
   if (ui.corner === 'first' && autoCorner) {
-    // Both walls seen (ADR-217): one tap places it in the corner where they meet.
+    // Both walls seen (ADR-218): one tap places it in the corner where they meet.
     const c = cornerPlacement(l.bounds, autoCorner.corner, autoCorner.along, cam);
     if (c) {
       placedCorner = c.point;
@@ -448,7 +448,7 @@ const hitPose = (h: XRHitResultLike) => h.getPose(refSpace)?.transform.matrix ??
 function onSelect() {
   if (ui.state === 'placing') tapQueued = true;
 }
-/** A touch once placed starts a one-finger drag (ADR-217); taps on the overlay's buttons never get here. */
+/** A touch once placed starts a one-finger drag (ADR-218); taps on the overlay's buttons never get here. */
 function onSelectStart() {
   if (ui.state === 'placed' && placement && touchSource) drag = { start: placement, from: null };
 }
@@ -506,7 +506,7 @@ export async function enterAR(overlay: HTMLElement | null): Promise<string | nul
     const s = await xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
       optionalFeatures: ['dom-overlay', 'anchors', 'depth-sensing', 'light-estimation'],
-      // CPU depth (ADR-217): what Android phones give; three's own depth path is for headsets.
+      // CPU depth (ADR-218): what Android phones give; three's own depth path is for headsets.
       depthSensing: {
         usagePreference: ['cpu-optimized'],
         dataFormatPreference: ['luminance-alpha', 'float32'],
@@ -525,7 +525,7 @@ export async function enterAR(overlay: HTMLElement | null): Promise<string | nul
     await l.gl.xr.setSession(s as unknown as Parameters<typeof l.gl.xr.setSession>[0]);
     const viewer = await s.requestReferenceSpace('viewer');
     hitSource = (await s.requestHitTestSource?.({ space: viewer })) ?? null;
-    // ADR-217: rays up-left and up-right of the centre find the two walls of a corner; a touch source for dragging.
+    // ADR-218: rays up-left and up-right of the centre find the two walls of a corner; a touch source for dragging.
     const Ray = (globalThis as { XRRay?: new (o: DOMPointInit, d: DOMPointInit) => unknown }).XRRay;
     if (Ray)
       wallSources = await Promise.all(
@@ -632,7 +632,7 @@ export function toggleARStep() {
   setUi({ fine: !ui.fine });
 }
 
-/** Wall gap − or + 5 mm (ADR-217), 0 to 200 mm; once placed by a corner the furniture moves with it. */
+/** Wall gap − or + 5 mm (ADR-218), 0 to 200 mm; once placed by a corner the furniture moves with it. */
 export function stepARWallGap(more: boolean) {
   const gap = ui.gap + (more ? GAP_STEP : -GAP_STEP);
   if (gap < 0 || gap > GAP_MAX) return;
@@ -643,13 +643,13 @@ export function stepARWallGap(more: boolean) {
   setUi({ gap });
 }
 
-/** Sizes switch (ADR-217): Overall → Per piece → Off. */
+/** Sizes switch (ADR-218): Overall → Per piece → Off. */
 export function cycleARSizes() {
   setUi({ sizes: nextARSizes(ui.sizes) });
   if (ui.state === 'placed') rebuildLabels();
 }
 
-/** Hide behind real objects: On ↔ Off (ADR-217). */
+/** Hide behind real objects: On ↔ Off (ADR-218). */
 export function toggleAROcclusion() {
   setUi({ occlusion: !ui.occlusion });
   if (occluder) occluder.visible = ui.occlusion;
@@ -736,7 +736,7 @@ export function ARBridge({
       spot = null;
       hitNow = null;
     }
-    // Room corner (ADR-217): the walls the side rays saw in the last frames; both make an auto corner.
+    // Room corner (ADR-218): the walls the side rays saw in the last frames; both make an auto corner.
     autoCorner = null;
     if (ui.corner === 'first') {
       wallsSeen = wallSources.map((src, i) => {
@@ -846,7 +846,7 @@ class Preview {
     if (!at) return;
     const y = 0.002;
     if (ui.corner === 'first' && autoCorner) {
-      // Both walls seen (ADR-217): the corner where they meet and the furniture in it.
+      // Both walls seen (ADR-218): the corner where they meet and the furniture in it.
       const c = autoCorner.corner;
       this.cornerDot.position.set(c.x, c.y + y, c.z);
       this.cornerDot.visible = true;
@@ -945,7 +945,7 @@ export interface SizeLabel {
   at: [number, number, number];
 }
 
-/** The labels the Sizes switch shows (ADR-215, ADR-217): overall W, H and D; each piece's W × H × D; or none. */
+/** The labels the Sizes switch shows (ADR-215, ADR-218): overall W, H and D; each piece's W × H × D; or none. */
 export function sizeLabels(sizes: ARSizes, b: Box, pieces: readonly ARPiece[]): SizeLabel[] {
   if (sizes === 'off') return [];
   if (sizes === 'overall')
@@ -1000,7 +1000,7 @@ function labelSprites(list: readonly SizeLabel[]): Group | null {
 }
 
 // ---------------------------------------------------------------------------
-// One-finger drag, depth occlusion and light estimation (ADR-217)
+// One-finger drag, depth occlusion and light estimation (ADR-218)
 // ---------------------------------------------------------------------------
 
 const NO_PIECES: readonly ARPiece[] = [];
@@ -1076,7 +1076,7 @@ function makeOccluder() {
   return mesh;
 }
 
-/** Each placed frame with depth: this frame's depth into the occluder (ADR-217). */
+/** Each placed frame with depth: this frame's depth into the occluder (ADR-218). */
 function occlusionFrame(f: XRFrameLike, gl: WebGLRenderer) {
   if (!occluder || !ui.occlusion || !refSpace || !f.getDepthInformation) return;
   let depth: XRDepthLike | null | undefined;
@@ -1125,7 +1125,7 @@ function occlusionFrame(f: XRFrameLike, gl: WebGLRenderer) {
   occluder.visible = true;
 }
 
-/** Each placed frame with a light estimate: the room's light replaces the 3D view's lights (ADR-217). */
+/** Each placed frame with a light estimate: the room's light replaces the 3D view's lights (ADR-218). */
 function lightFrame(f: XRFrameLike) {
   const l = live;
   if (!l || !lightProbe || !f.getLightEstimate) return;

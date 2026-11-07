@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// AR walls, wall gap, depth occlusion, light estimation, one-finger drag and per-piece sizes (ADR-217, N222), with
+// AR walls, wall gap, depth occlusion, light estimation, one-finger drag and per-piece sizes (ADR-218, N222), with
 // WebXR simulated frame by frame: the centre ray, the two side rays, the touch source, depth and light estimates are
 // stand-ins. The real-phone check is G-482.
 import { act, cleanup, render, renderHook } from '@testing-library/react';
@@ -39,7 +39,7 @@ vi.mock('@react-three/fiber', () => ({
 const B = { x: 0, y: 0, z: 0, w: 600, h: 870, d: 560 };
 const close = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
 
-describe('AR walls, gap, drag, light and sizes maths (ADR-217)', () => {
+describe('AR walls, gap, drag, light and sizes maths (ADR-218)', () => {
   it('two walls meeting square give the corner; the back goes against the wall the phone faces', () => {
     const left = { x: 0, z: -0.7, nx: 1, nz: 0 }; // the wall x = 0, facing +x
     const back = { x: 0.8, z: 0, nx: 0, nz: 1 }; // the wall z = 0, facing +z
@@ -226,7 +226,7 @@ afterEach(() => {
   delete (navigator as unknown as Record<string, unknown>).xr;
 });
 
-describe('View in AR with walls and a wall gap (ADR-217)', () => {
+describe('View in AR with walls and a wall gap (ADR-218)', () => {
   it('both walls seen: one tap puts the back-left corner in the room corner, off the walls by the gap', async () => {
     const { ar, ui, hits, frames, tap } = await startAR();
     hits.centre = floorAt(0.2, -1.3, 0.3);
@@ -269,7 +269,7 @@ describe('View in AR with walls and a wall gap (ADR-217)', () => {
   });
 });
 
-describe('View in AR once placed: drag, occlusion, light, sizes (ADR-217)', () => {
+describe('View in AR once placed: drag, occlusion, light, sizes (ADR-218)', () => {
   async function placed(opts: { depth?: boolean; light?: boolean } = {}) {
     const t = await startAR(opts);
     t.hits.centre = floorAt(0, -1.3, -1);

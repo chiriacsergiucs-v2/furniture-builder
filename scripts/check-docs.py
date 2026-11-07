@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Check the ADR set and its references (ADR-050).
 
-- every ADR in docs/adr/ (Pending or Deferred) and docs/adr-done/ (Implemented) has a valid header;
+- every ADR in docs/adr/ (Pending or Deferred) and docs/adr-done/ (Implemented or Rejected, ADR-217) has a valid
+  header;
 - the docs/adr/README.md index lists each ADR once, with the right link and status;
 - every ADR id, ADR link and backlog id used in the repository exists;
 - "- Acceptance:" is light, full or browser (ADR-066, ADR-108); a light ADR keeps the find-it marker on its backlog
@@ -32,8 +33,8 @@ for folder in (ADR, DONE):
             errors.append(f"{rel}: first line is not '# ADR-{num}: <title>'")
         st = re.search(r"^- Status: (.+)$", text, re.M)
         status = st.group(1).strip() if st else ""
-        if folder == DONE and status != "Implemented":
-            errors.append(f"{rel}: in adr-done/ but Status is '{status}'")
+        if folder == DONE and not (status == "Implemented" or re.fullmatch(r"Rejected \(.+\)", status)):
+            errors.append(f"{rel}: in adr-done/ but Status is '{status}' (Implemented or Rejected (<reason>))")
         if folder == ADR and not (status == "Pending" or re.fullmatch(r"Deferred \(.+\)", status)):
             errors.append(f"{rel}: Status must be Pending or Deferred (<reason>), is '{status}'")
         for key in ("Date", "Depends on", "Design"):
@@ -86,7 +87,7 @@ def research_problems(text):
 # Header references inside each ADR.
 for num, (path, status) in adrs.items():
     # A shipped ADR deletes the features it built, so only pending ADRs are checked.
-    if status != "Implemented":
+    if path.parent == ADR:
         errors += [f"{path.relative_to(REPO)}: {e}" for e in research_problems(path.read_text())]
     text, rel = path.read_text(), path.relative_to(REPO)
     deps = re.search(r"^- Depends on: (.+)$", text, re.M)

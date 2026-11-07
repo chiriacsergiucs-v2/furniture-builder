@@ -451,7 +451,7 @@ export default function Viewer3D() {
     [projectPieces],
   );
   const showLocks = !exploded && !rendering && locked.length > 0;
-  // AR per-piece sizes (ADR-217): each project piece's box and own size; a single design is one piece.
+  // AR per-piece sizes (ADR-218): each project piece's box and own size; a single design is one piece.
   const arPieces = useMemo(
     () =>
       projectPieces
@@ -901,7 +901,7 @@ function ThreeMore({ name }: { name: string }) {
         : '';
   const sizesName =
     arUi.sizes === 'overall' ? t('Overall') : arUi.sizes === 'piece' ? t('Per piece') : t('Off');
-  // The wall gap shows in Room corner mode and once placed by a corner (ADR-217).
+  // The wall gap shows in Room corner mode and once placed by a corner (ADR-218).
   const showGap = (ar === 'placing' && !!arUi.corner) || (ar === 'placed' && arUi.byCorner);
   const pointName =
     arUi.point === 'centre'

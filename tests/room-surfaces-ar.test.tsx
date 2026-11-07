@@ -120,7 +120,7 @@ describe('View in AR (ADR-208 item 7)', () => {
     expect(mode).toBe('immersive-ar');
     expect(init.requiredFeatures).toEqual(['hit-test']);
     // ADR-213 adds anchors (optional).
-    // ADR-217 adds depth-sensing and light-estimation (optional).
+    // ADR-218 adds depth-sensing and light-estimation (optional).
     expect(init.optionalFeatures).toEqual([
       'dom-overlay',
       'anchors',

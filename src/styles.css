@@ -7507,7 +7507,7 @@ ul.plain {
 .ar-overlay .ar-pad .btn {
   min-height: 44px;
 }
-/* ADR-217: the wall gap stepper. */
+/* ADR-218: the wall gap stepper. */
 .ar-overlay .ar-gap {
   align-items: center;
 }

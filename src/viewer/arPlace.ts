@@ -190,7 +190,7 @@ export function dimensionLabels(b: Box): DimLabel[] {
 }
 
 // ---------------------------------------------------------------------------
-// Walls, wall gap, drag, light and per-piece sizes (ADR-217)
+// Walls, wall gap, drag, light and per-piece sizes (ADR-218)
 // ---------------------------------------------------------------------------
 
 /** A wall seen by a hit: a point on it and its face (unit, horizontal, pointing into the room). */
@@ -214,7 +214,7 @@ export function wallOf(m: ArrayLike<number>): Wall {
 export const CORNER_MIN_ANGLE = (60 * Math.PI) / 180;
 
 /**
- * The room corner where two walls meet (ADR-217), at floor height `y`, with the wall the back goes against: the one
+ * The room corner where two walls meet (ADR-218), at floor height `y`, with the wall the back goes against: the one
  * the phone faces more squarely. `along` is a floor spot 1 m from the corner along that wall, away from the other
  * wall, ready for `cornerPlacement`. Null when the walls are nearly parallel.
  */
@@ -254,7 +254,7 @@ export const GAP_STEP = 5;
 export const GAP_MAX = 200;
 
 /**
- * A corner placement moved off the walls by `gapMm` (ADR-217): forward from the back wall, and from the side wall
+ * A corner placement moved off the walls by `gapMm` (ADR-218): forward from the back wall, and from the side wall
  * toward the content's middle (right for a back-left corner, left for a back-right one).
  */
 export function withWallGap(pl: Placement, corner: ARPoint, gapMm: number): Placement {
@@ -262,7 +262,7 @@ export function withWallGap(pl: Placement, corner: ARPoint, gapMm: number): Plac
   return nudge(pl, corner === 'back-right' ? -g : g, g);
 }
 
-/** One-finger drag (ADR-217): the placement moved by the finger's floor movement, its turn kept. */
+/** One-finger drag (ADR-218): the placement moved by the finger's floor movement, its turn kept. */
 export const dragTo = (start: Placement, from: Spot, to: Spot): Placement => ({
   ...start,
   cx: start.cx + to.x - from.x,
@@ -291,7 +291,7 @@ export function mainLight(e: LightEstimateLike) {
   };
 }
 
-/** What the Sizes switch shows (ADR-217). */
+/** What the Sizes switch shows (ADR-218). */
 export type ARSizes = 'overall' | 'piece' | 'off';
 export const nextARSizes = (s: ARSizes): ARSizes =>
   s === 'overall' ? 'piece' : s === 'piece' ? 'off' : 'overall';
