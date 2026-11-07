@@ -5,7 +5,7 @@
 // under "Project templates" in Add a piece, placed by a tap.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { piecesList, renderApp, WIDTHS } from './setup';
+import { openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)', (width) => {
   it('bare app → project → Undo Move, Edit history, versions, a style, a project template', async () => {
@@ -17,8 +17,7 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     let dlg = await screen.findByRole('dialog');
     await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');

@@ -21,7 +21,7 @@ import type { Design, Mm } from '../types';
 import { findFamily, insertVariant } from './index';
 import { insertable } from './types';
 
-export interface RoomPreset {
+interface RoomPreset {
   id: string;
   name: string;
   template: ProjectTemplate;

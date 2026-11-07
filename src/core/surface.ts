@@ -6,13 +6,13 @@ import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types'
  * Pictures on boards (ADR-048): which files are accepted, how big they are kept, and how one picture is laid on
  * each face of a part. Pure: no DOM, no storage, no three.js.
  */
-export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
 /** Larger files are refused before decoding (phones run out of memory on huge photos). */
 export const MAX_IMAGE_BYTES = 30 * 1024 * 1024;
 /** Longest edge kept after import; larger pictures are scaled down, keeping their proportions. */
-export const MAX_TEXTURE_PX = 2048;
+const MAX_TEXTURE_PX = 2048;
 /** Board covered by one picture when it is first added: this length along the picture's width. */
-export const DEFAULT_TILE_LENGTH: Mm = 1000;
+const DEFAULT_TILE_LENGTH: Mm = 1000;
 export const MAX_TILE: Mm = 10_000;
 
 /** Board finishes (ADR-067), in the order the Materials dialog shows them. */

@@ -1513,3 +1513,228 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Ask the user; closest to the request is to keep showing the descriptions and make the three texts state the height the row builds (820), read from the catalog piece, and write the desk texts as W x H x D. (estimate: effort +5% of ADR-216, value +5%)
 - Work: Low
 - Impact: Low-medium
+
+### G-485: Import cycles in core and ui are not broken or linted
+
+- Status: Open
+- Origin: ADR-219 Out of scope, 2026-11-07 (architecture review I-01, section 2)
+- Missing: ADR-219 enforces layer directions only. The 9-file core cycle around project.ts (arrange, common, compat, connections, groupMove, selection, sizeLock, variables), the shopping/fasteners/prices type cycle and the UI cycles (Dialogs, CountStepper/Inspector, Project/Settings) stay, and no import/no-cycle rule guards them.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the core cycle be broken (anti-candidate in review section 6: project.ts and its cycle are the model layer) and an import/no-cycle rule added?
+- Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
+
+### G-486: The CI build job does not cache Vite build output
+
+- Status: Open
+- Origin: ADR-220 Out of scope, 2026-11-07 (architecture review I-02)
+- Missing: ADR-220 caches only the type-check state (node_modules/.tmp). The build job still runs a cold vite build; no build or Vitest result cache.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Is a build cache worth the risk of a stale bundle in CI?
+- Suggested pick: Leave the build cold: CI is the source of truth and a stale bundle is a regression risk (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-487: The project cut list and hardware are not derived once in the store
+
+- Status: Open
+- Origin: ADR-221 Out of scope, 2026-11-07 (architecture review I-03)
+- Missing: The review's third step, deriving projectCutlist/projectHardware once in commitProject and storing them, and deriving the view once instead of per mounted useView(), is not built; ADR-221 memoises placeItem and reads projectModel only.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the derived cut list and hardware move into the store after ADR-221 is measured?
+- Suggested pick: Measure after ADR-221; build only if a 60-item edit still takes over 10 ms (estimate: effort +15 %, value +10 %)
+- Work: Medium
+- Impact: Low-medium
+
+### G-488: Research data is not a generated lazy JSON file
+
+- Status: Open
+- Origin: ADR-222 Out of scope, 2026-11-07 (architecture review I-04, section 10 question 5)
+- Missing: ADR-222 loads the research data through a dynamic import (a lazy chunk). The review's generated public/research/*.json, which removes the two ?raw edges and changes a data layout (ADR-043 lineage), is not built.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Is a generated public/research/*.json an acceptable home for the research data?
+- Suggested pick: Keep the lazy chunk; it gives the same first-load saving with no data-layout change (estimate: JSON +25 % effort, +0-5 % value)
+- Work: Medium
+- Impact: Low
+
+### G-489: Restoring a backup writes rows without a transaction
+
+- Status: Open
+- Origin: ADR-223 Out of scope, 2026-11-07 (architecture review section 4, persist row)
+- Missing: restoreFiles (src/persist/backup.ts:277-285) writes N rows one by one; a failure halfway leaves a partial restore.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should restoreFiles run in one Dexie transaction so a restore is all or nothing?
+- Suggested pick: One transaction over the restored tables, with a test that a failing row leaves the library unchanged (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Medium
+
+### G-490: Width-independent find-it tests still run at both widths
+
+- Status: Open
+- Origin: ADR-224 Out of scope, 2026-11-07 (architecture review I-06, section 10 question 1)
+- Missing: Running find-it tests whose rendered path does not depend on width at one width (about -40 % test CPU) is not built; it amends CLAUDE.md R3 and ADR-108, which stay unchanged.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: May width-independent find-it tests run at one width (amends R3 and ADR-108)?
+- Suggested pick: Keep both widths (R3 and ADR-108 unchanged) until the user decides; the saving is CPU time only (estimate: effort +10 %, value +5 %)
+- Work: Low
+- Impact: Low-medium
+- Conflicts: ADR-108: find-it runs at 390 and 1280 px
+
+### G-491: Diagnostics are still translated inside the model
+
+- Status: Open
+- Origin: ADR-225 Out of scope, 2026-11-07 (architecture review I-07, section 10 question 4)
+- Missing: Diagnostic { code, params } translated at the edge (messageOf), t() out of the model files, materials labels resolved by the caller, and packages/model are not built; ADR-225 adds only a code field.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Accept translate-at-the-edge diagnostics (amends ADR-008 and the ADR-153 translation rule) and a model package?
+- Suggested pick: Decide after ADR-225 ships; the code field already lets checks and tests stop keying on text (estimate: effort +60-80 %, value +10 %)
+- Work: High
+- Impact: Low-medium
+- Conflicts: ADR-153: messages are translated where they are written
+
+### G-492: Some checks still match English panel labels
+
+- Status: Open
+- Origin: ADR-225 Out of scope, 2026-11-07 (architecture review I-07)
+- Missing: Label regexes in clearance.ts, build.ts, shape.ts, replace.ts and assembly.ts that have no panel role or kind field to key on stay as regexes after ADR-225.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should Panel get a role field for every label a check matches (a model-shape change)?
+- Suggested pick: Add the role field only where a check needs it, in a follow-up ADR (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low
+
+### G-493: Saved-row list functions still return whole rows
+
+- Status: Open
+- Origin: ADR-227 Out of scope, 2026-11-07 (architecture review I-09)
+- Missing: listDesigns/listProjects (src/persist/db.ts:231-233, 247-248) still return raw rows instead of { id, name, updatedAt } summaries.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the list functions return summaries so no caller can re-save an unvalidated row?
+- Suggested pick: Return summaries in a follow-up after ADR-227 and ADR-223 (estimate: effort +10 %, value +3 %)
+- Work: Low
+- Impact: Low
+
+### G-494: Nesting is not a workspace package
+
+- Status: Open
+- Origin: ADR-228 Out of scope, 2026-11-07 (architecture review I-10, section 6)
+- Missing: packages/nesting as a pnpm workspace package with its own tsc and Vitest project is not built; ADR-228 keeps it an internal module with a lint boundary.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Is a workspace package worth the extra build and CI setup?
+- Suggested pick: Stay internal until a second consumer exists (estimate: effort +25 %, value +2 %)
+- Work: Medium
+- Impact: Low
+
+### G-495: Production nesting still depends on machine speed
+
+- Status: Open
+- Origin: ADR-228 Out of scope, 2026-11-07 (architecture review I-10, section 10 question 2)
+- Missing: The production default maxMs = 1500 (src/core/nesting/place.ts) is unchanged, so a sheet layout can differ between a slow and a fast device; only tests use maxMs: Infinity.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the production nesting default become deterministic (maxMs Infinity or an attempt bound), accepting a slower first layout on a weak phone and a layout that may differ from one already printed?
+- Suggested pick: An attempt bound tuned to today's median layout time, so results stop depending on speed (estimate: effort +10 %, value +5 %)
+- Work: Low
+- Impact: Medium
+- Conflicts: ADR-018: seeded guillotine heuristic with a time budget
+
+### G-496: Print dictionaries are not loaded lazily
+
+- Status: Open
+- Origin: ADR-229 Out of scope, 2026-11-07 (architecture review I-11)
+- Missing: PRINT_RU and PRINT_EN (src/core/i18n/print.ts) stay in the main chunk; ADR-229 makes only the Russian UI dictionary lazy.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should setPrintLang load the print dictionary on demand?
+- Suggested pick: Load them in setPrintLang after ADR-229 measures the saving (estimate: effort +10 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-497: The 3D viewer still imports persist directly
+
+- Status: Open
+- Origin: ADR-230 Out of scope, 2026-11-07 (architecture review section 2)
+- Missing: Viewer3D.tsx:78-79 import src/persist; ADR-230 removes ui imports and DOM side channels only.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the viewer read saved models and pictures through the store (after ADR-223)?
+- Suggested pick: Route them through the store after ADR-223 (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-498: The design store is not split into slices
+
+- Status: Open
+- Origin: ADR-231 Out of scope, 2026-11-07 (architecture review I-13)
+- Missing: projectSlice, selectionSlice and viewSlice with commit/commitProject as the only seams are not built; designStore.ts stays one file.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Split designStore.ts into slices once ADR-231's helpers are in?
+- Suggested pick: Split after ADR-231 if the file is still over 1 500 lines (estimate: effort +20 %, value +3 %)
+- Work: Medium
+- Impact: Low
+
+### G-499: The whole app, seller catalog included, is precached on first visit
+
+- Status: Open
+- Origin: ADR-234 Out of scope, 2026-11-07 (architecture review I-16, section 10 question 3)
+- Missing: Precaching the shell only and runtime-caching the seller catalog and path tracer on first use (first-visit download about -40 %) is not built: ADR-234 keeps offline before first use (ADR-002, ADR-161).
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Is offline after first use enough for the seller catalog and the path tracer?
+- Suggested pick: Keep offline before first use; the budget test stops unplanned growth (estimate: change +10 % effort, -40 % first download, risk: picker empty offline before first use)
+- Work: Low
+- Impact: Low-medium
+- Conflicts: ADR-161: the seller catalog is an offline snapshot
+
+### G-500: App.tsx is one 815-line component with no memoised children
+
+- Status: Open
+- Origin: ADR-236 Out of scope, 2026-11-07 (architecture review section 3 and Skipped)
+- Missing: Splitting App.tsx (27 store subscriptions, 11 effects) and memo of RoomPlan/Panels are not built.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Split App.tsx and memoise the heavy children?
+- Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
+
+### G-501: The catalog PDF extractor tests run nowhere
+
+- Status: Open
+- Origin: ADR-237 Out of scope, 2026-11-07 (architecture review I-19)
+- Missing: tools/catalog/test_extract_pdf.py imports extract_pdf.py, which imports pdfplumber at module top (line 21), so it cannot run in CI without installing pdfplumber.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Install pdfplumber in CI (a Python dependency the app does not use) or make the import lazy so the tests run without it?
+- Suggested pick: Make the pdfplumber import lazy in the functions that need it and run the tests that do not (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-502: No frame-time profile of the 3D viewer
+
+- Status: Open
+- Origin: ADR-238 Out of scope, 2026-11-07 (architecture review I-20)
+- Missing: ADR-238's saving is reasoned from object counts; no browser profile of frame time on a 20-piece room was taken before or after.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Profile the viewer in Chromium before and after ADR-238?
+- Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-503: The Gaps page still imports the gaps ledger with ?raw
+
+- Status: Open
+- Origin: ADR-219
+- Missing: src/ui/Gaps.tsx imports docs/adr/GAPS.md?raw, outside the three data-loader folders ADR-219 allows; eslint.config.js and tests/core-boundary.test.ts carry it as a named allowance so the tree stays green
+- Request: User, 2026-11-07: "No regressions shall be introduced"; ADR-219: ?raw imports outside catalog/brands, sellers and research fail
+- Questions: Move the ledger import into a loader under src/core (or generated data) so the allowance can go, or keep the Gaps page's ?raw import as an accepted exception?
+- Suggested pick: Keep the allowance until the research data leaves ?raw (review section 6 step 5), then move the ledger the same way: it is closest to ADR-219's rule without a behaviour change now
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-504: Two find-it checks still read a class on an element found by role
+
+- Status: Open
+- Origin: ADR-224 build, 2026-11-07 (architecture review I-06)
+- Missing: tests/find-it/info-tip.test.tsx picks the info buttons among all buttons found by role by their info-btn class, and tests/find-it/editor-nav.test.tsx reads the sheet-open and sheet-full classes on the editor's main area (found by role): an info button has no role or name of its own that sets it apart, and the sheet stop is CSS layout. No querySelector remains.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Give InfoTip buttons something users can perceive that sets them apart (for example a shared name prefix already enforced, or aria-haspopup), and assert the sheet stop only through the Resize the sheet slider and the peek's aria-expanded?
+- Suggested pick: Keep the two class reads (equal strictness, no change users see) until a role-based marker is chosen (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low

@@ -15,10 +15,10 @@ import {
   type Capability,
 } from './types';
 
-export interface LocalVariant extends Omit<CatalogVariant, 'create'> {
+interface LocalVariant extends Omit<CatalogVariant, 'create'> {
   design?: Design;
 }
-export interface LocalFamily extends Omit<CatalogFamily, 'variants'> {
+interface LocalFamily extends Omit<CatalogFamily, 'variants'> {
   variants: LocalVariant[];
 }
 export interface LocalTemplate {
@@ -200,7 +200,7 @@ export type TemplateProblemCode =
   | 'bad-variant'
   | 'duplicate-variant'
   | 'variant-design';
-export interface TemplateProblem {
+interface TemplateProblem {
   code: TemplateProblemCode;
   variant?: string;
 }

@@ -94,10 +94,11 @@ describe.each(WIDTHS)('shipped seller board pictures at %ipx (find-it, ADR-162)'
     const items = await within(picker).findAllByRole('listitem', {}, { timeout: 15000 });
     const hosted = items.find((li) => li.textContent?.includes('hosted blue'))!;
     const remote = items.find((li) => li.textContent?.includes('remote red'))!;
-    expect(hosted.querySelector('img')?.getAttribute('src')).toBe(
+    // The picture has no alt text (the row names the product): role presentation.
+    expect(within(hosted).queryAllByRole('presentation')[0]?.getAttribute('src')).toBe(
       '/furniture-builder/sellers/regency/101.jpg',
     );
-    expect(remote.querySelector('img')).toBeNull();
+    expect(within(remote).queryAllByRole('presentation')).toHaveLength(0);
 
     await user.click(within(hosted).getByRole('button', { name: 'Use this' }));
     expect(await within(white).findByText(/Seller product: Pal hosted blue/)).toBeTruthy();

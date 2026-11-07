@@ -9,11 +9,11 @@ import type { Axis, Box, Face, FrameParams, Material, Mm, Panel, PanelRole } fro
  * from lengths (their section is the two short sides), panels from sheets.
  */
 
-export const LEDGER_HEIGHT = 40;
-export const MATTRESS_LIP = 50;
-export const CENTRE_RAIL_HEIGHT = 80;
-export const CENTRE_RAIL_FROM = 1400;
-export const BACK_START = 100;
+const LEDGER_HEIGHT = 40;
+const MATTRESS_LIP = 50;
+const CENTRE_RAIL_HEIGHT = 80;
+const CENTRE_RAIL_FROM = 1400;
+const BACK_START = 100;
 const GUARD_RAIL = 100;
 const RUNG_PITCH = 250;
 const RUNG_HEIGHT = 30;

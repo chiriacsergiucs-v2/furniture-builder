@@ -7,7 +7,7 @@ import { check, resolve, stepsWriting, typeOf, visibleSteps } from './engine';
 import { boardsVersion, stepById } from './steps';
 import type { Answers, Generator as Family } from './types';
 
-export const SUGGEST_CAP = 64;
+const SUGGEST_CAP = 64;
 export const CARDS_FIRST = 6;
 
 export interface Suggestion {

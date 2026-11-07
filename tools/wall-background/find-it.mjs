@@ -5,13 +5,13 @@
 // whole wall (ADR-146 replaced the repeat size); Wall 4 gets a Colour. The 3D view shows the picture
 // and the colour on the walls; "Solid walls" makes them opaque; the front view fills the back wall behind the piece.
 // Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

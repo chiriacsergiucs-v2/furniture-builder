@@ -29,7 +29,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   entry in `src/core/i18n/ru/<area>.ts` (a key without one fails `pnpm typecheck`); text from built-in data goes
   through `tr()` with its entry in `src/core/i18n/ru/data-*.ts`; print and CSV text goes through `pt()` with its
   Russian and English entries in `src/core/i18n/print-text.ts`. A deleted text deletes its entries. The feature tree
-  (`src/core/features.ts`, ADR-158) is updated only when the user asks (user 2026-11-07). The Gaps page is not translated (user
+  (`src/ui/info/features.ts`, ADR-158) is updated only when the user asks (user 2026-11-07). The Gaps page is not translated (user
   2026-10-29).
 
 ## Repository layout
@@ -123,8 +123,10 @@ and `pnpm build`, and pushed straight to `main` after the user approves the list
   document shape bumps `schemaVersion` and keeps old readers (ADR-011).
 - Storage: never edit a shipped Dexie version; never delete rows the app cannot read (ADR-012). Use the
   `add-storage-version` skill. Nothing may delete or rewrite saved designs without the user's explicit decision.
-- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014). Two exceptions: the
-  quick-count card over the 3D view (ADR-085), and moving and turning project pieces in Move mode (ADR-093).
+- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014). Exceptions: the
+  quick-count card over the 3D view (ADR-085), moving and turning project pieces in Move mode (ADR-093), resizing an
+  imported 3D model (ADR-102), the height drag (ADR-122), fitting a wall picture (ADR-146) and the turn handle
+  (ADR-169).
 - Zustand selectors return stable references (no `.filter()`/`.map()` inside a selector).
 - Keyboard focus visible; no horizontal page scroll at 390 px.
 - No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016).
@@ -177,7 +179,7 @@ on restores it unchanged.
 - Every implementation reply ends with **Decided** and **Skipped this iteration** (no backlog status table, user
   2026-11-07).
 - Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
-  sets `checked` (the date) on the feature lines it verifies (`src/core/features.ts`); Done gaps live in
+  sets `checked` (the date) on the feature lines it verifies (`src/ui/info/features.ts`); Done gaps live in
   `docs/adr/GAPS-archive.md` and are never re-checked.
 - Gaps ledger (ADR-082): optional since 2026-11-07. Record a gap with `pnpm gaps add` only when the user asks;
   skipped items are listed in the reply.

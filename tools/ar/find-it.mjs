@@ -6,14 +6,14 @@
 // "Room corner" with its two hints and "Cancel corner", two floor taps that place it, the fine-tune buttons and step
 // switch, "Place again" and "Exit AR". WebXR is a stand-in session: frames come from a timer, the hit-test result is
 // whatever the script sets, taps are `select` events. Not part of `pnpm test`. Not checked here: a real phone (G-482).
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

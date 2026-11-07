@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { t } from '../../core/i18n';
-import type { Answers } from '../../core/wizard/types';
+import { t } from '../core/i18n';
+import type { Answers } from '../core/wizard/types';
 
 /** A closed new-piece wizard's answers, kept in memory for the session only, never stored (ADR-211, G-356). */
 export interface WizardDraft {

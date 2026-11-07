@@ -2,7 +2,7 @@
  * What the app can do, as a tree of domains (ADR-158), for the Information and guides page. Written by hand from the
  * implemented ADRs; a feature built later adds its line here (CLAUDE.md). Texts are keys of the dictionary (ADR-153).
  */
-import type { Key } from './i18n';
+import type { Key } from '../../core/i18n';
 
 export interface Feature {
   /** What the user can do, in a few words. */

@@ -5,7 +5,7 @@
 // closed, no Finish group (ADR-163); Move to lists only working actions; a group holding an error opens itself (ADR-008).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openSheet, renderApp, WIDTHS } from './setup';
 
 const GROUPS = ['More: clearance, merge'] as const;
 
@@ -19,8 +19,7 @@ describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-117, ADR-160)',
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
     // Phones: the panel is a bottom sheet opened from its peek row.
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     const addPiece = async (name: RegExp) => {
       await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
       const dlg = await screen.findByRole('dialog');

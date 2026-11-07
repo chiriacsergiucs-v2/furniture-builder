@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * What a gap and feature sync must still check (CLAUDE.md, user rule 2026-11-05: "future syncs only check unmarked
- * ones, not entire list"). Prints, from the feature tree (`src/core/features.ts`, ADR-158) and the ADR folders:
+ * ones, not entire list"). Prints, from the feature tree (`src/ui/info/features.ts`, ADR-158) and the ADR folders:
  *
  *   - feature lines with no `checked` date;
  *   - feature lines whose `checked` date is older than the Implemented date of an ADR they cite;
@@ -26,7 +26,7 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
  * ADR layout and skills; 053 pnpm, Prettier and Node 24; 066 light acceptance; 082 gaps ledger; 108 find-it in jsdom;
  * 114 one control height; 115 high-severity layout fixes; 116 heading scale and spacing; 120 lower-severity critique
  * fixes; 127 backend choice; 131 secure sessions and CSP; 150 delete the research tests; 183 feature-tree details; 197 faster CI;
- * 201 failing and missing acceptance checks.
+ * 201 failing and missing acceptance checks; 219, 220, 224, 226, 227, 231, 235, 236, 237 architecture review internals (no feature).
  */
 export const EXEMPT = [
   'ADR-001',
@@ -49,6 +49,15 @@ export const EXEMPT = [
   'ADR-183',
   'ADR-197',
   'ADR-201',
+  'ADR-219',
+  'ADR-220',
+  'ADR-224',
+  'ADR-226',
+  'ADR-227',
+  'ADR-231',
+  'ADR-235',
+  'ADR-236',
+  'ADR-237',
 ];
 
 /** Feature lines are optional for ADRs after this number (user 2026-11-07). */
@@ -127,7 +136,7 @@ export function pending(domains, implemented, exempt = EXEMPT, inProgress = pend
 }
 
 async function main() {
-  const { FEATURES } = await import(pathToFileURL(join(REPO, 'src/core/features.ts')).href);
+  const { FEATURES } = await import(pathToFileURL(join(REPO, 'src/ui/info/features.ts')).href);
   const p = pending(FEATURES, implementedDates());
   const sections = [
     ['Feature lines with no checked date', p.unchecked],

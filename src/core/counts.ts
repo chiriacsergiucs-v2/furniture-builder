@@ -9,7 +9,7 @@ import type { Product, Space } from './types';
 
 export type CountKey = 'vdiv' | 'hdiv' | 'shelves' | 'drawers' | 'doors' | 'sliding';
 
-export interface CountRow {
+interface CountRow {
   key: CountKey;
   label: string;
   value: number;

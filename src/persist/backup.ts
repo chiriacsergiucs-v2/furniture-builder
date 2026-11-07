@@ -1,7 +1,10 @@
 import {
   BACKUP_TABLES,
+  keyOf,
   planBackup,
   planRestore,
+  rowText,
+  tableFiles,
   type BackupFile,
   type BackupStatus,
   type BackupTable,
@@ -14,8 +17,8 @@ import { unzipStore, zipStore } from '../core/zip';
 import type { Design } from '../core/types';
 import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
-import { db, getSetting, saveDesign, saveProject, saveTemplate, setSetting } from './db';
-import { onSavedChange } from './events';
+import { db, getSetting, saveDesign, saveProject, savedRows, saveTemplate, setSetting } from './db';
+import { onSavedChange, takeDirty } from './events';
 import { t } from '../core/i18n';
 
 /**
@@ -84,9 +87,13 @@ export async function askPersist(): Promise<boolean> {
   }
 }
 
+/** Whether this device was asked already: read once per visit (ADR-235), not at every save. */
+let persistAsked: Promise<boolean> | undefined;
 /** At the first save on this device, ask once (G-239); later the button in Settings asks again. */
 export async function askPersistOnce(): Promise<void> {
-  if (await getSetting<boolean>(PERSIST_ASKED_KEY)) return;
+  const asked = (persistAsked ??= getSetting<boolean>(PERSIST_ASKED_KEY).then((v) => !!v));
+  persistAsked = Promise.resolve(true);
+  if (await asked) return;
   await setSetting(PERSIST_ASKED_KEY, true).catch(() => {});
   await askPersist();
 }
@@ -101,9 +108,12 @@ export interface FolderState {
   permission: Permission | 'none';
 }
 
-/** The chosen folder: kept in memory for this visit, read from IndexedDB once after a restart. */
-let chosen: DirHandle | undefined;
-const folder = async () => (chosen ??= await getSetting<DirHandle>(FOLDER_KEY));
+/**
+ * The chosen folder: kept in memory for this visit, read from IndexedDB once after a restart; "no folder" is kept too
+ * (ADR-235), until the user chooses one.
+ */
+let chosen: Promise<DirHandle | undefined> | undefined;
+const folder = () => (chosen ??= getSetting<DirHandle>(FOLDER_KEY));
 
 export async function folderState(): Promise<FolderState> {
   const h = await folder();
@@ -124,7 +134,7 @@ export async function chooseFolder(): Promise<FolderState | 'cancelled'> {
   if (!pick) return { permission: 'none' };
   try {
     const h = await pick({ mode: 'readwrite', id: 'furniture-builder-backup' });
-    chosen = h;
+    chosen = Promise.resolve(h);
     await setSetting(FOLDER_KEY, h);
     return { name: h.name, permission: 'granted' };
   } catch {
@@ -168,33 +178,117 @@ export function onBackupStatus(l: (s: BackupStatus) => void): () => void {
 /** What was last written per path in this session: unchanged files are not written again. */
 const written = new Map<string, string>();
 
-async function writeFolder(root: DirHandle, files: BackupFile[]): Promise<void> {
+/**
+ * Write the files, remove the backup's files of rows deleted since, and say whether a file this session wrote was
+ * missing from the folder (someone removed it, or another folder was chosen): it is written again.
+ */
+async function writeFolder(root: DirHandle, files: BackupFile[]): Promise<boolean> {
   const byDir = new Map<string, BackupFile[]>();
   for (const f of files) {
     const [dir] = f.path.split('/');
     byDir.set(dir, [...(byDir.get(dir) ?? []), f]);
   }
+  let missing = false;
   for (const [name] of BACKUP_TABLES) {
     const list = byDir.get(name) ?? [];
     const dir = await root.getDirectoryHandle(name, { create: true });
+    const present = new Set<string>();
+    for await (const e of dir.values())
+      if (e.kind === 'file' && e.name.endsWith('.json')) present.add(e.name);
     const keep = new Set(list.map((f) => f.path.split('/')[1]));
     for (const f of list) {
-      if (written.get(f.path) === f.text) continue;
-      const w = await (
-        await dir.getFileHandle(f.path.split('/')[1], { create: true })
-      ).createWritable();
+      const file = f.path.split('/')[1];
+      if (!present.has(file) && written.has(f.path)) missing = true;
+      else if (written.get(f.path) === f.text) continue;
+      const w = await (await dir.getFileHandle(file, { create: true })).createWritable();
       await w.write(f.text);
       await w.close();
       written.set(f.path, f.text);
     }
     // A file for an item deleted since the last backup goes too, so a restore never brings it back. Only the
     // backup's own .json files in its own table folders are touched; saved data never is.
-    for await (const e of dir.values())
-      if (e.kind === 'file' && e.name.endsWith('.json') && !keep.has(e.name)) {
-        await dir.removeEntry(e.name);
-        written.delete(`${name}/${e.name}`);
+    for (const file of present)
+      if (!keep.has(file)) {
+        await dir.removeEntry(file);
+        written.delete(`${name}/${file}`);
       }
   }
+  return missing;
+}
+
+/**
+ * Each table's keys in stored order and each row's backup text, from the last backup in this visit (ADR-235). The next
+ * backup reads only the rows saved since (`takeDirty`); a table whose keys are not all text is read whole each time.
+ */
+interface TableCache {
+  keys: unknown[];
+  text: Map<string, string>;
+}
+let cache: Map<BackupTable, TableCache> | undefined;
+
+const cacheTable = (table: BackupTable, rows: unknown[]): TableCache | undefined => {
+  const key = keyOf(table);
+  const keys = rows.map((r) =>
+    r && typeof r === 'object' ? (r as Record<string, unknown>)[key] : undefined,
+  );
+  if (keys.some((k) => typeof k !== 'string')) return undefined;
+  return { keys, text: new Map(rows.map((r, i) => [keys[i] as string, rowText(table, r)])) };
+};
+
+/** Every table read whole: the first backup of a visit, and the fallback. Fills the cache. */
+async function fullFiles(): Promise<BackupFile[]> {
+  const tables = await readTables();
+  cache = new Map();
+  for (const [name] of BACKUP_TABLES) {
+    const c = cacheTable(name, tables[name] ?? []);
+    if (c) cache.set(name, c);
+  }
+  return planBackup(tables);
+}
+
+/** The same files as `fullFiles`, reading only the tables and rows saved since the last backup. */
+async function changedFiles(
+  known: Map<BackupTable, TableCache>,
+  dirty: Map<string, Set<string>>,
+): Promise<BackupFile[]> {
+  const files: BackupFile[] = [];
+  for (const [name] of BACKUP_TABLES) {
+    const table = db.table(name);
+    let c = known.get(name);
+    const changed = dirty.get(name);
+    if (!c) {
+      const rows = await table.toArray();
+      c = cacheTable(name, rows);
+      if (c) known.set(name, c);
+      else {
+        files.push(...planBackup({ [name]: rows }));
+        continue;
+      }
+    } else if (changed?.size) {
+      const keys = await table.toCollection().primaryKeys();
+      if (keys.some((k) => typeof k !== 'string')) {
+        known.delete(name);
+        files.push(...planBackup({ [name]: await table.toArray() }));
+        continue;
+      }
+      const live = new Set(keys as string[]);
+      for (const k of [...c.text.keys()]) if (!live.has(k) || changed.has(k)) c.text.delete(k);
+      const need = (keys as string[]).filter((k) => !c!.text.has(k));
+      const rows = need.length ? await table.bulkGet(need) : [];
+      rows.forEach((r, i) => {
+        if (r !== undefined) c!.text.set(need[i], rowText(name, r));
+      });
+      c.keys = keys.filter((k) => c!.text.has(k as string));
+    }
+    const t = c;
+    files.push(
+      ...tableFiles(
+        name,
+        t.keys.map((k) => ({ key: k, text: t.text.get(k as string)! })),
+      ),
+    );
+  }
+  return files;
 }
 
 /** Back up now to the chosen folder. Without a folder, or without permission, says so. */
@@ -205,10 +299,17 @@ export async function backupNow(): Promise<BackupStatus> {
   try {
     if ((await h.queryPermission?.({ mode: 'readwrite' })) === 'prompt')
       return record({ at, items: 0, error: t('Allow the backup folder again to back up.') });
-    const files = planBackup(await readTables());
-    await writeFolder(h, files);
+    // Only the rows saved since the last backup are read (ADR-235); the first backup of a visit reads everything,
+    // and so does one that finds a file of its own missing from the folder.
+    const dirty = takeDirty();
+    let files = cache ? await changedFiles(cache, dirty) : await fullFiles();
+    if (await writeFolder(h, files)) {
+      files = await fullFiles();
+      await writeFolder(h, files);
+    }
     return record({ at, items: files.length });
   } catch (e) {
+    cache = undefined; // the next backup reads everything again
     return record({
       at,
       items: 0,
@@ -280,7 +381,10 @@ export async function restoreFiles(files: BackupFile[]): Promise<RestorePlan> {
     if (a.table === 'designs') await saveDesign(a.design);
     else if (a.table === 'projects') await saveProject(a.project);
     else if (a.table === 'templates') await saveTemplate(a.template);
-    else await db.table(a.table).add(a.row);
+    else {
+      await db.table(a.table).add(a.row);
+      savedRows(a.table, [a.row[keyOf(a.table)]]);
+    }
   }
   return plan;
 }

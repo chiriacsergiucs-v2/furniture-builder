@@ -7,13 +7,13 @@
 // - Wizard Doors: a five-option segmented control, every label whole; two rows at 390 px, one at 1280 px (G-357);
 //   Review reads "Compartment widths: 0 mm" (G-360).
 // - Arrow keys on Editor mode (G-361).
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

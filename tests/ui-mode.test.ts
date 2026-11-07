@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MODE_LABEL, MODES, parseMode, useUi } from '../src/ui/shell/uiStore';
+import { MODE_LABEL, MODES, parseMode, useUi } from '../src/store/uiStore';
 
 describe('editor modes (ADR-079, ADR-080)', () => {
   it('has two modes in order, with the agreed labels; Configure is gone', () => {

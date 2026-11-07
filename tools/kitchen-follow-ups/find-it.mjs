@@ -5,13 +5,13 @@
 // sink's From left / From front; the 3D view with the ceiling filler and a picked problem's box ("After repair");
 // Fasteners in project Settings; Parts with "Guidance: drilling positions from your values". Screenshots go to the out
 // dir. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4309/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl('http://localhost:4309/furniture-builder/');
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

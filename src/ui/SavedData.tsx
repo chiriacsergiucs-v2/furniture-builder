@@ -29,7 +29,7 @@ import { getLang, t } from '../core/i18n';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useAccount } from '../store/accountStore';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 
 const mb = (n?: number) =>
   n === undefined ? '?' : t('{n} MB', { n: Math.max(0.1, n / 1e6).toFixed(1) });

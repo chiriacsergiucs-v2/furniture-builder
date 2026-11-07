@@ -3,7 +3,7 @@
  * (bani, cents) so sums are exact. A missing price is listed by name and the total is marked incomplete.
  */
 import { t } from './i18n';
-import type { ShopLine, ShopUnit } from './shopping';
+import type { ShopLine, ShopUnit } from './shopping-types';
 import type { SellerPrice } from './sellers';
 import type { ProductRef } from './types';
 
@@ -42,7 +42,7 @@ export type SellerLookup = (r: ProductRef) => SellerPrice | null;
  * per m² by area; bands and solid stock per metre; hardware per piece × seller units per item. Packs, sets and other
  * units are not converted (null).
  */
-export function sellerLinePrice(l: ShopLine, seller?: SellerLookup): number | null {
+function sellerLinePrice(l: ShopLine, seller?: SellerLookup): number | null {
   if (!l.product || !seller) return null;
   const sp = seller(l.product);
   if (!sp) return null;

@@ -3,14 +3,13 @@
 //   pnpm build && pnpm preview --port 4176 --strictPort &
 //   node tools/catalog-flows/find-it.mjs http://127.0.0.1:4176/furniture-builder/ <out dir>
 // Not part of `pnpm test`. Every check prints PASS or FAIL; the script exits 1 when any check fails.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://127.0.0.1:4176/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-catalog-flows-acceptance';
+const url = previewUrl('http://127.0.0.1:4176/furniture-builder/');
+const out = outDir('/tmp/furniture-catalog-flows-acceptance');
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

@@ -72,7 +72,7 @@ import {
   VariablesPanel,
 } from './Variables';
 import { askConfirm } from './Confirm';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { tNode } from './i18n';
 import {
   ApplianceEditor,

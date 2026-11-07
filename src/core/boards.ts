@@ -11,21 +11,21 @@ import { materialKey, type Project } from './project';
 import { bandKey } from './cutlist';
 import type { Design, EdgeBand, Material } from './types';
 
-export interface BoardChoice {
+interface BoardChoice {
   /** `materialKey` of a board, or `decor:<id>` for a decor. */
   key: string;
   label: string;
   board: Material;
 }
 
-export const decorKey = (d: Decor) => `decor:${d.id}`;
+const decorKey = (d: Decor) => `decor:${d.id}`;
 
 /** A board in a select: "name, thickness mm" (the maker and type labels stay on the Boards panel, ADR-163). */
 export const boardLabel = (m: Material) =>
   t('{name}, {thickness} mm', { name: tr(m.name), thickness: m.thickness });
 
 /** A decor as a board: the list's values on a copy of `like` (grain and sheet stay, ADR-055). */
-export const decorBoard = (d: Decor, like?: Material): Material =>
+const decorBoard = (d: Decor, like?: Material): Material =>
   ({
     id: 'decor',
     grain: like?.grain ?? false,

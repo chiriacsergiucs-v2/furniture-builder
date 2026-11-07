@@ -41,7 +41,7 @@ export interface StoredBundle {
   importedAt: string;
   bundle: ResearchBundle;
 }
-export const bundleKey = (b: ResearchBundle) => `${b.document.id}@${b.document.version}`;
+const bundleKey = (b: ResearchBundle) => `${b.document.id}@${b.document.version}`;
 export const storedOf = (bundle: ResearchBundle, importedAt: string): StoredBundle => ({
   key: bundleKey(bundle),
   docId: bundle.document.id,
@@ -253,7 +253,7 @@ export function validateBundle(x: unknown): string[] {
 }
 
 /** Problems with an assessment: every criterion scored 1–5, words from the paper's scales, a rationale and an author. */
-export function validateAssessment(a: Assessment): string[] {
+function validateAssessment(a: Assessment): string[] {
   const e: string[] = [];
   for (const [k] of ASSESSMENT_CRITERIA) {
     const v = a.scores?.[k];
@@ -282,9 +282,8 @@ export function assessedValue(a: Assessment): string {
   const v = ASSESSMENT_CRITERIA.reduce((n, [k, , w]) => n + a.scores[k] * w, 0);
   return (Math.round(v * 10 + 1e-9) / 10).toFixed(1);
 }
-export const assessedDemand = (a: Assessment) =>
-  a.internal ? 'Indirect' : SCORE_WORD[a.scores.demand];
-export const assessedAdoption = (a: Assessment) => SCORE_WORD[a.scores.adoption];
+const assessedDemand = (a: Assessment) => (a.internal ? 'Indirect' : SCORE_WORD[a.scores.demand]);
+const assessedAdoption = (a: Assessment) => SCORE_WORD[a.scores.adoption];
 
 export type RatingDim =
   'demand' | 'impact' | 'complexity' | 'confidence' | 'adoption' | 'priority' | 'appreciation';
@@ -314,13 +313,13 @@ export function rating(f: ResearchFeature, dim: RatingDim): Rating {
   return { value, source: 'assessment' };
 }
 /** All core ratings present (from the paper or assessed): demand, appreciation, value, complexity, confidence, priority. */
-export const fullyRated = (f: ResearchFeature) =>
+const fullyRated = (f: ResearchFeature) =>
   (['demand', 'appreciation', 'impact', 'complexity', 'confidence', 'priority'] as const).every(
     (d) => rating(f, d).source !== 'none',
   );
 
 /** Buckets for the paper's free-form words ("High for cabinetry" → High, "Medium if data exists" → Medium). */
-export function scaleBucket(s: string, scale: readonly string[]): string {
+function scaleBucket(s: string, scale: readonly string[]): string {
   const t = s.toLowerCase().replace('high/medium', 'medium-high');
   const sorted = [...scale].sort((a, b) => b.length - a.length);
   return sorted.find((w) => t.startsWith(w.toLowerCase())) ?? 'Other';
@@ -339,17 +338,17 @@ export function valueBand(f: ResearchFeature): string {
   if (Number.isNaN(v)) return '';
   return VALUE_BANDS.find(([, , lo, hi]) => v >= lo && v < hi)?.[0] ?? '';
 }
-export const complexityOf = (f: ResearchFeature) =>
+const complexityOf = (f: ResearchFeature) =>
   scaleBucket(rating(f, 'complexity').value, COMPLEXITY_SCALE);
-export const confidenceOf = (f: ResearchFeature) =>
+const confidenceOf = (f: ResearchFeature) =>
   scaleBucket(rating(f, 'confidence').value, CONFIDENCE_SCALE);
 /** Appreciation bucket: the scale word, or Mixed / Unproven / Indirect as the paper writes them. */
-export const appreciationOf = (f: ResearchFeature) => {
+const appreciationOf = (f: ResearchFeature) => {
   const r = rating(f, 'appreciation').value;
   return /^(indirect|mixed|unproven)/i.test(r) ? r.split(' ')[0] : scaleBucket(r, DEMAND_SCALE);
 };
 export const APPRECIATION_KEYS = [...DEMAND_SCALE, 'Mixed', 'Unproven', 'Indirect'] as const;
-export const demandOf = (f: ResearchFeature) => {
+const demandOf = (f: ResearchFeature) => {
   const r = rating(f, 'demand').value;
   return /^(indirect|emerging)/i.test(r) ? 'Indirect / emerging' : scaleBucket(r, DEMAND_SCALE);
 };
@@ -369,12 +368,12 @@ export interface ViewFeature extends ResearchFeature {
   /** In an earlier edition of its paper but not in the latest one. Kept, never deleted. */
   retired: boolean;
 }
-export interface ViewCompetitor extends Competitor {
+interface ViewCompetitor extends Competitor {
   docs: string[];
   findings: string[];
   features: string[];
 }
-export interface ViewDocument {
+interface ViewDocument {
   doc: ResearchDocument;
   versions: number[];
   importedAt: string;
@@ -396,7 +395,7 @@ export interface CatalogView {
 }
 
 const REF = /\[\^(ref-\d+)\]/g;
-export const excerptOf = (text: string | undefined, [a, b]: [number, number]) =>
+const excerptOf = (text: string | undefined, [a, b]: [number, number]) =>
   text
     ? text
         .split('\n')
@@ -575,7 +574,7 @@ export function level(s: string): number {
   return 1;
 }
 /** P0 → 0, P0/P1 → 0.5, P1 internal → 1, not evaluated → 9. */
-export function priorityRank(s: string): number {
+function priorityRank(s: string): number {
   const m = s.match(/P(\d)(?:\/P(\d))?/);
   if (!m) return 9;
   return m[2] ? (Number(m[1]) + Number(m[2])) / 2 : Number(m[1]);
@@ -751,7 +750,7 @@ export function sortFeatures(
 }
 
 export type GroupBy = 'none' | 'category' | 'parent' | 'priority' | 'selection';
-export interface FeatureGroup {
+interface FeatureGroup {
   key: string;
   label: string;
   items: ViewFeature[];
@@ -797,7 +796,7 @@ export function groupFeatures(
           : () => 0;
   return [...groups.values()].sort((a, b) => order(a) - order(b) || a.label.localeCompare(b.label));
 }
-export function rootOf(view: CatalogView, f: ViewFeature): ViewFeature {
+function rootOf(view: CatalogView, f: ViewFeature): ViewFeature {
   let cur = f;
   for (let i = 0; i < 20 && cur.parent; i++) {
     const p = view.features.get(cur.parent);
@@ -825,7 +824,7 @@ export function descendants(view: CatalogView, id: string): ViewFeature[] {
 
 // ── Overview ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export interface CatalogStats {
+interface CatalogStats {
   features: number;
   topLevel: number;
   subfeatures: number;
@@ -887,12 +886,11 @@ export function stats(view: CatalogView, marks: Record<string, ResearchMark>): C
 }
 
 /** First band of the effective research priority ("P0/P1" → P0, "P1 internal" → P1); '' when none. */
-export const priorityBand = (f: ResearchFeature) =>
-  rating(f, 'priority').value.match(/P[0-3]/)?.[0] ?? '';
+const priorityBand = (f: ResearchFeature) => rating(f, 'priority').value.match(/P[0-3]/)?.[0] ?? '';
 
 // ── Assessment dashboard ────────────────────────────────────────────────────────────────────────────────────────
 
-export interface AssessmentStats {
+interface AssessmentStats {
   ratedByPaper: number;
   assessed: number;
   unrated: number;

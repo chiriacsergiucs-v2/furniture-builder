@@ -5,7 +5,7 @@
 // sheet starts with the same section (Romanian by default).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import { PHONE_WIDTH, printedSheet, renderApp, stepItems, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('project assembly order at %ipx (find-it, ADR-178)', (width) => {
   it('Fill the room → Assembly → Project order with numbered stages and the guidance line; print starts with it', async () => {
@@ -34,13 +34,13 @@ describe.each(WIDTHS)('project assembly order at %ipx (find-it, ADR-178)', (widt
     const panel = screen.getByRole('tabpanel');
     const order = await within(panel).findByRole('region', { name: 'Project order' });
     expect(within(order).getByRole('heading', { name: 'Project order' })).toBeTruthy();
-    const stages = within(order)
-      .getAllByRole('listitem')
-      .filter((li) => li.querySelector('.step-n'));
+    const stages = stepItems(order);
     expect(stages.length).toBeGreaterThanOrEqual(2);
-    expect(stages.map((li) => li.querySelector('.step-n')!.textContent)).toEqual(
-      stages.map((_, i) => String(i + 1)),
-    );
+    // Each stage starts with its number: 1, 2, …
+    stages.forEach((li, i) => {
+      expect(within(li).getAllByText(String(i + 1)).length).toBeGreaterThan(0);
+      expect(li.textContent).toMatch(new RegExp(`^${i + 1}\\D`));
+    });
     expect(within(stages[0]).getByText('Corner cabinets')).toBeTruthy();
     expect(within(stages[0]).getAllByText(/corner/i).length).toBeGreaterThan(1);
     expect(within(stages[1]).getByText('Base pieces')).toBeTruthy();
@@ -60,11 +60,9 @@ describe.each(WIDTHS)('project assembly order at %ipx (find-it, ADR-178)', (widt
     });
     window.print = vi.fn();
     await user.click(within(panel).getByRole('button', { name: 'Print assembly steps' }));
-    await waitFor(() => expect(document.querySelector('.print-root')).not.toBeNull());
-    const first = document.querySelector('.print-root section.pr-block h2');
-    expect(first?.textContent).toBe('Ordinea în proiect');
-    expect(document.querySelector('.print-root section.pr-block')?.textContent).toMatch(
-      /Corpuri de colț/,
-    );
+    const root = await printedSheet();
+    const first = within(root).getAllByRole('heading', { level: 2, hidden: true })[0];
+    expect(first.textContent).toBe('Ordinea în proiect');
+    expect(first.parentElement!.textContent).toMatch(/Corpuri de colț/);
   });
 });

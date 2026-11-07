@@ -49,7 +49,7 @@ export interface AccountLink {
   deviceOnly?: boolean;
 }
 
-export type SyncAction =
+type SyncAction =
   | { type: 'create'; item: LocalItem }
   | { type: 'update'; item: LocalItem; link: AccountLink; remote: RemoteRecord }
   | { type: 'pull'; item: LocalItem; link: AccountLink; remote: RemoteRecord }

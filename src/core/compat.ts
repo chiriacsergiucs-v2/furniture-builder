@@ -23,10 +23,10 @@ import type { Box, Diagnostic, Mm, Product } from './types';
 /** How a piece hangs for the side-to-side rules. */
 export type Mount = 'floor' | 'wall' | 'above';
 
-export type RuleSeverity = 'refuse' | 'warning';
+type RuleSeverity = 'refuse' | 'warning';
 
 /** The named checks a rule may use; each is implemented once below. */
-export type RulePredicate =
+type RulePredicate =
   | 'sides-only'
   | 'same-mount'
   | 'back-to-wall'
@@ -37,7 +37,7 @@ export type RulePredicate =
 /** The kinds of join between pieces (ADR-207): side by side, in a corner, one over the other, or against a wall. */
 export type JoinKind = 'side' | 'corner' | 'stacked' | 'wall';
 
-export type CompatRuleId =
+type CompatRuleId =
   'side-only' | 'same-mount' | 'back-to-wall' | 'depth-match' | 'height-match' | 'family';
 
 export interface CompatRule {
@@ -180,7 +180,7 @@ export function mountOf(item: ProjectItem): Mount {
 }
 
 /** The catalog family a piece was inserted from (ADR-028 origin), if it is a shipped family (G-103). */
-export function familyOf(item: ProjectItem): CatalogFamily | undefined {
+function familyOf(item: ProjectItem): CatalogFamily | undefined {
   const id = item.design.catalog?.origin?.catalogId;
   return id ? findFamily(id) : undefined;
 }
@@ -222,7 +222,7 @@ const rooms = (f: { rooms: Room[] }) => f.rooms.map((r) => tr(ROOM_LABEL[r])).jo
  * What a rule is checked on: a side join or two touching pieces (`b` set), or a face of `a` against a wall.
  * Sizes are in mm; the snap passes footprint sizes (ADR-070), the checks the carcass depth and the overall height.
  */
-export interface JoinContext {
+interface JoinContext {
   a: ProjectItem;
   mountA: Mount;
   faceA: string;

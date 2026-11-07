@@ -174,7 +174,7 @@ export function makeModelItem(
 // The file check (before any parser sees the file)
 // ---------------------------------------------------------------------------
 
-export type GltfCheck =
+type GltfCheck =
   | { ok: true; format: ModelFormat; triangles: number; name: string }
   | { ok: false; problem: string };
 
@@ -194,7 +194,7 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /** The name shown for a model: the file name without its extension, at most 80 characters. */
-export const modelName = (fileName: string) =>
+const modelName = (fileName: string) =>
   (fileName.replace(/\.(glb|gltf)$/i, '').trim() || '3D model').slice(0, 80);
 
 /** Triangles drawn: every primitive of every mesh, times the nodes that show it (at least once). */

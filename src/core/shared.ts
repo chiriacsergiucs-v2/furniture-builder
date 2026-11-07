@@ -100,7 +100,7 @@ function memberOf(it: ProjectItem): Member | string {
   return t('{name} is not a cabinet, a blind corner unit or a desk.', { name });
 }
 
-export interface SharedPlan {
+interface SharedPlan {
   reason: string | null;
   /** Members, left to right in their own frame. */
   ids: string[];

@@ -135,6 +135,16 @@ jobs:
 
       - run: pnpm format:check
 
+      # ADR-220: the incremental state of `tsc -b` (node_modules/.tmp), restored after the install like the lint cache,
+      # so typecheck re-checks only the files whose inputs changed. A lockfile or tsconfig change starts cold.
+      - if: env.DOCS_ONLY != 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules/.tmp
+          key: tsc-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json') }}-${{ github.sha }}
+          restore-keys: |
+            tsc-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json') }}-
+
       - if: env.DOCS_ONLY != 'true'
         run: pnpm typecheck
 
@@ -148,6 +158,12 @@ jobs:
             .eslintcache
             node_modules/.cache/prettier
           key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', '.prettierrc*') }}-${{ github.sha }}
+
+      - if: github.event_name == 'push'
+        uses: actions/cache/save@v6
+        with:
+          path: node_modules/.tmp
+          key: tsc-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json') }}-${{ github.sha }}
 
   test:
     needs: ship-check

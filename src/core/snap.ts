@@ -31,7 +31,7 @@ export type Axis = 'x' | 'z';
 export { mountOf, type Mount };
 
 /** A vertical face of a piece's footprint on the plan. */
-export interface FaceConnector {
+interface FaceConnector {
   owner: string;
   name: string;
   face: 'side' | 'back' | 'front';
@@ -49,7 +49,7 @@ export interface FaceConnector {
 }
 
 /** A wall of the room, pointing into the room. */
-export interface WallConnector {
+interface WallConnector {
   wall: number;
   axis: Axis;
   at: Mm;
@@ -59,7 +59,7 @@ export interface WallConnector {
 }
 
 /** An inside corner of the room: two walls meeting at 90° seen from inside. */
-export interface CornerConnector {
+interface CornerConnector {
   walls: [number, number];
   x: Mm;
   z: Mm;
@@ -588,7 +588,7 @@ function turnedFaces(pts: [number, number][], front: number[]): TurnedFace[] {
  * whole-mm points around the exact move, the one reaching furthest without passing `d`, so the snapped piece never
  * overlaps what it snaps to and the gap left is under 1 mm.
  */
-export function roundAway(n: [number, number], d: number): { x: number; z: number } {
+function roundAway(n: [number, number], d: number): { x: number; z: number } {
   const ex = n[0] * d,
     ez = n[1] * d;
   let best: { x: number; z: number; reach: number } | null = null;

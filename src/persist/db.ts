@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
-import { validateDesign } from '../core/design';
-import { validateProject, type Project } from '../core/project';
+import { newId, upgradeDesign, validateDesign } from '../core/design';
+import { PROJECT_SCHEMA, validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
 import { validateBand, type Band, type Decor } from '../core/materials';
@@ -12,7 +12,7 @@ import { validateBundle, validateMark, type StoredBundle } from '../core/researc
 import type { ResearchMark } from '../core/research/types';
 import { validateGapMark, type GapMark } from '../core/gaps';
 import { validateVersion, type ProjectVersion } from '../core/projectVersion';
-import { BACKUP_TABLES, keyOf } from '../core/backup';
+import type { BackupTable } from '../core/backup';
 import { emitSavedChange } from './events';
 import type { AccountLink } from '../core/sync';
 import { t } from '../core/i18n';
@@ -223,28 +223,29 @@ class FurnitureDb extends Dexie {
       accountLinks: '[accountId+table+localId], accountId, remoteId',
       bands: 'id',
     });
-    // Every user table reports its changes after the write (backup, account upload; src/persist/events.ts).
-    for (const [name] of BACKUP_TABLES) {
-      const t = this.table(name);
-      const emit = (key: unknown, deleted: boolean) =>
-        emitSavedChange({ table: name, key: String(key), deleted });
-      t.hook('creating', (key, obj) => {
-        emit(key ?? (obj as Record<string, unknown>)[keyOf(name)], false);
-      });
-      t.hook('updating', (_mods, key) => {
-        emit(key, false);
-      });
-      t.hook('deleting', (key) => {
-        emit(key, true);
-      });
-    }
   }
 }
 
 export const db = new FurnitureDb();
 
+/**
+ * Report saved rows after their write succeeded (ADR-235): the folder backup, the account upload and the lists that
+ * follow saves listen (`src/persist/events.ts`). Every write function below calls it itself; no Dexie hook does, so a
+ * `put` never reads the row first. `tests/persist.test.ts` lists every write function and checks that it reports.
+ */
+export function savedRows(table: BackupTable, keys: Iterable<unknown>, deleted = false): void {
+  for (const key of keys) emitSavedChange({ table, key: String(key), deleted });
+}
+const saved =
+  <T>(table: BackupTable, keys: Iterable<unknown>, deleted = false) =>
+  (r: T): T => {
+    savedRows(table, keys, deleted);
+    return r;
+  };
+
 export async function saveDesign(d: Design, database = db): Promise<void> {
   await database.designs.put({ id: d.id, name: d.name, updatedAt: d.updatedAt, design: d });
+  savedRows('designs', [d.id]);
 }
 
 export async function listDesigns(database = db): Promise<StoredDesign[]> {
@@ -258,10 +259,12 @@ export async function loadDesign(id: string, database = db): Promise<Design | un
   return row.design;
 }
 
-export const deleteDesign = (id: string, database = db) => database.designs.delete(id);
+export const deleteDesign = (id: string, database = db) =>
+  database.designs.delete(id).then(saved('designs', [id], true));
 
 export async function saveProject(p: Project, database = db): Promise<void> {
   await database.projects.put({ id: p.id, name: p.name, updatedAt: p.updatedAt, project: p });
+  savedRows('projects', [p.id]);
 }
 export const listProjects = (database = db): Promise<StoredProject[]> =>
   database.projects.orderBy('updatedAt').reverse().toArray();
@@ -271,11 +274,72 @@ export async function loadProject(id: string, database = db): Promise<Project | 
   if (!row || validateProject(row.project).length) return undefined;
   return row.project;
 }
-export const deleteProject = (id: string, database = db) => database.projects.delete(id);
+export const deleteProject = (id: string, database = db) =>
+  database.projects.delete(id).then(saved('projects', [id], true));
+
+/** The result of copying a saved row (ADR-227): the new id, or why the row could not be copied. */
+export type CopyResult = { ok: true; id: string } | { ok: false; reason: string };
+
+/** The validation problems of a stored document; one that throws on the way is a problem too (ADR-008). */
+const problems = (check: (v: unknown) => string[], doc: unknown): string[] => {
+  try {
+    return check(doc);
+  } catch (e) {
+    return [(e as Error).message || t('unknown error')];
+  }
+};
+const refused = (errs: string[]): CopyResult => ({
+  ok: false,
+  reason: errs.length
+    ? errs.slice(0, 2).join('; ')
+    : t('Saved work could not be read from this browser.'),
+});
+
+/**
+ * Duplicate a saved design (ADR-227): read through the same validating path as `loadDesign` (older versions upgraded
+ * in memory), then save a copy with a new id, `name` and the current `schemaVersion`. A row that does not validate is
+ * refused and left as it is (ADR-011, ADR-012).
+ */
+export async function copyDesign(id: string, name: string, database = db): Promise<CopyResult> {
+  const row = await database.designs.get(id);
+  if (!row) return refused([]);
+  const errs = problems(validateDesign, row.design);
+  if (errs.length) return refused(errs);
+  const now = new Date().toISOString();
+  const copy: Design = {
+    ...upgradeDesign(row.design),
+    id: newId(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await saveDesign(copy, database);
+  return { ok: true, id: copy.id };
+}
+
+/** Duplicate a saved project (ADR-227), as `copyDesign`: validated first, written at `PROJECT_SCHEMA`. */
+export async function copyProject(id: string, name: string, database = db): Promise<CopyResult> {
+  const row = await database.projects.get(id);
+  if (!row) return refused([]);
+  const errs = problems(validateProject, row.project);
+  if (errs.length) return refused(errs);
+  const now = new Date().toISOString();
+  const copy: Project = {
+    ...row.project,
+    schemaVersion: PROJECT_SCHEMA,
+    id: newId(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await saveProject(copy, database);
+  return { ok: true, id: copy.id };
+}
 
 /** Keep a version of a project (ADR-123); a version is never rewritten. */
 export async function saveProjectVersion(v: ProjectVersion, database = db): Promise<void> {
   await database.projectVersions.add(v);
+  savedRows('projectVersions', [v.id]);
 }
 /** A project's kept versions, newest first; unreadable rows are skipped and kept (ADR-012). */
 export async function listProjectVersions(
@@ -315,26 +379,29 @@ export async function listOrphanVersions(database = db): Promise<ProjectVersion[
 }
 /** Only on the user's Delete (ADR-123, G-156: nothing removes versions automatically). */
 export const deleteProjectVersion = (id: string, database = db) =>
-  database.projectVersions.delete(id);
+  database.projectVersions.delete(id).then(saved('projectVersions', [id], true));
 /**
  * Only on the user's Delete versions when a project is deleted (ADR-203, G-190): the rows `listProjectVersions`
  * returned, by id; rows the app cannot read are never in that list and stay (ADR-012).
  */
 export const deleteProjectVersions = (ids: readonly string[], database = db) =>
-  database.projectVersions.bulkDelete([...ids]);
+  database.projectVersions.bulkDelete([...ids]).then(saved('projectVersions', ids, true));
 
 export async function saveTemplate(t: LocalTemplate, database = db): Promise<void> {
   await database.templates.put({ id: t.id, updatedAt: t.updatedAt, template: t });
+  savedRows('templates', [t.id]);
 }
 /** Local templates that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listTemplates(database = db): Promise<LocalTemplate[]> {
   const rows = await database.templates.orderBy('updatedAt').reverse().toArray();
   return rows.filter((r) => !validateLocalTemplate(r.template).length).map((r) => r.template);
 }
-export const deleteTemplate = (id: string, database = db) => database.templates.delete(id);
+export const deleteTemplate = (id: string, database = db) =>
+  database.templates.delete(id).then(saved('templates', [id], true));
 
 export async function saveResearchBundle(s: StoredBundle, database = db): Promise<void> {
   await database.researchDocs.put(s);
+  savedRows('researchDocs', [s.key]);
 }
 /** Stored editions that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listResearchBundles(database = db): Promise<StoredBundle[]> {
@@ -343,6 +410,10 @@ export async function listResearchBundles(database = db): Promise<StoredBundle[]
 }
 export async function saveResearchMarks(marks: ResearchMark[], database = db): Promise<void> {
   await database.researchMarks.bulkPut(marks);
+  savedRows(
+    'researchMarks',
+    marks.map((m) => m.id),
+  );
 }
 /** Decisions that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listResearchMarks(database = db): Promise<ResearchMark[]> {
@@ -352,10 +423,15 @@ export async function listResearchMarks(database = db): Promise<ResearchMark[]> 
 
 export async function saveGapMark(mark: GapMark, database = db): Promise<void> {
   await database.gapMarks.put(mark);
+  savedRows('gapMarks', [mark.gapId]);
 }
 /** Marks read from a gap-marks file (ADR-212), already merged newer-wins by `readGapMarksFile`. */
 export async function saveGapMarks(marks: GapMark[], database = db): Promise<void> {
   await database.gapMarks.bulkPut(marks);
+  savedRows(
+    'gapMarks',
+    marks.map((m) => m.gapId),
+  );
 }
 /** Gap marks that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listGapMarks(database = db): Promise<GapMark[]> {
@@ -365,6 +441,7 @@ export async function listGapMarks(database = db): Promise<GapMark[]> {
 
 export async function saveImage(img: StoredImage, database = db): Promise<void> {
   await database.images.put(img);
+  savedRows('images', [img.id]);
 }
 /** The stored picture if it is readable; an unreadable row is left in place (ADR-012). */
 export async function loadImage(id: string, database = db): Promise<StoredImage | undefined> {
@@ -379,13 +456,32 @@ export async function loadImage(id: string, database = db): Promise<StoredImage 
 
 /** Replaces the stored decor list with the user's new one (ADR-049). */
 export async function replaceDecors(decors: Decor[], database = db): Promise<void> {
-  await database.transaction('rw', database.decors, async () => {
+  const old = await database.transaction('rw', database.decors, async () => {
+    const keys = await database.decors.toCollection().primaryKeys();
     await database.decors.clear();
     await database.decors.bulkPut(decors);
+    return keys;
   });
+  const kept = new Set(decors.map((d) => d.id));
+  savedRows(
+    'decors',
+    old.filter((k) => !kept.has(k)),
+    true,
+  );
+  savedRows(
+    'decors',
+    decors.map((d) => d.id),
+  );
 }
 export const listDecors = (database = db): Promise<Decor[]> => database.decors.toArray();
-export const clearDecors = (database = db) => database.decors.clear();
+export async function clearDecors(database = db): Promise<void> {
+  const keys = await database.transaction('rw', database.decors, async () => {
+    const k = await database.decors.toCollection().primaryKeys();
+    await database.decors.clear();
+    return k;
+  });
+  savedRows('decors', keys, true);
+}
 
 /** A new band-list import replaces the list (ADR-212), as the decor list does. */
 export async function replaceBands(bands: Band[], database = db): Promise<void> {
@@ -407,6 +503,7 @@ export async function saveProjectTemplate(t: ProjectTemplate, database = db): Pr
     updatedAt: t.updatedAt,
     template: t,
   });
+  savedRows('projectTemplates', [t.id]);
 }
 /** Project templates that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listProjectTemplates(database = db): Promise<ProjectTemplate[]> {
@@ -422,7 +519,7 @@ export async function listProjectTemplates(database = db): Promise<ProjectTempla
   return rows.filter((r) => usable(r.template)).map((r) => r.template);
 }
 export const deleteProjectTemplate = (id: string, database = db) =>
-  database.projectTemplates.delete(id);
+  database.projectTemplates.delete(id).then(saved('projectTemplates', [id], true));
 
 /** The user's price list (ADR-062); unreadable rows are skipped and kept. Fastener rows (ADR-074) are not prices. */
 export async function listPrices(database = db): Promise<PriceEntry[]> {
@@ -453,19 +550,31 @@ export async function listFasteners(database = db): Promise<FastenerChoice[]> {
     .filter(validFastenerChoice);
 }
 export const saveFastener = (c: FastenerChoice, database = db) =>
-  database.prices.put({
-    id: FASTENER_PREFIX + c.joint,
-    unit: 'piece',
-    amount: 0,
-    text: c.name,
-    per: c.per,
-    ...(c.edge !== undefined ? { edge: c.edge } : {}),
-  } as FastenerRow);
+  database.prices
+    .put({
+      id: FASTENER_PREFIX + c.joint,
+      unit: 'piece',
+      amount: 0,
+      text: c.name,
+      per: c.per,
+      ...(c.edge !== undefined ? { edge: c.edge } : {}),
+    } as FastenerRow)
+    .then(saved('prices', [FASTENER_PREFIX + c.joint]));
 export const deleteFastener = (joint: JointType, database = db) =>
-  database.prices.delete(FASTENER_PREFIX + joint);
-export const savePrice = (e: PriceEntry, database = db) => database.prices.put(e);
-export const savePrices = (list: PriceEntry[], database = db) => database.prices.bulkPut(list);
-export const deletePrice = (id: string, database = db) => database.prices.delete(id);
+  database.prices
+    .delete(FASTENER_PREFIX + joint)
+    .then(saved('prices', [FASTENER_PREFIX + joint], true));
+export const savePrice = (e: PriceEntry, database = db) =>
+  database.prices.put(e).then(saved('prices', [e.id]));
+export const savePrices = (list: PriceEntry[], database = db) =>
+  database.prices.bulkPut(list).then(
+    saved(
+      'prices',
+      list.map((e) => e.id),
+    ),
+  );
+export const deletePrice = (id: string, database = db) =>
+  database.prices.delete(id).then(saved('prices', [id], true));
 
 /**
  * Pictures no stored design, project or template refers to (ADR-048 cleanup). Rows are searched as text, so rows
@@ -487,14 +596,16 @@ export async function unusedImageIds(
   const kept = new Set(keep);
   return ids.filter((id) => !kept.has(id) && !text.includes(`"${id}"`));
 }
-export const deleteImages = (ids: string[], database = db) => database.images.bulkDelete(ids);
+export const deleteImages = (ids: string[], database = db) =>
+  database.images.bulkDelete(ids).then(saved('images', ids, true));
 
 /** A stored model if its row is readable; an unreadable row is left in place (ADR-012). */
 export async function loadModel(id: string, database = db): Promise<StoredModel | undefined> {
   const row = await database.models.get(id);
   return row && row.bytes instanceof ArrayBuffer && row.bytes.byteLength > 0 ? row : undefined;
 }
-export const saveModel = (m: StoredModel, database = db) => database.models.put(m);
+export const saveModel = (m: StoredModel, database = db) =>
+  database.models.put(m).then(saved('models', [m.id]));
 /** Readable models, newest first (ADR-076). */
 export async function listModels(database = db): Promise<StoredModel[]> {
   const rows = await database.models.orderBy('createdAt').reverse().toArray();
@@ -510,7 +621,7 @@ export async function deleteModelIfUnused(
   keep: Iterable<string> = [],
   database = db,
 ): Promise<{ deleted: boolean; usedBy: string[] }> {
-  return database.transaction(
+  const r = await database.transaction(
     'rw',
     database.models,
     database.projects,
@@ -534,6 +645,8 @@ export async function deleteModelIfUnused(
       return { deleted: true, usedBy };
     },
   );
+  if (r.deleted) savedRows('models', [id], true);
+  return r;
 }
 
 const LAST_KEY = 'furniture-builder:last-design';

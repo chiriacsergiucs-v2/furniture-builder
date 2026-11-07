@@ -3,23 +3,10 @@
 // shows "45,00 lei / m²" under its line total, a row without a price shows "—", and the printed list has the
 // Unit price column; every header follows More › Print language (Romanian by default: "Preț unitar"; user 2026-11-05:
 // "All headers via print language").
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setPrintLang } from '../../src/core/i18n/print';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, openSheet, renderApp, WIDTHS } from './setup';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -52,9 +39,8 @@ describe.each(WIDTHS)('unit price on Shopping list rows at %ipx (find-it, ADR-18
     await user.type(within(create).getByRole('textbox'), `Unit price ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    await addPiece(user, panel);
+    await openSheet(user, panel);
+    await addPiece(user);
 
     const build = screen.queryByRole('radio', { name: /Build & Preview/ });
     if (build) await user.click(build);

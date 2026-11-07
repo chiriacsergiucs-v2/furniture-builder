@@ -4,13 +4,13 @@
 // Build & Preview › Assembly lists the steps with the guidance line; Show step lights the step's parts in the 3D view
 // (the viewer reports how many parts are lit on <body data-lit>); ← → move between steps; a second piece gets its
 // own section. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

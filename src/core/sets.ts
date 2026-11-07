@@ -26,7 +26,7 @@ import type { VariableSet } from './setRoom';
 export { roomAt, setRooms, type VariableSet } from './setRoom';
 
 /** Gap between set 1 and the next set, and between sets. */
-export const SET_GAP = 500;
+const SET_GAP = 500;
 
 export const setName = (n: number) => t('Set {n}', { n });
 
@@ -48,7 +48,7 @@ export function setComplete(project: Project, set: VariableSet): boolean {
 }
 
 /** The x extent of the room, or of the pieces of set 1 (and the sets before `before`) when there is no room. */
-export function setSpan(project: Project): { x0: number; w: number } {
+function setSpan(project: Project): { x0: number; w: number } {
   if (project.room) {
     const xs = project.room.outline.map((p) => p[0]);
     const x0 = Math.min(...xs);

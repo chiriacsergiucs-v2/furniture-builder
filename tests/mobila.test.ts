@@ -17,7 +17,7 @@ import {
   validateProject,
   type Project,
 } from '../src/core/project';
-import { mobilaDormitor, mobilaLiving, sampleProjects } from '../src/core/samples/mobila';
+import { mobilaDormitor, mobilaLiving, sampleProjects } from './fixtures/mobila';
 import type { CabinetParams, Design } from '../src/core/types';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();

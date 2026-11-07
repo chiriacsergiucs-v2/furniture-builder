@@ -9,9 +9,12 @@ const INTRO = /Pieces are cut and bought together/;
 
 /** Every info button on the page has a name: "About …", or "Guidance: …" for ADR-010 guidance. */
 function expectNamedInfoButtons() {
-  const all = [...document.querySelectorAll<HTMLButtonElement>('button.info-btn')];
+  // An ⓘ button has no visible text and no role of its own beyond button, so the component's class marks it; every
+  // button is found by role first (`hidden`: buttons behind an open modal dialog count too).
+  const all = screen
+    .getAllByRole('button', { hidden: true })
+    .filter((b) => b.classList.contains('info-btn'));
   expect(all.length).toBeGreaterThan(0);
-  // `hidden`: buttons behind an open modal dialog count too.
   const named = screen.getAllByRole('button', { name: /^(About |Guidance: )\S/, hidden: true });
   for (const b of all) expect(named).toContain(b);
 }

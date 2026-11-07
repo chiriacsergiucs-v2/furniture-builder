@@ -4,7 +4,7 @@
 // listed in Run parts, and the sink is a line in the shopping list.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openSheet, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('run handles and sinks at %ipx (find-it, ADR-125)', (width) => {
   it('bare app → three base cabinets → Settings › Run parts → handles and a sink', async () => {
@@ -15,8 +15,7 @@ describe.each(WIDTHS)('run handles and sinks at %ipx (find-it, ADR-125)', (width
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     for (let i = 0; i < 3; i++) {
       await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
       const dlg = await screen.findByRole('dialog');

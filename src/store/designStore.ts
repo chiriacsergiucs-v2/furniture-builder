@@ -155,6 +155,7 @@ import type {
   Mm,
   PanelParams,
   PanelSetParams,
+  Product,
   SellerItem,
   Space,
 } from '../core/types';
@@ -271,6 +272,11 @@ interface State {
   /** ADR-206: a seller product for a run part of the open project, by run part key (undefined removes it). */
   setRunProduct: (key: string, hp: HardwareProduct | undefined) => void;
   rename: (name: string) => void;
+  /** Change the open piece's parameters when it is a `kind` (ADR-231); any other piece is left as it is. */
+  updateParams: <K extends Product['kind']>(
+    kind: K,
+    patch: Partial<Extract<Product, { kind: K }>['params']>,
+  ) => void;
   updateCabinet: (patch: Partial<CabinetParams>) => void;
   updateDesk: (patch: Partial<DeskParams>) => void;
   updateCorner: (patch: Partial<CornerParams>) => void;
@@ -326,7 +332,6 @@ interface State {
   undo: () => void;
   redo: () => void;
   openProject: (p: Project) => void;
-  closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
   /**
@@ -632,34 +637,46 @@ export const useDesign = create<State>((rawSet, get) => {
         ? { ...bound, catalog: { ...bound.catalog, brand: undefined } }
         : bound;
     const stamped = { ...debranded, updatedAt: new Date().toISOString() };
-    set({
+    // Edited from the project editor (ADR-088): each change is one project undo step (ADR-051), and the piece keeps
+    // no history of its own (ADR-231).
+    const drilling = !!(p0 && !get().editingItemId && get().drillItemId);
+    const partial: Partial<State> = {
       design: stamped,
       model: buildModel(stamped),
-      past: [...past, design].slice(-HISTORY),
+      past: drilling ? past : [...past, design].slice(-HISTORY),
       future: [],
       dirtyAt: Date.now(),
       pristine: false,
-    });
+    };
     const sel = get().selectedId;
-    if (sel && !findInProduct(stamped.product, sel)) set({ selectedId: null });
+    if (sel && !findInProduct(stamped.product, sel)) partial.selectedId = null;
     // Editing a project piece: the change lives in the project's embedded copy, never the library (ADR-022).
     const { project, editingItemId, drillItemId } = get();
-    // Edited from the project editor (ADR-088): each change is one project undo step (ADR-051).
-    if (project && !editingItemId && drillItemId)
-      return commitProject({
-        ...project,
-        items: project.items.map((i) => (i.id === drillItemId ? { ...i, design: stamped } : i)),
-      });
-    if (project && editingItemId) {
-      set({
-        project: {
+    if (project && drilling)
+      return commitProject(
+        {
           ...project,
-          updatedAt: stamped.updatedAt,
-          items: project.items.map((i) => (i.id === editingItemId ? { ...i, design: stamped } : i)),
+          items: project.items.map((i) => (i.id === drillItemId ? { ...i, design: stamped } : i)),
         },
-        projectDirtyAt: Date.now(),
-      });
-    }
+        undefined,
+        { also: partial },
+      );
+    // One `set` per edit (ADR-231).
+    set(
+      project && editingItemId
+        ? {
+            ...partial,
+            project: {
+              ...project,
+              updatedAt: stamped.updatedAt,
+              items: project.items.map((i) =>
+                i.id === editingItemId ? { ...i, design: stamped } : i,
+              ),
+            },
+            projectDirtyAt: Date.now(),
+          }
+        : partial,
+    );
   };
   /** Keep the project's embedded copy in step with the piece editor (undo/redo included). */
   const syncItem = () => {
@@ -689,15 +706,20 @@ export const useDesign = create<State>((rawSet, get) => {
     });
   };
   /** After the project changed (undo, a move, a removal): the loaded piece follows its project copy or is dropped. */
-  const syncDrill = () => {
-    const { project, drillItemId, design, selectedId } = get();
-    if (!drillItemId) return;
+  const drillView = (st: State): Partial<State> => {
+    const { project, drillItemId, design, selectedId } = st;
+    if (!drillItemId) return {};
     const item = project?.items.find((i) => i.id === drillItemId);
-    if (!item) return set({ drillItemId: null, selectedId: undefined });
-    if (item.design === design) return;
+    if (!item) return { drillItemId: null, selectedId: undefined };
+    if (item.design === design) return {};
     const d = upgradeDesign(item.design);
     const keep = typeof selectedId !== 'string' || findInProduct(d.product, selectedId);
-    set({ design: d, model: buildModel(d), selectedId: keep ? selectedId : null });
+    return { design: d, model: buildModel(d), selectedId: keep ? selectedId : null };
+  };
+  /** `partial` with the loaded piece and the selection following the project in it, as one `set` (ADR-231). */
+  const settle = (partial: Partial<State>, p?: Project): Partial<State> => {
+    const kept = p ? { ...partial, ...keepSelected(p, { ...get(), ...partial }) } : partial;
+    return { ...kept, ...drillView({ ...get(), ...kept }) };
   };
   /** Inside `transact`: the depth, and the project and history as they were when it started. */
   let txDepth = 0;
@@ -705,22 +727,31 @@ export const useDesign = create<State>((rawSet, get) => {
   const commitProject = (
     next: Project,
     name?: string,
-    opts?: { amend?: boolean },
+    opts?: { amend?: boolean; base?: Project | null; also?: Partial<State> },
   ): string | null => {
+    // What the change is checked against and undoes to: the current project, or the project as it was when the
+    // piece editor opened (ADR-226).
+    const base = opts && 'base' in opts ? (opts.base ?? null) : get().project;
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
-    let linked = propagateLinks(get().project, next, get().linkAll);
+    let linked = propagateLinks(base, next, get().linkAll);
     // Template references keep their overrides up to date while the template's revision is the catalog's (ADR-124).
     const items = linked.items.map((i) => syncRef(i, catalogFamilies));
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
     // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
     // the whole change is refused.
-    const locked =
-      sizeLockBlocked(get().project, linked) ?? pieceLocksBlocked(get().project, linked);
+    const locked = sizeLockBlocked(base, linked) ?? pieceLocksBlocked(base, linked);
     if (locked) {
-      set({ notice: locked });
-      syncDrill();
+      // Refused: the project stays as it was before the change (ADR-226: also after a piece-editor session).
+      const cur = get().project;
+      set(
+        settle({
+          ...opts?.also,
+          notice: locked,
+          ...(base && cur !== base ? { project: base, projectModel: buildProjectModel(base) } : {}),
+        }),
+      );
       return locked;
     }
     // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
@@ -730,7 +761,7 @@ export const useDesign = create<State>((rawSet, get) => {
     // off, the parts of run requests a binding changed are made again (ADR-209).
     const synced = applyPieceBindings(syncSets(linked));
     const bound = remakeAskedParts(synced, applyBindings(synced));
-    const held = heldByBinding(get().project, linked, bound);
+    const held = heldByBinding(base, linked, bound);
     // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
       ...pruneWorktopEdges(
@@ -745,10 +776,11 @@ export const useDesign = create<State>((rawSet, get) => {
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
-    const prev = get().project;
+    const prev = base;
     // Amending (a template placed by the tap after its insert): the change joins the step before it (ADR-123).
     const amend = !!opts?.amend && get().projectPast.length > 0;
-    set({
+    const partial: Partial<State> = {
+      ...opts?.also,
       project: stamped,
       projectModel: buildProjectModel(stamped),
       projectDirtyAt: Date.now(),
@@ -765,22 +797,29 @@ export const useDesign = create<State>((rawSet, get) => {
         : amend
           ? { projectFuture: [], projectFutureNames: [] }
           : {}),
-    });
-    keepSelected(stamped);
-    syncDrill();
+    };
+    // One `set` per commit (ADR-231): the selection and the loaded piece follow in the same step.
+    set(settle(partial, stamped));
     return null;
   };
   /** The selection keeps the pieces still in the project; the main one falls to the next selected (ADR-097). */
-  const keepSelected = (p: Project) => {
-    const { selectedItemIds, selectedItemId } = get();
-    if (selectedItemIds.length < 2) return;
+  const keepSelected = (p: Project, st: State): Partial<State> => {
+    const { selectedItemIds, selectedItemId } = st;
+    if (selectedItemIds.length < 2) return {};
     const have = new Set([...p.items, ...(p.models ?? [])].map((i) => i.id));
     const ids = selectedItemIds.filter((x) => have.has(x));
-    if (ids.length === selectedItemIds.length) return;
-    set({
+    if (ids.length === selectedItemIds.length) return {};
+    return {
       selectedItemIds: ids,
       selectedItemId: ids.includes(selectedItemId ?? '') ? selectedItemId : (ids[0] ?? null),
-    });
+    };
+  };
+  /** Commit `f(project)` when it changed the project; a no-op otherwise (ADR-231). */
+  const projectAction = (f: (p: Project) => Project, name?: string) => {
+    const p = get().project;
+    if (!p) return;
+    const next = f(p);
+    if (next !== p) commitProject(next, name);
   };
   /** Show an earlier or later state of the project; the selection survives if the piece still exists. */
   const restoreProject = (
@@ -791,7 +830,7 @@ export const useDesign = create<State>((rawSet, get) => {
     projectFutureNames: string[],
   ) => {
     const sel = get().selectedItemId;
-    set({
+    const partial: Partial<State> = {
       project: p,
       projectModel: buildProjectModel(p),
       projectPast,
@@ -809,8 +848,8 @@ export const useDesign = create<State>((rawSet, get) => {
         const main = sel && have.has(sel) ? sel : (ids[0] ?? null);
         return { selectedItemId: main, selectedItemIds: ids };
       })(),
-    });
-    syncDrill();
+    };
+    set(settle(partial));
   };
   const initial = templates[0].create();
   return {
@@ -914,24 +953,6 @@ export const useDesign = create<State>((rawSet, get) => {
         notice: null,
       });
     },
-    closeProject: () =>
-      set({
-        notice: null,
-        project: null,
-        projectModel: null,
-        editingItemId: null,
-        selectedItemId: null,
-        drillItemId: null,
-        projectPast: [],
-        projectFuture: [],
-        projectPastNames: [],
-        projectFutureNames: [],
-        placingIds: [],
-        sessionBase: null,
-        placingItemId: null,
-        drawingRoom: null,
-        scalingPlan: null,
-      }),
     updateProject: (fn) => {
       const p = get().project;
       if (p) commitProject(fn(p));
@@ -1015,42 +1036,12 @@ export const useDesign = create<State>((rawSet, get) => {
       if (res.project !== p) commitProject(settleConnections(res.project, movingSet(p, ids), true));
       return null;
     },
-    setLocked: (id, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setLocked(p, id, on);
-      if (next !== p) commitProject(next);
-    },
-    setSizeLocked: (id, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setSizeLocked(p, id, on);
-      if (next !== p) commitProject(next);
-    },
-    setTurnLocked: (id, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setTurnLocked(p, id, on);
-      if (next !== p) commitProject(next);
-    },
-    setAxisLocked: (id, axis, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setAxisLocked(p, id, axis, on);
-      if (next !== p) commitProject(next);
-    },
-    setBoardsLocked: (id, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setBoardsLocked(p, id, on);
-      if (next !== p) commitProject(next);
-    },
-    setConstructionLocked: (id, on) => {
-      const p = get().project;
-      if (!p) return;
-      const next = setConstructionLocked(p, id, on);
-      if (next !== p) commitProject(next);
-    },
+    setLocked: (id, on) => projectAction((p) => setLocked(p, id, on)),
+    setSizeLocked: (id, on) => projectAction((p) => setSizeLocked(p, id, on)),
+    setTurnLocked: (id, on) => projectAction((p) => setTurnLocked(p, id, on)),
+    setAxisLocked: (id, axis, on) => projectAction((p) => setAxisLocked(p, id, axis, on)),
+    setBoardsLocked: (id, on) => projectAction((p) => setBoardsLocked(p, id, on)),
+    setConstructionLocked: (id, on) => projectAction((p) => setConstructionLocked(p, id, on)),
     setItemHeight: (id, height) => {
       const p = get().project;
       if (!p) return null;
@@ -1062,18 +1053,8 @@ export const useDesign = create<State>((rawSet, get) => {
       }
       return res.project !== p ? commitProject(res.project) : null;
     },
-    keepTemplate: (id, revision) => {
-      const p = get().project;
-      if (!p) return;
-      const next = keepTemplate(p, id, revision);
-      if (next !== p) commitProject(next);
-    },
-    linkTemplate: (id, origin) => {
-      const p = get().project;
-      if (!p) return;
-      const next = linkItemOrigin(p, id, origin);
-      if (next !== p) commitProject(next);
-    },
+    keepTemplate: (id, revision) => projectAction((p) => keepTemplate(p, id, revision)),
+    linkTemplate: (id, origin) => projectAction((p) => linkItemOrigin(p, id, origin)),
     removeItem: (id) => {
       const p = get().project;
       if (p) {
@@ -1131,18 +1112,9 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project, t('Add variable {name}', { name: name.trim() }));
       return res.id;
     },
-    updateVariable: (id, patch) => {
-      const p = get().project;
-      if (!p) return;
-      const next = updateVariable(p, id, patch);
-      if (next !== p) commitProject(next, t('Change variable'));
-    },
-    deleteVariable: (id) => {
-      const p = get().project;
-      if (!p) return;
-      const next = deleteVariable(p, id);
-      if (next !== p) commitProject(next, t('Delete variable'));
-    },
+    updateVariable: (id, patch) =>
+      projectAction((p) => updateVariable(p, id, patch), t('Change variable')),
+    deleteVariable: (id) => projectAction((p) => deleteVariable(p, id), t('Delete variable')),
     bindRequest: (r, target, expr) => {
       const p = get().project;
       if (!p) return;
@@ -1189,28 +1161,14 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project, t('Add value set'));
       return res.id;
     },
-    updateVariableSet: (id, patch) => {
-      const p = get().project;
-      if (!p) return;
-      const next = updateSet(p, id, patch);
-      if (next !== p) commitProject(next, t('Change value set'));
-    },
-    removeVariableSet: (id) => {
-      const p = get().project;
-      if (!p) return;
-      const next = removeSet(p, id);
-      if (next !== p) commitProject(next, t('Remove value set'));
-    },
-    followProject: (id, key) => {
-      const p = get().project;
-      if (!p) return;
-      const next = followProject(p, id, key);
-      if (next !== p)
-        commitProject(
-          next,
-          t('Follow project {setting}', { setting: SETTING_LABEL[key].toLowerCase() }),
-        );
-    },
+    updateVariableSet: (id, patch) =>
+      projectAction((p) => updateSet(p, id, patch), t('Change value set')),
+    removeVariableSet: (id) => projectAction((p) => removeSet(p, id), t('Remove value set')),
+    followProject: (id, key) =>
+      projectAction(
+        (p) => followProject(p, id, key),
+        t('Follow project {setting}', { setting: SETTING_LABEL[key].toLowerCase() }),
+      ),
     duplicateItem: (id) => {
       const p = get().project;
       const res = p && duplicateItem(p, id);
@@ -1218,12 +1176,7 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project);
       set({ selectedItemId: res.id });
     },
-    linkIdentical: (id) => {
-      const p = get().project;
-      if (!p) return;
-      const next = linkIdentical(p, id);
-      if (next !== p) commitProject(next, t('Link identical pieces'));
-    },
+    linkIdentical: (id) => projectAction((p) => linkIdentical(p, id), t('Link identical pieces')),
     setAssembly: (itemId, edit, name) => {
       // The user's steps live in the design (ADR-207, design schemaVersion 9).
       const apply = (d: Design): Design => {
@@ -1448,12 +1401,7 @@ export const useDesign = create<State>((rawSet, get) => {
         );
       return res.groupId;
     },
-    ungroup: (groupId) => {
-      const p = get().project;
-      if (!p) return;
-      const next = ungroup(p, groupId);
-      if (next !== p) commitProject(next, t('Ungroup'));
-    },
+    ungroup: (groupId) => projectAction((p) => ungroup(p, groupId), t('Ungroup')),
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
       if (!item) return;
@@ -1475,34 +1423,21 @@ export const useDesign = create<State>((rawSet, get) => {
     backToProject: () => {
       const raw = get().project;
       if (!raw) return;
-      // A resized piece moves whatever sits on it; run parts follow it (ADR-061).
-      // Edits made in the piece editor reach its linked copies, or unlink it (ADR-111).
       const before = projectBeforeEdit;
-      const p = refreshRunParts(resolvePlacements(propagateLinks(before, raw, get().linkAll)));
-      // Edits made in the piece editor become one project undo step.
       projectBeforeEdit = null;
-      const edited = p.items.find((i) => i.id === get().editingItemId);
-      const history =
-        before && before !== p
-          ? {
-              projectPast: [...get().projectPast, before].slice(-HISTORY),
-              projectPastNames: [
-                ...get().projectPastNames,
-                edited ? t('Edit {what}', { what: edited.design.name }) : describeChange(before, p),
-              ].slice(-HISTORY),
-              projectFuture: [],
-              projectFutureNames: [],
-            }
-          : {};
-      set({
+      const edited = raw.items.find((i) => i.id === get().editingItemId);
+      const leave: Partial<State> = {
         editingItemId: null,
         drillItemId: null,
-        project: p,
-        projectModel: buildProjectModel(p),
         selectedId: undefined,
         highlight: [],
-        ...history,
-        ...(p !== raw ? { projectDirtyAt: Date.now() } : {}),
+      };
+      if (!before || before === raw) return set(leave);
+      // Edits made in the piece editor become one project undo step, through the project's own commit (ADR-226):
+      // linked copies, size locks, bindings, value sets and run parts follow as for any project edit.
+      commitProject(raw, edited ? t('Edit {what}', { what: edited.design.name }) : undefined, {
+        base: before,
+        also: leave,
       });
     },
     undoProject: () => {
@@ -1614,7 +1549,6 @@ export const useDesign = create<State>((rawSet, get) => {
       const settings = p.runSettings ?? { scribe: 0, auto: true };
       const next: Project = {
         ...p,
-        schemaVersion: PROJECT_SCHEMA,
         runRequests: [...(p.runRequests ?? []).filter((x) => requestKey(x) !== key), r],
         runPartsRemoved: (p.runPartsRemoved ?? []).filter((k) => k !== key),
       };
@@ -1936,12 +1870,8 @@ export const useDesign = create<State>((rawSet, get) => {
         commitProject(projectWithSellerItem(project, it), t('Add seller product'));
       else commit(withSellerItem(get().design, it));
     },
-    setProjectSellerItemQuantity: (seller, id, quantity) => {
-      const p = get().project;
-      if (!p) return;
-      const next = projectSellerItemQuantity(p, seller, id, quantity);
-      if (next !== p) commitProject(next);
-    },
+    setProjectSellerItemQuantity: (seller, id, quantity) =>
+      projectAction((p) => projectSellerItemQuantity(p, seller, id, quantity)),
     setRunProduct: (key, hp) => {
       const p = get().project;
       if (!p) return;
@@ -1968,32 +1898,21 @@ export const useDesign = create<State>((rawSet, get) => {
         partBands: Object.keys(bands).length ? bands : undefined,
       });
     },
-    updateCabinet: (patch) => {
+    updateParams: (kind, patch) => {
       const d = get().design;
-      if (d.product.kind !== 'cabinet') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
-    },
-    updateDesk: (patch) => {
-      const d = get().design;
-      if (d.product.kind !== 'desk') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
-    },
-    updateCorner: (patch) => {
-      const d = get().design;
-      if (d.product.kind !== 'corner') return;
+      if (d.product.kind !== kind) return;
       // A corner's mount is a schemaVersion 7 field (ADR-177).
-      const mounted = 'mount' in patch || 'mountHeight' in patch;
+      const mounted = kind === 'corner' && ('mount' in patch || 'mountHeight' in patch);
       commit({
         ...d,
         schemaVersion: mounted ? SCHEMA_VERSION : d.schemaVersion,
-        product: { ...d.product, params: { ...d.product.params, ...patch } },
+        product: { ...d.product, params: { ...d.product.params, ...patch } } as Product,
       });
     },
-    updatePanelSet: (patch) => {
-      const d = get().design;
-      if (d.product.kind !== 'panels') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
-    },
+    updateCabinet: (patch) => get().updateParams('cabinet', patch),
+    updateDesk: (patch) => get().updateParams('desk', patch),
+    updateCorner: (patch) => get().updateParams('corner', patch),
+    updatePanelSet: (patch) => get().updateParams('panels', patch),
     setLoosePanelBoard: (panelId, board) => {
       const d0 = get().design;
       if (d0.product.kind !== 'panels') return;
@@ -2004,16 +1923,8 @@ export const useDesign = create<State>((rawSet, get) => {
       );
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, panels } } });
     },
-    updatePanel: (patch) => {
-      const d = get().design;
-      if (d.product.kind !== 'panel') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
-    },
-    updateFrame: (patch) => {
-      const d = get().design;
-      if (d.product.kind !== 'frame') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
-    },
+    updatePanel: (patch) => get().updateParams('panel', patch),
+    updateFrame: (patch) => get().updateParams('frame', patch),
     resizePiece: (key, value) => {
       const d = get().design;
       // A bed's size is its mattress (ADR-211); `resizeBed` leaves other pieces alone.

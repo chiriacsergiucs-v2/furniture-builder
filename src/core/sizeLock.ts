@@ -91,7 +91,7 @@ export function outerSize(design: Design): { w: number; h: number; d: number } {
 }
 
 /** Whether two designs have the same outside size, on `axes` (default all three). */
-export function sameSize(a: Design, b: Design, axes: readonly SizeAxis[] = SIZE_AXES): boolean {
+function sameSize(a: Design, b: Design, axes: readonly SizeAxis[] = SIZE_AXES): boolean {
   if (a === b || !axes.length) return true;
   const x = outerSize(a),
     y = outerSize(b);

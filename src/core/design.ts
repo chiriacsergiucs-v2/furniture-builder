@@ -20,7 +20,7 @@ import { t } from './i18n';
 import { ROOMS } from './catalog/types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
 
-export type PedestalSide = 'left' | 'right';
+type PedestalSide = 'left' | 'right';
 
 export const newId = (): string =>
   (
@@ -30,7 +30,7 @@ export const newId = (): string =>
 
 /** User's stock (2026-10-21): PAL and HDF 2800 × 2070, MDF 2440 × 1220, 10 mm trim per edge, 4 mm kerf. */
 export const DEFAULT_KERF = 4;
-export const DEFAULT_TRIM = 10;
+const DEFAULT_TRIM = 10;
 export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<Material['sheet']> {
   const mdf = /mdf/i.test(m.id) || /mdf/i.test(m.name);
   return mdf
@@ -582,7 +582,7 @@ export const unsplit = (s: Space): Space =>
  * A row of bays: vertical dividers, the same number of fixed shelves in every bay and the same doors on each.
  * The quick layout for base and wall units; anything finer is edited space by space.
  */
-export interface BayLayout {
+interface BayLayout {
   bays: number;
   shelves: number;
   doors: 0 | 1 | 2;
@@ -659,7 +659,7 @@ export const pedestalRoot = (p: DeskParams, side: PedestalSide, deskId: string):
   };
 
 /** Editable space trees of a product, each with the name shown in breadcrumbs. */
-export interface ProductRoot {
+interface ProductRoot {
   root: Space;
   label: string;
   side?: PedestalSide;
@@ -734,7 +734,7 @@ export function setProductParams<P extends Product>(prod: P, patch: Partial<P['p
 // ---------------------------------------------------------------------------
 
 export const MAX_SHELVES = 50;
-export const MAX_MM = 100_000;
+const MAX_MM = 100_000;
 export const MAX_DRAWERS = 20;
 export const MAX_LOOSE = 100;
 

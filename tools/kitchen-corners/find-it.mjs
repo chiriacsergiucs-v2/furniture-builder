@@ -9,16 +9,16 @@
 // size, the plan's dashed hob outline, **Cut the back around it** under Checks, the front view's wall-unit drag
 // snapping to the worktop line (**Snapped to the worktop line**) and placing freely with Alt, and the **Clearances**
 // button in the 3D view drawing the zones. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4305/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl('http://localhost:4305/furniture-builder/');
+const out = outDir();
 mkdirSync(out, { recursive: true });
 const schema = Number(
   /PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1],
 );
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

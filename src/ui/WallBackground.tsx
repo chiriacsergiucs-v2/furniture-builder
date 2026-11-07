@@ -7,7 +7,7 @@ import { Select } from './controls';
 import { Icon } from './icons';
 import { StraightenPhoto } from './StraightenPhoto';
 import { applyWallFinish } from './wallFinishTarget';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 
 /** Starting paint colour for a wall: the grey the 3D view shows walls in. */
 const WALL_GREY = '#c9cdc8';

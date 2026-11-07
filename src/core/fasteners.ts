@@ -8,7 +8,7 @@ import { t } from './i18n';
 import { pt, type PrintKey } from './i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
-import type { ShopLine } from './shopping';
+import type { ShopLine } from './shopping-types';
 import { inPlaneAxes } from './geometry';
 import type { Axis, Box, FurnitureModel, Mm, Panel, PanelRole } from './types';
 
@@ -132,7 +132,7 @@ const span = (b: Box, a: 0 | 1 | 2): [number, number] =>
   a === 0 ? [b.x, b.x + b.w] : a === 1 ? [b.y, b.y + b.h] : [b.z, b.z + b.d];
 
 /** The axis two boxes touch on, when they meet with an area (touch on one axis, overlap on the other two). */
-export function contactAxis(a: Box, b: Box): Axis | null {
+function contactAxis(a: Box, b: Box): Axis | null {
   let touch: Axis | null = null;
   for (const ax of [0, 1, 2] as const) {
     const [a0, a1] = span(a, ax),
@@ -147,7 +147,7 @@ export function contactAxis(a: Box, b: Box): Axis | null {
 const AXES: Axis[] = ['x', 'y', 'z'];
 
 /** A joint: one board's edge or face against another board's face (two edges butted together are not one). */
-export const isJoint = (a: Panel, b: Panel): boolean => {
+const isJoint = (a: Panel, b: Panel): boolean => {
   const ax = contactAxis(a.box, b.box);
   return ax !== null && (a.thicknessAxis === ax || b.thicknessAxis === ax);
 };
@@ -214,7 +214,7 @@ export function fastenerCounts(model: FurnitureModel): FastenerCount[] {
 }
 
 /** Adds counts of the same joint type. */
-export function addCounts(lists: { counts: FastenerCount[]; times: number }[]): FastenerCount[] {
+function addCounts(lists: { counts: FastenerCount[]; times: number }[]): FastenerCount[] {
   return JOINTS.map((j) => {
     let count = 0,
       lengthMm = 0;

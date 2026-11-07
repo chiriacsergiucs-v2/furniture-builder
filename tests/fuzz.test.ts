@@ -46,7 +46,8 @@ import {
   type WorktopJoint,
 } from '../src/core/project';
 import { mirrorDesign } from '../src/core/arrange';
-import { shapeOutline, type RoomFeature } from '../src/core/room';
+import { shapeOutline, wallLength, type Room, type RoomFeature } from '../src/core/room';
+import { suggestRoomMixes, type RoomInput } from '../src/core/roomfill';
 import { applyBindings } from '../src/core/variables';
 import { withSettings } from '../src/core/projectSettings';
 import type {
@@ -1295,4 +1296,95 @@ it(
     expect(Object.values(seen).every((n) => n > 0)).toBe(true);
   },
   FUZZ_TIMEOUT * 3,
+);
+
+// ADR-173, ADR-177: seeded random rooms through Fill the room. Moved here from tests/roomfill.test.ts (ADR-237) with
+// the same assertions; at the default FUZZ_N it checks the same 20 rooms.
+it(
+  'seeded random rooms never throw and never offer a mix with an error (ADR-173, ADR-237)',
+  async () => {
+    const input = (room: Room, over: Partial<RoomInput> = {}): RoomInput => ({
+      room,
+      depth: 560,
+      minWidth: 400,
+      maxWidth: 1200,
+      ...over,
+    });
+    /** The wall corner cabinets of a project: corner pieces hung on the wall. */
+    const wallCorners = (items: ProjectItem[]) =>
+      items.filter((i) => i.design.product.kind === 'corner' && i.placement?.kind === 'wall');
+    let seed = 5;
+    const rnd = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 150);
+    let rooms = 0;
+    for (let n = 0; n < N; n++) {
+      // A deep run takes minutes: yield to the event loop between rooms so vitest's worker can still report.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      rooms++;
+      const shape = (['rectangle', 'l-shape', 'u-shape', 'alcove'] as const)[Math.floor(rnd() * 4)];
+      const width = 2500 + Math.floor(rnd() * 3000),
+        depth = 2500 + Math.floor(rnd() * 2000);
+      const room: Room = {
+        height: 2400 + Math.floor(rnd() * 400),
+        outline: shapeOutline(shape, {
+          width,
+          depth,
+          cutWidth: 800 + Math.floor(rnd() * 1000),
+          cutDepth: 800 + Math.floor(rnd() * 1000),
+          offset: Math.floor(rnd() * 500),
+        }),
+        features: [],
+      };
+      const walls = room.outline.map((_, i) => i).filter(() => rnd() < 0.7);
+      if (rnd() < 0.5)
+        room.features.push({
+          id: 'd',
+          kind: 'door',
+          label: 'Door',
+          wall: walls[0] ?? 0,
+          from: Math.floor(rnd() * 1000),
+          width: 800,
+          sill: 0,
+          height: 2050,
+          depth: 0,
+        });
+      // ADR-177: windows on the walls (high and low sills) and every corner kind, with and without a wall row.
+      if (rnd() < 0.6) {
+        const wall = walls[Math.floor(rnd() * walls.length)] ?? 0;
+        room.features.push({
+          id: 'w',
+          kind: 'window',
+          label: 'Window',
+          wall,
+          from: Math.floor(rnd() * Math.max(1, wallLength(room, wall) - 600)),
+          width: 600 + Math.floor(rnd() * 900),
+          sill: rnd() < 0.8 ? 1000 : 500,
+          height: 1200,
+          depth: 0,
+        });
+      }
+      const corner = (['blind', 'l-shape', 'diagonal', 'none'] as const)[Math.floor(rnd() * 4)];
+      const wallRow = rnd() < 0.85 ? 'always' : 'never';
+      const inp = input(room, { walls, corner, wallRow });
+      const r = suggestRoomMixes(inp);
+      for (const m of r.mixes) {
+        expect(validateProject(m.project)).toEqual([]);
+        expect(
+          buildProjectModel(m.project).diagnostics.filter((d) => d.severity === 'error'),
+        ).toEqual([]);
+        if (corner === 'none' || wallRow === 'never')
+          expect(wallCorners(m.project.items)).toEqual([]);
+      }
+      // Same input, same mixes.
+      if (n % 10 === 0)
+        expect(suggestRoomMixes(inp).mixes.map((m) => m.key)).toEqual(r.mixes.map((m) => m.key));
+    }
+    // ADR-237: the rooms checked, pinned before the test moves to tests/fuzz.test.ts.
+    expect(rooms).toBe(process.env.FUZZ_N ? N : 20);
+  },
+  /* about 0.7 s a room on a quiet machine; generous for a loaded one */
+  Math.max(120000, Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 150) * 3000),
 );

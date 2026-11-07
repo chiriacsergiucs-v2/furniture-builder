@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { newId } from '../../core/design';
 import { newProject } from '../../core/project';
 import {
+  copyDesign,
+  copyProject,
   deleteDesign,
   deleteProject,
   deleteProjectVersions,
   listDesigns,
   listProjectVersions,
   listProjects,
-  saveDesign,
   saveProject,
   type StoredDesign,
   type StoredProject,
@@ -25,7 +25,7 @@ import { catalogFamilies } from '../../core/catalog';
 import { newerCount, newerText, templateStatus } from '../../core/templateRevision';
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
-import { useUi } from './uiStore';
+import { useUi } from '../../store/uiStore';
 import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
@@ -124,16 +124,13 @@ export function ProjectsPage({
     setMsg(r.message ?? null);
     refresh();
   };
+  // Copied through the validating path (ADR-227): a row that cannot be read is refused and left as it is.
   const duplicate = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {
-    const now = new Date().toISOString();
-    const copy = {
-      id: newId(),
-      name: t('{name} (copy)', { name: r.name }),
-      createdAt: now,
-      updatedAt: now,
-    };
-    if (kind === 'project') await saveProject({ ...(r as StoredProject).project, ...copy });
-    else await saveDesign({ ...(r as StoredDesign).design, ...copy });
+    const name = t('{name} (copy)', { name: r.name });
+    const res = await (kind === 'project' ? copyProject(r.id, name) : copyDesign(r.id, name)).catch(
+      () => ({ ok: false as const, reason: '' }),
+    );
+    if (!res.ok) setMsg({ ok: false, text: t('Saved work could not be read from this browser.') });
     refresh();
   };
   const remove = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {

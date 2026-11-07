@@ -17,7 +17,7 @@ import { productIndex, sellerPriceLookup } from '../core/sellers';
 import { shoppingList, type ShopLine } from '../core/shopping';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerCounts } from './Fasteners';
-import { usePrices } from './priceStore';
+import { usePrices } from '../store/priceStore';
 import { useSellerCatalogs } from './ProductPicker';
 import { useNesting } from './useNesting';
 import { useView } from './useView';

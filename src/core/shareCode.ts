@@ -8,7 +8,7 @@
 import { t } from './i18n';
 
 /** Codes start with this, so a pasted text is recognised (and a later format can take another prefix). */
-export const CODE_PREFIX = 'FB1-';
+const CODE_PREFIX = 'FB1-';
 /** The link form: `<app address>#open=<code>`. */
 export const LINK_KEY = '#open=';
 
@@ -68,7 +68,7 @@ export function codeIn(text: string): string | null {
   return code.startsWith(CODE_PREFIX) ? code : null;
 }
 
-export type Decoded = { ok: true; doc: unknown } | { ok: false; error: string };
+type Decoded = { ok: true; doc: unknown } | { ok: false; error: string };
 
 /** The document in a code or link; a message when it is not one or is damaged. */
 export async function decodeCode(text: string): Promise<Decoded> {

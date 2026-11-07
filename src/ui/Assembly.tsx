@@ -36,7 +36,7 @@ import { askConfirm, askText } from './Confirm';
 import { GuidanceTip } from './controls';
 import { PieceElevation } from './Elevation';
 import { Icon } from './icons';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { captureStill, hasStill } from '../viewer/renderBridge';
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
@@ -470,7 +470,7 @@ export function PrintAssembly() {
     </div>
   );
   return (
-    <div className="print-root" aria-hidden="true">
+    <div className="print-root" role="region" aria-label={t('Printed sheet')} aria-hidden="true">
       <header className="pr-head">
         <h1>{view.title}</h1>
         <p>

@@ -7,6 +7,10 @@ export const ru_surfaces = {
   'Add a picture for the floor': 'Добавить изображение для пола',
   'Plan picture': 'Изображение плана',
   'Add a plan picture': 'Добавить изображение плана',
+  // Accessible names of the plan's drawn layers (ADR-224); the layers stay hidden from screen readers.
+  'Plan picture on the plan': 'Изображение плана на плане',
+  'Wall background bands': 'Полосы фона стен',
+  'Floor finish': 'Отделка пола',
   'Set the scale': 'Задать масштаб',
   'Tap a corner of the plan, then the other end of a wall you know.':
     'Нажмите на угол плана, затем на другой конец стены, длину которой вы знаете.',
@@ -79,7 +83,7 @@ export const ru_surfaces = {
   'Could not export for AR: {message}': 'Не удалось экспортировать для AR: {message}',
   'Engine: {name}': 'Движок: {name}',
 
-  // Feature tree (src/core/features.ts, ADR-158)
+  // Feature tree (src/ui/info/features.ts, ADR-158)
   'Wall colour bands on the plan': 'Цветные полосы стен на плане',
   "A 50 mm band inside each wall with a background, in the wall's colour.":
     'Полоса 50 мм у каждой стены с фоном, в цвет стены.',

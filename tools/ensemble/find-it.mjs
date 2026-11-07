@@ -5,13 +5,13 @@
 // Updated for the app shell (ADR-078: Projects place, ⋯ More → Files, breadcrumb in place of banners), the editor
 // modes (ADR-079/080: Parts CSV and Print on the Parts list in Build & Preview, Materials in the Settings dialog)
 // and the phone layout (N82: the project panel is a bottom sheet; Compose shows the drawing only).
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

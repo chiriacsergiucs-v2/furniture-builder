@@ -23,7 +23,7 @@ import { askConfirm } from './Confirm';
 import { Dialog } from './Dialogs';
 import { Group, InfoTip, MmField } from './controls';
 import { Icon } from './icons';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 
 /** `bottom height = 400`: what a bound field shows instead of being edited (ADR-166). */
 export function bindingHint(

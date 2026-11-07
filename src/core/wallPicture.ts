@@ -208,7 +208,7 @@ export function dragPicture(
 }
 
 /** A 3 × 3 projective map, row by row. */
-export type Homography = [number, number, number, number, number, number, number, number, number];
+type Homography = [number, number, number, number, number, number, number, number, number];
 
 /**
  * The projective map of the unit square onto quadrilateral `q`: (0,0) → q[0], (1,0) → q[1], (1,1) → q[2],
