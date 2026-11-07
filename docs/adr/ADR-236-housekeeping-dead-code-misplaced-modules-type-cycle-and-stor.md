@@ -70,5 +70,7 @@ TDD (review section 9): every item starts from a test written first that pins to
       Evidence: `tests/store-locations.test.ts` › "no sample generator and no wallCount under src"; `CLAUDE.md` diff.
 - [x] `tests/core-boundary.test.ts` (ADR-219) passes; no Zustand `create(` remains under `src/ui`. Evidence:
       `tests/core-boundary.test.ts`, `tests/store-locations.test.ts` › "no Zustand store is created under src/ui".
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      Evidence (ran 2026-11-07, local, branch `wip/b1a` at the ADR-220 commit): all six pass; `pnpm test` 1725 passed /
+      0 failed (195 files), up from 1714 tests (192 files) before ADR-236.

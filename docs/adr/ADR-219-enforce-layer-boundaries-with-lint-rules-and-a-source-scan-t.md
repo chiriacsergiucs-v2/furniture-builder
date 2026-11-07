@@ -77,5 +77,7 @@ TDD (review section 9): every item starts from a test written first that pins to
       `../ui/icons` failed lint and the test, `../ui/useSnap` passed.
 - [x] `import.meta.glob` and `?raw` outside the three allowed folders fail lint and the test. Evidence: the scratch
       file above; `tests/core-boundary.test.ts` › "import.meta.glob only in the data loaders".
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      Evidence (ran 2026-11-07, local, branch `wip/b1a` at the ADR-220 commit): all six pass; `pnpm test` 1725 passed /
+      0 failed (195 files), up from 1714 tests (192 files) before ADR-236.
