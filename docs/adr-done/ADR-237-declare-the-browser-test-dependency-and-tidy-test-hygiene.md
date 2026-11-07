@@ -1,7 +1,8 @@
 # ADR-237: Declare the browser test dependency and tidy test hygiene
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N242
@@ -59,11 +60,32 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) a Vitest test parses every `tools/*/find-it.mjs` and asserts each bare import specifier is declared
+- [x] (test first) a Vitest test parses every `tools/*/find-it.mjs` and asserts each bare import specifier is declared
       in `package.json` (red before: `playwright`), green after.
-- [ ] `node tools/move-3d/find-it.mjs` passes against `pnpm build && pnpm preview` with the system Chromium.
-- [ ] (test first) the seeded rooms are counted before the move; `tests/fuzz.test.ts` checks the same count at the
+- [x] `node tools/move-3d/find-it.mjs` passes against `pnpm build && pnpm preview` with the system Chromium.
+- [x] (test first) the seeded rooms are counted before the move; `tests/fuzz.test.ts` checks the same count at the
       default `FUZZ_N`, and `FUZZ_N=30000` passes.
-- [ ] `tests/persist.test.ts` passes in any order (`--sequence.shuffle`).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] `tests/persist.test.ts` passes in any order (`--sequence.shuffle`).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+
+## Evidence (2026-11-07, run locally on branch `wip/b1c`)
+
+- Dependency: `playwright-core` 1.63.0 (the version of the preinstalled Playwright, browser revision chromium-1243),
+  exact, devDependency, lockfile updated; `pnpm install --frozen-lockfile` passes. Licence Apache-2.0 (its
+  `package.json`); it has no install script and no dependencies, so an install downloads no browser whatever
+  `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` says; no telemetry (the only match in its code is a Firefox pref that turns
+  telemetry off).
+- `tests/tool-deps.test.ts` › "every package a find-it script or the harness imports is declared in package.json": red
+  before (76 scripts: `playwright`), green after; "the scripts share tools/lib/harness.mjs" likewise.
+- `tools/lib/harness.mjs` (`launchBrowser`, `previewUrl`, `outDir`, `PREVIEW_URL`, `WIDTHS`); the 76
+  `tools/*/find-it*.mjs` changed mechanically (import, launch, URL and folder defaults kept per script, widths
+  untouched). Against `pnpm build && pnpm preview --port 4391`: `tools/move-3d/find-it.mjs` 32/32 with Playwright's own
+  Chromium and 32/32 with `CHROMIUM_PATH=/opt/pw-browsers/chromium`; `tools/home/find-it.mjs` 63/63;
+  `tools/start-new/find-it.mjs` 48 checks passed.
+- The seeded rooms: a count pinned in `tests/roomfill.test.ts` first (20 at the default), then moved to
+  `tests/fuzz.test.ts` › "seeded random rooms never throw and never offer a mix with an error (ADR-173, ADR-237)" with
+  the same assertions and count; it yields between rooms so a deep run does not stall vitest's worker.
+  `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`: 9/9 passed.
+- `tests/persist.test.ts`: red with `--sequence.shuffle --sequence.seed=3` before, green with seeds 1 to 4 after (a new
+  `IDBFactory`, handed to Dexie too, and a fresh `src/persist/db` per test).

@@ -4,11 +4,11 @@
 // Starts from the bare app at each width and finds everything by visible text: imports a 0.6 m cube (written by the
 // script, no binary committed), types sizes with Keep proportions off and on, resets, undoes, and drags the height
 // handle in 3D in Move mode. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
 
 /** A 0.6 m red cube as a GLB (12 triangles). */
@@ -87,7 +87,7 @@ function cubeGlb(m = 0.6) {
 const good = `${out}/Cube.glb`;
 writeFileSync(good, cubeGlb());
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

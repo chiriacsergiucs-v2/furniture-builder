@@ -394,4 +394,6 @@ export const ru_project = {
     'Когда «Выбор» включён, каждое касание добавляет или убирает изделие; мышью то же делает щелчок с Shift, Ctrl или Cmd.',
   ' A drag on empty space selects every piece it touches.':
     ' Протягивание по пустому месту выбирает все изделия, которых касается рамка.',
+  // The connection ticks on the plan and the room front view, hidden from screen readers (ADR-224).
+  'Connection ticks': 'Отметки соединений',
 } satisfies Record<string, string>;

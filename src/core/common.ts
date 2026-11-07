@@ -9,7 +9,7 @@ import { bounds2, footprint, isRect, rectOf, sharedLength, unionOutline, type Pt
 import { placeItem, type CommonPanel, type Project } from './project';
 import type { Design, Diagnostic, Face, Panel } from './types';
 
-export type CommonKind = CommonPanel['kind'];
+type CommonKind = CommonPanel['kind'];
 
 /** How a member is built while it is in a common top and/or bottom. */
 export interface CommonBuild {
@@ -59,7 +59,7 @@ export const commonTopRole = (d: Design): Panel['role'] =>
  * A member's replaced parts by layer: the top layer first (a doubled top, ADR-105, has two), all pieces of a layer
  * together (a blind or L corner has one per carcass).
  */
-export function layersOf(removed: readonly Panel[], kind: CommonKind): Panel[][] {
+function layersOf(removed: readonly Panel[], kind: CommonKind): Panel[][] {
   const ys = [...new Set(removed.map((p) => p.box.y))].sort((a, b) =>
     kind === 'top' ? b - a : a - b,
   );
@@ -71,13 +71,13 @@ const outlineOf = (parts: readonly Panel[]): Pt[] | null =>
   parts.length === 1 ? footprint(parts[0]) : unionOutline(parts.map(footprint));
 
 /** A gap a common panel bridges (ADR-189): its rectangle in plan and its width along the row. */
-export interface CommonGap {
+interface CommonGap {
   rect: Pt[];
   width: number;
   between: [string, string];
 }
 
-export interface CommonPlan {
+interface CommonPlan {
   /** Why the members cannot share one panel, or null. */
   reason: string | null;
   layers: 1 | 2;

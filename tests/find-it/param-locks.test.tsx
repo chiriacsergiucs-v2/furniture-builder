@@ -4,24 +4,7 @@
 // Height still changes; a turn-locked piece refuses Turn with the reason and has no turn handle.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
-async function openMenu(user: User, card: HTMLElement) {
-  await user.click(within(card).getByRole('button', { name: 'More actions' }));
-  return screen.findByRole('group', { name: 'More actions' });
-}
+import { addPiece, openMenu, openSheet, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('turn and size locks at %ipx (find-it, ADR-171)', (width) => {
   it('More actions → Lock turn, Lock width…; the chip names the locks; Width off, Height changes; Turn refused', async () => {
@@ -31,9 +14,8 @@ describe.each(WIDTHS)('turn and size locks at %ipx (find-it, ADR-171)', (width) 
     await user.type(within(create).getByRole('textbox'), `Locks ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    await addPiece(user, panel);
+    await openSheet(user, panel);
+    await addPiece(user);
     const card = await screen.findByRole('region', { name: /^Selected piece: / });
 
     // The five toggles are listed.

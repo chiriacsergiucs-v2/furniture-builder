@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { validateProject } from '../src/core/project';
-import { sampleProjects } from '../src/core/samples/mobila';
+import { sampleProjects } from './fixtures/mobila';
 
 /** The importable project files in docs/samples are the generator's output. `WRITE_SAMPLES=1 npx vitest run tests/samples-files.test.ts` rewrites them. */
 describe('sample project files', () => {

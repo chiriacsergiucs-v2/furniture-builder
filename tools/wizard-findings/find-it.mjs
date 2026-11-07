@@ -3,14 +3,13 @@
 //   pnpm build && pnpm preview --port 4175 --strictPort &
 //   node tools/wizard-findings/find-it.mjs http://127.0.0.1:4175/furniture-builder/ <out dir>
 // Finds everything by role and visible text. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://127.0.0.1:4175/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-wizard-findings';
+const url = previewUrl('http://127.0.0.1:4175/furniture-builder/');
+const out = outDir('/tmp/furniture-wizard-findings');
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

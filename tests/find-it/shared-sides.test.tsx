@@ -3,21 +3,7 @@
 // sides → the parts list counts 3 sides; with a wardrobe in the selection the toggle is off and says why.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, name: RegExp) {
-  const side = screen.getByRole('complementary', { name: 'Compose' });
-  const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(side).getByRole('button', { name: 'Add a piece' }));
-  const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(list).getAllByRole('button', { name })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
   it('two base units → Select both → Shared sides → Parts counts 3 sides; a wardrobe makes it off', async () => {
@@ -49,7 +35,7 @@ describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
     const sides = screen
       .getAllByRole('row')
       .filter((tr) => /: (Left|Right) side/.test(tr.textContent ?? ''))
-      .reduce((n, tr) => n + Number(tr.querySelector('td')?.textContent ?? 0), 0);
+      .reduce((n, tr) => n + Number(within(tr).queryAllByRole('cell')[0]?.textContent ?? 0), 0);
     expect(sides).toBe(3);
 
     // A wardrobe in the selection: Shared sides is off, disabled, with the reason.

@@ -8,13 +8,13 @@
 // tick too, and Build & Preview › 3D draws a seam line (counted in `document.body.dataset.seams`) that is gone while
 // exploded and after Disconnect. ADR-201 (G-346): in Build & Preview › 3D with Move on, dragging a connected piece moves
 // the connected set along, and on a desktop an Alt drag moves that piece alone (then one Undo). Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

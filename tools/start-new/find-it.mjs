@@ -3,13 +3,12 @@
 // Next, Refine → Back, U → Rectangle, Rectangle → L, the cabinet depths on Walls, Use this mix), a failed save of
 // "Project with several pieces", and no sideways scroll in the wizard dialog body (the footer at 760 px).
 // Usage: node tools/start-new/find-it.mjs <url> <out dir>
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
-const url = process.argv[2] ?? 'http://127.0.0.1:4174/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-start-new-acceptance';
+const url = previewUrl('http://127.0.0.1:4174/furniture-builder/');
+const out = outDir('/tmp/furniture-start-new-acceptance');
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

@@ -20,8 +20,8 @@ export type ProductKind =
   | 'other';
 
 /** What the seller's price is for. */
-export type SellerUnit = 'piece' | 'm' | 'm2' | 'pack' | 'set';
-export type SellerStock = 'in' | 'out' | 'order' | 'preorder' | 'online' | 'other';
+type SellerUnit = 'piece' | 'm' | 'm2' | 'pack' | 'set';
+type SellerStock = 'in' | 'out' | 'order' | 'preorder' | 'online' | 'other';
 
 export interface SellerProduct {
   /** The seller's product id, unique in its catalog. */

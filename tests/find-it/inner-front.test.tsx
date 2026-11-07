@@ -25,7 +25,7 @@ describe.each(WIDTHS)('inner front at %ipx (find-it, ADR-108)', (width) => {
     await user.click(within(settings).getByRole('button', { name: 'Done' }));
 
     // The parts list is still open; the drawer boxes are listed without inner fronts.
-    expect(document.querySelectorAll('table').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('table').length).toBeGreaterThan(0);
     expect(screen.queryAllByText(/Drawer inner front/)).toHaveLength(0);
     expect(screen.getAllByText(/Drawer side/).length).toBeGreaterThan(0);
   });

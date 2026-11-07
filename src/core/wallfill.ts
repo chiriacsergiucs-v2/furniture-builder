@@ -36,7 +36,7 @@ import {
 } from './project';
 import type { Design, Diagnostic, Mm, Space } from './types';
 
-export type PieceKind = 'tall' | 'shelves' | 'drawers' | 'door';
+type PieceKind = 'tall' | 'shelves' | 'drawers' | 'door';
 export type TallPosition = 'left' | 'right' | 'ends' | 'centre';
 /** Whether mixes get a row of wall cabinets (ADR-104): some with and some without, every mix, or none. */
 export type WallRow = 'any' | 'always' | 'never';
@@ -239,8 +239,7 @@ export interface Candidate {
 }
 
 /** The tall cabinet height in use (ADR-204). */
-export const tallHeightOf = (input: Pick<WallInput, 'tallHeight'>): Mm =>
-  input.tallHeight ?? TALL_HEIGHT;
+const tallHeightOf = (input: Pick<WallInput, 'tallHeight'>): Mm => input.tallHeight ?? TALL_HEIGHT;
 
 /** Positions of `t` tall cabinets among `n` pieces. */
 function tallIndices(n: number, t: number, at: TallPosition): number[] | null {

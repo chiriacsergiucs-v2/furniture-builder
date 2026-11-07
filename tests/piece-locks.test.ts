@@ -30,7 +30,7 @@ import { hasAnyLock } from '../src/core/sizeLock';
 import type { CabinetParams, Design, FrameParams } from '../src/core/types';
 import { db, loadProject, saveProject } from '../src/persist/db';
 import { useDesign } from '../src/store/designStore';
-import { useUi } from '../src/ui/shell/uiStore';
+import { useUi } from '../src/store/uiStore';
 
 const tpl = (id: string) => templates.find((x) => x.id === id)!.create();
 function row(...ids: string[]): Project {

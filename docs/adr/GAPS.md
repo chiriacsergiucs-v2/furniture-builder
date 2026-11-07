@@ -1715,3 +1715,26 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
 - Work: Low
 - Impact: Low
+
+### G-503: The Gaps page still imports the gaps ledger with ?raw
+
+- Status: Open
+- Origin: ADR-219
+- Missing: src/ui/Gaps.tsx imports docs/adr/GAPS.md?raw, outside the three data-loader folders ADR-219 allows; eslint.config.js and tests/core-boundary.test.ts carry it as a named allowance so the tree stays green
+- Request: User, 2026-11-07: "No regressions shall be introduced"; ADR-219: ?raw imports outside catalog/brands, sellers and research fail
+- Questions: Move the ledger import into a loader under src/core (or generated data) so the allowance can go, or keep the Gaps page's ?raw import as an accepted exception?
+- Suggested pick: Keep the allowance until the research data leaves ?raw (review section 6 step 5), then move the ledger the same way: it is closest to ADR-219's rule without a behaviour change now
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-504: Two find-it checks still read a class on an element found by role
+
+- Status: Open
+- Origin: ADR-224 build, 2026-11-07 (architecture review I-06)
+- Missing: tests/find-it/info-tip.test.tsx picks the info buttons among all buttons found by role by their info-btn class, and tests/find-it/editor-nav.test.tsx reads the sheet-open and sheet-full classes on the editor's main area (found by role): an info button has no role or name of its own that sets it apart, and the sheet stop is CSS layout. No querySelector remains.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Give InfoTip buttons something users can perceive that sets them apart (for example a shared name prefix already enforced, or aria-haspopup), and assert the sheet stop only through the Resize the sheet slider and the peek's aria-expanded?
+- Suggested pick: Keep the two class reads (equal strictness, no change users see) until a role-based marker is chosen (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low

@@ -22,7 +22,7 @@ import type {
 import type { Answers, Compartment, Option, StepDef } from './types';
 
 export const MAX_DIVIDERS = 7;
-export const MAX_COMP_SHELVES = 20;
+const MAX_COMP_SHELVES = 20;
 export const MAX_COMP_DRAWERS = 10;
 
 // ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ export const compartmentCount = (a: Answers): number => {
   return Number.isInteger(n) && n >= 0 && n <= MAX_DIVIDERS ? n + 1 : 1;
 };
 
-export const DEFAULT_COMPARTMENT: Compartment = { kind: 'shelves', shelves: 2, drawers: 3 };
+const DEFAULT_COMPARTMENT: Compartment = { kind: 'shelves', shelves: 2, drawers: 3 };
 
 const isCompartment = (c: unknown): c is Compartment =>
   !!c &&
@@ -92,7 +92,7 @@ const everySpace = (s: Space, fn: (c: Space) => Space): Space => {
 };
 
 /** The space a content answer stands for. Keeps the compartment's id and front. */
-export function contentSpace(c: Compartment, keep: Space): Space {
+function contentSpace(c: Compartment, keep: Space): Space {
   const base = {
     id: keep.id,
     front: keep.front ?? null,
@@ -133,7 +133,7 @@ const doors = (v: string) =>
 // ---------------------------------------------------------------------------
 
 /** A board the wizard offers: `value` is a built-in board's id, else the board's `materialKey` or `decor:<id>`. */
-export interface WizardBoard {
+interface WizardBoard {
   value: string;
   label: string;
   board: Material;
@@ -189,7 +189,7 @@ export function boardOptions(current?: string): Option[] {
 }
 
 /** The board `putBoard` put on a piece: its carcass board, or its panels' board (ADR-194). */
-export function pieceBoard(d: Design): Material | undefined {
+function pieceBoard(d: Design): Material | undefined {
   const p = d.product;
   const id =
     p.kind === 'cabinet' || p.kind === 'corner' || p.kind === 'desk'
@@ -271,7 +271,7 @@ function putBoard(d: Design, value: string): Design {
 // Options and labels
 // ---------------------------------------------------------------------------
 
-export const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
+const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
   { value: 'open', label: 'Open', uses: [] },
   { value: 'shelves', label: 'Shelves', uses: ['shelves'] },
   { value: 'drawers', label: 'Drawers', uses: ['drawers'] },

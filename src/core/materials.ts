@@ -81,7 +81,7 @@ export const BAND_KINDS: { value: EdgeBandKind; label: string }[] = [
 ];
 /** Common supplier thicknesses in tenths of a mm (0.4 · 0.8 · 1 · 2 · 3 mm): choices only, never a default. */
 export const COMMON_BAND_THICKNESS = [4, 8, 10, 20, 30];
-export const BAND_MAX_THICKNESS = 100;
+const BAND_MAX_THICKNESS = 100;
 export const BAND_MAX_WIDTH = 100;
 export const BAND_MAX_ALLOWANCE = 100;
 export const BAND_MAX_CODE = 60;

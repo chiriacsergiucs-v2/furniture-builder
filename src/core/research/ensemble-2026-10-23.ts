@@ -19,7 +19,7 @@ import {
   type ResearchSection,
 } from './types';
 
-export const ENSEMBLE_DOC_ID = 'ens-2026-10-23';
+const ENSEMBLE_DOC_ID = 'ens-2026-10-23';
 
 /** Grouping aids from the request, plus the ones this paper needs (persistence, catalogue data, commerce). */
 export const ENSEMBLE_CATEGORIES: ResearchCategory[] = [
@@ -173,7 +173,7 @@ export const RANKED_ROWS: [number, string][] = [
   [39, 'AR placement'],
 ];
 /** Document line of a ranked row. */
-export const rankLine = (rank: number) => 74 + rank;
+const rankLine = (rank: number) => 74 + rank;
 
 /** Top fifteen recommendations (lines 125–139). */
 export const RECOMMENDATION_ROWS: [number, string][] = [
@@ -193,7 +193,7 @@ export const RECOMMENDATION_ROWS: [number, string][] = [
   [14, 'Room/context geometry'],
   [15, 'Automatic ensemble BOM/order list'],
 ];
-export const recommendationLine = (rank: number) => 124 + rank;
+const recommendationLine = (rank: number) => 124 + rank;
 
 /** MVP capability table (lines 466–480). */
 export const MVP_ROWS: [number, string][] = [

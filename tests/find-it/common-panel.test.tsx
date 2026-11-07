@@ -4,21 +4,7 @@
 // why.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, name: RegExp) {
-  const side = screen.getByRole('complementary', { name: 'Compose' });
-  const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(side).getByRole('button', { name: 'Add a piece' }));
-  const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(list).getAllByRole('button', { name })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('common top at %ipx (find-it, ADR-165)', (width) => {
   it('two base units → Select both → Common top → Parts lists one Common top; a wardrobe makes it off', async () => {

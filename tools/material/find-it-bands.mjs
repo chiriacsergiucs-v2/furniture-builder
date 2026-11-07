@@ -5,13 +5,13 @@
 // Suggest run parts) → Material → Run worktop chip → PAL 18 oak → Apply → the Parts list has the worktop on PAL 18
 // oak; Material → Fronts → Edge band › Your own band… → 2 mm → Apply → the Parts list names the 2 mm band; no
 // horizontal scroll, no page errors. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

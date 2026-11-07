@@ -58,13 +58,13 @@ export interface Repair {
 export const applicable = (r: Repair) => !r.refused;
 
 /** At most this many repairs are listed for one problem, smallest first. */
-export const MAX_REPAIRS = 4;
+const MAX_REPAIRS = 4;
 
 /**
  * The codes repairs exist for (ADR-071; the depth and height matches ADR-204; a back over a pipe or outlet, ADR-205;
  * the family warning, ADR-210).
  */
-export const REPAIRABLE = new Set([
+const REPAIRABLE = new Set([
   'pieces-overlap',
   'opening-blocked',
   'outside-room',

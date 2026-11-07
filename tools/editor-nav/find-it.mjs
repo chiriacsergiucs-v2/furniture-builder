@@ -10,13 +10,13 @@
 //    deleting a project and keeping its versions, History lists "Versions of deleted projects", "Restore as a new
 //    project" opens it and Delete asks and removes one.
 // Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4311/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl('http://localhost:4311/furniture-builder/');
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok: !!ok });

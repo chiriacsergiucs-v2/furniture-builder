@@ -6,7 +6,7 @@ import { FastenersPanel } from './Fasteners';
 import { Inspector } from './Inspector';
 import { ProjectPanel } from './Project';
 import { Icon } from './icons';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { SavedDataPanel } from './SavedData';
 
 /**

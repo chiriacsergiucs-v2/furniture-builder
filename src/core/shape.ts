@@ -22,7 +22,7 @@ const cross = (a: V3, b: V3): V3 => [
 ];
 
 /** Whole degrees 1–89 (ADR-040 amendment: lounger backrests reach 80° from flat at the 100° position). */
-export const MAX_TILT = 89;
+const MAX_TILT = 89;
 const min3 = (b: Box): V3 => [b.x, b.y, b.z];
 const size = (b: Box, a: Axis) => (a === 'x' ? b.w : a === 'y' ? b.h : b.d);
 
@@ -49,7 +49,7 @@ export function profileWorld(b: Box, t: Axis, points: [number, number][]): V3[] 
 }
 
 /** Convex hull (monotone chain) of 2D points, counter-clockwise. */
-export function hull2(pts: [number, number][]): [number, number][] {
+function hull2(pts: [number, number][]): [number, number][] {
   const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   if (p.length < 3) return p;
   const turn = (o: number[], a: number[], b: number[]) =>
@@ -133,7 +133,7 @@ export function aabbOf(p: Panel): Box {
  * Separating-axis test on two convex solids. Projections are rounded to 1/1000 mm, so faces that touch (or meet
  * within floating-point noise) never count as an overlap; a shared volume must be at least 0.001 mm deep.
  */
-export function solidsOverlap(a: Solid, b: Solid): boolean {
+function solidsOverlap(a: Solid, b: Solid): boolean {
   const axes: V3[] = [...a.normals, ...b.normals];
   for (const e of a.edges)
     for (const f of b.edges) {

@@ -17,7 +17,7 @@ import {
 } from './projectTemplate';
 import type { Mm } from './types';
 
-export interface InsertResult {
+interface InsertResult {
   project: Project;
   /** The inserted pieces, in template order. */
   ids: string[];
@@ -34,7 +34,7 @@ export function droppedWallConnections(project: Project, t: ProjectTemplate): nu
 }
 
 /** Where a template's block goes when no point is given: right of the project's pieces, against the back. */
-export function insertPoint(project: Project): { x: Mm; z: Mm } {
+function insertPoint(project: Project): { x: Mm; z: Mm } {
   const right = project.items.length
     ? Math.max(...project.items.map((i) => placedBounds(i).x + placedBounds(i).w))
     : 0;

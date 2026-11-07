@@ -26,7 +26,7 @@ export interface RemoteRecord {
   deletedAt?: string | null;
 }
 
-export interface SaveRequest {
+interface SaveRequest {
   /** Absent: a new record. */
   id?: string;
   kind: RecordKind;

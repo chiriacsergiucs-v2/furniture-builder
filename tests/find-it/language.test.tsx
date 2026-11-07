@@ -3,11 +3,7 @@
 // text, at phone and desktop widths.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-async function openMore(user: Awaited<ReturnType<typeof renderApp>>['user'], name: RegExp) {
-  await user.click(screen.getByLabelText(name));
-}
+import { openMore, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('language at %i px', (width) => {
   it('More → Language → Русский saves ru and reloads', async () => {

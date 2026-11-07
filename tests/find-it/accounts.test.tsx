@@ -19,6 +19,11 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
+/** The sync status beside the save status (ADR-139): a button named by its state. */
+const SYNC_STATES =
+  /^(Your account|Uploading…|Waiting for a connection( \(\d+\))?|Upload failed — Retry|Kept both: \d+|Waiting to upload \(\d+\)|In your account)$/;
+const syncStatus = () => screen.getByRole('button', { name: SYNC_STATES });
+
 describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130–N144)', (width) => {
   it('bare app → piece → notice → Saved data → sign in → In your account → share link → preview → account', async () => {
     const { user } = await renderApp(width);
@@ -80,10 +85,9 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130�
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 
     // N140, N138 (ADR-139, ADR-137): the sync status and the item's badge; the notice is gone.
-    await waitFor(
-      () => expect(document.querySelector('.sync-status')?.textContent).toMatch(/In your account/),
-      { timeout: 15000 },
-    );
+    await waitFor(() => expect(syncStatus().textContent).toMatch(/In your account/), {
+      timeout: 15000,
+    });
     // The status above already reads "In your account" before the first sync (idle, nothing waiting); the badge
     // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-197) and longer
     // under a loaded full local run at 390 px (G-347, ADR-201): 15 s, under the 30 s test timeout.
@@ -122,8 +126,7 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130�
       bodySchema: 3,
     });
     await user.click(places().getByRole('link', { name: /Projects/ }));
-    const status = () => document.querySelector<HTMLButtonElement>('.sync-status')!;
-    await user.click(status());
+    await user.click(syncStatus());
     dlg = within(await screen.findByRole('dialog', { name: 'Account' }));
     await user.click(dlg.getByRole('button', { name: 'Sync now' }));
 
@@ -147,7 +150,7 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130�
       design: { ...row.design, name: 'Changed offline' },
     });
     await client.sync();
-    await waitFor(() => expect(status().textContent).toMatch(/Waiting for a connection/));
+    await waitFor(() => expect(syncStatus().textContent).toMatch(/Waiting for a connection/));
     expect(await screen.findByText('Waiting to upload', { selector: '.badge' })).toBeTruthy();
 
     // N130 (ADR-129): changed here and in the account too — both are kept.
@@ -164,7 +167,7 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130�
       baseRevision: rec.revision,
     });
     await client.sync();
-    await waitFor(() => expect(status().textContent).toMatch(/Kept both: 1/));
+    await waitFor(() => expect(syncStatus().textContent).toMatch(/Kept both: 1/));
     expect(
       await screen.findByText('Changed elsewhere (from your account)', { selector: 'strong' }),
     ).toBeTruthy();

@@ -9,7 +9,7 @@ import type { Design, FurnitureModel, Panel } from './types';
  * Millimetres are converted to Fusion's centimetres here and nowhere else. NOT verified inside Fusion.
  */
 
-export interface FusionGroup {
+interface FusionGroup {
   name: string;
   panels: Panel[];
 }

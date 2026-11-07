@@ -3,13 +3,13 @@
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // Since ADR-079/080 the editor has two modes: Compose (drawing + editor, the editor in a bottom sheet on a phone) and
 // Build & Preview (3D and the parts with Download CSV and Print). "No errors" is read as Download CSV enabled there.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

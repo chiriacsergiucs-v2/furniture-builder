@@ -1,14 +1,13 @@
 // Production acceptance for ADR-200. IndexedDB failure switches simulate quota failures, never delete test data.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
-const url = process.argv[2] ?? 'http://127.0.0.1:4173/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-project-acceptance';
+const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
+const out = outDir('/tmp/furniture-project-acceptance');
 mkdirSync(out, { recursive: true });
 const schema = Number(
   /PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1],
 );
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

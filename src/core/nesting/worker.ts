@@ -5,7 +5,7 @@
 import { nest } from './place';
 import type { NestJob, NestOptions, NestResult } from './types';
 
-export interface NestRequest {
+interface NestRequest {
   id: number | string;
   jobs: NestJob[];
   options?: NestOptions;

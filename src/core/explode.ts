@@ -10,7 +10,7 @@ import { translate, union } from './geometry';
 import type { Box, Panel } from './types';
 
 /** Default spread: centres move half their distance again. */
-export const EXPLODE = 0.5;
+const EXPLODE = 0.5;
 
 /** Twice the centre, so integer boxes give integer centres. */
 const centre2 = (b: Box) => [2 * b.x + b.w, 2 * b.y + b.h, 2 * b.z + b.d];

@@ -1,5 +1,5 @@
 /** Types for tests; the script itself is plain JavaScript (scripts/sync-pending.mjs). */
-import type { Feature, FeatureDomain } from '../src/core/features';
+import type { Feature, FeatureDomain } from '../src/ui/info/features';
 
 export const EXEMPT: string[];
 export function implementedDates(repo?: string): Record<string, string>;

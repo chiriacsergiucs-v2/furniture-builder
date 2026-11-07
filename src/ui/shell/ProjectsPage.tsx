@@ -25,7 +25,7 @@ import { catalogFamilies } from '../../core/catalog';
 import { newerCount, newerText, templateStatus } from '../../core/templateRevision';
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
-import { useUi } from './uiStore';
+import { useUi } from '../../store/uiStore';
 import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';

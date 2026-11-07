@@ -8,7 +8,7 @@ import { newId } from './design';
 import { validateProject, type Project } from './project';
 
 /** `session`: the project as it was opened, kept at the first change after opening (G-155). */
-export type VersionKind = 'session' | 'manual' | 'before-restore';
+type VersionKind = 'session' | 'manual' | 'before-restore';
 
 export interface ProjectVersion {
   id: string;

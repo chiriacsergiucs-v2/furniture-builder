@@ -49,7 +49,7 @@ export function enclosing(b: Box): Box {
 }
 
 /** Separating-axis test of two convex floor outlines, projections rounded to 1/1000 mm (touching is no overlap). */
-export function outlinesOverlap(a: [number, number][], b: [number, number][]): boolean {
+function outlinesOverlap(a: [number, number][], b: [number, number][]): boolean {
   for (const poly of [a, b])
     for (let i = 0; i < poly.length; i++) {
       const [x0, z0] = poly[i],
@@ -177,7 +177,7 @@ export function equalParts(total: Mm, n: number): Mm[] {
 export const inPlaneAxes = (t: Axis): [Axis, Axis] =>
   t === 'x' ? ['y', 'z'] : t === 'y' ? ['x', 'z'] : ['x', 'y'];
 
-export const faceAxis = (f: Face): Axis => f[1] as Axis;
+const faceAxis = (f: Face): Axis => f[1] as Axis;
 
 /**
  * Cut-list dimensions of a panel. Length follows the grain when the material has grain,

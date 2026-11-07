@@ -57,10 +57,14 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) a Vitest test reads both tsconfigs and `ci.yml` and asserts `incremental: true` and the cache
-      steps for `node_modules/.tmp` in `checks` (red before the change, green after).
-- [ ] A second local `pnpm typecheck` after one edited file is faster than the first, and an introduced type error
-      still fails it (checked by hand, timings in the backlog row).
+- [x] (test first) a Vitest test reads both tsconfigs and `ci.yml` and asserts `incremental: true` and the cache
+      steps for `node_modules/.tmp` in `checks` (red before the change, green after). Evidence:
+      `tests/incremental-typecheck.test.ts` (3 tests, red before).
+- [x] A second local `pnpm typecheck` after one edited file is faster than the first, and an introduced type error
+      still fails it (checked by hand, timings in the backlog row). Evidence: backlog N225 (cold 43 s, no edit 0.2 s,
+      one edited file 7–10 s, a type error rc=1).
 - [ ] A CI run on the branch restores or saves the cache; its run id is cited in the backlog row.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      Evidence (ran 2026-11-07, local, branch `wip/b1a` at the ADR-220 commit): all six pass; `pnpm test` 1725 passed /
+      0 failed (195 files), up from 1714 tests (192 files) before ADR-236.

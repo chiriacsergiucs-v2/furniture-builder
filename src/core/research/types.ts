@@ -136,7 +136,7 @@ export interface Competitor {
   line: number;
 }
 
-export type FeatureOrigin = 'explicit' | 'inferred';
+type FeatureOrigin = 'explicit' | 'inferred';
 
 export interface ResearchFeature {
   /** Stable id (`<doc prefix>.f.<slug>`). A later paper may reuse it to add evidence. */
@@ -186,7 +186,7 @@ export interface ResearchFeature {
 }
 
 /** Where the app stands on a feature, with the evidence (backlog row / ADR) and what is still missing. */
-export interface AppStatus {
+interface AppStatus {
   status: Implementation;
   evidence: string;
   missing?: string;
@@ -305,7 +305,7 @@ export const IMPLEMENTATION_LABEL: Record<Implementation, string> = {
 };
 
 export const USER_PRIORITIES = ['', 'P0', 'P1', 'P2', 'P3'] as const;
-export type UserPriority = (typeof USER_PRIORITIES)[number];
+type UserPriority = (typeof USER_PRIORITIES)[number];
 
 /**
  * The user's decision on one record (feature or finding), stored on this device. Selection and implementation are

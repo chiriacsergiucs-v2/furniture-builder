@@ -62,15 +62,15 @@ export interface StepPart {
 }
 
 /** Identical drawer boxes listed once (ADR-186): one box's parts, and how many boxes. */
-export interface StepBox {
+interface StepBox {
   times: number;
   parts: StepPart[];
 }
 
 /** Which half of a two-part hardware item a step fits (ADR-185). */
-export type HardwareHalf = 'carcass' | 'drawer' | 'plate' | 'door';
+type HardwareHalf = 'carcass' | 'drawer' | 'plate' | 'door';
 
-export interface StepHardware {
+interface StepHardware {
   kind: HardwareKind;
   label: string;
   quantity: number;
@@ -83,13 +83,13 @@ export interface StepHardware {
 }
 
 /** The fasteners of one joint type a step uses (ADR-185, counted by ADR-074's rules). */
-export interface StepFastener {
+interface StepFastener {
   joint: JointType;
   count: number;
 }
 
 /** What the Prepare step lists (ADR-186): only what the model holds — no depth or position is added (ADR-010). */
-export type PrepItem =
+type PrepItem =
   | { kind: 'band'; part: StepPart; long: number; short: number }
   | { kind: 'cups'; count: number; hinge: StepHardware }
   | { kind: 'pins'; count: number; panelIds: string[] };
@@ -137,7 +137,7 @@ export const STEP_ORDER: StepId[] = [
 ];
 
 /** Step titles: the `t()` keys shown on the tab; the printed sheet uses `pt()` with the same meaning. */
-export const STEP_TITLE: Record<StepId, string> = {
+const STEP_TITLE: Record<StepId, string> = {
   prepare: t('Prepare the parts'),
   'fit-hardware': t('Fit hardware to the sides'),
   bottom: t('Bottom'),
@@ -535,7 +535,7 @@ export const partName = (label: string, w: Words): string =>
   w === 'print' ? partRo(label) : tr(label);
 
 /** A hardware line's name: as the schedule names it on the tab, as the printed hardware list names it on the sheet. */
-export const hardwareName = (h: StepHardware, w: Words): string =>
+const hardwareName = (h: StepHardware, w: Words): string =>
   w === 'print' ? hardwareRo(h).item : tr(h.label);
 
 /** The step's title. */
@@ -836,12 +836,12 @@ export function stepInstruction(s: AssemblyStep, w: Words): string {
 // Project assembly order (ADR-178): which piece goes in first
 // ---------------------------------------------------------------------------
 
-export type ProjectStageId = 'corners' | 'base' | 'wall' | 'run';
+type ProjectStageId = 'corners' | 'base' | 'wall' | 'run';
 
 export const PROJECT_STAGE_ORDER: ProjectStageId[] = ['corners', 'base', 'wall', 'run'];
 
 /** Stage titles: the `t()` keys shown on the tab; the printed sheet uses `pt()` with the same meaning. */
-export const PROJECT_STAGE_TITLE: Record<ProjectStageId, string> = {
+const PROJECT_STAGE_TITLE: Record<ProjectStageId, string> = {
   corners: t('Corner cabinets'),
   base: t('Base pieces'),
   wall: t('Wall pieces'),

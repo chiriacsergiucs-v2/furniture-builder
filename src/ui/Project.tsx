@@ -76,15 +76,10 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { MoveToButtons } from './MoveTo';
-import { keepSheetClosedOnce, useUi } from './shell/uiStore';
+import { keepSheetClosedOnce, useUi } from '../store/uiStore';
 import { CompatRules } from './CompatRules';
-import {
-  consumeDragClick,
-  dragSource,
-  newPieceTarget,
-  registerPlanHit,
-  usePieceList,
-} from './pieceDrag';
+import { consumeDragClick, dragSource, newPieceTarget, registerPlanHit } from './pieceDrag';
+import { usePieceList } from '../store/pieceListStore';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -132,7 +127,7 @@ import {
   useFocusedProblem,
   type FocusedProblem,
 } from './ProblemBanner';
-import { useProblem } from './problemStore';
+import { useProblem } from '../store/problemStore';
 import { ReplaceDialog } from './Replace';
 import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
@@ -776,7 +771,12 @@ function ConnectionTicks({
   if (!seams.length) return null;
   const half = fs * 0.6;
   return (
-    <g className="plan-connections" aria-hidden="true">
+    <g
+      className="plan-connections"
+      role="img"
+      aria-label={t('Connection ticks')}
+      aria-hidden="true"
+    >
       {seams.map((s) => {
         // Across the seam at its middle: a seam along z (x1 === x2) gets a tick along x, and the other way round.
         const xm = (s.x1 + s.x2) / 2,
@@ -811,7 +811,12 @@ function FrontConnectionTicks({
   if (!seams.length) return null;
   const half = fs * 0.6;
   return (
-    <g className="plan-connections front-connections" aria-hidden="true">
+    <g
+      className="plan-connections front-connections"
+      role="img"
+      aria-label={t('Connection ticks')}
+      aria-hidden="true"
+    >
       {seams.map((s) => {
         const ym = -(s.y1 + s.y2) / 2;
         return <line key={s.id} x1={s.x1 - half} y1={ym} x2={s.x1 + half} y2={ym} />;

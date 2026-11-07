@@ -1,7 +1,8 @@
 # ADR-219: Enforce layer boundaries with lint rules and a source-scan test
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N224
@@ -36,7 +37,7 @@ cutlist, materials`): no `./project`, `./catalog/*`, `./i18n/print`, `./nesting/
     `./research/*`, `./sellers/*`. **Allowance:** `desk.ts → ./design` until diagnostics leave the model (G-491).
   - `src/{ui,store,persist,viewer,online}/**`: no `core/nesting/place` or `core/nesting/validate`.
   - `src/viewer/**`: no `../ui/*`. **Allowance:** the 14 `../ui/*` modules the viewer imports today, listed by
-    name, until [ADR-230](ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md) moves them.
+    name, until [ADR-230](../adr/ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md) moves them.
 - `no-restricted-syntax` for `import.meta.glob` and `?raw` imports outside `src/core/catalog/brands`,
   `src/core/sellers` and `src/core/research`.
 - `tests/core-boundary.test.ts`, modelled on `tests/network-boundary.test.ts`, scans `src/` for the same forbidden
@@ -65,10 +66,19 @@ cutlist, materials`): no `./project`, `./catalog/*`, `./i18n/print`, `./nesting/
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `tests/core-boundary.test.ts` scans `src/`, passes on today's tree with the two allowances, and
+- [x] (test first) `tests/core-boundary.test.ts` scans `src/`, passes on today's tree with the two allowances, and
       its self-check proves each regex catches a forbidden `react`, `three`, `dexie`, `../ui/x` and `?raw` import.
-- [ ] A scratch file importing `three` from `src/core` fails `pnpm lint` and the test (checked by hand, file removed).
-- [ ] The viewer allowance lists each `../ui/*` module by name; a new `../ui/*` import from `src/viewer` fails.
-- [ ] `import.meta.glob` and `?raw` outside the three allowed folders fail lint and the test.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      Evidence: `tests/core-boundary.test.ts` › "no module in src/ imports across a layer boundary", "the scan itself
+      catches each forbidden import" (a third allowance, `src/ui/Gaps.tsx` `?raw`, G-503).
+- [x] A scratch file importing `three` from `src/core` fails `pnpm lint` and the test (checked by hand, file removed).
+      Evidence (ran 2026-11-07): `src/core/zzScratch.ts` with `three`, `../store/designStore`, `?raw` and
+      `import.meta.glob` gave 4 ESLint errors and 2 failing tests; removed.
+- [x] The viewer allowance lists each `../ui/*` module by name; a new `../ui/*` import from `src/viewer` fails.
+      Evidence: `VIEWER_UI` in `eslint.config.js` and the test (14 names); a scratch `src/viewer` import of
+      `../ui/icons` failed lint and the test, `../ui/useSnap` passed.
+- [x] `import.meta.glob` and `?raw` outside the three allowed folders fail lint and the test. Evidence: the scratch
+      file above; `tests/core-boundary.test.ts` › "import.meta.glob only in the data loaders".
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      Evidence (ran 2026-11-07, local, branch `wip/b1a` at the ADR-220 commit): all six pass; `pnpm test` 1725 passed /
+      0 failed (195 files), up from 1714 tests (192 files) before ADR-236.

@@ -95,7 +95,7 @@ export function finishTargets(
   return project.items.filter((i) => ids.includes(i.id));
 }
 
-export interface FinishResult {
+interface FinishResult {
   project: Project;
   applied: string[];
   skipped: string[];
@@ -368,7 +368,7 @@ export function materialTargets(
   return project.items.filter((i) => i.id === id);
 }
 
-export interface MaterialResult {
+interface MaterialResult {
   project: Project;
   applied: string[];
   skipped: string[];
@@ -450,7 +450,7 @@ export function applyMaterial(
 }
 
 /** A run role in a sentence ("no run worktop"). */
-export function runRoleName(r: RunRole): string {
+function runRoleName(r: RunRole): string {
   switch (r) {
     case 'run-worktop':
       return t('run worktop');

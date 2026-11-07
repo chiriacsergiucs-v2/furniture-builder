@@ -14,7 +14,7 @@ import { useDesign } from '../store/designStore';
 import { useCatalog, useLocalTemplates } from './Catalog';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 

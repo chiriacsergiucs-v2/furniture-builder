@@ -12,11 +12,11 @@
 //   6. G-316: five Regency boards with shipped pictures, each seen in 3D (screenshots `g316-<code>-<width>.png`).
 // window.print is replaced by a counter so the print sheet stays on screen for checks; Chromium's own PDF printer
 // counts the client sheet's pages. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4306/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance/prints-exports';
+const url = previewUrl('http://localhost:4306/furniture-builder/');
+const out = outDir('dist-acceptance/prints-exports');
 mkdirSync(out, { recursive: true });
 
 /** Regency 18 mm boards whose pictures the app ships (`public/sellers/regency/<id>.jpg`): wood, stone, plain. */
@@ -29,7 +29,7 @@ const BOARDS = [
   { code: 'P18KR.112.PE', name: 'gri 112' },
 ];
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

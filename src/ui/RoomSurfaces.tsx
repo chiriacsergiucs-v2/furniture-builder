@@ -64,6 +64,8 @@ export function PlanPictureLayer({
       {!pp.hidden && rect && url && url !== 'missing' && (
         <image
           className="plan-picture"
+          role="img"
+          aria-label={t('Plan picture on the plan')}
           href={url}
           x={rect.x}
           y={rect.z}
@@ -97,7 +99,7 @@ export function FloorFill({ room }: { room: Room }) {
   const url = f.image ? urls.get(pictureKey(f.image)) : undefined;
   const r = f.image ? floorRect(room, f.image) : null;
   return (
-    <g className="room-floor-finish" aria-hidden="true">
+    <g className="room-floor-finish" role="img" aria-label={t('Floor finish')} aria-hidden="true">
       <defs>
         <clipPath id={clip}>
           <polygon points={points} />
@@ -124,7 +126,7 @@ export function WallBands({ room }: { room: Room }) {
   const bands = useMemo(() => wallBands(room), [room]);
   if (!bands.length) return null;
   return (
-    <g className="wall-bands" aria-hidden="true">
+    <g className="wall-bands" role="img" aria-label={t('Wall background bands')} aria-hidden="true">
       {bands.map((b) => (
         <rect
           key={b.wall}

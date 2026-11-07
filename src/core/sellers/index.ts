@@ -64,7 +64,7 @@ export function thumbUrl(o: Offer): string | null {
 }
 
 export const refOf = (o: Offer): ProductRef => ({ seller: o.seller.id, id: o.p.id, name: o.p.n });
-export const refKey = (r: Pick<ProductRef, 'seller' | 'id'>) => `${r.seller}:${r.id}`;
+const refKey = (r: Pick<ProductRef, 'seller' | 'id'>) => `${r.seller}:${r.id}`;
 
 /** Every product by `seller:id`. */
 export function productIndex(cats: SellerCatalog[]): Map<string, Offer> {
@@ -77,7 +77,7 @@ export function productIndex(cats: SellerCatalog[]): Map<string, Offer> {
 const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /** Every word of the query appears in the product's name, code, maker or category. */
-export function matchesQuery(p: SellerProduct, query: string): boolean {
+function matchesQuery(p: SellerProduct, query: string): boolean {
   const words = fold(query).split(/\s+/).filter(Boolean);
   if (!words.length) return true;
   const hay = fold(`${p.n} ${p.code ?? ''} ${p.m ?? ''} ${p.c}`);
@@ -90,7 +90,7 @@ const STOCK_RANK = { in: 0, online: 1, order: 2, preorder: 3, other: 4, out: 5 }
  * Products of the given kinds that match the query, best first: by `score` (lower is better), then in stock, then
  * name. At most `limit`.
  */
-export function searchProducts(
+function searchProducts(
   cats: SellerCatalog[],
   opts: {
     kinds?: ProductKind[];
@@ -125,7 +125,7 @@ export const boardOffers = (cats: SellerCatalog[], m: Material, query = '') =>
   });
 
 /** Decor codes of a board: words with a digit, at least 3 characters ("U504", "112", "H1145"). */
-export function decorTokens(m: Material): string[] {
+function decorTokens(m: Material): string[] {
   const text = [m.name, m.decor?.code, m.band?.code, m.product?.name].filter(Boolean).join(' ');
   const words = fold(shortName(text)).split(/[^a-z0-9]+/);
   return [...new Set(words.filter((w) => w.length >= 3 && /\d/.test(w)))];
@@ -149,7 +149,7 @@ export function bandOffers(cats: SellerCatalog[], m: Material, query = ''): Offe
 }
 
 /** The product kinds that fit a hardware line of the schedule. */
-export const HARDWARE_KINDS: Partial<Record<HardwareKind, ProductKind[]>> = {
+const HARDWARE_KINDS: Partial<Record<HardwareKind, ProductKind[]>> = {
   hinge: ['hinge'],
   'corner-hinge': ['hinge'],
   'drawer-runner-pair': ['runner'],
