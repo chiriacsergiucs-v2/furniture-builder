@@ -1,7 +1,8 @@
 # ADR-234: Keep offline before first use and put a budget on the precache
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-222
 - Design: n/a
 - Backlog: N239
@@ -22,7 +23,7 @@ product picker loads, plus the path tracer. The review offered precaching the sh
 ADR-161 (the seller catalog is "an offline snapshot") promise that features work offline, and the app is used in
 workshops without signal, so offline before first use is kept: the precache list does not change. What is missing is
 a guard so the precache only grows on purpose. Depends on
-[ADR-222](ADR-222-split-the-bundle-with-manual-chunks-lazy-pages-and-lazy-rese.md), whose chunk names it checks.
+[ADR-222](../adr-done/ADR-222-split-the-bundle-with-manual-chunks-lazy-pages-and-lazy-rese.md), whose chunk names it checks.
 
 ## Decision
 

@@ -1,7 +1,8 @@
 # ADR-222: Split the bundle with manual chunks, lazy pages and lazy research data
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N227
