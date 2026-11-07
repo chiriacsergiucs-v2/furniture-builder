@@ -5,12 +5,12 @@
  * `WRITE_GOLDEN=1 pnpm exec vitest run tests/diagnostic-golden.test.ts` rewrites the file.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { catalogFamilies, insertVariant } from '../src/core/catalog';
 import { localClearances } from '../src/core/clearance';
 import { templates } from '../src/core/design';
-import { setLang, type Lang } from '../src/core/i18n';
+import { loadDictionary, setLang, type Lang } from '../src/core/i18n';
 import { buildProjectModel, type Project } from '../src/core/project';
 import type { RoomFeature } from '../src/core/room';
 import type { Design, Diagnostic } from '../src/core/types';
@@ -129,6 +129,8 @@ function listing(): Row[] {
   return out;
 }
 
+// The Russian dictionary is a lazy chunk (ADR-229): load it before the Russian rows are built.
+beforeAll(() => loadDictionary('ru'));
 afterEach(() => setLang('en'));
 
 describe('diagnostic golden (ADR-225)', () => {
