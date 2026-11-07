@@ -53,11 +53,15 @@ describe.each(WIDTHS)('ADR-209 kitchen run follow-ups at %ipx (find-it)', (width
 
     const runParts = within(settings).getByRole('region', { name: 'Run parts' });
     await user.click(within(runParts).getByRole('button', { name: /Suggest run parts/ }));
-    const list = () => runParts.querySelector<HTMLElement>('ul.run-list')!;
-    const rowWith = (re: RegExp) =>
-      [...list().querySelectorAll<HTMLElement>(':scope > li')].find((li) =>
-        re.test(li.textContent ?? ''),
-      )!;
+    // The suggested parts are the section's first list (found again only once it is replaced: a role query over the
+    // whole section is slow in jsdom); a row is one of its own items, not a nested one.
+    let list: HTMLElement | undefined;
+    const rowWith = (re: RegExp) => {
+      if (!list?.isConnected) list = within(runParts).getAllByRole('list', { hidden: true })[0];
+      return [...list.children].find(
+        (li) => li.tagName === 'LI' && re.test(li.textContent ?? ''),
+      ) as HTMLElement;
+    };
 
     // Add trim… → Crown → Moulding profile typed: the strip takes the profile's size, no height needed.
     await user.click(within(runParts).getByRole('button', { name: 'Add trim…' }));

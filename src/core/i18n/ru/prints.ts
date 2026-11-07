@@ -32,4 +32,6 @@ export const ru_prints = {
   'Taking the step pictures…': 'Снимаем картинки шагов…',
   'Project seller items need project schemaVersion {v}':
     'Товары продавца проекта требуют schemaVersion проекта {v}',
+  // The printed sheet's root, hidden from screen readers (ADR-224).
+  'Printed sheet': 'Лист для печати',
 } satisfies Record<string, string>;

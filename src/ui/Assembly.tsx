@@ -470,7 +470,7 @@ export function PrintAssembly() {
     </div>
   );
   return (
-    <div className="print-root" aria-hidden="true">
+    <div className="print-root" role="region" aria-label={t('Printed sheet')} aria-hidden="true">
       <header className="pr-head">
         <h1>{view.title}</h1>
         <p>

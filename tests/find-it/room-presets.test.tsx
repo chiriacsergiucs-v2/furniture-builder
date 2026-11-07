@@ -6,7 +6,7 @@
 // error (never prefilled).
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { piecesList, renderApp, WIDTHS } from './setup';
+import { openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -47,8 +47,7 @@ describe.each(WIDTHS)('room presets and room-mix filters at %ipx (find-it, ADR-2
       expect(screen.queryByRole('dialog', { name: 'Start something new' })).toBeNull(),
     );
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     const pieces = await piecesList(user, panel);
     const items = within(pieces).getAllByRole('listitem');
     expect(items).toHaveLength(2);

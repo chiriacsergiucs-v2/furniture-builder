@@ -5,20 +5,7 @@
 // with "Refused: … is locked — unlock it to move it."; it cannot be chosen, and the repair that applies stays chosen.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { piecesList, renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('repairs carry the group at %ipx (find-it, ADR-176)', (width) => {
   it('Checks → overlap → a repair the group cannot follow shows "Refused:" with its reason, disabled', async () => {
@@ -28,11 +15,10 @@ describe.each(WIDTHS)('repairs carry the group at %ipx (find-it, ADR-176)', (wid
     await user.type(within(create).getByRole('textbox'), `Group repairs ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    await addPiece(user, panel);
-    await addPiece(user, panel);
-    await addPiece(user, panel);
+    await openSheet(user, panel);
+    await addPiece(user);
+    await addPiece(user);
+    await addPiece(user);
 
     // Group the first and the third (Select on: a tap adds a piece, ADR-159).
     let list = await piecesList(user, panel);

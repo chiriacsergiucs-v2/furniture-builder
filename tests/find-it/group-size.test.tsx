@@ -4,7 +4,7 @@
 // a new width is shared Equally; a single piece shows Height beside Width and Depth.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { piecesList, renderApp, WIDTHS } from './setup';
+import { openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('group size at %ipx (find-it, ADR-148)', (width) => {
   it('bare app → new project → two pieces → Group → Size of the group → Width Equally', async () => {
@@ -15,8 +15,7 @@ describe.each(WIDTHS)('group size at %ipx (find-it, ADR-148)', (width) => {
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     const addPiece = async () => {
       await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
       const dlg = await screen.findByRole('dialog');

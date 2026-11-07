@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
+import { t } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import { boardBandRo, drillingRo, hardwareRo, partRo } from '../core/ro';
 import { useDesign } from '../store/designStore';
@@ -35,7 +36,7 @@ export function PrintSheet() {
   const mm = pt('mm');
 
   return (
-    <div className="print-root" aria-hidden="true">
+    <div className="print-root" role="region" aria-label={t('Printed sheet')} aria-hidden="true">
       <header className="pr-head">
         <h1>{view.title}</h1>
         <p>

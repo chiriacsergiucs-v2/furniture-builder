@@ -4,20 +4,8 @@
 // tapping the chip opens the Shopping list.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { addPiece, openSheet, renderApp, WIDTHS } from './setup';
 
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
 const chip = () => screen.getByRole('button', { name: /^(Estimate: |No prices yet)/ });
 const amountOf = (text: string) =>
   /Estimate: ([\d\s\u00a0.,]+) lei/.exec(text)?.[1]?.replace(/\s/g, '');
@@ -30,9 +18,8 @@ describe.each(WIDTHS)('running estimate at %ipx (find-it, ADR-172)', (width) => 
     await user.type(within(create).getByRole('textbox'), `Estimate ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    await addPiece(user, panel);
+    await openSheet(user, panel);
+    await addPiece(user);
     await waitFor(() => expect(chip().getAttribute('aria-label')).toMatch(/^No prices yet/));
 
     // A price for the first line of the Shopping list.

@@ -3,22 +3,7 @@
 // base units beside it → Select all → Common top → the parts list has one Common top, cut to template.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, search: string, name: RegExp) {
-  const side = screen.getByRole('complementary', { name: 'Compose' });
-  const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(side).getByRole('button', { name: 'Add a piece' }));
-  const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.type(within(list).getByRole('searchbox', { name: 'Search the items' }), search);
-  await user.click(within(list).getAllByRole('button', { name })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('common top over a corner at %ipx (find-it, ADR-189)', (width) => {
   it('L corner + two base units → Select all → Common top → Parts: Common top, cut to template', async () => {
@@ -28,9 +13,9 @@ describe.each(WIDTHS)('common top over a corner at %ipx (find-it, ADR-189)', (wi
     const start = await screen.findByRole('dialog', { name: 'Start something new' });
     await user.click(within(start).getByRole('button', { name: /Project with several pieces/ }));
     await user.click(await screen.findByRole('radio', { name: 'Compose' }));
-    await addPiece(user, 'Base L', /L corner: Base L/);
-    await addPiece(user, 'Base cabinet', /Base cabinet, doors: 1 door/);
-    await addPiece(user, 'Base cabinet', /Base cabinet, doors: 1 door/);
+    await addPiece(user, /L corner: Base L/, 'Base L');
+    await addPiece(user, /Base cabinet, doors: 1 door/, 'Base cabinet');
+    await addPiece(user, /Base cabinet, doors: 1 door/, 'Base cabinet');
 
     const side = screen.getByRole('complementary', { name: 'Compose' });
     const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
