@@ -77,24 +77,46 @@ export const safeName = (key: string): string =>
  */
 export function planBackup(tables: Partial<Record<BackupTable, unknown[]>>): BackupFile[] {
   const files: BackupFile[] = [];
-  for (const [table, key] of BACKUP_TABLES) {
-    const used = new Set<string>();
-    (tables[table] ?? []).forEach((row, i) => {
-      const k = isObj(row) && typeof row[key] === 'string' ? (row[key] as string) : `row-${i}`;
-      let name = safeName(k);
-      for (let n = 2; used.has(name); n++) name = `${safeName(k)}-${n}`;
-      used.add(name);
-      // Designs and projects as the documents Import reads; the stored row when it has no document.
-      const doc =
-        table === 'designs' && isObj(row) && 'design' in row
-          ? row.design
-          : table === 'projects' && isObj(row) && 'project' in row
-            ? row.project
-            : row;
-      files.push({ path: `${table}/${name}.json`, text: encodeRow(doc) });
-    });
-  }
+  for (const [table, key] of BACKUP_TABLES)
+    files.push(
+      ...tableFiles(
+        table,
+        (tables[table] ?? []).map((row) => ({
+          key: isObj(row) ? row[key] : undefined,
+          text: rowText(table, row),
+        })),
+      ),
+    );
   return files;
+}
+
+/** A row's backup text: designs and projects as the documents Import reads; the stored row when it has no document. */
+export function rowText(table: BackupTable, row: unknown): string {
+  const doc =
+    table === 'designs' && isObj(row) && 'design' in row
+      ? row.design
+      : table === 'projects' && isObj(row) && 'project' in row
+        ? row.project
+        : row;
+  return encodeRow(doc);
+}
+
+/**
+ * The files of one table from its rows' keys and texts, in stored order (ADR-235: the folder backup keeps the texts
+ * between runs and rebuilds the names here, so a backup of changed rows names its files as a full one does).
+ */
+export function tableFiles(
+  table: BackupTable,
+  rows: readonly { key: unknown; text: string }[],
+): BackupFile[] {
+  const used = new Set<string>();
+  return rows.map((row, i) => {
+    const k = typeof row.key === 'string' ? row.key : `row-${i}`;
+    let name = safeName(k);
+    for (let n = 2; used.has(name); n++) name = `${safeName(k)}-${n}`;
+    used.add(name);
+    return { path: `${table}/${name}.json`, text: row.text };
+  });
 }
 
 /** What a restore stores: whole documents for designs, projects and templates, stored rows for the rest. */

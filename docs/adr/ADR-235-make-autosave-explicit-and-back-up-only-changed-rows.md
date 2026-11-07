@@ -57,11 +57,20 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `persist.test.ts` with an `emitSavedChange` spy: every save, put and delete function emits once
-      with the right table and key (green with hooks before, green with explicit calls after).
-- [ ] (test first) fake-indexeddb: three saves call `settings.get` for the folder once; with no folder, too.
-- [ ] (test first) with a folder: after saving one project, `backupNow` does not read `models` or `images`
-      (`toArray` spies), and the folder holds the same files as a full backup.
-- [ ] `find-it/account-ui` upload spy and the backup tests pass unchanged.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) `persist.test.ts` with an `emitSavedChange` spy: every save, put and delete function emits once
+      with the right table and key (green with hooks before, green with explicit calls after). Evidence: "every write
+      reports its change (ADR-235)": a listener on `onSavedChange` checks each of the 31 write functions of
+      `src/persist/db.ts` (and `restoreFiles`); a second test fails when a new write function is not in the list.
+      Green with the hooks before and with `savedRows` after.
+- [x] (test first) fake-indexeddb: three saves call `settings.get` for the folder once; with no folder, too.
+      Evidence: `tests/backup-session.test.ts` "three saves read the backup folder and the persist-asked flag once;
+      with no folder, too" (red before: 3 reads of each).
+- [x] (test first) with a folder: after saving one project, `backupNow` does not read `models` or `images`
+      (`toArray` spies), and the folder holds the same files as a full backup. Evidence: "with a folder: after saving
+      one project, a backup reads no models or images and matches a full backup" (red before: every table read) and
+      "a file of its own missing from the folder is written again" (red before).
+- [x] `find-it/account-ui` upload spy and the backup tests pass unchanged. Evidence: `tests/account-ui.test.tsx`
+      15/15 and `tests/backup.test.ts` 16/16, unchanged.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence 2026-11-07 (local):
+      `pnpm test` 194 files, 1724/1724 passed (1714 on `main` before).
