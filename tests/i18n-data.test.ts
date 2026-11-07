@@ -12,11 +12,14 @@ import { COMPAT_RULES } from '../src/core/compat';
 import { baseLabel } from '../src/core/cutlist';
 import { defaultMaterials, templates } from '../src/core/design';
 import { JOINTS } from '../src/core/fasteners';
-import { hasRu, setLang, tr } from '../src/core/i18n';
+import { hasRu, loadDictionary, setLang, tr } from '../src/core/i18n';
 import { BAND_KINDS, KINDS, MAKERS } from '../src/core/materials';
 import { sampleProjects } from './fixtures/mobila';
 import { builtInStyles, HANDLE_NAMES } from '../src/core/styles';
 import type { Design } from '../src/core/types';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 /** Every text a built-in design shows: its name, boards, part names, hardware and notes. */
 function designTexts(d: Design): string[] {

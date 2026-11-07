@@ -1,7 +1,8 @@
 # ADR-222: Split the bundle with manual chunks, lazy pages and lazy research data
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N227
@@ -59,12 +60,14 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `tests/bundle-boundary.test.ts` written against today's `dist` with today's figures (red for the
+- [x] (test first) `tests/bundle-boundary.test.ts` written against today's `dist` with today's figures (red for the
       `WebGLRenderer` and `"ens-2026-10-23"` assertions), green after; it skips with its message without `dist`.
-- [ ] (test first) jsdom find-it `tests/find-it/lazy-pages.test.tsx` at 390 and 1280 px reaches the Research, Gaps,
+      Evidence: `ADR-222 bundle boundary > reads dist/assets` red before (research data in index; `WebGLRenderer` was
+      already absent from `index` on main), green after; without `dist` it reports `skipped: run pnpm build first`.
+- [x] (test first) jsdom find-it `tests/find-it/lazy-pages.test.tsx` at 390 and 1280 px reaches the Research, Gaps,
       Info, Catalog, Account and Share pages from the bare app by role and visible text, through the fallback.
-- [ ] The research tests (`research-built-rows`, `i18n-research*`) pass unchanged.
-- [ ] `pnpm build` lists the named chunks; `index` gzip size before and after recorded in the backlog row.
-- [ ] The CI `build` job runs the bundle test after the build.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] The research tests (`research-built-rows`, `i18n-research*`) pass unchanged.
+- [x] `pnpm build` lists the named chunks; `index` gzip size before and after recorded in the backlog row.
+- [x] The CI `build` job runs the bundle test after the build.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).

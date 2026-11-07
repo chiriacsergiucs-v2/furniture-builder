@@ -75,6 +75,7 @@ describe('sign-in screens (ADR-136)', () => {
     const u = userEvent.setup();
     ui();
     await u.click(screen.getByRole('button', { name: 'Account' }));
+    await dlgA(); // the dialog's states load on first use (ADR-222)
     expect(
       dlg().getByText(/Everything still works on this device without an account/),
     ).toBeTruthy();
@@ -94,6 +95,7 @@ describe('sign-in screens (ADR-136)', () => {
     await fakeBackend(server).signUp('me@example.com', 'right-one');
     ui();
     await u.click(screen.getByRole('button', { name: 'Account' }));
+    await dlgA(); // the dialog's states load on first use (ADR-222)
     await u.type(dlg().getByLabelText('Email'), 'me@example.com');
     await u.type(dlg().getByLabelText('Password'), 'wrong');
     await u.click(dlg().getByRole('button', { name: 'Sign in' }));

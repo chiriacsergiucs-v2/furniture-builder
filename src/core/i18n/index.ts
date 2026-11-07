@@ -10,7 +10,8 @@
  * Context: one English word with two meanings gets a key per meaning, `Back@@panel` (the back panel) beside `Back`
  * (go back); English shows the text before `@@`.
  */
-import { ru, ruData } from './ru';
+// Type only (ADR-229): the Russian dictionary is a lazy chunk, loaded by `loadDictionary` before the app's modules.
+import type { ru } from './ru';
 
 export type Lang = 'en' | 'ru';
 export const LANGS: Lang[] = ['en', 'ru'];
@@ -22,7 +23,10 @@ export type Params = Record<string, string | number>;
 
 let lang: Lang = 'en';
 
-/** Set once, before the app's modules load (src/langInit.ts); tests set it per case. */
+/**
+ * Set once, before the app's modules load (src/langInit.ts); tests set it per case. Russian text needs its
+ * dictionary loaded first (`loadDictionary`); until then `t` and `tr` give English.
+ */
 export function setLang(l: Lang): void {
   lang = l;
 }
@@ -34,8 +38,25 @@ export function parseLang(v: string | null | undefined): Lang {
   return LANGS.find((l) => l === v) ?? 'en';
 }
 
+/** The Russian code texts, once loaded. */
+let RU: Partial<Record<Key, string>> = {};
 // Data entries win: a part named "Back" is the back panel, not the "Back" button.
-const RU_ALL: Record<string, string> = { ...ru, ...ruData };
+let RU_ALL: Record<string, string> = {};
+/** Keys with simple placeholders, by their text with each placeholder as a hole: `Top box {w}` → `Top box ␁`. */
+let shapes: Map<string, { names: string[]; value: string }> | null = null;
+
+/**
+ * Load a language's dictionary (ADR-229): a dynamic import of the Russian one, nothing for English. src/main.tsx
+ * awaits it before importing the app, so texts made at module load are in that language; tests that switch to
+ * Russian await it in their setup.
+ */
+export async function loadDictionary(l: Lang): Promise<void> {
+  if (l !== 'ru' || Object.keys(RU).length) return;
+  const m = await import('./ru');
+  RU = m.ru;
+  RU_ALL = { ...m.ru, ...m.ruData };
+  shapes = null;
+}
 
 /** Russian plural form: 0 one (1, 21), 1 few (2–4, 22–24), 2 many (5–20, 25…). */
 export function ruPlural(n: number): 0 | 1 | 2 {
@@ -69,13 +90,11 @@ export function english(key: string): string {
 
 /** The text in the current language. */
 export function t(key: Key, params?: Params): string {
-  return format(lang === 'ru' ? ru[key] : english(key), params);
+  return format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
 }
 
 const NUM = /\d+(?:[.,]\d+)?/g;
 const HOLE = '\u0001';
-/** Keys with simple placeholders, by their text with each placeholder as a hole: `Top box {w}` → `Top box ␁`. */
-let shapes: Map<string, { names: string[]; value: string }> | null = null;
 function shapeOf(text: string): { names: string[]; value: string } | undefined {
   if (!shapes) {
     shapes = new Map();

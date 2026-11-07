@@ -122,6 +122,13 @@ export function ResearchPage({
   };
   const st = useMemo(() => stats(view, marks), [view, marks]);
   const ctx: Ctx = { view, marks, open, go };
+  // The research papers load on first use (ADR-222).
+  if (!stored.length)
+    return (
+      <p className="loading" role="status">
+        {t('Loading…')}
+      </p>
+    );
   return (
     <main className="catalog-page research-page" aria-label={t('Feature Research & Catalog')}>
       <header className="catalog-head">

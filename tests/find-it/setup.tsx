@@ -11,9 +11,13 @@
 //   import them instead of copying them into a test file.
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, configure, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, vi } from 'vitest';
+
+// Pages and dialogs load on first use (React.lazy, ADR-222): in a test the first visit compiles the page's modules and
+// renders it after the click returns, so the find-by waits allow 10 s instead of 1 s.
+configure({ asyncUtilTimeout: 10000 });
 
 export const PHONE_WIDTH = 390;
 export const DESKTOP_WIDTH = 1280;
@@ -82,8 +86,10 @@ export async function renderApp(width: number) {
   globalThis.indexedDB = new IDBFactory();
   window.history.replaceState(null, '', '/');
   vi.resetModules();
-  // The languages stored on the device (ADR-153, ADR-157), read before the app's modules, as main.tsx does.
-  await import('../../src/langInit');
+  // The languages stored on the device (ADR-153, ADR-157), read before the app's modules, and the chosen language's
+  // dictionary loaded before them (ADR-229), as main.tsx does.
+  const { langReady } = await import('../../src/langInit');
+  await langReady;
   const { App } = await import('../../src/ui/App');
   const user = userEvent.setup();
   return { user, ...render(<App />) };

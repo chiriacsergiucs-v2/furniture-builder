@@ -215,6 +215,14 @@ jobs:
 
       - run: pnpm build:ci
 
+      # ADR-222: the first-paint `index` chunk stays free of three.js, the account backend and the research data, under
+      # its byte budget. ADR-234: the precache lists the shell, the seller catalog and the 3D chunks, under its budget.
+      # ADR-229: the Russian UI dictionary stays a lazy chunk; the entry chunk's Cyrillic stays under its budget.
+      # They read the build above; REQUIRE_DIST turns a missing `dist` into a failure, not a skip.
+      - run: pnpm exec vitest run tests/bundle-boundary.test.ts tests/precache.test.ts tests/bundle-cyrillic.test.ts
+        env:
+          REQUIRE_DIST: '1'
+
   # The one check that merge rules and the babysit skill wait on (ADR-197): green only when every job above passed,
   # or, for a docs-only change, when `checks` passed and the tests and build were skipped.
   verify:

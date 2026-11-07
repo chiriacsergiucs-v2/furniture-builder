@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { AccountUser, KnownAccount, RemoteRecord } from '../core/account';
+import { isHttpsOrigin } from '../core/origin';
 import type { ItemSyncState, LocalTable } from '../core/sync';
 
 /**
@@ -76,7 +77,8 @@ const write = (key: string, v: unknown) => {
 export const backendConfigured = (): boolean => {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return !!url && /^https:\/\//.test(url) && !!key;
+  // The same origin rule as `src/online/origins.ts` (ADR-233); the key is required too, as `client.ts` needs it.
+  return isHttpsOrigin(url) && !!key;
 };
 
 export const useAccount = create<AccountState>((set) => ({

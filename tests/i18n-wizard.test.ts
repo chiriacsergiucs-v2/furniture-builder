@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { hasRu } from '../src/core/i18n';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { hasRu, loadDictionary } from '../src/core/i18n';
 import { CONSTRUCTION_TYPES } from '../src/core/wizard/registry';
 import { STEPS } from '../src/core/wizard/steps';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 /** Every text the wizard data shows: step titles and hints, field labels and hints, options, types (ADR-155). */
 function wizardTexts(): string[] {

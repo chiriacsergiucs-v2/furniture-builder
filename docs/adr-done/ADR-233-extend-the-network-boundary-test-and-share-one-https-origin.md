@@ -1,7 +1,8 @@
 # ADR-233: Extend the network boundary test and share one https origin rule
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N238
@@ -57,12 +58,20 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) self-check cases for each new pattern (a remote `new Image`, `src="https://…"`,
+- [x] (test first) self-check cases for each new pattern (a remote `new Image`, `src="https://…"`,
       `import('https://…')`, `@supabase`, `navigator.serviceWorker`) fail before the patterns exist, pass after; the
-      scan of today's `src` stays empty.
-- [ ] (test first) a fixture-URL table (`undefined`, `''`, `https://`, `http://x.co`, `not a url`,
+      scan of today's `src` stays empty. Evidence: `tests/network-boundary.test.ts` › "the boundary test itself
+      catches each remote load (ADR-233)" (fails with the patterns emptied), "no module outside src/online loads a
+      remote picture, script or the backend library (ADR-233)", "only the PWA registration file reaches the service
+      worker (ADR-233)".
+- [x] (test first) a fixture-URL table (`undefined`, `''`, `https://`, `http://x.co`, `not a url`,
       `https://x.supabase.co`) gives the same answer from `onlineOrigins(...).length > 0` and from `isHttpsOrigin`;
-      `backendConfigured` is false without a key.
-- [ ] `tests/accounts*` and `find-it/accounts.test.tsx` pass unchanged.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+      `backendConfigured` is false without a key. Evidence: `tests/network-boundary.test.ts` › "one https origin rule
+      (ADR-233)" (6 fixture rows, `"https://"` red before the change: `backendConfigured` said true) and
+      "backendConfigured is false without the public key".
+- [x] `tests/accounts*` and `find-it/accounts.test.tsx` pass unchanged. Evidence: `tests/account-ui.test.tsx` and
+      `tests/find-it/accounts.test.tsx` green, unmodified (there is no `tests/accounts*` file; `account-ui` is the
+      match).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence (local, 2026-11-07):
+      1756 tests after vs 1746 before; the 9 tests that timed out under machine load passed when rerun alone.

@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { catalogFamilies, findFamily, insertVariant } from '../src/core/catalog';
 import {
   localRevision,
@@ -12,7 +12,7 @@ import {
   type TemplateProblemCode,
 } from '../src/core/catalog/local';
 import { templates } from '../src/core/design';
-import { setLang } from '../src/core/i18n';
+import { loadDictionary, setLang } from '../src/core/i18n';
 import * as db from '../src/persist/db';
 import { useDesign } from '../src/store/designStore';
 import { saveDesignToCatalog } from '../src/store/saveToCatalog';
@@ -22,6 +22,9 @@ import {
   saveTemplateEdit,
   useTemplates,
 } from '../src/store/templatesStore';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 // ADR-195: honest template revisions, visible storage errors and user wording for template problems.
 
