@@ -101,7 +101,24 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
-import { ARBridge, enterAR, exitAR, exportUsdz, turnAR, useARState, useARSupported } from './AR';
+import {
+  ARBridge,
+  cancelARCorner,
+  cycleARPoint,
+  enterAR,
+  exitAR,
+  exportUsdz,
+  keepTapsForButtons,
+  nudgeAR,
+  placeARAgain,
+  startARCorner,
+  toggleARStep,
+  turnAR,
+  turnARStep,
+  useARState,
+  useARSupported,
+  useARUi,
+} from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
@@ -367,6 +384,8 @@ export default function Viewer3D() {
   // A render (ADR-068) always uses the realistic look.
   const rendering = useRendering();
   const realistic = rendering || look === 'realistic';
+  // In AR, drei's contact shadows would render their depth pass through the XR camera: a wrong blob under the pieces.
+  const arOn = useARState() !== 'off';
   // Stage colours come from the stylesheet tokens so the canvas matches the light or dark theme.
   const bg = useMemo(() => {
     void theme;
@@ -550,17 +569,19 @@ export default function Viewer3D() {
             <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
             <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
             <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-            <ContactShadows
-              position={[
-                bounds.x * S + (bounds.w * S) / 2,
-                -0.0005,
-                bounds.z * S + (bounds.d * S) / 2,
-              ]}
-              scale={Math.max(bounds.w, bounds.d) * S * 2.2}
-              blur={2.4}
-              opacity={0.38}
-              far={1.2}
-            />
+            {!arOn && (
+              <ContactShadows
+                position={[
+                  bounds.x * S + (bounds.w * S) / 2,
+                  -0.0005,
+                  bounds.z * S + (bounds.d * S) / 2,
+                ]}
+                scale={Math.max(bounds.w, bounds.d) * S * 2.2}
+                blur={2.4}
+                opacity={0.38}
+                far={1.2}
+              />
+            )}
           </>
         )}
         <Panels
@@ -834,19 +855,38 @@ export default function Viewer3D() {
  */
 function ThreeMore({ name }: { name: string }) {
   const canAR = useARSupported();
-  const ar = useARState();
+  const arUi = useARUi();
+  const ar = arUi.state;
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const overlay = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDetailsElement>(null);
-  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect').
+  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect'); taps elsewhere must.
   useEffect(() => {
     const el = overlay.current;
     if (!el) return;
-    const stop = (e: Event) => e.preventDefault();
-    el.addEventListener('beforexrselect', stop);
-    return () => el.removeEventListener('beforexrselect', stop);
+    el.addEventListener('beforexrselect', keepTapsForButtons);
+    return () => el.removeEventListener('beforexrselect', keepTapsForButtons);
   }, []);
+  // AR hints (ADR-213 to ADR-215): look for the floor first, then what a tap does in the current mode.
+  const hint =
+    ar === 'placing'
+      ? !arUi.found
+        ? t('Looking for the floor — move the phone slowly.')
+        : arUi.corner === 'first'
+          ? t('Tap the floor in the room corner.')
+          : arUi.corner === 'second'
+            ? t('Tap the floor along the wall the back goes against.')
+            : t('Tap to place it on the outline.')
+      : ar === 'placed'
+        ? t('Placed at full size. Fine-tune with the arrows, or Place again.')
+        : '';
+  const pointName =
+    arUi.point === 'centre'
+      ? t('Centre')
+      : arUi.point === 'back-left'
+        ? t('Back-left')
+        : t('Back-right');
   return (
     <>
       <details className="menu three-more" ref={menu}>
@@ -884,21 +924,82 @@ function ThreeMore({ name }: { name: string }) {
           {note}
         </span>
       )}
-      <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
-        <p className="ar-hint" role="status">
-          {ar === 'placing' ? t('Tap the floor to place') : ''}
-        </p>
-        <div className="ar-actions">
-          {ar === 'placed' && (
-            <button type="button" className="btn" onClick={turnAR}>
-              {t('Turn 90° ↻')}
-            </button>
-          )}
-          <button type="button" className="btn solid" onClick={exitAR}>
-            {t('Exit AR')}
-          </button>
-        </div>
-      </div>
+      {/* On the page body, so no toolbar stacking context puts it under the app bar (in-page overlay). */}
+      {createPortal(
+        <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
+          <p className="ar-hint" role="status">
+            {hint}
+          </p>
+          <div className="ar-actions">
+            {ar === 'placed' && (
+              <div className="ar-pad" role="group" aria-label={t('Fine-tune')}>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('Turn left by the step')}
+                  onClick={() => turnARStep(false)}
+                >
+                  ↺
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('back')}>
+                  {t('↑ Back')}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('Turn right by the step')}
+                  onClick={() => turnARStep(true)}
+                >
+                  ↻
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('left')}>
+                  {t('← Left')}
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('forward')}>
+                  {t('↓ Forward')}
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('right')}>
+                  {t('→ Right')}
+                </button>
+              </div>
+            )}
+            <div className="ar-row">
+              {ar === 'placing' && !arUi.corner && (
+                <>
+                  <button type="button" className="btn" onClick={cycleARPoint}>
+                    {t('Point: {name}', { name: pointName })}
+                  </button>
+                  <button type="button" className="btn" onClick={startARCorner}>
+                    {t('Room corner')}
+                  </button>
+                </>
+              )}
+              {ar === 'placing' && arUi.corner && (
+                <button type="button" className="btn" onClick={cancelARCorner}>
+                  {t('Cancel corner')}
+                </button>
+              )}
+              {ar === 'placed' && (
+                <>
+                  <button type="button" className="btn" onClick={toggleARStep}>
+                    {arUi.fine ? t('Step: 1 cm / 1°') : t('Step: 10 cm / 15°')}
+                  </button>
+                  <button type="button" className="btn" onClick={turnAR}>
+                    {t('Turn 90° ↻')}
+                  </button>
+                  <button type="button" className="btn" onClick={placeARAgain}>
+                    {t('Place again')}
+                  </button>
+                </>
+              )}
+              <button type="button" className="btn solid" onClick={exitAR}>
+                {t('Exit AR')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </>
   );
 }
@@ -1147,8 +1248,9 @@ function Occlusion() {
     composer.setSize(size.width, size.height);
   }, [composer, gl, size.width, size.height]);
   useEffect(() => () => composer.dispose(), [composer]);
-  // Priority 1 takes over drawing from the default renderer.
-  useFrame(() => composer.render(), 1);
+  // Priority 1 takes over drawing from the default renderer. In AR the composer's passes would draw through the XR
+  // camera into its own targets and show nothing, so AR draws the scene directly.
+  useFrame(() => (gl.xr.isPresenting ? gl.render(scene, camera) : composer.render()), 1);
   return null;
 }
 

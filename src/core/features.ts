@@ -943,6 +943,26 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-208'],
             checked: '2026-11-06',
           },
+          {
+            name: 'AR furniture sits on the real floor',
+            detail:
+              'Steady floor-only hits, anchors so it does not drift, a soft shadow under it, sharper edges.',
+            adrs: ['ADR-213'],
+            checked: '2026-11-07',
+          },
+          {
+            name: 'Place in AR by a corner or into a room corner',
+            detail:
+              'A footprint outline, a Point switch (Centre, Back-left, Back-right) and Room corner by two floor taps.',
+            adrs: ['ADR-214'],
+            checked: '2026-11-07',
+          },
+          {
+            name: 'Fine-tune in AR and see its size',
+            detail: 'Move 1 cm or 10 cm, turn 1° or 15°, Place again, and W × H × D labels in mm.',
+            adrs: ['ADR-215'],
+            checked: '2026-11-07',
+          },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },
         ],

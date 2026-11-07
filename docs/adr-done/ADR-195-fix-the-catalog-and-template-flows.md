@@ -75,7 +75,7 @@ Every text added or changed gets its Russian entry (ADR-153).
 - [x] A rejected template write or read shows an alert on the Catalog page and keeps the draft.
 - [x] Searching "flap" shows chip and heading counts equal to the cards shown.
 - [ ] At 390 px under 30 % of cards show "More"; the page stays under 30 000 px; one meta line per card. — Not met:
-      178 of 183 cards (97.3 %) still show "More"; the page (29 734 px) and one meta line per card are met (G-477).
+      178 of 183 cards (97.3 %) still show "More"; the page (29 734 px) and one meta line per card are met (G-483).
 - [x] "Save this piece as a template" is absent with no design open, else opens the name/room/type form.
 - [x] A draft with no rooms or no name shows the user sentence in English and Russian; no raw validator string renders.
 - [x] A safety-gated card shows "I check it myself"; tapping it enables Open and ticks the catalog switch.
@@ -96,7 +96,7 @@ Run locally on 2026-11-06 on branch `adr-195-catalog-template-flows` (not merged
 - Item 3: chip and heading counts count matched variants; the heading uses a plural ("1 item").
 - Item 4: Open under the picture (column 1, rows 3–4), picture 96 × 34 px, no row gap, so a card keeps its height
   (92 px at 390 px, as before). Text column 214 px at 390 px (281 px at 1280) instead of ≈150. Cards without a
-  picture keep the old layout. The "More" target is not reached: the meta line needs 272 px at the median (G-477).
+  picture keep the old layout. The "More" target is not reached: the meta line needs 272 px at the median (G-483).
 - Item 5: "Save this piece as a template" is hidden when no design is open and opens the shared Save to catalog
   form (`CatalogSaveForm`: name, room, type); the confirmation links to the new family.
 - Item 6: `validateLocalTemplate` returns codes; `templateProblemText` maps each to a `t()` sentence with a Russian
