@@ -1,10 +1,11 @@
 import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Html, Line, OrbitControls } from '@react-three/drei';
 import {
   Fragment,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,6 +25,7 @@ import {
   Float32BufferAttribute,
   FrontSide,
   type Intersection,
+  type Material,
   Matrix4,
   Mesh,
   Path,
@@ -81,7 +83,7 @@ import {
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
-import { boxUvs, finishLook, planeUvs } from '../core/surface';
+import { boxUvs, planeUvs } from '../core/surface';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
@@ -96,6 +98,19 @@ import { useClearances } from '../store/clearances';
 import type { ClearanceZone } from '../core/envelopes';
 import { useSnap } from '../store/useSnap';
 import { useViewStore } from '../store/viewStore';
+import {
+  boxOf,
+  edgePositions,
+  lookKey,
+  makeMaterial,
+  MergedEdges,
+  panelMatrix,
+  Pool,
+  SELECT,
+  sizeKey,
+  type BoardLook,
+  type EdgeItem,
+} from './panelResources';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
@@ -127,7 +142,6 @@ import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, MaterialImage, Panel, Yaw } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
-const SELECT = '#2d5b4c';
 const HIGHLIGHT = '#f2c230';
 
 const geoCache = new WeakMap<Panel, ExtrudeGeometry>();
@@ -1078,7 +1092,6 @@ function useDrillItem() {
 }
 
 /** How much of a panel outside the selected space shows (ADR-087). */
-const FADED = 0.28;
 
 /**
  * The selected space's or piece's box as a thick outline (ADR-087), drawn over the panels so it shows through the
@@ -2051,6 +2064,24 @@ function Panels({
     setLit(litIds?.length ?? 0);
     return () => setLit(null);
   }, [litIds, setLit]);
+  // Shared materials and boxes (ADR-238): one per look and per size, kept while a panel uses them.
+  const pools = useMemo(
+    () => ({ materials: new Pool<Material>(), boxes: new Pool<BufferGeometry>() }),
+    [],
+  );
+  const usedLooks = new Set<string>();
+  const usedSizes = new Set<string>();
+  const materialFor = (l: BoardLook) => {
+    const k = lookKey(l);
+    usedLooks.add(k);
+    return pools.materials.get(k, () => makeMaterial(l));
+  };
+  const boxFor = (b: Box) => {
+    usedSizes.add(sizeKey(b.w, b.h, b.d));
+    return boxOf(pools.boxes, b.w, b.h, b.d);
+  };
+  // The Simple look's panel edges, merged into one line per edge style (ADR-238).
+  const edgeItems: EdgeItem[] = [];
   const isFaded = (p: Panel) => {
     if (litSet && !litSet.has(p.id)) return true;
     if (!fadeBox) return false;
@@ -2058,6 +2089,171 @@ function Panels({
     const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;
     return !own || !inSelection(fadeBox, own.box);
   };
+
+  const meshes = panels
+    .filter((p) => showFronts || !FRONT.has(p.role))
+    .map((p) =>
+      yawed(
+        p,
+        (() => {
+          const b = p.box;
+          // The whole piece selected (ADR-083) tints every panel.
+          const selected =
+            !plain &&
+            (view.mode === 'project'
+              ? !preview && selectedIds.includes(p.nodeId.split(':')[0])
+              : selectedId === null || p.nodeId === selectedId);
+          const lit = !plain && hl.has(p.id);
+          const faded = isFaded(p);
+          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+          const tinted = selected && !outline;
+          const own = !!outline && p.nodeId === ownId;
+          // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
+          const img = images.get(p.materialId);
+          const map = img ? textures.get(img.id) : undefined;
+          const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
+          const color = lit
+            ? HIGHLIGHT
+            : tinted
+              ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
+              : base;
+          // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
+          const follow = followUpGeometry(p);
+          const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
+          const material = materialFor({
+            realistic,
+            color,
+            map: map ?? null,
+            faded,
+            side,
+            back: p.role === 'back',
+            finish: finishes.get(p.materialId),
+          });
+          // Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+          // not drawn (an edge outline is a mesh the occlusion pass would smear); the selection outline is.
+          const edges = (g: BufferGeometry, centred: boolean) => {
+            if (!realistic)
+              edgeItems.push({
+                positions: edgePositions(g),
+                matrix: panelMatrix(p, centred),
+                selected: tinted || own,
+                faded,
+              });
+          };
+          // Outside in, one level per tap at the hit point (ADR-083).
+          const onClick = (e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation();
+            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
+            if (drag.clicked() || preview) return;
+            const at = hitToMm(e.point, built.get(p.id), exploded);
+            const n = e.nativeEvent;
+            if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
+              toggleItem(p.nodeId.split(':')[0]);
+            else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+            else tapPiece(at.x, at.y);
+          };
+          const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
+          // A board with a picture has its own texture coordinates; a plain box shares its size's geometry.
+          // A mesh never switches between the two (keyed apart): a removed geometry prop would reset it.
+          const box = map && img ? null : boxFor(b);
+          const geometry = box ? null : <PictureGeometry p={p} img={img!} />;
+          const shared = box ? { geometry: box } : {};
+          const meshKey = box ? p.id : `${p.id}:picture`;
+          if (follow) {
+            edges(follow, false);
+            return (
+              <mesh
+                key={p.id}
+                geometry={follow}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              />
+            );
+          }
+          if (p.shape?.kind === 'profile') {
+            // A picture's copy of the outline has the same edges as the outline.
+            edges(profileGeometry(p), false);
+            return map && img ? (
+              <mesh
+                key={p.id}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
+                <PictureGeometry p={p} img={img} />
+              </mesh>
+            ) : (
+              <mesh
+                key={p.id}
+                geometry={profileGeometry(p)}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              />
+            );
+          }
+          // A picture's box has the same edges as the plain box of its size.
+          edges(box ?? boxOf(pools.boxes, b.w, b.h, b.d), true);
+          if (!box) usedSizes.add(sizeKey(b.w, b.h, b.d));
+          const mesh = (
+            <mesh
+              key={meshKey}
+              position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+              {...shared}
+              material={material}
+              onClick={onClick}
+              onPointerDown={onDown}
+              castShadow={realistic}
+              receiveShadow={realistic}
+            >
+              {geometry}
+            </mesh>
+          );
+          if (p.shape?.kind !== 'tilt') return mesh;
+          // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
+          const s = p.shape,
+            pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
+            a = (s.angleDeg * Math.PI) / 180;
+          return (
+            <group
+              key={p.id}
+              position={[pv[0] * S, pv[1] * S, pv[2] * S]}
+              rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}
+            >
+              <mesh
+                position={[
+                  (b.x + b.w / 2 - pv[0]) * S,
+                  (b.y + b.h / 2 - pv[1]) * S,
+                  (b.z + b.d / 2 - pv[2]) * S,
+                ]}
+                key={meshKey}
+                {...shared}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
+                {geometry}
+              </mesh>
+            </group>
+          );
+        })(),
+      ),
+    );
+  // After each commit the looks and sizes this render did not use are disposed; everything on unmount.
+  useEffect(() => {
+    pools.materials.sweep(usedLooks);
+    pools.boxes.sweep(usedSizes);
+  });
+  useEffect(() => () => (pools.materials.clear(), pools.boxes.clear()), [pools]);
 
   return (
     <group>
@@ -2072,179 +2268,40 @@ function Panels({
         </YawGroup>
       )}
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
-      {panels
-        .filter((p) => showFronts || !FRONT.has(p.role))
-        .map((p) =>
-          yawed(
-            p,
-            (() => {
-              const b = p.box;
-              // The whole piece selected (ADR-083) tints every panel.
-              const selected =
-                !plain &&
-                (view.mode === 'project'
-                  ? !preview && selectedIds.includes(p.nodeId.split(':')[0])
-                  : selectedId === null || p.nodeId === selectedId);
-              const lit = !plain && hl.has(p.id);
-              const faded = isFaded(p);
-              // With the outline, only the selected space's own panels are marked (green edges), and no tint.
-              const tinted = selected && !outline;
-              const own = !!outline && p.nodeId === ownId;
-              // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
-              const img = images.get(p.materialId);
-              const map = img ? textures.get(img.id) : undefined;
-              const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
-              const color = lit
-                ? HIGHLIGHT
-                : tinted
-                  ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
-                  : base;
-              // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
-              const follow = followUpGeometry(p);
-              const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
-              const look = realistic ? (
-                <>
-                  {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
-                  not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
-                  <meshPhysicalMaterial
-                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                    map={map ?? null}
-                    color={color}
-                    metalness={0}
-                    {...finishLook(finishes.get(p.materialId))}
-                    transparent={faded}
-                    opacity={faded ? FADED : 1}
-                    depthWrite={!faded}
-                    side={side}
-                  />
-                </>
-              ) : (
-                <>
-                  <meshStandardMaterial
-                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                    map={map ?? null}
-                    color={color}
-                    roughness={0.78}
-                    metalness={0}
-                    transparent={p.role === 'back' || faded}
-                    opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
-                    depthWrite={!faded}
-                    side={side}
-                  />
-                  <Edges
-                    threshold={15}
-                    color={tinted || own ? SELECT : '#3b403c'}
-                    lineWidth={tinted || own ? 1.6 : 1}
-                    transparent={faded}
-                    opacity={faded ? FADED : 1}
-                  />
-                </>
-              );
-              // Outside in, one level per tap at the hit point (ADR-083).
-              const onClick = (e: ThreeEvent<MouseEvent>) => {
-                e.stopPropagation();
-                // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-                if (drag.clicked() || preview) return;
-                const at = hitToMm(e.point, built.get(p.id), exploded);
-                const n = e.nativeEvent;
-                if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
-                  toggleItem(p.nodeId.split(':')[0]);
-                else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
-                else tapPiece(at.x, at.y);
-              };
-              const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
-              const geometry =
-                map && img ? (
-                  <PictureGeometry p={p} img={img} />
-                ) : (
-                  <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-                );
-              if (follow)
-                return (
-                  <mesh
-                    key={p.id}
-                    geometry={follow}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {look}
-                  </mesh>
-                );
-              if (p.shape?.kind === 'profile') {
-                return map && img ? (
-                  <mesh
-                    key={p.id}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    <PictureGeometry p={p} img={img} />
-                    {look}
-                  </mesh>
-                ) : (
-                  <mesh
-                    key={p.id}
-                    geometry={profileGeometry(p)}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {look}
-                  </mesh>
-                );
-              }
-              const mesh = (
-                <mesh
-                  key={p.id}
-                  position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-                  onClick={onClick}
-                  onPointerDown={onDown}
-                  castShadow={realistic}
-                  receiveShadow={realistic}
-                >
-                  {geometry}
-                  {look}
-                </mesh>
-              );
-              if (p.shape?.kind !== 'tilt') return mesh;
-              // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
-              const s = p.shape,
-                pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
-                a = (s.angleDeg * Math.PI) / 180;
-              return (
-                <group
-                  key={p.id}
-                  position={[pv[0] * S, pv[1] * S, pv[2] * S]}
-                  rotation={[
-                    s.axis === 'x' ? a : 0,
-                    s.axis === 'y' ? a : 0,
-                    s.axis === 'z' ? a : 0,
-                  ]}
-                >
-                  <mesh
-                    position={[
-                      (b.x + b.w / 2 - pv[0]) * S,
-                      (b.y + b.h / 2 - pv[1]) * S,
-                      (b.z + b.d / 2 - pv[2]) * S,
-                    ]}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {geometry}
-                    {look}
-                  </mesh>
-                </group>
-              );
-            })(),
-          ),
-        )}
+      {meshes}
+      {!realistic && (
+        <PanelEdges
+          items={edgeItems}
+          deps={[
+            panels,
+            showFronts,
+            edgeItems.map((i) => (i.selected ? 1 : 0) + (i.faded ? 2 : 0)).join(''),
+          ]}
+        />
+      )}
     </group>
+  );
+}
+
+/**
+ * The Simple look's panel edges (ADR-238): one line per edge style for the whole model, built again only when the
+ * panels or their styles change, the old lines disposed then; never picked (ADR-014).
+ */
+function PanelEdges({ items, deps }: { items: EdgeItem[]; deps: readonly unknown[] }) {
+  const size = useThree((s) => s.size);
+  const [merged] = useState(() => new MergedEdges());
+  const lines = merged.update(deps, () => items);
+  useEffect(() => () => merged.dispose(), [merged]);
+  useLayoutEffect(() => {
+    for (const l of lines) l.material.resolution.set(size.width, size.height);
+    invalidate();
+  }, [lines, size]);
+  return (
+    <>
+      {lines.map((l) => (
+        <primitive key={l.uuid} object={l} />
+      ))}
+    </>
   );
 }
 

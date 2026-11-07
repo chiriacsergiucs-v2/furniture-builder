@@ -58,11 +58,22 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) browser find-it `tools/move-3d/find-it.mjs` and `tools/drill-select/find-it.mjs` pass on the
-      production build at 390 and 1280 px before; the same after.
-- [ ] (test first) a count test (React Three test renderer or a pure helper over the panel list): distinct materials
-      ≤ distinct keys and geometries ≤ distinct sizes for a 40-panel model.
-- [ ] Selecting one panel highlights only that panel (browser script assertion).
-- [ ] Changing the model disposes the old merged edges (a dispose spy in the count test).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) browser find-it `tools/move-3d/find-it.mjs` and `tools/drill-select/find-it.mjs` pass on the
+      production build at 390 and 1280 px before; the same after. Evidence (run 2026-11-07, `vite preview`): move-3d
+      32/32 before and after; drill-select 25/26 before and after (the one failure, "390px project: a tap on the
+      selected piece …", is outside the 3D view and fails before the change too); assembly 30, connections 65,
+      connections-typed 44 unchanged. 3D screenshots at 390 and 1280 px (Simple, Realistic, selected piece, selected
+      space) match apart from a few anti-aliased edge pixels where coplanar edges overlap.
+- [x] (test first) a count test (React Three test renderer or a pure helper over the panel list): distinct materials
+      ≤ distinct keys and geometries ≤ distinct sizes for a 40-panel model. (`tests/viewer-resources.test.ts`, "a
+      40-panel model: materials ≤ distinct looks, geometries ≤ distinct sizes"; one merged line for the 40 panels'
+      480 edges in "one line per edge style for the whole model".)
+- [x] Selecting one panel highlights only that panel (browser script assertion). (`tools/drill-select/find-it.mjs`,
+      "3D: selecting one space highlights only its panels": selection-colour pixels 4872 / 4291 / 5990 for bay, space
+      and whole piece, the same counts before and after the change.)
+- [x] Changing the model disposes the old merged edges (a dispose spy in the count test). (`tests/viewer-resources.test.ts`,
+      "one line per edge style for the whole model; a new model disposes the old lines".)
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Locally: lint, format:check,
+      typecheck, build, docs:check and `vitest related` over the changed files (64 files, 265 tests); the full suite
+      runs in CI. No test was removed.
