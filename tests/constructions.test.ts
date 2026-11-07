@@ -555,6 +555,7 @@ describe('build only what the user set, and say why a part cannot be built (ADR-
       });
       expect(m.panels.filter((p) => p.role === 'door' || p.role === 'drawer-front')).toEqual([]);
       expect(m.diagnostics.map((x) => x.code)).not.toContain('door-small');
+      expect(m.diagnostics.map((x) => x.code)).not.toContain('flap-small');
       for (const p of m.panels)
         expect(Math.min(p.box.w, p.box.h, p.box.d), p.id).toBeGreaterThan(0);
       for (const r of cutlist(m, d.materials))

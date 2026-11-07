@@ -1,3 +1,4 @@
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx } from './i18n';
 import { buildCabinet, type PartialModel } from './cabinet';
 import { pedestalRoot } from './design';
@@ -40,9 +41,9 @@ export function buildDesk(
   materials: Map<string, Material>,
 ): PartialModel {
   const out: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
-  const err = (code: string, message: string) =>
+  const err = (code: DiagnosticCode, message: string) =>
     out.diagnostics.push({ severity: 'error', code, message, nodeId: deskId });
-  const warn = (code: string, message: string) =>
+  const warn = (code: DiagnosticCode, message: string) =>
     out.diagnostics.push({ severity: 'warning', code, message, nodeId: deskId });
   const top = materials.get(p.topMaterialId),
     body = materials.get(p.bodyMaterialId);

@@ -1,7 +1,8 @@
 # ADR-225: Give every diagnostic a stable code
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N230
@@ -61,11 +62,29 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) golden: every diagnostic (`severity`, `code`, `message` in English and Russian) from the catalog
+- [x] (test first) golden: every diagnostic (`severity`, `code`, `message` in English and Russian) from the catalog
       variants and the sample projects written on `main`; after, identical except codes split on purpose (listed).
-- [ ] (test first) a test asserts every emitted code is in `DiagnosticCode` and no two different messages share one.
-- [ ] `tsc` fails on an unknown code literal (checked with a scratch line, removed).
-- [ ] Tests that matched a message now match a code (count before and after in the backlog row).
-- [ ] `clearance.ts` results are byte-identical for the catalog variants; each remaining regex cites G-492.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      Evidence: `tests/diagnostic-golden.test.ts` "every diagnostic of the catalog, the templates and the samples
+      matches the golden" (436 rows, `tests/fixtures/diagnostics-golden.json`, written and passing on the unchanged
+      source; also squeezed ×0.25 and stretched ×3 copies and the samples piled up and in a small room). Codes split
+      on purpose (`SPLIT` in the test): `door-small` → `flap-small` (flaps), `drawer-heights` → `drawer-heights-count`
+      (one height per drawer), `space-too-small` → `inset-doors-depth` (no depth behind inset doors), `corner-size` →
+      `diagonal-proportion` (diagonal width vs depth).
+- [x] (test first) a test asserts every emitted code is in `DiagnosticCode` and no two different messages share one.
+      Evidence: `tests/diagnostic-codes.test.ts` (every code the source gives is a DiagnosticCode; every listed code is
+      given somewhere; no two different problems share a code). Codes kept with several wordings of one problem are
+      listed with the reason in `SAME_PROBLEM`; the closest calls are G-505.
+- [x] `tsc` fails on an unknown code literal (checked with a scratch line, removed). Evidence: scratch file gave
+      `TS2322: Type '"no-such-code"' is not assignable to type 'DiagnosticCode'`; kept as a `@ts-expect-error` line in
+      `tests/diagnostic-codes.test.ts`, so `pnpm typecheck` fails if it ever compiles.
+- [x] Tests that matched a message now match a code (count before and after in the backlog row).
+- [x] `clearance.ts` results are byte-identical for the catalog variants; each remaining regex cites G-492. Evidence:
+      `tests/diagnostic-golden.test.ts` "opening clearances of every catalog variant and template match the golden"
+      (`tests/fixtures/clearance-golden.json`). No regex could go: each one tells apart panels of the same role
+      (sliding door, flap, lift-up flap, fixed front), so all four stay and cite G-492.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      2026-11-07 on wip/b3d: lint, format:check, typecheck, build and docs:check pass; `pnpm test` 1739 passed of 1752
+      (1746 before), 13 failed, all 30 s find-it timeouts or the roomfill < 100 ms timing test on a machine at load
+      average ≈ 30, failing the same way on an unchanged copy (see N230). Left unticked until a run on a quiet machine
+      or CI. Evidence: CI run 42354663319 (PR #200) green on every job.

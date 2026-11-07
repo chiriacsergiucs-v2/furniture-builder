@@ -3,6 +3,7 @@ import { catalogFamilies } from '../core/catalog';
 import { applyLayout, layoutPresets } from '../core/catalog/presets';
 import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet';
 import { RULE_DEFAULTS } from '../core/rules';
+import { seatingDefaults } from '../core/frame';
 import { t, tr } from '../core/i18n';
 import { boardLabel } from '../core/boards';
 import type {
@@ -736,13 +737,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
                   checked={!!p.recline}
                   onChange={(v) =>
                     set({
-                      recline: v
-                        ? {
-                            positions: [100, 120, 150],
-                            at: 0,
-                            footrest: { length: 380, angles: [0, 45, 90] },
-                          }
-                        : null,
+                      recline: v ? seatingDefaults(p.width).recline : null,
                     })
                   }
                 />
@@ -756,12 +751,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
                       recline: {
                         ...p.recline!,
                         footrest: v
-                          ? {
-                              length: 380,
-                              angles: p.recline!.positions.map((_, i, a) =>
-                                Math.round((90 * i) / Math.max(1, a.length - 1)),
-                              ),
-                            }
+                          ? seatingDefaults(p.width, undefined, p.recline!.positions).footrest
                           : null,
                       },
                     })
@@ -773,7 +763,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
                   label={t('Arm rests')}
                   checked={!!p.arms}
                   onChange={(v) =>
-                    set({ arms: v ? { height: (p.back?.seatHeight ?? 450) + 220 } : null })
+                    set({ arms: v ? seatingDefaults(p.width, p.back?.seatHeight).arms : null })
                   }
                 />
               )}
@@ -792,13 +782,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
                   checked={!!p.backrest}
                   onChange={(v) =>
                     set({
-                      backrest: v
-                        ? {
-                            length: Math.min(650, Math.floor(p.width / 3)),
-                            positions: [100, 120, 150],
-                            at: 2,
-                          }
-                        : null,
+                      backrest: v ? seatingDefaults(p.width).backrest : null,
                     })
                   }
                 />

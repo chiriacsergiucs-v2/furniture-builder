@@ -92,7 +92,9 @@ describe('common panel across gaps, corners and desks (ADR-189)', () => {
     expect(errors(pl)).toEqual([]);
     // Doors are checked against the top's pieces, not its enclosing outline: none hits the common top.
     expect(
-      buildProjectModel(pl).diagnostics.filter((d) => /hits Common top/.test(d.message)),
+      buildProjectModel(pl).diagnostics.filter(
+        (d) => d.code === 'opening-blocked' && /hits Common top/.test(d.message),
+      ),
     ).toEqual([]);
     const rows = buildProjectModel(pl).model.panels.filter((x) => x.role === 'top');
     expect(rows.map((x) => x.id)).toEqual(['common:c']);

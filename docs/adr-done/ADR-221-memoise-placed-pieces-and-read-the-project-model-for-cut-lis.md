@@ -1,7 +1,8 @@
 # ADR-221: Memoise placed pieces and read the project model for cut list and hardware
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N226
@@ -55,11 +56,16 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) golden: `projectCutlist` and `projectHardware` rows for every sample project (`mobilaLiving` and
-      the others in the samples) written to a fixture on `main`; byte-identical after the change.
-- [ ] (test first) `buildModel` spied with a counter: one `commitProject` plus `projectCutlist` and `projectHardware`
-      on a 30-item project makes at most 31 calls (red before).
-- [ ] Placing the same item twice returns the same object; a changed item (new identity) gets a new result.
-- [ ] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) golden: `projectCutlist` and `projectHardware` rows for every sample project (`mobilaLiving` and
+      the others in the samples) written to a fixture on `main`; byte-identical after the change. Evidence: `tests/project-rows-golden.test.ts` › "rows and hardware of every
+      sample project are byte-identical to the golden file" (fixture `tests/fixtures/project-rows.golden.json`, written
+      before the change; the two samples plus a run with a run plinth, common top, shared sides, run handle and a piece
+      placed above).
+- [x] (test first) `buildModel` spied with a counter: one `commitProject` plus `projectCutlist` and `projectHardware`
+      on a 30-item project makes at most 31 calls (red before). Evidence: `tests/place-memo.test.ts` › "one commit plus the cut list and
+      hardware of a 30-item project build each piece once": 90 calls before, 30 after.
+- [x] Placing the same item twice returns the same object; a changed item (new identity) gets a new result. Evidence: `tests/place-memo.test.ts` › "placing
+      the same item twice returns the same object; a changed item gets a new result".
+- [x] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes (9 tests, 2026-11-07).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42354663319 (PR #200) green on every job.

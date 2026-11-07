@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix, relative } from 'node:path';
+import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
 // ADR-219: the layer rules of CLAUDE.md, checked on the source itself, so CI fails even if eslint.config.js (which
@@ -137,4 +138,80 @@ describe('layer boundaries (ADR-219)', () => {
     expect(violation('src/ui/a.tsx', 'react')).toBeNull();
     expect(violation('src/core/a.ts', './types')).toBeNull();
   });
+});
+
+// ADR-228: the nesting engine (place, validate, types) is an internal module. Its three files import only each
+// other, and only src/core reaches place or validate; the app goes through core/nesting. Checked on the files
+// themselves and through ESLint (`pnpm lint`), each with a self-check that a forbidden import is caught.
+describe('nesting engine boundary (ADR-228)', () => {
+  const engine = NESTING.map((f) => `${f}.ts`);
+  /** Engine files' imports that leave the engine. */
+  const outside = (file: string, text: string): string[] =>
+    specifiers(text).filter(
+      (s) => !s.startsWith('./') || !NESTING.includes(posix.join(posix.dirname(file), s.slice(2))),
+    );
+
+  it('the three engine files import only each other', () => {
+    const hits = engine.flatMap((file) =>
+      outside(file, readFileSync(join(ROOT, file), 'utf8')).map((s) => `${file} → ${s}`),
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('only src/core imports place or validate', () => {
+    const hits = SOURCES.filter(({ file }) => !file.startsWith('src/core/')).flatMap(
+      ({ file, text }) =>
+        specifiers(text)
+          .filter((s) => /(^|\/)core\/nesting\/(place|validate)$/.test(s))
+          .map((s) => `${file} → ${s}`),
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('the file scan catches an import leaving the engine', () => {
+    const f = 'src/core/nesting/place.ts';
+    expect(
+      outside(f, "import { a } from './validate';\nimport type { T } from './types';"),
+    ).toEqual([]);
+    expect(outside(f, "import { x } from './index';")).toEqual(['./index']);
+    expect(outside(f, "import { x } from './fromDesign';")).toEqual(['./fromDesign']);
+    expect(outside(f, "import { x } from '../cutlist';")).toEqual(['../cutlist']);
+    expect(outside(f, "export * from '../types';")).toEqual(['../types']);
+    expect(outside(f, "const m = await import('./worker');")).toEqual(['./worker']);
+    expect(outside(f, "import { x } from 'some-package';")).toEqual(['some-package']);
+    expect(violation('src/main.tsx', './core/nesting/validate')).not.toBeNull();
+    expect(violation('src/store/a.ts', '../core/nesting')).toBeNull();
+    expect(violation('src/core/projectEstimate.ts', './nesting/place')).toBeNull();
+  });
+
+  it('pnpm lint enforces the same boundary', async () => {
+    const eslint = new ESLint({ cwd: ROOT });
+    const errors = async (filePath: string, code: string) =>
+      (await eslint.lintText(code, { filePath: join(ROOT, filePath) }))
+        .flatMap((r) => r.messages)
+        .filter((m) => m.ruleId === 'no-restricted-imports').length;
+    for (const file of engine) {
+      expect(await errors(file, "import { a } from './validate';\nexport const b = a;\n")).toBe(0);
+      for (const spec of ['./index', './fromDesign', './worker', '../cutlist', '../types', 'react'])
+        expect(
+          await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`),
+        ).toBeGreaterThan(0);
+    }
+    for (const file of ['src/ui/a.tsx', 'src/store/a.ts', 'src/main.tsx', 'src/langInit.ts']) {
+      const up = file.split('/').length === 2 ? './core' : '../core';
+      expect(
+        await errors(file, `import { nest } from '${up}/nesting';\nexport const b = nest;\n`),
+      ).toBe(0);
+      for (const m of ['place', 'validate'])
+        expect(
+          await errors(file, `import { a } from '${up}/nesting/${m}';\nexport const b = a;\n`),
+        ).toBe(1);
+    }
+    expect(
+      await errors(
+        'src/core/projectEstimate.ts',
+        "import { nest } from './nesting/place';\nexport const b = nest;\n",
+      ),
+    ).toBe(0);
+  }, 60_000);
 });

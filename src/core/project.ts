@@ -1136,17 +1136,50 @@ const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
   return yaw ? { ...b, yaw } : b;
 };
 
-export function placeItem(
-  item: ProjectItem,
-  opts?: {
-    noPlinth?: boolean;
-    common?: CommonBuild;
-    shared?: SharedBuild;
-    sharedPins?: PinRows[];
-    /** The room, for backs cut around its pipes and outlets (ADR-205). */
-    room?: Room;
-  },
-): PlacedPiece {
+/** How `placeItem` builds a piece: inside a run plinth, a common top or bottom, shared sides, a room. */
+interface PlaceOptions {
+  noPlinth?: boolean;
+  common?: CommonBuild;
+  shared?: SharedBuild;
+  sharedPins?: PinRows[];
+  /** The room, for backs cut around its pipes and outlets (ADR-205). */
+  room?: Room;
+}
+
+/**
+ * Placed pieces by item and by the options they were built with (ADR-221). Items are immutable store snapshots, so the
+ * item object is a valid key; an entry goes with its item. Never mutate an item or a placed piece in place.
+ */
+const placed = new WeakMap<ProjectItem, Map<string, PlacedPiece>>();
+
+/** The options `placeItem` reads, as a string: the same key means the same result for the same item. */
+function placeKey(item: ProjectItem, opts: PlaceOptions | undefined): string {
+  if (!opts) return '';
+  return [
+    opts.noPlinth ? 'n' : '',
+    opts.common ? `c${JSON.stringify(opts.common)}` : '',
+    opts.shared ? `s${JSON.stringify(opts.shared)}` : '',
+    opts.sharedPins?.length ? `p${JSON.stringify(opts.sharedPins)}` : '',
+    // The room is read only for backs cut around its pipes and outlets.
+    item.backCuts?.length && opts.room ? `r${JSON.stringify(opts.room)}` : '',
+  ]
+    .filter(Boolean)
+    .join('|');
+}
+
+/** Build one item and move its panels into the room, once per item and options (ADR-221). */
+export function placeItem(item: ProjectItem, opts?: PlaceOptions): PlacedPiece {
+  const key = placeKey(item, opts);
+  let byKey = placed.get(item);
+  const hit = byKey?.get(key);
+  if (hit) return hit;
+  const pc = placeItemOnce(item, opts);
+  if (!byKey) placed.set(item, (byKey = new Map()));
+  byKey.set(key, pc);
+  return pc;
+}
+
+function placeItemOnce(item: ProjectItem, opts: PlaceOptions | undefined): PlacedPiece {
   const c = opts?.common;
   // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides; sharing a
   // side (ADR-190) it leaves its right side out and its left side carries the neighbour's pin rows.
@@ -3574,8 +3607,9 @@ export function pruneWorktopEdges(project: Project): Project {
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
-export function projectCutlist(input: Project): CutRow[] {
+export function projectCutlist(input: Project, projectModel?: ProjectModel): CutRow[] {
   const project = applyRunHandles(input);
+  const pieces = projectModel && piecesOf(project, projectModel);
   const rows = new Map<string, CutRow>();
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
   // Worktops at a corner are cut to their joint (ADR-205).
@@ -3643,7 +3677,7 @@ export function projectCutlist(input: Project): CutRow[] {
   const common = commonBuilds(project);
   const shared = sharedBuilds(project);
   if (common.plans.size) {
-    const pm = buildProjectModel(input);
+    const pm = pieces && projectModel ? projectModel : buildProjectModel(input);
     const model: FurnitureModel = {
       panels: pm.model.panels.filter((p) => p.id.startsWith('common:')),
       spaces: [],
@@ -3657,37 +3691,17 @@ export function projectCutlist(input: Project): CutRow[] {
         r,
       );
   }
-  for (const item of project.items) {
-    const c = common.builds.get(item.id);
-    const raw = buildModel(
-      sharedDesign(c ? commonDesign(item.design, c) : item.design, shared.builds.get(item.id)),
-    );
-    const pins = shared.pins.get(item.id);
-    const pinned = pins ? { ...raw, panels: withSharedPins(raw.panels, pins) } : raw;
-    // A back cut around a pipe or outlet (ADR-205): its own row, noted with the cut-out.
-    const cuts = item.backCuts?.length
-      ? backCutsOf(
-          item,
-          pinned.panels,
-          shared.builds.get(item.id)?.right ? buildModel(item.design).panels : pinned.panels,
-          project.room,
-        )
-      : { shapes: new Map<string, PanelShape>(), features: [] };
-    const built = cuts.shapes.size
-      ? {
-          ...pinned,
-          panels: pinned.panels.map((p) =>
-            cuts.shapes.has(p.id) ? { ...p, shape: cuts.shapes.get(p.id) } : p,
-          ),
-        }
-      : pinned;
-    const leaves = (p: Panel) =>
-      (covered.has(item.id) && p.role === 'plinth') ||
-      (!!c?.top && p.role === commonTopRole(item.design)) ||
-      (!!c?.bottom && p.role === 'bottom');
-    const model = built.panels.some(leaves)
-      ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
-      : built;
+  project.items.forEach((item, n) => {
+    // The piece as the project model built it (ADR-221), or built the same way here.
+    const model =
+      pieces?.[n].model ??
+      placeItem(item, {
+        noPlinth: covered.has(item.id),
+        common: common.builds.get(item.id),
+        shared: shared.builds.get(item.id),
+        sharedPins: shared.pins.get(item.id),
+        room: project.room,
+      }).model;
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
       const id = materialKey(mat);
@@ -3717,7 +3731,7 @@ export function projectCutlist(input: Project): CutRow[] {
           panelIds,
         });
     }
-  }
+  });
   return [...rows.values()].sort(
     (a, b) =>
       a.materialName.localeCompare(b.materialName) ||
@@ -3727,15 +3741,33 @@ export function projectCutlist(input: Project): CutRow[] {
   );
 }
 
-export function projectHardware(input: Project): HardwareItem[] {
+/**
+ * The project model's pieces when it was built from this project (ADR-221): one piece per item, in order. Undefined when
+ * it was not, so the caller builds the pieces itself.
+ */
+function piecesOf(project: Project, pm: ProjectModel): PlacedPiece[] | undefined {
+  return pm.pieces.length === project.items.length &&
+    pm.pieces.every((pc, n) => pc.item.id === project.items[n].id)
+    ? pm.pieces
+    : undefined;
+}
+
+/**
+ * The hardware of every piece × its quantity. Each piece counts the hardware of its own design, also inside a common
+ * top or shared sides; with the project model, its items are used, so the pieces already placed are not built again
+ * (ADR-221).
+ */
+export function projectHardware(input: Project, projectModel?: ProjectModel): HardwareItem[] {
   const project = applyRunHandles(input);
+  const items =
+    (projectModel && piecesOf(project, projectModel))?.map((pc) => pc.item) ?? project.items;
   return hardwareSummary({
     panels: [],
     spaces: [],
     diagnostics: [],
     bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
-    hardware: project.items.flatMap((i) =>
-      buildModel(i.design).hardware.map((h) => ({ ...h, quantity: h.quantity * i.quantity })),
+    hardware: items.flatMap((i) =>
+      placeItem(i).model.hardware.map((h) => ({ ...h, quantity: h.quantity * i.quantity })),
     ),
   });
 }

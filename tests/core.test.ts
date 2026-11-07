@@ -521,7 +521,7 @@ describe('drawer heights and adjustable shelves (ADR-023)', () => {
       interior: { id: 'dr', kind: 'drawers', count: 3, heights: [{ mode: 'fr', value: 1 }] },
     });
     expect(validateDesign(wrong)).toContain('Drawer heights must list one size per drawer');
-    expect(errors(wrong).map((e) => e.code)).toContain('drawer-heights');
+    expect(errors(wrong).map((e) => e.code)).toContain('drawer-heights-count');
     const tooBig = withCab(byTemplate('chest'), {
       interior: {
         id: 'dr',
