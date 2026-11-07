@@ -68,6 +68,7 @@ TDD (review section 9): every item starts from a test written first that pins to
       and prices do not import each other in a cycle".
 - [x] No `samples/mobila` under `src`; `CLAUDE.md` names `src/ui/info/features.ts` and the four viewer exceptions.
       Evidence: `tests/store-locations.test.ts` › "no sample generator and no wallCount under src"; `CLAUDE.md` diff.
-- [ ] `tests/core-boundary.test.ts` (ADR-219) passes; no Zustand `create(` remains under `src/ui`.
+- [x] `tests/core-boundary.test.ts` (ADR-219) passes; no Zustand `create(` remains under `src/ui`. Evidence:
+      `tests/core-boundary.test.ts`, `tests/store-locations.test.ts` › "no Zustand store is created under src/ui".
 - [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
