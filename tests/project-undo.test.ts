@@ -83,7 +83,7 @@ describe('project undo and redo (ADR-051)', () => {
     s().openProject(run(['base-door']));
     expect(s().projectPast).toHaveLength(0);
     s().updateProject((p) => ({ ...p, name: 'B' }));
-    s().closeProject();
+    s().load(s().design); // leaving the project, as the UI does (ADR-231)
     expect(s().projectPast).toHaveLength(0);
     expect(s().projectFuture).toHaveLength(0);
   });

@@ -379,7 +379,7 @@ describe('project seller items (ADR-210, G-313)', () => {
     return projectWithSellerItem(projectWithSellerItem(p, leg), pin);
   }
   beforeEach(() => {
-    useDesign.getState().closeProject();
+    useDesign.getState().load(useDesign.getState().design);
   });
 
   it('are added once after the pieces’ items; the same product adds up; 0 removes', () => {

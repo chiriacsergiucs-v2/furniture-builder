@@ -88,7 +88,7 @@ describe('outside-in selection (ADR-083)', () => {
 });
 
 describe('store: tapping the piece (ADR-083)', () => {
-  beforeEach(() => useDesign.getState().closeProject());
+  beforeEach(() => useDesign.getState().load(useDesign.getState().design));
 
   it('loading leaves nothing selected; taps drill; undo and redo keep a valid selection', () => {
     const p = piece();
