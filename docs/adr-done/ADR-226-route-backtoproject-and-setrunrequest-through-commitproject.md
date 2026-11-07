@@ -1,7 +1,8 @@
 # ADR-226: Route backToProject and setRunRequest through commitProject
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N231
@@ -68,5 +69,5 @@ TDD (review section 9): every item starts from a test written first that pins to
 - [x] `tests/project-undo.test.ts`, `linked.test.ts` and `place-and-undo.test.ts` pass unchanged; one undo step still
       reverts a whole piece-editor session. Evidence: those files unchanged and green;
       `tests/back-to-project-commit.test.ts` › "one undo step still reverts a whole piece-editor session".
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42350405704 (PR #198) green on every job.

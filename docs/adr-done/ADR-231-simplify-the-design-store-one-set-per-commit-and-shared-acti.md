@@ -1,7 +1,8 @@
 # ADR-231: Simplify the design store: one set per commit and shared action helpers
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-226
 - Design: n/a
 - Backlog: N236
@@ -20,7 +21,7 @@ choices below were decided by Claude under the user's ownership grant, 2026-11-0
 `src/store/designStore.ts` makes 2–5 `set()` calls per edit, each re-running every mounted selector (Zustand 5 does
 not batch); `updateCabinet/Desk/PanelSet/Panel/Frame` are identical; 11 project actions are the same 4-line wrapper
 around `get().project`; piece history is pushed in drill mode and never cleared; `closeProject` has no UI caller
-(only tests). Depends on [ADR-226](ADR-226-route-backtoproject-and-setrunrequest-through-commitproject.md), which
+(only tests). Depends on [ADR-226](../adr-done/ADR-226-route-backtoproject-and-setrunrequest-through-commitproject.md), which
 settles `commitProject`'s shape first.
 
 ## Decision
@@ -72,5 +73,5 @@ TDD (review section 9): every item starts from a test written first that pins to
       `load(design)`, the action the UI clears the project with, and passes.
 - [x] Every existing store test passes unchanged (apart from the `closeProject` calls above). The `update*` actions
       stay as one-line aliases of `updateParams` because the Inspector and Editors select them.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42350405704 (PR #198) green on every job.

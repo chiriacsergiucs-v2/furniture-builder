@@ -1,7 +1,8 @@
 # ADR-235: Make autosave explicit and back up only changed rows
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N240
