@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
-import { validateDesign } from '../core/design';
-import { validateProject, type Project } from '../core/project';
+import { newId, upgradeDesign, validateDesign } from '../core/design';
+import { PROJECT_SCHEMA, validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
 import { validateBand, type Band, type Decor } from '../core/materials';
@@ -272,6 +272,65 @@ export async function loadProject(id: string, database = db): Promise<Project | 
   return row.project;
 }
 export const deleteProject = (id: string, database = db) => database.projects.delete(id);
+
+/** The result of copying a saved row (ADR-227): the new id, or why the row could not be copied. */
+export type CopyResult = { ok: true; id: string } | { ok: false; reason: string };
+
+/** The validation problems of a stored document; one that throws on the way is a problem too (ADR-008). */
+const problems = (check: (v: unknown) => string[], doc: unknown): string[] => {
+  try {
+    return check(doc);
+  } catch (e) {
+    return [(e as Error).message || t('unknown error')];
+  }
+};
+const refused = (errs: string[]): CopyResult => ({
+  ok: false,
+  reason: errs.length
+    ? errs.slice(0, 2).join('; ')
+    : t('Saved work could not be read from this browser.'),
+});
+
+/**
+ * Duplicate a saved design (ADR-227): read through the same validating path as `loadDesign` (older versions upgraded
+ * in memory), then save a copy with a new id, `name` and the current `schemaVersion`. A row that does not validate is
+ * refused and left as it is (ADR-011, ADR-012).
+ */
+export async function copyDesign(id: string, name: string, database = db): Promise<CopyResult> {
+  const row = await database.designs.get(id);
+  if (!row) return refused([]);
+  const errs = problems(validateDesign, row.design);
+  if (errs.length) return refused(errs);
+  const now = new Date().toISOString();
+  const copy: Design = {
+    ...upgradeDesign(row.design),
+    id: newId(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await saveDesign(copy, database);
+  return { ok: true, id: copy.id };
+}
+
+/** Duplicate a saved project (ADR-227), as `copyDesign`: validated first, written at `PROJECT_SCHEMA`. */
+export async function copyProject(id: string, name: string, database = db): Promise<CopyResult> {
+  const row = await database.projects.get(id);
+  if (!row) return refused([]);
+  const errs = problems(validateProject, row.project);
+  if (errs.length) return refused(errs);
+  const now = new Date().toISOString();
+  const copy: Project = {
+    ...row.project,
+    schemaVersion: PROJECT_SCHEMA,
+    id: newId(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await saveProject(copy, database);
+  return { ok: true, id: copy.id };
+}
 
 /** Keep a version of a project (ADR-123); a version is never rewritten. */
 export async function saveProjectVersion(v: ProjectVersion, database = db): Promise<void> {
