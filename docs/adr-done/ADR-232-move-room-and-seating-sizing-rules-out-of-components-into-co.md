@@ -1,7 +1,8 @@
 # ADR-232: Move room and seating sizing rules out of components into core
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N237

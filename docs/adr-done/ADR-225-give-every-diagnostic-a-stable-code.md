@@ -1,7 +1,8 @@
 # ADR-225: Give every diagnostic a stable code
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N230
@@ -81,9 +82,9 @@ TDD (review section 9): every item starts from a test written first that pins to
       `tests/diagnostic-golden.test.ts` "opening clearances of every catalog variant and template match the golden"
       (`tests/fixtures/clearance-golden.json`). No regex could go: each one tells apart panels of the same role
       (sliding door, flap, lift-up flap, fixed front), so all four stay and cite G-492.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
       2026-11-07 on wip/b3d: lint, format:check, typecheck, build and docs:check pass; `pnpm test` 1739 passed of 1752
       (1746 before), 13 failed, all 30 s find-it timeouts or the roomfill < 100 ms timing test on a machine at load
       average ≈ 30, failing the same way on an unchanged copy (see N230). Left unticked until a run on a quiet machine
-      or CI.
+      or CI. Evidence: CI run 42354663319 (PR #200) green on every job.

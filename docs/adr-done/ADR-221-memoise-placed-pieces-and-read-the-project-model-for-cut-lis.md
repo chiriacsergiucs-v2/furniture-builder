@@ -1,7 +1,8 @@
 # ADR-221: Memoise placed pieces and read the project model for cut list and hardware
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N226
@@ -66,5 +67,5 @@ TDD (review section 9): every item starts from a test written first that pins to
 - [x] Placing the same item twice returns the same object; a changed item (new identity) gets a new result. Evidence: `tests/place-memo.test.ts` › "placing
       the same item twice returns the same object; a changed item gets a new result".
 - [x] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes (9 tests, 2026-11-07).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42354663319 (PR #200) green on every job.
