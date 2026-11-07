@@ -58,9 +58,11 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `tests/precache.test.ts` written against today's build: the shell, `regency-*` and the viewer
-      chunks are listed, total under the budget; green before and after ADR-222's chunk names land.
-- [ ] Removing `js` from `globPatterns` makes the test fail (checked by hand, reverted).
-- [ ] The CI `build` job runs the test after `pnpm build:ci`; the measured total is in the backlog row.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] (test first) `tests/precache.test.ts` written against today's build: the shell, `regency-*` and the viewer
+      chunks are listed, total under the budget; green before and after ADR-222's chunk names land. Evidence: green on
+      the main build (150 entries, 8 630 852 bytes) and on the ADR-222 build (160 entries, 8 625 254 bytes); the
+      `react-three-*` check was added with ADR-222's chunk name.
+- [x] Removing `js` from `globPatterns` makes the test fail (checked by hand, reverted).
+- [x] The CI `build` job runs the test after `pnpm build:ci`; the measured total is in the backlog row.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).

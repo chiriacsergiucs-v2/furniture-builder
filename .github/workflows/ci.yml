@@ -216,8 +216,9 @@ jobs:
       - run: pnpm build:ci
 
       # ADR-222: the first-paint `index` chunk stays free of three.js, the account backend and the research data, under
-      # its byte budget. It reads the build above; REQUIRE_DIST turns a missing `dist` into a failure, not a skip.
-      - run: pnpm exec vitest run tests/bundle-boundary.test.ts
+      # its byte budget. ADR-234: the precache lists the shell, the seller catalog and the 3D chunks, under its budget.
+      # Both read the build above; REQUIRE_DIST turns a missing `dist` into a failure, not a skip.
+      - run: pnpm exec vitest run tests/bundle-boundary.test.ts tests/precache.test.ts
         env:
           REQUIRE_DIST: '1'
 
