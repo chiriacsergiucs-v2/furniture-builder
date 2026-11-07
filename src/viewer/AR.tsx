@@ -1,20 +1,30 @@
 import { invalidate, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useSyncExternalStore } from 'react';
 import {
+  AlwaysDepth,
   CanvasTexture,
   CircleGeometry,
   DataTexture,
+  DirectionalLight,
+  FloatType,
   Group,
+  LightProbe,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  NearestFilter,
   PlaneGeometry,
   Quaternion,
+  RedFormat,
+  RGFormat,
   RingGeometry,
   Scene,
+  ShaderMaterial,
   Sprite,
   SpriteMaterial,
   SRGBColorSpace,
+  UnsignedByteType,
+  Vector2,
   Vector3,
   type Color,
   type Object3D,
@@ -26,6 +36,21 @@ import type { Box } from '../core/types';
 import {
   cornerPlacement,
   dimensionLabels,
+  dragTo,
+  GAP_MAX,
+  GAP_STEP,
+  isWallPose,
+  mainLight,
+  nextARSizes,
+  pieceLabels,
+  wallOf,
+  wallsCorner,
+  withWallGap,
+  type ARPiece,
+  type ARSizes,
+  type LightEstimateLike,
+  type Spot,
+  type Wall,
   faceYaw,
   isFloorPose,
   nextARPoint,
@@ -64,7 +89,15 @@ interface XRSessionLike {
   addEventListener(type: string, f: () => void): void;
   removeEventListener(type: string, f: () => void): void;
   requestReferenceSpace(type: string): Promise<unknown>;
-  requestHitTestSource?(o: { space: unknown }): Promise<XRHitSource> | undefined;
+  requestHitTestSource?(o: {
+    space: unknown;
+    offsetRay?: unknown;
+  }): Promise<XRHitSource> | undefined;
+  requestHitTestSourceForTransientInput?(o: { profile: string }): Promise<XRHitSource> | undefined;
+  requestLightProbe?(): Promise<unknown>;
+  enabledFeatures?: readonly string[];
+  depthUsage?: string;
+  depthDataFormat?: string;
 }
 interface XRSystemLike {
   isSessionSupported(mode: string): Promise<boolean>;
@@ -78,9 +111,23 @@ interface XRHitResultLike {
   getPose(space: unknown): { transform: { matrix: Float32Array } } | null;
   createAnchor?(): Promise<XRAnchorLike> | undefined;
 }
+interface XRDepthLike {
+  data: ArrayBuffer;
+  width: number;
+  height: number;
+  rawValueToMeters: number;
+  normDepthBufferFromNormView: { matrix: Float32Array };
+}
+interface XRViewLike {
+  projectionMatrix: Float32Array;
+}
 interface XRFrameLike {
   getHitTestResults(s: XRHitSource): XRHitResultLike[];
+  getHitTestResultsForTransientInput?(s: XRHitSource): { results: XRHitResultLike[] }[];
   getPose?(space: unknown, base: unknown): { transform: { matrix: Float32Array } } | null;
+  getViewerPose?(space: unknown): { views: readonly XRViewLike[] } | null;
+  getDepthInformation?(view: XRViewLike): XRDepthLike | null | undefined;
+  getLightEstimate?(probe: unknown): LightEstimateLike | null | undefined;
   trackedAnchors?: { has(a: XRAnchorLike): boolean };
 }
 
@@ -102,8 +149,31 @@ export interface ARUi {
   corner: null | 'first' | 'second';
   /** Fine-tune step (ADR-215): 1 cm / 1° when true, 10 cm / 15° when false. */
   fine: boolean;
+  /** Room corner mode: both walls are seen, so one tap places it (ADR-218). */
+  walls: boolean;
+  /** Wall gap in mm (ADR-218). */
+  gap: number;
+  /** Placed by a room corner, so the wall gap applies (ADR-218). */
+  byCorner: boolean;
+  /** What the Sizes switch shows (ADR-218). */
+  sizes: ARSizes;
+  /** The phone gives depth (ADR-218), and whether real objects hide the furniture. */
+  depth: boolean;
+  occlusion: boolean;
 }
-const OFF: ARUi = { state: 'off', found: false, point: 'centre', corner: null, fine: true };
+const OFF: ARUi = {
+  state: 'off',
+  found: false,
+  point: 'centre',
+  corner: null,
+  fine: true,
+  walls: false,
+  gap: 0,
+  byCorner: false,
+  sizes: 'overall',
+  depth: false,
+  occlusion: true,
+};
 let ui: ARUi = OFF;
 let supported: boolean | null = null;
 const listeners = new Set<() => void>();
@@ -159,6 +229,7 @@ interface Live {
   gl: WebGLRenderer;
   scene: Scene;
   bounds: Box;
+  pieces: readonly ARPiece[];
 }
 let live: Live | null = null;
 let session: XRSessionLike | null = null;
@@ -187,6 +258,23 @@ const m0 = new Matrix4();
 const q = new Quaternion();
 const UP = new Vector3(0, 1, 0);
 const ONE = new Vector3(1, 1, 1);
+/** ADR-218: the up-left and up-right rays that look for the two walls, and the walls they saw lately. */
+let wallSources: (XRHitSource | null)[] = [];
+let wallsSeen: ({ wall: Wall; age: number } | undefined)[] = [];
+const WALL_FRAMES = 30;
+/** The corner and wall spot an auto room corner would use now, or null. */
+let autoCorner: { corner: Spot; along: Spot } | null = null;
+/** The corner of the content the wall gap applies to, when placed by a room corner. */
+let placedCorner: ARPoint | null = null;
+/** One-finger drag (ADR-218): the transient-input hit source, and the drag under way. */
+let touchSource: XRHitSource | null = null;
+let drag: { start: Placement; from: Vector3 | null } | null = null;
+/** Depth occlusion and light estimation (ADR-218). */
+let depthOn = false;
+let occluder: Mesh<PlaneGeometry, ShaderMaterial> | null = null;
+let lightProbe: unknown = null;
+let estLight: Group | null = null;
+let hiddenLights: Object3D[] = [];
 
 /** An anchor being made: the hit pose it started from, and the anchor once the promise resolves. */
 interface AnchorWait {
@@ -272,27 +360,51 @@ function place(pl: Placement, a: AnchorWait | null) {
   showForPlaced(l.scene);
   if (preview) preview.root.visible = false;
   grounding = groundingShadow(l.bounds);
-  labels = dimensionSprites(l.bounds);
   l.scene.add(grounding);
-  if (labels) l.scene.add(labels);
+  rebuildLabels();
+  if (depthOn) {
+    occluder = makeOccluder();
+    occluder.visible = ui.occlusion;
+    l.scene.add(occluder);
+  }
   apply();
-  setUi({ state: 'placed', corner: null, found: false });
+  setUi({ state: 'placed', corner: null, found: false, byCorner: !!placedCorner });
 }
 
+/** The size labels the Sizes switch asks for (ADR-215, ADR-218). */
+function rebuildLabels() {
+  const l = live;
+  if (!l) return;
+  if (labels) {
+    l.scene.remove(labels);
+    disposeTree(labels);
+  }
+  labels = labelSprites(sizeLabels(ui.sizes, l.bounds, l.pieces));
+  if (labels) l.scene.add(labels);
+}
+
+const disposeTree = (o: Object3D) =>
+  o.traverse((c) => {
+    const m = c as Mesh;
+    m.geometry?.dispose();
+    const mat = m.material as (MeshBasicMaterial & SpriteMaterial) | undefined;
+    mat?.map?.dispose();
+    mat?.dispose?.();
+  });
+
 function removeGroundingAndLabels(scene: Scene) {
-  for (const o of [grounding, labels]) {
+  for (const o of [grounding, labels, occluder, estLight]) {
     if (!o) continue;
     scene.remove(o);
-    o.traverse((c) => {
-      const m = c as Mesh;
-      m.geometry?.dispose();
-      const mat = m.material as (MeshBasicMaterial & SpriteMaterial) | undefined;
-      mat?.map?.dispose();
-      mat?.dispose?.();
-    });
+    disposeTree(o);
   }
+  (occluder?.material.uniforms.uDepth.value as Texture | null)?.dispose();
   grounding = null;
   labels = null;
+  occluder = null;
+  estLight = null;
+  showAll(hiddenLights);
+  hiddenLights = [];
 }
 
 /** Handles a tap in the frame after it (hit results and anchors need an animation frame). */
@@ -301,6 +413,15 @@ function onTap(cam: Vector3) {
   if (!l || !spot || !hitNow || ui.state !== 'placing') return;
   const pose = hitPose(hitNow);
   if (!pose) return;
+  if (ui.corner === 'first' && autoCorner) {
+    // Both walls seen (ADR-218): one tap places it in the corner where they meet.
+    const c = cornerPlacement(l.bounds, autoCorner.corner, autoCorner.along, cam);
+    if (c) {
+      placedCorner = c.point;
+      place(withWallGap(c.placement, c.point, ui.gap), makeAnchor(hitNow, pose));
+      return;
+    }
+  }
   if (ui.corner === 'first') {
     cornerSpot = spot.clone();
     dropAnchor(cornerAnchor);
@@ -313,9 +434,11 @@ function onTap(cam: Vector3) {
     if (!c) return;
     const a = cornerAnchor;
     cornerAnchor = null;
-    place(c.placement, a);
+    placedCorner = c.point;
+    place(withWallGap(c.placement, c.point, ui.gap), a);
     return;
   }
+  placedCorner = null;
   place(placeAt(l.bounds, ui.point, spot, faceYaw(spot, cam)), makeAnchor(hitNow, pose));
 }
 
@@ -325,11 +448,25 @@ const hitPose = (h: XRHitResultLike) => h.getPose(refSpace)?.transform.matrix ??
 function onSelect() {
   if (ui.state === 'placing') tapQueued = true;
 }
+/** A touch once placed starts a one-finger drag (ADR-218); taps on the overlay's buttons never get here. */
+function onSelectStart() {
+  if (ui.state === 'placed' && placement && touchSource) drag = { start: placement, from: null };
+}
+function onSelectEnd() {
+  drag = null;
+}
 
 function restore() {
   const l = live;
-  hitSource?.cancel();
-  hitSource = null;
+  for (const h of [hitSource, touchSource, ...wallSources]) h?.cancel();
+  hitSource = touchSource = null;
+  wallSources = [];
+  wallsSeen = [];
+  autoCorner = null;
+  placedCorner = null;
+  drag = null;
+  depthOn = false;
+  lightProbe = null;
   dropAnchor(anchor);
   dropAnchor(cornerAnchor);
   anchor = cornerAnchor = null;
@@ -368,7 +505,12 @@ export async function enterAR(overlay: HTMLElement | null): Promise<string | nul
   try {
     const s = await xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
-      optionalFeatures: ['dom-overlay', 'anchors'],
+      optionalFeatures: ['dom-overlay', 'anchors', 'depth-sensing', 'light-estimation'],
+      // CPU depth (ADR-218): what Android phones give; three's own depth path is for headsets.
+      depthSensing: {
+        usagePreference: ['cpu-optimized'],
+        dataFormatPreference: ['luminance-alpha', 'float32'],
+      },
       ...(overlay ? { domOverlay: { root: overlay } } : {}),
     });
     session = s;
@@ -383,6 +525,33 @@ export async function enterAR(overlay: HTMLElement | null): Promise<string | nul
     await l.gl.xr.setSession(s as unknown as Parameters<typeof l.gl.xr.setSession>[0]);
     const viewer = await s.requestReferenceSpace('viewer');
     hitSource = (await s.requestHitTestSource?.({ space: viewer })) ?? null;
+    // ADR-218: rays up-left and up-right of the centre find the two walls of a corner; a touch source for dragging.
+    const Ray = (globalThis as { XRRay?: new (o: DOMPointInit, d: DOMPointInit) => unknown }).XRRay;
+    if (Ray)
+      wallSources = await Promise.all(
+        [-1, 1].map(
+          async (side) =>
+            (await s
+              .requestHitTestSource?.({
+                space: viewer,
+                offsetRay: new Ray(
+                  { x: 0, y: 0, z: 0, w: 1 },
+                  { x: 0.35 * side, y: 0.35, z: -1, w: 0 },
+                ),
+              })
+              ?.catch(() => null)) ?? null,
+        ),
+      );
+    touchSource =
+      (await s
+        .requestHitTestSourceForTransientInput?.({ profile: 'generic-touchscreen' })
+        ?.catch(() => null)) ?? null;
+    const features = s.enabledFeatures ?? [];
+    depthOn = features.includes('depth-sensing') && s.depthUsage === 'cpu-optimized';
+    if (features.includes('light-estimation') && s.requestLightProbe)
+      s.requestLightProbe()
+        .then((p) => (lightProbe = p))
+        .catch(() => undefined);
     preview = new Preview(l.bounds);
     l.scene.add(preview.root);
     saved = { background: l.scene.background };
@@ -390,10 +559,14 @@ export async function enterAR(overlay: HTMLElement | null): Promise<string | nul
     // The camera picture shows through.
     l.scene.background = null;
     floor = NO_FLOOR;
-    setUi({ ...OFF, state: 'placing' });
+    setUi({ ...OFF, state: 'placing', depth: depthOn });
     s.addEventListener('select', onSelect);
+    s.addEventListener('selectstart', onSelectStart);
+    s.addEventListener('selectend', onSelectEnd);
     s.addEventListener('end', function ended() {
       s.removeEventListener('select', onSelect);
+      s.removeEventListener('selectstart', onSelectStart);
+      s.removeEventListener('selectend', onSelectEnd);
       s.removeEventListener('end', ended);
       restore();
     });
@@ -459,6 +632,29 @@ export function toggleARStep() {
   setUi({ fine: !ui.fine });
 }
 
+/** Wall gap − or + 5 mm (ADR-218), 0 to 200 mm; once placed by a corner the furniture moves with it. */
+export function stepARWallGap(more: boolean) {
+  const gap = ui.gap + (more ? GAP_STEP : -GAP_STEP);
+  if (gap < 0 || gap > GAP_MAX) return;
+  if (placement && ui.state === 'placed' && placedCorner) {
+    placement = withWallGap(placement, placedCorner, gap - ui.gap);
+    apply();
+  }
+  setUi({ gap });
+}
+
+/** Sizes switch (ADR-218): Overall → Per piece → Off. */
+export function cycleARSizes() {
+  setUi({ sizes: nextARSizes(ui.sizes) });
+  if (ui.state === 'placed') rebuildLabels();
+}
+
+/** Hide behind real objects: On ↔ Off (ADR-218). */
+export function toggleAROcclusion() {
+  setUi({ occlusion: !ui.occlusion });
+  if (occluder) occluder.visible = ui.occlusion;
+}
+
 /** Place again: back to placing, with the same point; the content hides until the next tap. */
 export function placeARAgain() {
   const l = live;
@@ -466,13 +662,15 @@ export function placeARAgain() {
   dropAnchor(anchor);
   anchor = null;
   placement = null;
+  placedCorner = null;
+  drag = null;
   removeGroundingAndLabels(l.scene);
   resetSceneMatrix(l.scene);
   hideForPlacing(l.scene);
   if (preview) preview.root.visible = true;
   floor = NO_FLOOR;
   spot = null;
-  setUi({ state: 'placing', found: false, corner: null });
+  setUi({ state: 'placing', found: false, corner: null, byCorner: false });
 }
 
 /** Exit AR: ends the session; the view comes back as it was. */
@@ -485,12 +683,18 @@ export function exitAR() {
  * Inside the canvas: hands the renderer and scene to AR and, each AR frame, finds the steady floor, moves the outline,
  * handles a queued tap and follows the anchor. `bounds` is what is shown (mm).
  */
-export function ARBridge({ bounds }: { bounds: Box }) {
+export function ARBridge({
+  bounds,
+  pieces = NO_PIECES,
+}: {
+  bounds: Box;
+  pieces?: readonly ARPiece[];
+}) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   useEffect(() => {
-    live = { gl, scene, bounds };
-  }, [gl, scene, bounds]);
+    live = { gl, scene, bounds, pieces };
+  }, [gl, scene, bounds, pieces]);
   useEffect(
     () => () => {
       if (session) exitAR();
@@ -514,6 +718,9 @@ export function ARBridge({ bounds }: { bounds: Box }) {
           apply();
         }
       }
+      dragFrame(f);
+      occlusionFrame(f, gl);
+      lightFrame(f);
       return;
     }
     // Placing: only the nearest hit counts, and only when it faces up (ADR-213).
@@ -529,7 +736,20 @@ export function ARBridge({ bounds }: { bounds: Box }) {
       spot = null;
       hitNow = null;
     }
-    setUi({ found: !!spot });
+    // Room corner (ADR-218): the walls the side rays saw in the last frames; both make an auto corner.
+    autoCorner = null;
+    if (ui.corner === 'first') {
+      wallsSeen = wallSources.map((src, i) => {
+        const h = src && refSpace ? f.getHitTestResults(src)[0] : undefined;
+        const wm = h ? hitPose(h) : null;
+        if (wm && isWallPose(wm)) return { wall: wallOf(wm), age: 0 };
+        const old = wallsSeen[i];
+        return old && old.age < WALL_FRAMES ? { ...old, age: old.age + 1 } : undefined;
+      });
+      const [w1, w2] = wallsSeen;
+      if (spot && w1 && w2) autoCorner = wallsCorner(w1.wall, w2.wall, spot.y, cam);
+    }
+    setUi({ found: !!spot, walls: !!autoCorner });
     preview?.update(live.bounds, spot, cam);
     if (tapQueued) {
       tapQueued = false;
@@ -625,6 +845,17 @@ class Preview {
     this.shown = null;
     if (!at) return;
     const y = 0.002;
+    if (ui.corner === 'first' && autoCorner) {
+      // Both walls seen (ADR-218): the corner where they meet and the furniture in it.
+      const c = autoCorner.corner;
+      this.cornerDot.position.set(c.x, c.y + y, c.z);
+      this.cornerDot.visible = true;
+      this.dot.visible = false;
+      const cp = cornerPlacement(b, c, autoCorner.along, cam);
+      if (!cp) return;
+      this.show(withWallGap(cp.placement, cp.point, ui.gap), y);
+      return;
+    }
     if (ui.corner === 'first') {
       this.ring.position.set(at.x, at.y + y, at.z);
       this.ring.visible = true;
@@ -644,7 +875,8 @@ class Preview {
       this.wall.scale.x = Math.hypot(dx, dz);
       this.wall.rotation.y = Math.atan2(-dz, dx);
       this.wall.visible = true;
-      pl = cornerPlacement(b, cornerSpot, at, cam)?.placement ?? null;
+      const cp = cornerPlacement(b, cornerSpot, at, cam);
+      pl = cp ? withWallGap(cp.placement, cp.point, ui.gap) : null;
       this.dot.visible = false;
     } else {
       pl = placeAt(b, ui.point, at, faceYaw(at, cam));
@@ -653,7 +885,10 @@ class Preview {
       this.dot.position.set(px - cx, 0.001, pz - cz);
       this.dot.visible = true;
     }
-    if (!pl) return;
+    if (pl) this.show(pl, y);
+  }
+
+  private show(pl: Placement, y: number) {
     this.footprint.position.set(pl.cx, pl.cy + y, pl.cz);
     this.footprint.rotation.y = pl.yaw;
     this.footprint.visible = true;
@@ -704,13 +939,32 @@ export const dimensionText = (key: 'w' | 'h' | 'd', mm: number) =>
       ? t('H {mm} mm', { mm })
       : t('D {mm} mm', { mm });
 
-/** The W × H × D labels as sprites facing the phone; null where the device cannot draw text into a canvas. */
-function dimensionSprites(b: Box): Group | null {
+/** A size label: its text and where it stands (metres, the content's own frame). */
+export interface SizeLabel {
+  text: string;
+  at: [number, number, number];
+}
+
+/** The labels the Sizes switch shows (ADR-215, ADR-218): overall W, H and D; each piece's W × H × D; or none. */
+export function sizeLabels(sizes: ARSizes, b: Box, pieces: readonly ARPiece[]): SizeLabel[] {
+  if (sizes === 'off') return [];
+  if (sizes === 'overall')
+    return dimensionLabels(b).map((l) => ({ text: dimensionText(l.key, l.mm), at: l.at }));
+  return pieceLabels(pieces).map((l) => ({
+    text: t('{w} × {h} × {d} mm', { w: l.w, h: l.h, d: l.d }),
+    at: l.at,
+  }));
+}
+
+/** The labels as sprites facing the phone; null where the device cannot draw text into a canvas. */
+function labelSprites(list: readonly SizeLabel[]): Group | null {
+  if (!list.length) return null;
   const g = new Group();
   g.name = 'ar:labels';
-  for (const l of dimensionLabels(b)) {
+  for (const l of list) {
+    const wide = l.text.length > 10;
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
+    canvas.width = wide ? 512 : 256;
     canvas.height = 64;
     let ctx: CanvasRenderingContext2D | null;
     try {
@@ -724,19 +978,19 @@ function dimensionSprites(b: Box): Group | null {
     if (!ctx) return null;
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.beginPath();
-    ctx.roundRect(0, 0, 256, 64, 18);
+    ctx.roundRect(0, 0, canvas.width, 64, 18);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 34px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(dimensionText(l.key, l.mm), 128, 33);
+    ctx.fillText(l.text, canvas.width / 2, 33);
     const tex = new CanvasTexture(canvas);
     tex.colorSpace = SRGBColorSpace;
     const sprite = new Sprite(
       new SpriteMaterial({ map: tex, depthTest: false, transparent: true }),
     );
-    sprite.scale.set(0.2, 0.05, 1);
+    sprite.scale.set(wide ? 0.4 : 0.2, 0.05, 1);
     sprite.position.set(...l.at);
     sprite.renderOrder = 10;
     sprite.raycast = () => undefined;
@@ -744,6 +998,165 @@ function dimensionSprites(b: Box): Group | null {
   }
   return g;
 }
+
+// ---------------------------------------------------------------------------
+// One-finger drag, depth occlusion and light estimation (ADR-218)
+// ---------------------------------------------------------------------------
+
+const NO_PIECES: readonly ARPiece[] = [];
+
+/** While a finger drags: the furniture follows the floor under it, in the anchor's frame at placing. */
+function dragFrame(f: XRFrameLike) {
+  if (!drag || !touchSource || !placement || !f.getHitTestResultsForTransientInput) return;
+  const hit = f.getHitTestResultsForTransientInput(touchSource)[0]?.results[0];
+  const m = hit ? hitPose(hit) : null;
+  if (!m || !isFloorPose(m)) return;
+  const p = new Vector3(m[12], m[13], m[14]).applyMatrix4(new Matrix4().copy(anchorDelta).invert());
+  if (!drag.from) {
+    drag.from = p;
+    return;
+  }
+  placement = dragTo(drag.start, drag.from, p);
+  apply();
+}
+
+const OCCLUDER_VERTEX = `
+void main() {
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+/**
+ * Writes the phone's measured depth into the depth buffer (no colour), a little behind the real surface, so the
+ * furniture behind a real object fails the depth test and the camera picture shows. Normalized view coordinates start
+ * at the top left; the depth buffer's own coordinates come from `normDepthBufferFromNormView`.
+ */
+const OCCLUDER_FRAGMENT = `
+uniform sampler2D uDepth;
+uniform float uFloat;
+uniform float uRawToMeters;
+uniform mat4 uUv;
+uniform mat4 uProj;
+uniform vec2 uSize;
+void main() {
+  vec2 v = gl_FragCoord.xy / uSize;
+  vec2 uv = (uUv * vec4(v.x, 1.0 - v.y, 0.0, 1.0)).xy;
+  vec4 t = texture2D(uDepth, uv);
+  float raw = uFloat > 0.5 ? t.r : dot(t.rg, vec2(255.0, 65280.0));
+  float d = raw * uRawToMeters;
+  if (d <= 0.0) discard;
+  d += max(0.04, 0.03 * d);
+  vec4 clip = uProj * vec4(0.0, 0.0, -d, 1.0);
+  gl_FragDepth = clamp(0.5 * (clip.z / clip.w) + 0.5, 0.0, 1.0);
+}`;
+
+function makeOccluder() {
+  const mesh = new Mesh(
+    new PlaneGeometry(2, 2),
+    new ShaderMaterial({
+      vertexShader: OCCLUDER_VERTEX,
+      fragmentShader: OCCLUDER_FRAGMENT,
+      uniforms: {
+        uDepth: { value: null },
+        uFloat: { value: 0 },
+        uRawToMeters: { value: 0.001 },
+        uUv: { value: new Matrix4() },
+        uProj: { value: new Matrix4() },
+        uSize: { value: new Vector2(1, 1) },
+      },
+      colorWrite: false,
+      depthWrite: true,
+      depthFunc: AlwaysDepth,
+    }),
+  );
+  mesh.name = 'ar:occluder';
+  mesh.frustumCulled = false;
+  mesh.renderOrder = -1e6;
+  mesh.raycast = () => undefined;
+  // Nothing to draw until the phone gives depth.
+  mesh.visible = false;
+  return mesh;
+}
+
+/** Each placed frame with depth: this frame's depth into the occluder (ADR-218). */
+function occlusionFrame(f: XRFrameLike, gl: WebGLRenderer) {
+  if (!occluder || !ui.occlusion || !refSpace || !f.getDepthInformation) return;
+  let depth: XRDepthLike | null | undefined;
+  let view: XRViewLike | undefined;
+  try {
+    view = f.getViewerPose?.(refSpace)?.views[0];
+    depth = view ? f.getDepthInformation(view) : null;
+  } catch {
+    depth = null;
+  }
+  if (!depth || !view) return;
+  const u = occluder.material.uniforms;
+  const isFloat = session?.depthDataFormat === 'float32';
+  let tex = u.uDepth.value as DataTexture | null;
+  if (!tex || tex.image.width !== depth.width || tex.image.height !== depth.height) {
+    tex?.dispose();
+    tex = isFloat
+      ? new DataTexture(
+          new Float32Array(depth.data),
+          depth.width,
+          depth.height,
+          RedFormat,
+          FloatType,
+        )
+      : new DataTexture(
+          new Uint8Array(depth.data),
+          depth.width,
+          depth.height,
+          RGFormat,
+          UnsignedByteType,
+        );
+    tex.unpackAlignment = 1;
+    tex.minFilter = tex.magFilter = NearestFilter;
+    tex.generateMipmaps = false;
+    u.uDepth.value = tex;
+  } else
+    (tex.image as { data: ArrayBufferView }).data = isFloat
+      ? new Float32Array(depth.data)
+      : new Uint8Array(depth.data);
+  tex.needsUpdate = true;
+  u.uFloat.value = isFloat ? 1 : 0;
+  u.uRawToMeters.value = depth.rawValueToMeters;
+  (u.uUv.value as Matrix4).fromArray(depth.normDepthBufferFromNormView.matrix);
+  (u.uProj.value as Matrix4).fromArray(view.projectionMatrix);
+  gl.getDrawingBufferSize(u.uSize.value as Vector2);
+  occluder.visible = true;
+}
+
+/** Each placed frame with a light estimate: the room's light replaces the 3D view's lights (ADR-218). */
+function lightFrame(f: XRFrameLike) {
+  const l = live;
+  if (!l || !lightProbe || !f.getLightEstimate) return;
+  const est = f.getLightEstimate(lightProbe);
+  if (!est) return;
+  if (!estLight) {
+    estLight = new Group();
+    estLight.name = 'ar:light';
+    estLight.matrixAutoUpdate = false;
+    estLight.add(new LightProbe(), new DirectionalLight());
+    hiddenLights = [];
+    l.scene.traverse((o) => {
+      if (!ours(o) && (o as { isLight?: boolean }).isLight && o.visible) hiddenLights.push(o);
+    });
+    hiddenLights.forEach((o) => (o.visible = false));
+    l.scene.add(estLight);
+  }
+  const [probe, sun] = estLight.children as [LightProbe, DirectionalLight];
+  probe.sh.fromArray(Array.from(est.sphericalHarmonicsCoefficients));
+  probe.intensity = 1;
+  const main = mainLight(est);
+  sun.color.setRGB(...main.color);
+  sun.intensity = main.intensity;
+  sun.position.set(...main.direction);
+  // The estimate is in the world; the scene is moved to the placement, so the light group undoes that.
+  estLight.matrix.copy(l.scene.matrix).invert();
+  estLight.matrixWorldNeedsUpdate = true;
+}
+
+/** For tests: the room-light group once an estimate came, the occluder, the drag under way. */
+export const arInternals = () => ({ estLight, occluder, dragging: !!drag, hiddenLights });
 
 // ---------------------------------------------------------------------------
 // Export for AR (.usdz)

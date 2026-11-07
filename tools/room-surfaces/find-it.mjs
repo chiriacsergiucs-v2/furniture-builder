@@ -484,11 +484,12 @@ for (const width of [1280, 390]) {
   const xr = await page.evaluate(() => window.__xr);
   check(
     width,
-    'View in AR requests an immersive-ar session with hit-test required, dom-overlay and anchors optional',
+    'View in AR requests an immersive-ar session with hit-test required, dom-overlay, anchors, depth-sensing and light-estimation optional',
     xr.length === 1 &&
       xr[0].mode === 'immersive-ar' &&
       JSON.stringify(xr[0].requiredFeatures) === '["hit-test"]' &&
-      JSON.stringify(xr[0].optionalFeatures) === '["dom-overlay","anchors"]',
+      JSON.stringify(xr[0].optionalFeatures) ===
+        '["dom-overlay","anchors","depth-sensing","light-estimation"]',
     JSON.stringify(xr),
   );
   check(

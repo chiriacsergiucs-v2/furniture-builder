@@ -233,7 +233,12 @@ describe('View in AR, placing (ADR-213, ADR-214)', () => {
       string,
       { optionalFeatures: string[] },
     ];
-    expect(init[1].optionalFeatures).toEqual(['dom-overlay', 'anchors']);
+    expect(init[1].optionalFeatures).toEqual([
+      'dom-overlay',
+      'anchors',
+      'depth-sensing',
+      'light-estimation',
+    ]);
     await act(async () => ar.exitAR());
   });
 
