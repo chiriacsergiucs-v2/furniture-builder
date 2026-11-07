@@ -5,9 +5,9 @@
 // editor only with a design open; the three Select toggles have "About Select"; Lock boards and Lock construction
 // sit in More actions and turn off Boards with its hint; History lists "Versions of deleted projects" with Restore as a
 // new project and Delete. Drags (the sheet, the front-view box) need layout: `tools/editor-nav/find-it.mjs`.
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import { addPiece, openMore, openSheet, PHONE_WIDTH, renderApp, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
 
@@ -17,22 +17,8 @@ async function newProject(user: User, name: string) {
   await user.type(within(create).getByRole('textbox'), name);
   await user.click(within(create).getByRole('button', { name: 'Create project' }));
   const panel = await screen.findByRole('complementary', { name: 'Compose' });
-  const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-  if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+  await openSheet(user, panel);
   return panel;
-}
-async function addBase(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
-async function more(user: User) {
-  await user.click(screen.getByLabelText(/^More$/));
 }
 
 describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-211)', (width) => {
@@ -40,11 +26,15 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
 
   it('Start something new: Project, Fill a wall and Fill the room each have their own glyph', async () => {
     const { user } = await renderApp(width);
-    await more(user);
+    await openMore(user);
     await user.click(await screen.findByRole('button', { name: /New…/ }));
     const dlg = await screen.findByRole('dialog', { name: 'Start something new' });
+    // The glyph is the row's first child, an icon hidden from screen readers.
     const glyph = (name: RegExp) =>
-      within(dlg).getByRole('button', { name }).querySelector('.glyph path')?.getAttribute('d');
+      within(dlg)
+        .getByRole('button', { name })
+        .firstElementChild?.getElementsByTagName('path')[0]
+        ?.getAttribute('d');
     const shapes = [/^Project with several pieces/, /^Fill a wall/, /^Fill the room/].map(glyph);
     expect(shapes.every(Boolean)).toBe(true);
     expect(new Set(shapes).size).toBe(3);
@@ -53,7 +43,7 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
   it('Gaps and Research: no Back to the editor with nothing open; Back once a design is open', async () => {
     const { user } = await renderApp(width);
     const visit = async (button: RegExp, page: string) => {
-      await more(user);
+      await openMore(user);
       await user.click(screen.getByRole('button', { name: button }));
       return screen.findByRole('main', { name: page });
     };
@@ -85,10 +75,12 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
     expect(screen.queryByRole('button', { name: 'Up one level' })).toBeNull();
     // Enter on a space runs the same tap as the drawing; each further tap at the same spot selects one space smaller
     // (bigger to smaller, G-388): tap the hanging space until it is selected, noting the selected step each time.
-    const current = () =>
-      screen
-        .queryByRole('navigation', { name: 'Where this space sits' })
-        ?.querySelector('[aria-current]')?.textContent ?? null;
+    const current = () => {
+      const nav = screen.queryByRole('navigation', { name: 'Where this space sits' });
+      return nav
+        ? (within(nav).queryByRole('generic', { current: true })?.textContent ?? null)
+        : null;
+    };
     const seen: (string | null)[] = [];
     for (let i = 0; i < 5 && seen.at(-1) !== 'Hanging'; i++) {
       screen.getByRole('button', { name: /^Hanging.* space/ }).focus();
@@ -119,21 +111,23 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
       return;
     }
     const value = () => slider!.getAttribute('aria-valuetext');
+    // The sheet's stop is the editor's layout (CSS): the open and full-screen classes on its main area.
+    const work = () => screen.getByRole('main');
     // The peek row was opened above: the sheet is at half.
     expect(value()).toBe('Half');
-    expect(document.querySelector('.work')!.className).toContain('sheet-open');
+    expect(work().className).toContain('sheet-open');
     slider!.focus();
     await user.keyboard('{ArrowUp}');
     expect(value()).toBe('Full screen');
-    expect(document.querySelector('.work')!.className).toContain('sheet-full');
+    expect(work().className).toContain('sheet-full');
     await user.keyboard('{ArrowUp}');
     expect(value()).toBe('Full screen');
     await user.keyboard('{ArrowDown}');
     expect(value()).toBe('Half');
-    expect(document.querySelector('.work')!.className).not.toContain('sheet-full');
+    expect(work().className).not.toContain('sheet-full');
     await user.keyboard('{ArrowDown}');
     expect(value()).toBe('Collapsed');
-    expect(document.querySelector('.work')!.className).not.toContain('sheet-open');
+    expect(work().className).not.toContain('sheet-open');
     await user.keyboard('{End}');
     expect(value()).toBe('Full screen');
     await user.keyboard('{Home}');
@@ -148,7 +142,7 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
   it('About Select beside the Select toggles; the plan adds the drag box', async () => {
     const { user } = await renderApp(width);
     const panel = await newProject(user, `Select ${width}`);
-    await addBase(user, panel);
+    await addPiece(user);
     await user.click(within(panel).getByRole('button', { name: /^All pieces \(\d+\)$/ }));
     const tips = screen.getAllByRole('button', { name: 'About Select' });
     expect(tips.length).toBeGreaterThanOrEqual(2);
@@ -170,8 +164,8 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
 
   it('More actions: Lock boards turns Boards off with its hint; Lock construction; both unlock', async () => {
     const { user } = await renderApp(width);
-    const panel = await newProject(user, `Board locks ${width}`);
-    await addBase(user, panel);
+    await newProject(user, `Board locks ${width}`);
+    await addPiece(user);
     const card = await screen.findByRole('region', { name: /^Selected piece: / });
     const menu = async () => {
       await user.click(within(card).getByRole('button', { name: 'More actions' }));
@@ -195,7 +189,10 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
       .getByText('Boards, sheets and saw cut', { selector: 'summary' })
       .closest('details')!;
     expect(within(boards).getByRole('note').textContent).toBe('Boards locked — unlock to change');
-    expect(boards.querySelector('fieldset')!.disabled).toBe(true);
+    // Its controls sit in a disabled group (a fieldset).
+    const locked = within(boards).getAllByRole('group')[0] as HTMLFieldSetElement;
+    expect(locked.tagName).toBe('FIELDSET');
+    expect(locked.disabled).toBe(true);
     await user.click(within(settings).getByRole('button', { name: 'Close' }));
     // The Construction group says so too.
     const build = document.getElementById('g-build');
@@ -243,8 +240,7 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
 
     // Delete asks first; Cancel keeps it; Delete removes only that one.
     panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     const history = within(panel).getByText(/^History( · \d+ versions?)?$/, {
       selector: 'summary',
     });

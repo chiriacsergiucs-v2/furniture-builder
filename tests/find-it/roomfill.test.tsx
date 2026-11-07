@@ -5,7 +5,7 @@
 // the wall corner (Wall blind corner) above the corner cabinet.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openSheet, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('fill the room at %ipx (find-it, ADR-173)', (width) => {
   it('New… → Fill the room → suggestions → Use this mix → a project with a room; ⋯ → Fill the room… adds a mix', async () => {
@@ -31,8 +31,7 @@ describe.each(WIDTHS)('fill the room at %ipx (find-it, ADR-173)', (width) => {
 
     // The project is open with its room and pieces.
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
     if (all) await user.click(all);
     const pieces = within(within(panel).getByRole('list', { name: 'Pieces' }));

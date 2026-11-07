@@ -1715,3 +1715,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
 - Work: Low
 - Impact: Low
+
+### G-503: Two find-it checks still read a class on an element found by role
+
+- Status: Open
+- Origin: ADR-224 build, 2026-11-07 (architecture review I-06)
+- Missing: tests/find-it/info-tip.test.tsx picks the info buttons among all buttons found by role by their info-btn class, and tests/find-it/editor-nav.test.tsx reads the sheet-open and sheet-full classes on the editor's main area (found by role): an info button has no role or name of its own that sets it apart, and the sheet stop is CSS layout. No querySelector remains.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Give InfoTip buttons something users can perceive that sets them apart (for example a shared name prefix already enforced, or aria-haspopup), and assert the sheet stop only through the Resize the sheet slider and the peek's aria-expanded?
+- Suggested pick: Keep the two class reads (equal strictness, no change users see) until a role-based marker is chosen (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low

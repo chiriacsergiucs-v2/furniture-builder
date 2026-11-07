@@ -4,23 +4,17 @@
 // start with "Prepare the parts" and "Fit hardware to the sides", each step has an instruction and a fastener line
 // ("choose your fastener"); the chest lists "Drawer box × 4". Print assembly steps → each piece's section starts with
 // its front view and names the parts in Romanian (the default print language).
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, name: RegExp) {
-  const side = screen.getByRole('complementary', { name: 'Compose' });
-  const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(side).getByRole('button', { name: 'Add a piece' }));
-  const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(list).getAllByRole('button', { name })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import {
+  addPiece,
+  hiddenLabelled,
+  PHONE_WIDTH,
+  printedSheet,
+  renderApp,
+  stepItems,
+  WIDTHS,
+} from './setup';
 
 describe.each(WIDTHS)('assembly steps re-check at %ipx (find-it, ADR-185, ADR-186)', (width) => {
   it('Assembly → Prepare the parts, Fit hardware to the sides, a fastener line, Drawer box × 4; print with front views', async () => {
@@ -44,9 +38,7 @@ describe.each(WIDTHS)('assembly steps re-check at %ipx (find-it, ADR-185, ADR-18
     const [base, chest] = pieces;
 
     // The base cabinet: Prepare the parts, then Fit hardware to the sides (hinge mounting plates).
-    const steps = within(base)
-      .getAllByRole('listitem')
-      .filter((li) => li.querySelector('.step-n'));
+    const steps = stepItems(base);
     expect(within(steps[0]).getByText('Prepare the parts')).toBeTruthy();
     expect(within(steps[0]).getByText(/^Hinge cups to drill: 2/)).toBeTruthy();
     expect(within(steps[1]).getByText('Fit hardware to the sides')).toBeTruthy();
@@ -77,14 +69,19 @@ describe.each(WIDTHS)('assembly steps re-check at %ipx (find-it, ADR-185, ADR-18
     });
     window.print = vi.fn();
     await user.click(within(panel).getByRole('button', { name: 'Print assembly steps' }));
-    await waitFor(() => expect(document.querySelector('.print-root')).not.toBeNull());
-    const sections = [...document.querySelectorAll('.print-root section.pr-piece')];
-    expect(sections).toHaveLength(2);
-    for (const s of sections) {
-      const first = s.querySelector('h2')!.nextElementSibling;
-      expect(first?.querySelector('figure.piece-elevation svg')).not.toBeNull();
-    }
-    const text = document.querySelector('.print-root')!.textContent ?? '';
+    const root = await printedSheet();
+    // One section per piece: its heading, then its front view right after it.
+    const pieceHeadings = within(root)
+      .getAllByRole('heading', { level: 2, hidden: true })
+      .filter((h) => h.textContent !== 'Ordinea în proiect');
+    expect(pieceHeadings).toHaveLength(2);
+    const views = hiddenLabelled(root, 'figure', /^Vedere frontală: /);
+    expect(views).toHaveLength(2);
+    views.forEach((view, i) => {
+      expect(view.parentElement!.previousElementSibling).toBe(pieceHeadings[i]);
+      expect(within(view).getByRole('img', { hidden: true }).tagName).toBe('svg');
+    });
+    const text = root.textContent ?? '';
     expect(text).toMatch(/Lateral stânga/);
     expect(text).toMatch(/Corp de sertar × 4/);
     expect(text).toMatch(/Balama aplicată/);

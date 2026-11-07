@@ -3,23 +3,7 @@
 // bare app, by role and visible text, at desktop and phone widths.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-/** Bare app → ⋯ › New… › Project with several pieces → Compose, with two base cabinets. */
-async function projectWithTwoPieces(user: User) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  const dlg = await screen.findByRole('dialog', { name: 'Start something new' });
-  await user.click(within(dlg).getByRole('button', { name: /Project with several pieces/ }));
-  await user.click(await screen.findByRole('radio', { name: 'Compose' }));
-  for (let i = 0; i < 2; i++) {
-    await user.click(await screen.findByRole('button', { name: 'Add a piece' }));
-    const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-    await user.click(within(list).getAllByRole('button', { name: /Base cabinet, doors/ })[0]);
-  }
-}
+import { projectWithTwoPieces, renderApp, WIDTHS } from './setup';
 
 // One click path per width (ADR-201, G-370): the code round trip, the damaged-code message, settings reaching every
 // piece and own edits kept on Replace are proven in tests/research-batch-4.test.ts; this path finds each feature by

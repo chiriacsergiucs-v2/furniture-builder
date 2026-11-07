@@ -7,7 +7,7 @@
 // (and so the ⋯ menu with View in AR and Export for AR) is checked by tools/room-surfaces/find-it.mjs in Chromium.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { piecesList, renderApp, WIDTHS } from './setup';
+import { hiddenLabelled, openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 /** Picture import without a real canvas: an 800 × 600 picture, a grey average colour, a small JPEG blob. */
 function stubPictures() {
@@ -44,11 +44,7 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     const create = await screen.findByRole('dialog');
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const openSheet = async () => {
-      const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-      if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    };
-    await openSheet();
+    await openSheet(user, panel);
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
     await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Sideboard');
@@ -56,14 +52,16 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
     const place = screen.queryByRole('button', { name: 'Place to the right' });
     if (place) await user.click(place);
-    await openSheet();
+    await openSheet(user, panel);
     await user.click(await screen.findByRole('button', { name: 'Add the room' }));
-    await openSheet();
+    await openSheet(user, panel);
 
     // Wall 1 gets a colour: its 50 mm band shows on the plan.
     await user.selectOptions(screen.getByLabelText('Wall 1 background'), 'Colour');
     const plan = screen.getByRole('figure', { name: /Room plan, seen from above/ });
-    await waitFor(() => expect(plan.querySelectorAll('.wall-band')).toHaveLength(1));
+    // The plan's drawn layers are hidden from screen readers; each has a name, found with `hidden`.
+    const layer = (name: string) => hiddenLabelled(plan, 'img', name)[0] ?? null;
+    await waitFor(() => expect(layer('Wall background bands')?.children).toHaveLength(1));
 
     // Room → Floor background: None, Colour, Picture.
     const floor = screen.getByLabelText('Floor background') as HTMLSelectElement;
@@ -71,7 +69,11 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     expect(floor.value).toBe('none');
     await user.selectOptions(floor, 'Colour');
     expect(screen.getByLabelText('Floor colour')).toBeTruthy();
-    await waitFor(() => expect(plan.querySelector('.room-floor-finish polygon')).not.toBeNull());
+    await waitFor(() =>
+      expect(
+        [...(layer('Floor finish')?.children ?? [])].some((c) => c.tagName === 'polygon'),
+      ).toBe(true),
+    );
     fireEvent.change(screen.getByLabelText('Floor colour'), { target: { value: '#a0805a' } });
     // jsdom keeps no SVG fill style; the room the plan draws from holds the colour.
     const { useDesign } = await import('../../src/store/designStore');
@@ -83,15 +85,15 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     expect(await screen.findByText('oak.png')).toBeTruthy();
     expect(screen.getByText('Replace picture')).toBeTruthy();
     await user.selectOptions(screen.getByLabelText('Floor background'), 'None');
-    await waitFor(() => expect(plan.querySelector('.room-floor-finish')).toBeNull());
+    await waitFor(() => expect(layer('Floor finish')).toBeNull());
 
     // Room → Plan picture → Add a plan picture.
     const section = screen.getByRole('region', { name: 'Plan picture' });
     expect(within(section).getByRole('heading', { name: 'Plan picture' })).toBeTruthy();
     await user.upload(within(section).getByLabelText('Add a plan picture'), png('plan.png'));
     expect(await within(section).findByText('plan.png')).toBeTruthy();
-    await waitFor(() => expect(plan.querySelector('image.plan-picture')).not.toBeNull());
-    const img = () => plan.querySelector('image.plan-picture')!;
+    await waitFor(() => expect(layer('Plan picture on the plan')).not.toBeNull());
+    const img = () => layer('Plan picture on the plan')!;
     // Until the scale is set: 10 mm per pixel, so the 800 px picture is 8000 mm wide, at half opacity.
     expect(img().getAttribute('width')).toBe('8000');
     expect(img().getAttribute('opacity')).toBe('0.5');
@@ -125,13 +127,13 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     const show = within(section).getByRole('checkbox', { name: 'Show the plan picture' });
     expect((show as HTMLInputElement).checked).toBe(true);
     await user.click(show);
-    await waitFor(() => expect(plan.querySelector('image.plan-picture')).toBeNull());
+    await waitFor(() => expect(layer('Plan picture on the plan')).toBeNull());
     await user.click(show);
-    await waitFor(() => expect(plan.querySelector('image.plan-picture')).not.toBeNull());
+    await waitFor(() => expect(layer('Plan picture on the plan')).not.toBeNull());
     await user.click(within(section).getByRole('button', { name: 'Remove the plan picture' }));
     const confirm = await screen.findByRole('dialog');
     await user.click(within(confirm).getByRole('button', { name: 'Remove' }));
-    await waitFor(() => expect(plan.querySelector('image.plan-picture')).toBeNull());
+    await waitFor(() => expect(layer('Plan picture on the plan')).toBeNull());
     expect(within(section).getByLabelText('Add a plan picture')).toBeTruthy();
 
     // A 3D model from My 3D models (stored on this device), placed On a piece.
@@ -145,13 +147,13 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
       triangles: 12,
       createdAt: new Date().toISOString(),
     });
-    await openSheet();
+    await openSheet(user, panel);
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     const lib = await screen.findByRole('dialog', { name: 'Add a piece' });
     expect(within(lib).getByRole('heading', { name: 'My 3D models' })).toBeTruthy();
     await user.click(await within(lib).findByRole('button', { name: /^Cube ?400 × 300 × 300 mm/ }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-    await openSheet();
+    await openSheet(user, panel);
     const card = await screen.findByRole('region', { name: 'Selected 3D model: Cube' });
     const placed = within(card).getByRole('radiogroup', { name: 'Placed' });
     expect(
@@ -172,10 +174,10 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     expect(cube.position.y).toBeGreaterThan(0);
 
     // The wall behind a single piece: select the sideboard, Edit this piece; its front view shows Wall 1 behind it.
-    await openSheet();
+    await openSheet(user, panel);
     const list = await piecesList(user, panel);
     await user.click(within(list).getAllByRole('button', { name: /Sideboard/ })[0]);
-    await openSheet();
+    await openSheet(user, panel);
     await user.click(await within(panel).findByRole('button', { name: 'Edit this piece' }));
     expect(await screen.findByRole('img', { name: 'Wall 1 behind the piece' })).toBeTruthy();
   });

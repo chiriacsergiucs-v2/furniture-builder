@@ -4,7 +4,15 @@
 // the browser script (tools/connections-typed/find-it.mjs).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import {
+  addPiece,
+  PHONE_WIDTH,
+  printedSheet,
+  renderApp,
+  selectRows,
+  stepItems,
+  WIDTHS,
+} from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
 
@@ -16,27 +24,6 @@ async function newProject(user: User) {
   const start = await screen.findByRole('dialog', { name: 'Start something new' });
   await user.click(within(start).getByRole('button', { name: /Project with several pieces/ }));
   await user.click(await screen.findByRole('radio', { name: 'Compose' }));
-}
-async function addPiece(user: User, name: RegExp) {
-  const all = within(side()).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(side()).getByRole('button', { name: 'Add a piece' }));
-  const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(list).getAllByRole('button', { name })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
-/** Select the rows `which` of the Pieces list (several: the Select switch on). */
-async function selectRows(user: User, ...which: number[]) {
-  const all = within(side()).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  const sw = within(side()).getByRole('checkbox', { name: 'Select' }) as HTMLInputElement;
-  if (!sw.checked) await user.click(sw);
-  const rows = within(within(side()).getByRole('list', { name: 'Pieces' })).getAllByRole('button');
-  for (let i = 0; i < rows.length; i++)
-    if ((rows[i].getAttribute('aria-pressed') === 'true') !== which.includes(i))
-      await user.click(rows[i]);
 }
 /** Select one piece (the Select switch off). */
 async function selectOne(user: User, i: number) {
@@ -77,7 +64,7 @@ describe.each(WIDTHS)('typed connections at %ipx (find-it, ADR-207)', (width) =>
     // The wall unit moved over the base (From left 0): select both → Connected → stacked.
     card = await selectOne(user, 1);
     await setField(user, within(card).getByLabelText('From left'), 0);
-    await selectRows(user, 0, 1);
+    await selectRows(user, [0, 1]);
     const pair = within(side()).getByRole('region', { name: /^2 pieces selected/ });
     const connected = within(pair).getByRole('checkbox', { name: 'Connected' }) as HTMLInputElement;
     expect(connected.disabled).toBe(false);
@@ -102,7 +89,7 @@ describe.each(WIDTHS)('typed connections at %ipx (find-it, ADR-207)', (width) =>
     await newProject(user);
     await addPiece(user, /Blind corner/);
     await addPiece(user, /Base cabinet, doors: 1 door/);
-    await selectRows(user, 0, 1);
+    await selectRows(user, [0, 1]);
     const card = within(side()).getByRole('region', { name: /^2 pieces selected/ });
     const shared = within(
       within(card).getByRole('group', { name: 'Common top, bottom and sides' }),
@@ -133,11 +120,8 @@ describe.each(WIDTHS)('typed connections at %ipx (find-it, ADR-207)', (width) =>
     await user.click(screen.getByRole('tab', { name: /^Assembly/ }));
     const panel = screen.getByRole('tabpanel');
     const piece = (await within(panel).findAllByRole('region', { name: /^Assembly: / }))[0];
-    const steps = () =>
-      within(piece)
-        .getAllByRole('listitem')
-        .filter((li) => li.querySelector('.step-n'));
-    const titles = () => steps().map((li) => li.querySelector('strong')!.textContent);
+    const steps = () => stepItems(piece);
+    const titles = () => steps().map((li) => within(li).getAllByRole('strong')[0].textContent);
     const fit = steps().find((li) => within(li).queryByText('Fit hardware to the sides'))!;
     // Show step lights the hinge's side (the store's lit panels; the 3D view itself is the browser script).
     await user.click(within(fit).getByRole('button', { name: 'Show step' }));
@@ -186,10 +170,11 @@ describe.each(WIDTHS)('typed connections at %ipx (find-it, ADR-207)', (width) =>
     });
     window.print = vi.fn();
     await user.click(within(panel).getByRole('button', { name: 'Print assembly steps' }));
-    await waitFor(() => expect(document.querySelector('.print-root')).not.toBeNull());
-    const printed = [...document.querySelectorAll('.print-root .pr-table tbody tr strong')].map(
-      (s) => s.textContent,
-    );
+    const root = await printedSheet();
+    const printed = within(root)
+      .getAllByRole('table', { hidden: true })
+      .flatMap((table) => within(table).queryAllByRole('strong', { hidden: true }))
+      .map((s) => s.textContent);
     expect(printed[1]).toBe('2. My own step');
     window.dispatchEvent(new Event('afterprint'));
 

@@ -4,7 +4,7 @@
 // bound to it; Information and guides names what a template keeps.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openSheet, renderApp, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
 
@@ -23,8 +23,7 @@ describe.each(WIDTHS)('templates keep variables at %ipx (find-it, ADR-170)', (wi
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     let dlg = await screen.findByRole('dialog');
     await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');

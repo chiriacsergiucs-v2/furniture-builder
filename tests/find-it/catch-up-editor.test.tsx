@@ -3,7 +3,7 @@
 // N119 (ADR-120), in jsdom (ADR-108): from the bare app, by role and visible text, at 1280 and 390 px.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PHONE_WIDTH, piecesList, renderApp, WIDTHS } from './setup';
+import { openSheet, PHONE_WIDTH, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (width) => {
   it('modes, info buttons, Settings, linked copies, turn, plan checkboxes, Projects row, Back to the editor', async () => {
@@ -22,8 +22,7 @@ describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (wid
     expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
+    await openSheet(user, panel);
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     const dlg = await screen.findByRole('dialog');
     await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');

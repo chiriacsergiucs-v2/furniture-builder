@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { t } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import { formatMoney } from '../core/prices';
 import { useDesign } from '../store/designStore';
@@ -36,7 +37,7 @@ export function PrintClient() {
     }));
   }, [view, pieces]);
   return (
-    <div className="print-root" aria-hidden="true">
+    <div className="print-root" role="region" aria-label={t('Printed sheet')} aria-hidden="true">
       <header className="pr-head">
         <h1>{view.title}</h1>
         <p>

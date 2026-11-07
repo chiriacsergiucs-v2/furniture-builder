@@ -39,9 +39,8 @@ describe.each(WIDTHS)('part boards at %ipx (find-it, ADR-108)', (width) => {
 
     // The parts list shows the left side under its own board.
     await user.click(screen.getByRole('tab', { name: /^Parts/ }));
-    const oak = screen
-      .getAllByRole('table')
-      .find((t) => t.querySelector('caption')?.textContent?.includes('PAL 18 oak'))!;
+    // A table's caption is its name.
+    const oak = screen.getAllByRole('table', { name: /PAL 18 oak/ })[0];
     expect(within(oak).getByText('Left side')).toBeTruthy();
 
     // Wall brackets drop the plinth: its board choice is kept and warned about, and Clear removes it.

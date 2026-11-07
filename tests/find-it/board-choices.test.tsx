@@ -67,9 +67,8 @@ describe.each(WIDTHS)('board choices at %ipx (find-it, ADR-164)', (width) => {
 
     // The parts list: the new piece's doors and back are on PAL 18 oak too.
     await user.click(screen.getByRole('tab', { name: /^Parts/ }));
-    const oak = screen
-      .getAllByRole('table')
-      .find((t) => t.querySelector('caption')?.textContent?.includes('PAL 18 oak'))!;
+    // A table's caption is its name.
+    const oak = screen.getAllByRole('table', { name: /PAL 18 oak/ })[0];
     expect(within(oak).getAllByText(/Cabinet: (Door|Back)/).length).toBeGreaterThan(0);
     expect(within(oak).getAllByText(/Cabinet: Back/).length).toBeGreaterThan(0);
   });

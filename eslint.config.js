@@ -15,4 +15,18 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
+  {
+    // Find-it tests find by role and visible text, never by class name (CLAUDE.md R3, ADR-224).
+    files: ['tests/find-it/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'CallExpression[callee.property.name=/^querySelector(All)?$/]',
+          message:
+            'Find-it tests find by role and visible text (getByRole, within), not querySelector (ADR-224).',
+        },
+      ],
+    },
+  },
 );

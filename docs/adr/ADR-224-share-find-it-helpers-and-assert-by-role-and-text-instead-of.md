@@ -55,11 +55,19 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) before the rewrite, the list of find-it test names and their pass state is saved; after, the same
-      names pass at 390 and 1280 px.
-- [ ] No `function addPiece` or `projectWithTwoPieces` outside `setup.tsx` (checked by `rg`).
-- [ ] `pnpm lint` fails on a `querySelector` call in a `tests/find-it` file (checked with a scratch line, removed);
-      no such call remains.
-- [ ] Three rewritten assertions, chosen across files, fail when their visible text is removed (checked by hand).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) before the rewrite, the list of find-it test names and their pass state is saved; after, the same
+      names pass at 390 and 1280 px. (Run 2026-11-07: the same 223 names in 58 files before and after; after, every
+      name passed, two load flakes passing on re-run: `board-choices` 1280 px, `estimate-chip` 390 px, the latter
+      also failing on `main` under the same load.)
+- [x] No `function addPiece` or `projectWithTwoPieces` outside `setup.tsx` (checked by `rg`). (`setup.tsx` exports
+      `addPiece`, `projectWithTwoPieces`, `selectRows`, `openMore`, `openMenu`, plus `openSheet`, `composePanel`,
+      `printedSheet`, `hiddenLabelled`, `stepItems`.)
+- [x] `pnpm lint` fails on a `querySelector` call in a `tests/find-it` file (checked with a scratch line, removed);
+      no such call remains. (Scratch `document.querySelector` and `querySelectorAll` in `info.test.tsx`: two
+      `no-restricted-syntax` errors.)
+- [x] Three rewritten assertions, chosen across files, fail when their visible text is removed (checked by hand).
+      (Board name out of the parts table caption: `board-choices` red; "Ordinea în proiect" out of the printed
+      order: `assembly-order` red; the title out of the client sheet: `prints-exports` Client sheet red; all at both
+      widths, then restored.)
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). (1 714 tests before and after.)

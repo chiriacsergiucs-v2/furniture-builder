@@ -4,20 +4,7 @@
 // (tools/turn-handle/find-it.mjs).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function addPiece(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-  await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
-  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-  const place = screen.queryByRole('button', { name: 'Place to the right' });
-  if (place) await user.click(place);
-}
+import { addPiece, openSheet, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('turn handle at %ipx (find-it, ADR-169)', (width) => {
   it('one selected piece → a "Turn Base cabinet…" handle; Lock hides it; two selected have none', async () => {
@@ -27,9 +14,8 @@ describe.each(WIDTHS)('turn handle at %ipx (find-it, ADR-169)', (width) => {
     await user.type(within(create).getByRole('textbox'), `Turn ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
-    if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    await addPiece(user, panel);
+    await openSheet(user, panel);
+    await addPiece(user);
 
     const plan = await screen.findByRole('figure', { name: /Room plan, seen from above/ });
     const handle = () => within(plan).queryByRole('slider', { name: /^Turn Base cabinet/ });
@@ -58,7 +44,7 @@ describe.each(WIDTHS)('turn handle at %ipx (find-it, ADR-169)', (width) => {
     await waitFor(() => expect(handle()).toBeTruthy());
 
     // Two selected: none.
-    await addPiece(user, panel);
+    await addPiece(user);
     const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
     if (all) await user.click(all);
     await user.click(within(panel).getByRole('checkbox', { name: 'Select' }));
