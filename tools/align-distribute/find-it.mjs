@@ -2,13 +2,13 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/align-distribute/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // From the bare app at 1440 and 390 px, by visible text: select three pieces → Distribute evenly → equal gaps shown;
 // drag a wall unit over a base unit → the "centre" label. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

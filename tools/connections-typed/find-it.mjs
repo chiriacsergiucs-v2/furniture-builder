@@ -7,13 +7,13 @@
 // copies"; a blind corner and a base cabinet → Shared sides; Build & Preview › 3D › Assembly → Show step on "Fit
 // hardware to the sides" lights the 3D view (`document.body.dataset.lit`), Move step up, Reset the steps; New single
 // piece → Lounger → Settings → Backrest end → Right. No page errors. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4307/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl('http://localhost:4307/furniture-builder/');
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

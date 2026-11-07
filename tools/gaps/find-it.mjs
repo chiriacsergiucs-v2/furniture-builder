@@ -1,10 +1,10 @@
 // Find-it acceptance for the Gaps page (ADR-101, CLAUDE.md R3), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/gaps/find-it.mjs http://localhost:4173/furniture-builder/
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl } from '../lib/harness.mjs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const url = previewUrl();
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok, detail });

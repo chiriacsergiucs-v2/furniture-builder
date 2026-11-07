@@ -1,11 +1,10 @@
 // Production acceptance for ADR-198. Run with the existing Playwright browser tooling, as other tools/* scripts.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
-const url = process.argv[2] ?? 'http://127.0.0.1:4173/furniture-builder/';
-const out = process.argv[3] ?? '/tmp/furniture-shell-acceptance';
+const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
+const out = outDir('/tmp/furniture-shell-acceptance');
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
     : [],

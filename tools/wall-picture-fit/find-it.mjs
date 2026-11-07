@@ -6,15 +6,15 @@
 // "Apply" changes the picture in the front view and in 3D, "Reset" restores it; 3D › "Adjust wall picture" › tap
 // Wall 1 › dragging the wall changes "From left", a handle changes "W … × H …", Undo restores it, "Fill wall" fills the
 // wall again; the front view follows; with Adjust off the 3D view behaves as before. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 /** Snapping range on the wall (SNAP_RANGE, ADR-070): a shift must go past it to show. */
 const SNAP = 60;
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

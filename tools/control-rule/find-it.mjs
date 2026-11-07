@@ -5,13 +5,13 @@
 // Build & Preview, a single piece and a project) and Settings. In every state it measures each visible button, tab
 // and segmented label against its line height (one line each), and each control's height: 38 px with a mouse, 30 in
 // toolbars and tables (`--control-h`, `--control-h-sm`), and at least 44 × 44 with touch. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

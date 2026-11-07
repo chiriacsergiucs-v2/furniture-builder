@@ -1,7 +1,22 @@
 import 'fake-indexeddb/auto';
-import { describe, expect, it } from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
+import Dexie from 'dexie';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { templates } from '../src/core/design';
-import { db, deleteDesign, listDesigns, loadDesign, saveDesign } from '../src/persist/db';
+
+type Db = typeof import('../src/persist/db');
+let db: Db['db'], deleteDesign: Db['deleteDesign'], listDesigns: Db['listDesigns'];
+let loadDesign: Db['loadDesign'], saveDesign: Db['saveDesign'];
+
+// ADR-237: every test gets a new, empty IndexedDB and a fresh database module, as tests/find-it/setup.tsx does, so
+// the tests pass in any order. Dexie is not reloaded by `vi.resetModules()` and keeps the factory it found first, so it
+// is handed the new one too.
+beforeEach(async () => {
+  globalThis.indexedDB = new IDBFactory();
+  Dexie.dependencies.indexedDB = globalThis.indexedDB;
+  vi.resetModules();
+  ({ db, deleteDesign, listDesigns, loadDesign, saveDesign } = await import('../src/persist/db'));
+});
 
 describe('local storage', () => {
   it('saves, lists newest first, loads and deletes designs', async () => {

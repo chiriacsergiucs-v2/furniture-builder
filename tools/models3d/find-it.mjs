@@ -3,11 +3,11 @@
 // Starts from the bare app at each width and finds everything by visible text. The script writes its own small model
 // files into <out dir> (a red cube as .glb, a .gltf that points outside itself); no binary model is committed.
 // Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
 
 /** A 0.6 m red cube as a GLB (12 triangles). */
@@ -95,7 +95,7 @@ writeFileSync(
   }),
 );
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });

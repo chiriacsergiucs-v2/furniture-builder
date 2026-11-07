@@ -5,13 +5,13 @@
 // the front view → tap both → both pressed; the plan's and 3D's Select show checked; Group groups them. 3D: Esc →
 // tap both → both selected. Desktop: Shift-click in 3D adds a piece. Piece list: Select on → tap two rows → both
 // selected. No horizontal scroll at 390 px. Not part of `pnpm test`.
-import { chromium } from 'playwright';
+import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/';
-const out = process.argv[3] ?? 'dist-acceptance';
+const url = previewUrl();
+const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
+const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });
