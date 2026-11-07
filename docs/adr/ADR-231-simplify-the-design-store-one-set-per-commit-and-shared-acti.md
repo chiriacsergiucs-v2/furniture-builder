@@ -58,11 +58,19 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) subscription counter: one `updateCabinet` (via `updateParams`) in drill mode notifies subscribers
-      once (red before: 2 or more).
-- [ ] (test first) table-driven: each `projectAction` wrapper is a no-op (no history entry) when `f(p) === p`.
-- [ ] (test first) drilling into a piece and editing pushes no piece-history entry; undo still works after leaving.
-- [ ] `closeProject` is gone; the five tests that used it pass with their replacement.
-- [ ] Every existing store test passes unchanged.
+- [x] (test first) subscription counter: one `updateCabinet` (via `updateParams`) in drill mode notifies subscribers
+      once (red before: 2 or more). Evidence: `tests/store-shape.test.ts` › "one edit of a piece loaded from the project
+      notifies subscribers once".
+- [x] (test first) table-driven: each `projectAction` wrapper is a no-op (no history entry) when `f(p) === p`.
+      Evidence: `tests/store-shape.test.ts` › "every project action wrapper is a no-op when its change leaves the project
+      as it is" (15 wrappers; `removeVariableSet` is a wrapper too but `removeSet` always returns a new project).
+- [x] (test first) drilling into a piece and editing pushes no piece-history entry; undo still works after leaving.
+      Evidence: `tests/store-shape.test.ts` › "editing a piece loaded from the project adds no piece history; project
+      undo still works after leaving".
+- [x] `closeProject` is gone; the five tests that used it pass with their replacement. Evidence: six test files used
+      it (catalog-families-210, research-batch-4, project-undo, prints-exports-ui, select-path, rotation); each now calls
+      `load(design)`, the action the UI clears the project with, and passes.
+- [x] Every existing store test passes unchanged (apart from the `closeProject` calls above). The `update*` actions
+      stay as one-line aliases of `updateParams` because the Inspector and Editors select them.
 - [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
