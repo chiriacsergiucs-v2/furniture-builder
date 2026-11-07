@@ -215,6 +215,9 @@ jobs:
 
       - run: pnpm build:ci
 
+      # ADR-229: the Russian UI dictionary stays a lazy chunk; the entry chunk's Cyrillic stays under its budget.
+      - run: pnpm exec vitest run tests/bundle-cyrillic.test.ts
+
   # The one check that merge rules and the babysit skill wait on (ADR-197): green only when every job above passed,
   # or, for a docs-only change, when `checks` passed and the tests and build were skipped.
   verify:

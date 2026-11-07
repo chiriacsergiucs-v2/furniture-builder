@@ -21,12 +21,15 @@ import {
   notCountedPrint,
   type FastenerCount,
 } from '../src/core/fasteners';
-import { setLang, tr } from '../src/core/i18n';
+import { loadDictionary, setLang, tr } from '../src/core/i18n';
 import { pt, setPrintLang, type PrintLang } from '../src/core/i18n/print';
 import { PRINT_EN, PRINT_RU } from '../src/core/i18n/print-text';
 import { data_catalog } from '../src/core/i18n/ru/data-catalog';
 import { shoppingCsvRo, shoppingList } from '../src/core/shopping';
 import { STEPS } from '../src/core/wizard/steps';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 const LATIN = /[A-Za-z]/;
 

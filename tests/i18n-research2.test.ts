@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { hasRu } from '../src/core/i18n';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { hasRu, loadDictionary } from '../src/core/i18n';
 import { APPRECIATION_KEYS, DEMAND_SCALE, VALUE_BANDS } from '../src/core/research/catalog';
 import { ENSEMBLE_APP_STATUS, ENSEMBLE_MERGES } from '../src/core/research/ensemble-2026-10-23.app';
 import {
@@ -20,6 +20,9 @@ import {
   IMPLEMENTATION_LABEL,
   SELECTION_LABEL,
 } from '../src/core/research/types';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 /** Text that is a code, not words: priorities (P0, P1/P2), ids, numbers. */
 const isCode = (s: string) => !/[a-z]{2}/i.test(s) || /^P[0-3]([/ –-]P?[0-3])*$/.test(s);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { cutlist, lengthsList } from '../src/core/cutlist';
 import { defaultHandlePosition } from '../src/core/cabinet';
@@ -15,7 +15,7 @@ import {
   validateDesign,
   wrap,
 } from '../src/core/design';
-import { setLang } from '../src/core/i18n';
+import { loadDictionary, setLang } from '../src/core/i18n';
 import { nestingJobs } from '../src/core/nesting/fromDesign';
 import { overlaps } from '../src/core/geometry';
 import type {
@@ -26,6 +26,9 @@ import type {
   Space,
   SplitSize,
 } from '../src/core/types';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 const noOverlaps = (d: Design) => {
   const P = buildModel(d).panels;

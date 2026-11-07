@@ -1,8 +1,21 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { templates } from '../src/core/design';
 import type { CabinetParams, Design } from '../src/core/types';
-import { format, getLang, hasRu, parseLang, ruPlural, setLang, t, tr } from '../src/core/i18n';
+import {
+  format,
+  getLang,
+  hasRu,
+  loadDictionary,
+  parseLang,
+  ruPlural,
+  setLang,
+  t,
+  tr,
+} from '../src/core/i18n';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 afterEach(() => setLang('en'));
 
