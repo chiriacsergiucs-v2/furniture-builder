@@ -18,7 +18,7 @@ import { BAND_KINDS, bandProblems, bandText, parseTenths, type Decor } from '../
 import { bandFromOffer, bandOffers, loadSellerCatalogs, type SellerCatalog } from '../core/sellers';
 import { materialKey, runOf } from '../core/project';
 import type { Design, EdgeBand, EdgeBandKind, Material } from '../core/types';
-import { listDecors } from '../persist/db';
+import { listDecors } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { InfoTip, MmField, rovingKeys, rovingTab, Select } from './controls';
 import { Dialog } from './Dialogs';

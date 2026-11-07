@@ -41,6 +41,7 @@ const MODEL = [
 ].map((m) => `src/core/${m}.ts`);
 const NESTING = ['place', 'validate', 'types'].map((m) => `src/core/nesting/${m}`);
 // Allowance until ADR-230: the ui modules the viewer imports today, by name (eslint.config.js lists the same).
+// useImageUrls moved from src/persist/images to src/ui (ADR-223); the viewer's import of it followed.
 const VIEWER_UI = [
   'Clearances',
   'CountStepper',
@@ -49,6 +50,7 @@ const VIEWER_UI = [
   'keepProportions',
   'planDrag',
   'renderSupport',
+  'useImageUrls',
   'useLook',
   'useMediaQuery',
   'useSnap',

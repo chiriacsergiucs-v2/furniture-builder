@@ -317,6 +317,17 @@ describe('every write reports its change (ADR-235)', () => {
     ['deletePrice', () => dbm.deletePrice('pr1'), () => [['prices', 'pr1', true]]],
     ['saveModel', () => dbm.saveModel(model('mo1') as never), () => [['models', 'mo1', false]]],
     ['deleteModelIfUnused', () => dbm.deleteModelIfUnused('mo1'), () => [['models', 'mo1', true]]],
+    // Links to account records (ADR-128, named functions since ADR-223) are not saved work: no change reported.
+    [
+      'saveAccountLink',
+      () => dbm.saveAccountLink({ accountId: 'a', table: 'designs', localId: 'l1' }),
+      () => [],
+    ],
+    [
+      'deleteAccountLink',
+      () => dbm.deleteAccountLink({ accountId: 'a', table: 'designs', localId: 'l1' }),
+      () => [],
+    ],
     // Device settings are not saved work: no change reported.
     ['setSetting', () => dbm.setSetting('k', 1), () => []],
     ['deleteSetting', () => dbm.deleteSetting('k'), () => []],
@@ -350,6 +361,162 @@ describe('every write reports its change (ADR-235)', () => {
       ]);
       await flush();
       expect(seen).toEqual([['prices', 'r1', false]]);
+    } finally {
+      off();
+    }
+  });
+});
+
+// ADR-223: the ui saves through `src/store/libraryStore.ts`. Each library write runs the persist function of the same
+// name, so it reports exactly the changes the direct call reported (the folder backup and the account upload follow
+// them). Each case runs from an empty database twice, once directly and once through the library, and the reported
+// changes must be the same and not empty where the direct call reports any.
+describe('library writes report their changes like the direct calls (ADR-223)', () => {
+  type Seen = [table: string, key: string, deleted: boolean];
+  type Writes = Record<string, (...args: never[]) => Promise<unknown>>;
+  const flush = () => new Promise((r) => setTimeout(r, 10));
+  const d = templates[0].create();
+  const p = newProject('Library');
+  const v = (id: string) => ({ ...makeVersion(p, 'manual'), id });
+  const img = (id: string) => ({
+    id,
+    name: id,
+    type: 'image/png',
+    width: 1,
+    height: 1,
+    bytes: new Uint8Array([1]).buffer,
+    createdAt: '2026',
+  });
+  // [name, rows put first (not counted), the write with the module's function of that name]
+  const cases: [
+    name: string,
+    seed: () => Promise<unknown>,
+    run: (m: Writes) => Promise<unknown>,
+  ][] = [
+    ['saveDesign', async () => {}, (m) => m.saveDesign(d as never)],
+    ['copyDesign', () => dbm.saveDesign(d), (m) => m.copyDesign(d.id as never, 'c' as never)],
+    ['deleteDesign', () => dbm.saveDesign(d), (m) => m.deleteDesign(d.id as never)],
+    ['saveProject', async () => {}, (m) => m.saveProject(p as never)],
+    ['copyProject', () => dbm.saveProject(p), (m) => m.copyProject(p.id as never, 'c' as never)],
+    ['deleteProject', () => dbm.saveProject(p), (m) => m.deleteProject(p.id as never)],
+    [
+      'deleteProjectVersion',
+      () => dbm.saveProjectVersion(v('v1')),
+      (m) => m.deleteProjectVersion('v1' as never),
+    ],
+    [
+      'deleteProjectVersions',
+      () => db.projectVersions.bulkPut([v('v2'), v('v3')]),
+      (m) => m.deleteProjectVersions(['v2', 'v3'] as never),
+    ],
+    [
+      'saveProjectTemplate',
+      async () => {},
+      (m) => m.saveProjectTemplate({ id: 'pt1', name: 'n', updatedAt: '2026' } as never),
+    ],
+    [
+      'deleteProjectTemplate',
+      () => dbm.saveProjectTemplate({ id: 'pt1', name: 'n', updatedAt: '2026' } as never),
+      (m) => m.deleteProjectTemplate('pt1' as never),
+    ],
+    [
+      'saveTemplate',
+      async () => {},
+      (m) => m.saveTemplate({ id: 't1', updatedAt: '2026' } as never),
+    ],
+    [
+      'replaceDecors',
+      () => db.decors.put({ id: 'old' } as never),
+      (m) => m.replaceDecors([{ id: 'x1' }, { id: 'x2' }] as never),
+    ],
+    [
+      'clearDecors',
+      () => db.decors.bulkPut([{ id: 'x1' }, { id: 'x2' }] as never),
+      (m) => m.clearDecors(),
+    ],
+    ['replaceBands', async () => {}, (m) => m.replaceBands([{ id: 'b1' }] as never)],
+    [
+      'saveGapMark',
+      async () => {},
+      (m) => m.saveGapMark({ gapId: 'G-1', updatedAt: '2026' } as never),
+    ],
+    [
+      'saveGapMarks',
+      async () => {},
+      (m) => m.saveGapMarks([{ gapId: 'G-1' }, { gapId: 'G-2' }] as never),
+    ],
+    [
+      'deleteImages',
+      () => db.images.bulkPut([img('i1'), img('i2')]),
+      (m) => m.deleteImages(['i1', 'i2'] as never),
+    ],
+    [
+      'deleteModelIfUnused',
+      () =>
+        db.models.put({
+          id: 'mo1',
+          name: 'mo1',
+          format: 'glb',
+          bytes: new Uint8Array([1]).buffer,
+          size: { w: 1, h: 1, d: 1 },
+          triangles: 1,
+          createdAt: '2026',
+        }),
+      (m) => m.deleteModelIfUnused('mo1' as never),
+    ],
+    [
+      'savePrices',
+      async () => {},
+      (m) =>
+        m.savePrices([
+          { id: 'pr1', unit: 'piece', amount: 2 },
+          { id: 'pr2', unit: 'piece', amount: 3 },
+        ] as never),
+    ],
+    ['setSetting', async () => {}, (m) => m.setSetting('k' as never, 1 as never)],
+  ];
+  const writers = /^(save|delete|replace|clear|copy|set)[A-Z]/;
+
+  it('the list covers every write of the library, each a persist write of the same name', async () => {
+    const lib = await import('../src/store/libraryStore');
+    const names = Object.keys(lib)
+      .filter((n) => writers.test(n))
+      .sort();
+    expect(cases.map(([n]) => n).sort()).toEqual(names);
+    for (const n of names) expect(typeof (dbm as unknown as Writes)[n], n).toBe('function');
+  });
+
+  it('each library write reports the same changes as the direct persist call', async () => {
+    const lib = (await import('../src/store/libraryStore')) as unknown as Writes;
+    const known = new Set([d.id, p.id]);
+    const seen: Seen[] = [];
+    // A copy gets a new random id each run: compared as "<new id>".
+    const sorted = (l: Seen[], copy: boolean) =>
+      l
+        .map(([t, k, del]): Seen => [t, copy && !known.has(k) ? '<new id>' : k, del])
+        .sort((a, b) => a.join().localeCompare(b.join()));
+    const once = async (
+      name: string,
+      seed: () => Promise<unknown>,
+      run: () => Promise<unknown>,
+    ) => {
+      await Promise.all(db.tables.map((table) => table.clear()));
+      await seed();
+      await flush();
+      seen.length = 0;
+      await run();
+      await flush();
+      return sorted(seen, name.startsWith('copy'));
+    };
+    const off = onSavedChange((c) => seen.push([c.table, c.key, c.deleted]));
+    try {
+      for (const [name, seed, run] of cases) {
+        const direct = await once(name, seed, () => run(dbm as unknown as Writes));
+        const viaLibrary = await once(name, seed, () => run(lib));
+        expect([name, viaLibrary]).toEqual([name, direct]);
+        if (!['replaceBands', 'setSetting'].includes(name))
+          expect(direct.length, name).toBeGreaterThan(0);
+      }
     } finally {
       off();
     }

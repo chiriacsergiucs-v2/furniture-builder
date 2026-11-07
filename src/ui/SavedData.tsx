@@ -23,7 +23,7 @@ import {
   type FolderState,
   type StorageState,
 } from '../persist/backup';
-import { db, getSetting, setSetting } from '../persist/db';
+import { countDesigns, countProjects, getSetting, setSetting } from '../store/libraryStore';
 import { onSavedChange } from '../persist/events';
 import { getLang, t } from '../core/i18n';
 import { Dialog } from './Dialogs';
@@ -351,8 +351,8 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
     let live = true;
     const check = async () => {
       const [designs, projects, status, dismissedAt] = await Promise.all([
-        db.designs.count().catch(() => 0),
-        db.projects.count().catch(() => 0),
+        countDesigns().catch(() => 0),
+        countProjects().catch(() => 0),
         lastBackup(),
         getSetting<string>(NOTICE_KEY),
       ]);

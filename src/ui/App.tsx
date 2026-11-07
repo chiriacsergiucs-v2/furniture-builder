@@ -9,7 +9,7 @@ import {
   rememberLastProject,
   saveDesign,
   saveProject,
-} from '../persist/db';
+} from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';

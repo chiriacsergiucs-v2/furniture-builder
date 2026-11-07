@@ -13,7 +13,12 @@ import { frontEdge } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
-import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '../persist/db';
+import {
+  deleteModelIfUnused,
+  listModels,
+  loadModel,
+  type StoredModel,
+} from '../store/libraryStore';
 import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';

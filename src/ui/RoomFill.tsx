@@ -19,7 +19,7 @@ import {
 } from '../core/wallfill';
 import { CURRENCY_ID, DEFAULT_CURRENCY, formatMoney, parseMoney } from '../core/prices';
 import { builtInStyles, yourStyles, type Style } from '../core/styles';
-import { listProjects } from '../persist/db';
+import { listProjects, saveProject } from '../store/libraryStore';
 import { usePrices } from '../store/priceStore';
 import {
   checkRoom,
@@ -42,7 +42,6 @@ import {
   type ShapeSizes,
 } from '../core/room';
 import { snapshotSvg } from '../core/snapshot';
-import { saveProject } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';

@@ -3,7 +3,7 @@ import { productRoots } from '../core/design';
 import { t } from '../core/i18n';
 import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
-import { imageKey, useImageUrls } from '../persist/images';
+import { imageKey, useImageUrls } from './useImageUrls';
 import { useDesign } from '../store/designStore';
 import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';

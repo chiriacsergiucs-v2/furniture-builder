@@ -17,7 +17,7 @@ import {
   variableScope,
   variableUsers,
 } from '../core/variables';
-import { saveProject } from '../persist/db';
+import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { Dialog } from './Dialogs';

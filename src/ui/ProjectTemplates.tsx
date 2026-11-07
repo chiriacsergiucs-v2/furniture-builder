@@ -10,7 +10,7 @@ import {
   listProjectTemplates,
   saveProject,
   saveProjectTemplate,
-} from '../persist/db';
+} from '../store/libraryStore';
 import { projectTemplateFile } from '../persist/projectTemplateFile';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';

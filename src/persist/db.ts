@@ -226,7 +226,13 @@ class FurnitureDb extends Dexie {
   }
 }
 
+/**
+ * The raw database handle. Used only inside `src/persist` and by tests (ADR-223): the app goes through the named
+ * functions below (the ui through `src/store/libraryStore.ts`); `tests/layering.test.ts` refuses any other import.
+ */
 export const db = new FurnitureDb();
+/** The database type, for functions that take another instance (tests). */
+export type Database = FurnitureDb;
 
 /**
  * Report saved rows after their write succeeded (ADR-235): the folder backup, the account upload and the lists that
@@ -261,6 +267,14 @@ export async function loadDesign(id: string, database = db): Promise<Design | un
 
 export const deleteDesign = (id: string, database = db) =>
   database.designs.delete(id).then(saved('designs', [id], true));
+
+/** How many design and project rows are saved (readable or not), e.g. for the device-only notice (ADR-140). */
+export const countDesigns = (database = db): Promise<number> => database.designs.count();
+export const countProjects = (database = db): Promise<number> => database.projects.count();
+/** Every stored design and template row as it is, unread rows included, for the account upload (ADR-128). */
+export const designRows = (database = db): Promise<StoredDesign[]> => database.designs.toArray();
+export const templateRows = (database = db): Promise<StoredTemplate[]> =>
+  database.templates.toArray();
 
 export async function saveProject(p: Project, database = db): Promise<void> {
   await database.projects.put({ id: p.id, name: p.name, updatedAt: p.updatedAt, project: p });
@@ -443,6 +457,9 @@ export async function saveImage(img: StoredImage, database = db): Promise<void> 
   await database.images.put(img);
   savedRows('images', [img.id]);
 }
+/** Stored picture rows as they are (unreadable ones too), `undefined` where none (ADR-128). */
+export const imageRows = (ids: string[], database = db) => database.images.bulkGet(ids);
+
 /** The stored picture if it is readable; an unreadable row is left in place (ADR-012). */
 export async function loadImage(id: string, database = db): Promise<StoredImage | undefined> {
   const row = await database.images.get(id);
@@ -648,6 +665,21 @@ export async function deleteModelIfUnused(
   if (r.deleted) savedRows('models', [id], true);
   return r;
 }
+
+// Links between saved items and account records (ADR-128). Not saved work: no change is reported.
+export const accountLinksOf = (accountId: string, database = db): Promise<AccountLink[]> =>
+  database.accountLinks.where('accountId').equals(accountId).toArray();
+export const allAccountLinks = (database = db): Promise<AccountLink[]> =>
+  database.accountLinks.toArray();
+export const loadAccountLink = (
+  accountId: string,
+  table: string,
+  localId: string,
+  database = db,
+): Promise<AccountLink | undefined> => database.accountLinks.get([accountId, table, localId]);
+export const saveAccountLink = (l: AccountLink, database = db) => database.accountLinks.put(l);
+export const deleteAccountLink = (l: AccountLink, database = db) =>
+  database.accountLinks.delete([l.accountId, l.table, l.localId]);
 
 const LAST_KEY = 'furniture-builder:last-design';
 const LAST_PROJECT_KEY = 'furniture-builder:last-project';

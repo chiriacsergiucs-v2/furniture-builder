@@ -12,7 +12,7 @@ import {
   saveProject,
   type StoredDesign,
   type StoredProject,
-} from '../../persist/db';
+} from '../../store/libraryStore';
 import { useDesign } from '../../store/designStore';
 import { askConfirm, askText } from '../Confirm';
 import { ProjectTemplateList } from '../ProjectTemplates';

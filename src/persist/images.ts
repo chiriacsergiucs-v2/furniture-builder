@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { newId } from '../core/design';
 import { t } from '../core/i18n';
 import {
@@ -15,8 +14,9 @@ import type { MaterialImage } from '../core/types';
 import { db, loadImage, saveImage } from './db';
 
 /**
- * Pictures for materials (ADR-048), browser side: import a file the user picked, and share one object URL per
- * stored picture between the views. Nothing is uploaded; problems come back as messages, never as exceptions.
+ * Pictures for materials (ADR-048), browser side: import a file the user picked, and carry pictures in and out of
+ * files. The views share one object URL per stored picture through `src/ui/useImageUrls.ts` (ADR-223). Nothing is
+ * uploaded; problems come back as messages, never as exceptions.
  */
 export type ImportResult =
   { ok: true; image: MaterialImage; color: string } | { ok: false; problem: string };
@@ -71,72 +71,6 @@ export async function importImage(file: File): Promise<ImportResult> {
     bitmap.close();
   }
 }
-
-/** 'missing': no readable picture with that id on this device. */
-export type ImageUrl = string | 'missing';
-
-const cache = new Map<string, { refs: number; url?: ImageUrl; wait: Promise<ImageUrl> }>();
-
-function acquire(id: string): Promise<ImageUrl> {
-  const hit = cache.get(id);
-  if (hit) {
-    hit.refs++;
-    return hit.wait;
-  }
-  const entry: { refs: number; url?: ImageUrl; wait: Promise<ImageUrl> } = {
-    refs: 1,
-    wait: Promise.resolve('missing'),
-  };
-  entry.wait = loadImage(id)
-    .then(
-      (row) => (row ? URL.createObjectURL(new Blob([row.bytes], { type: row.type })) : 'missing'),
-      () => 'missing' as const,
-    )
-    .then((url) => {
-      entry.url = url;
-      // Released while loading: free it straight away.
-      if (entry.refs <= 0 && url !== 'missing') URL.revokeObjectURL(url);
-      return url;
-    });
-  cache.set(id, entry);
-  return entry.wait;
-}
-
-function release(id: string) {
-  const e = cache.get(id);
-  if (!e) return;
-  if (--e.refs > 0) return;
-  cache.delete(id);
-  if (e.url && e.url !== 'missing') URL.revokeObjectURL(e.url);
-}
-
-/**
- * Object URLs for the given picture ids, loaded from this device; released when no view uses them any more.
- * `ids` should be a stable, sorted key (joined with ',') so the effect runs only when the set changes.
- */
-export function useImageUrls(key: string): Map<string, ImageUrl> {
-  const [urls, setUrls] = useState<{ key: string; map: Map<string, ImageUrl> }>({
-    key: '',
-    map: new Map(),
-  });
-  useEffect(() => {
-    const ids = key ? key.split(',') : [];
-    let live = true;
-    Promise.all(ids.map((id) => acquire(id).then((u) => [id, u] as const))).then((pairs) => {
-      if (live) setUrls({ key, map: new Map(pairs) });
-    });
-    return () => {
-      live = false;
-      ids.forEach(release);
-    };
-  }, [key]);
-  return urls.key === key ? urls.map : EMPTY;
-}
-const EMPTY = new Map<string, ImageUrl>();
-
-/** Sorted, de-duplicated picture ids of the materials, as the key `useImageUrls` takes. */
-export const imageKey = (materials: { image?: { id: string } }[]) =>
-  [...new Set(materials.flatMap((m) => (m.image ? [m.image.id] : [])))].sort().join(',');
 
 /**
  * A design or project file with its pictures inside (ADR-048, user answer 2026-10-24): `pictures` holds every

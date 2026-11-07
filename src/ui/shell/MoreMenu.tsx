@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { exportFusionPython } from '../../core/fusion';
 import { pictureHolders } from '../../core/project';
 import { imageIdsOf } from '../../core/surface';
-import { deleteImages, unusedImageIds } from '../../persist/db';
+import { deleteImages, unusedImageIds } from '../../store/libraryStore';
 import { withPictures } from '../../persist/images';
 import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';

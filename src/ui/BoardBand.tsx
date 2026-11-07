@@ -17,7 +17,7 @@ import type { EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { Segmented, Select, Toggle } from './controls';
 import { BandProduct } from './SellerLinks';
-import { useImageUrls } from '../persist/images';
+import { useImageUrls } from './useImageUrls';
 
 /**
  * ADR-077: the edge band on a board, named by the user from the supplier's datasheet. Nothing is filled in: the

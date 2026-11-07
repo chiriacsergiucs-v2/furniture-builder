@@ -180,7 +180,7 @@ export function InYourAccount({ onOpened }: { onOpened: () => void }) {
       return;
     }
     if (res.table === 'designs') {
-      const { loadDesign } = await import('../persist/db');
+      const { loadDesign } = await import('../store/libraryStore');
       const d = await loadDesign(res.id);
       if (d) {
         useDesign.getState().load(d, { fromStorage: true });
