@@ -705,21 +705,29 @@ export const useDesign = create<State>((rawSet, get) => {
   const commitProject = (
     next: Project,
     name?: string,
-    opts?: { amend?: boolean },
+    opts?: { amend?: boolean; base?: Project | null },
   ): string | null => {
+    // What the change is checked against and undoes to: the current project, or the project as it was when the
+    // piece editor opened (ADR-226).
+    const base = opts && 'base' in opts ? (opts.base ?? null) : get().project;
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
-    let linked = propagateLinks(get().project, next, get().linkAll);
+    let linked = propagateLinks(base, next, get().linkAll);
     // Template references keep their overrides up to date while the template's revision is the catalog's (ADR-124).
     const items = linked.items.map((i) => syncRef(i, catalogFamilies));
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
     // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
     // the whole change is refused.
-    const locked =
-      sizeLockBlocked(get().project, linked) ?? pieceLocksBlocked(get().project, linked);
+    const locked = sizeLockBlocked(base, linked) ?? pieceLocksBlocked(base, linked);
     if (locked) {
-      set({ notice: locked });
+      // Refused: the project stays as it was before the change (ADR-226: also after a piece-editor session).
+      const cur = get().project;
+      set(
+        base && cur !== base
+          ? { notice: locked, project: base, projectModel: buildProjectModel(base) }
+          : { notice: locked },
+      );
       syncDrill();
       return locked;
     }
@@ -730,7 +738,7 @@ export const useDesign = create<State>((rawSet, get) => {
     // off, the parts of run requests a binding changed are made again (ADR-209).
     const synced = applyPieceBindings(syncSets(linked));
     const bound = remakeAskedParts(synced, applyBindings(synced));
-    const held = heldByBinding(get().project, linked, bound);
+    const held = heldByBinding(base, linked, bound);
     // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
       ...pruneWorktopEdges(
@@ -745,7 +753,7 @@ export const useDesign = create<State>((rawSet, get) => {
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
-    const prev = get().project;
+    const prev = base;
     // Amending (a template placed by the tap after its insert): the change joins the step before it (ADR-123).
     const amend = !!opts?.amend && get().projectPast.length > 0;
     set({
@@ -1475,34 +1483,15 @@ export const useDesign = create<State>((rawSet, get) => {
     backToProject: () => {
       const raw = get().project;
       if (!raw) return;
-      // A resized piece moves whatever sits on it; run parts follow it (ADR-061).
-      // Edits made in the piece editor reach its linked copies, or unlink it (ADR-111).
       const before = projectBeforeEdit;
-      const p = refreshRunParts(resolvePlacements(propagateLinks(before, raw, get().linkAll)));
-      // Edits made in the piece editor become one project undo step.
       projectBeforeEdit = null;
-      const edited = p.items.find((i) => i.id === get().editingItemId);
-      const history =
-        before && before !== p
-          ? {
-              projectPast: [...get().projectPast, before].slice(-HISTORY),
-              projectPastNames: [
-                ...get().projectPastNames,
-                edited ? t('Edit {what}', { what: edited.design.name }) : describeChange(before, p),
-              ].slice(-HISTORY),
-              projectFuture: [],
-              projectFutureNames: [],
-            }
-          : {};
-      set({
-        editingItemId: null,
-        drillItemId: null,
-        project: p,
-        projectModel: buildProjectModel(p),
-        selectedId: undefined,
-        highlight: [],
-        ...history,
-        ...(p !== raw ? { projectDirtyAt: Date.now() } : {}),
+      const edited = raw.items.find((i) => i.id === get().editingItemId);
+      set({ editingItemId: null, drillItemId: null, selectedId: undefined, highlight: [] });
+      if (!before || before === raw) return;
+      // Edits made in the piece editor become one project undo step, through the project's own commit (ADR-226):
+      // linked copies, size locks, bindings, value sets and run parts follow as for any project edit.
+      commitProject(raw, edited ? t('Edit {what}', { what: edited.design.name }) : undefined, {
+        base: before,
       });
     },
     undoProject: () => {
@@ -1614,7 +1603,6 @@ export const useDesign = create<State>((rawSet, get) => {
       const settings = p.runSettings ?? { scribe: 0, auto: true };
       const next: Project = {
         ...p,
-        schemaVersion: PROJECT_SCHEMA,
         runRequests: [...(p.runRequests ?? []).filter((x) => requestKey(x) !== key), r],
         runPartsRemoved: (p.runPartsRemoved ?? []).filter((k) => k !== key),
       };
