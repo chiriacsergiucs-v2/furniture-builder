@@ -52,6 +52,8 @@ const xrSystem = (): XRSystemLike | undefined => (navigator as unknown as { xr?:
 
 export type ARState = 'off' | 'placing' | 'placed';
 let state: ARState = 'off';
+/** While placing: true when the floor ring shows (the hit test found a surface this frame). */
+let found = false;
 let supported: boolean | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((f) => f());
@@ -63,8 +65,25 @@ function setState(s: ARState) {
   state = s;
   emit();
 }
+function setFound(f: boolean) {
+  if (found === f) return;
+  found = f;
+  emit();
+}
 /** Where AR is: off, waiting for a tap on the floor, or placed. */
 export const useARState = () => useSyncExternalStore(subscribe, () => state);
+/** While placing: whether the floor ring shows, so the hint can say to look for the floor or to tap. */
+export const useARFloorFound = () => useSyncExternalStore(subscribe, () => found);
+
+/**
+ * The AR overlay's `beforexrselect` handler: a tap on one of its buttons (Turn, Exit) must not also place the
+ * furniture, but every other tap must reach the session as `select`. The overlay covers the whole screen, so stopping
+ * every `beforexrselect` it sees would swallow the taps on the floor too (the cause of "nothing happens on taps").
+ */
+export function keepTapsForButtons(e: Event) {
+  const target = e.target as Element | null;
+  if (target?.closest?.('button, a, input, select, summary')) e.preventDefault();
+}
 
 /** True once `navigator.xr.isSessionSupported('immersive-ar')` said so; asked once per page. */
 export function useARSupported(): boolean {
@@ -167,6 +186,7 @@ function restore() {
   }
   saved = null;
   lastHit = null;
+  found = false;
   session = null;
   setState('off');
   invalidate();
@@ -258,12 +278,16 @@ export function ARBridge({ bounds }: { bounds: Box }) {
     const pose = hit && ref ? hit.getPose(ref) : null;
     if (!pose) {
       reticle.visible = false;
+      // A tap with no floor in view places nothing; the hint says to look for the floor.
+      lastHit = null;
+      setFound(false);
       return;
     }
     m.fromArray(pose.transform.matrix);
     reticle.matrix.copy(m);
     reticle.visible = true;
     lastHit = new Vector3().setFromMatrixPosition(m);
+    setFound(true);
   });
   return null;
 }
