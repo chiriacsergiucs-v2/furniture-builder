@@ -438,6 +438,24 @@ highest id in either file.
 - Conflicts: none
 - Note: 2026-11-06: ADR-208 takes over placement, drag, snap and templates for models. Bundling CC0 models moved to G-430.
 
+### G-041: ADR-076 models list
+
+- Status: Done (ADR-212)
+- Origin: ADR-076, 2026-10-25 00:16 UTC; agent default, accepted by the user
+- Missing: Models are stored in a separate Project.models list, not on project items as the ADR says.
+- Request: “Import 3D models and model libraries”.
+- Questions: Keep the separate Project.models list and write it into the ADR?
+- Suggested pick: Keep it (it lets one model be used many times), but write it into the ADR before shipping. Confirm. (estimate: effort 0%, value needs you)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Models live in a separate Project.models list, unlike the shipped ADR text; the choice is unrecorded.
+- Fix: Record the separate models list as the decision, here or in a small new ADR.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): ADR-076 is already Implemented, so the suggested pick (write it into the ADR before shipping) can no longer be done; record the answer here or in a new small ADR. Code uses Project.models (src/core/project.ts:159).
+- Note: 2026-11-06: ADR-212 shipped without this item; recording the separate Project.models list as the decision (a ledger edit) was skipped, so the gap is open again.
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): built: ADR-212 Decision 4 records the separate Project.models list (project schemaVersion 5, src/core/project.ts:471-472); the earlier note that ADR-212 skipped it was wrong.
+
 ### G-042: Project fasteners panel and Romanian labels
 
 - Status: Done (ADR-202)
@@ -472,6 +490,24 @@ highest id in either file.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: ADR-210 feeds the brand filter from the decor list, offline; the feed stays won't do (ADR-029, user 2026-10-25).
+
+### G-045: ADR-069 to 079 shipped with open gaps
+
+- Status: Done (obsolete: every remainder is in its own gap: G-031, G-037, G-039, G-047)
+- Origin: ADR-069..079, 2026-10-25 10:25 UTC; agent scoped it out
+- Missing: The open questions in G-027 and G-030 to G-042 are still unanswered, and nothing was checked on the live site (G-047); find-it was re-run after the merge (N88).
+- Request: “Merge all mergeable, push, list what is left”.
+- Questions: Re-run every find-it on main? Answer the open questions above?
+- Suggested pick: Re-run every find-it script on the production build of main. Answer the open questions above. Then open one follow-up ADR per group of gaps, so the gaps are tracked and not lost behind Done. (estimate: effort +10%, value +15%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: ADR-069 to 079 shipped with open questions unanswered and nothing checked on the live site.
+- Fix: Answer the listed open questions, open one follow-up ADR per gap group, do the live check.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per N88: every find-it script passed on a local production build after merging main. Remaining: the open questions in G-027 and G-030 to G-042, follow-up ADRs, the live check (G-047).
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): the 14 gaps it named are Done or carried by G-031, G-037, G-039, G-041 (now Done) and G-047.
 
 ### G-046: Settings dialog built as light
 

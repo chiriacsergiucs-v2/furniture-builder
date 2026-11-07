@@ -200,23 +200,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: User confirms: keep preset thickness list, carry over banding prices, keep the allowance per band.
 - Conflicts: none
 
-### G-041: ADR-076 models list
-
-- Status: Open
-- Origin: ADR-076, 2026-10-25 00:16 UTC; agent default, accepted by the user
-- Missing: Models are stored in a separate Project.models list, not on project items as the ADR says.
-- Request: “Import 3D models and model libraries”.
-- Questions: Keep the separate Project.models list and write it into the ADR?
-- Suggested pick: Keep it (it lets one model be used many times), but write it into the ADR before shipping. Confirm. (estimate: effort 0%, value needs you)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: Models live in a separate Project.models list, unlike the shipped ADR text; the choice is unrecorded.
-- Fix: Record the separate models list as the decision, here or in a small new ADR.
-- Conflicts: none
-- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): ADR-076 is already Implemented, so the suggested pick (write it into the ADR before shipping) can no longer be done; record the answer here or in a new small ADR. Code uses Project.models (src/core/project.ts:159).
-- Note: 2026-11-06: ADR-212 shipped without this item; recording the separate Project.models list as the decision (a ledger edit) was skipped, so the gap is open again.
-
 ### G-043: Duplicate backlog id D02
 
 - Status: Open
@@ -231,23 +214,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
 - Fix: With the user's approval, give the later row D03 and update every reference.
 - Conflicts: none
-
-### G-045: ADR-069 to 079 shipped with open gaps
-
-- Status: Open
-- Origin: ADR-069..079, 2026-10-25 10:25 UTC; agent scoped it out
-- Missing: The open questions in G-027 and G-030 to G-042 are still unanswered, and nothing was checked on the live site (G-047); find-it was re-run after the merge (N88).
-- Request: “Merge all mergeable, push, list what is left”.
-- Questions: Re-run every find-it on main? Answer the open questions above?
-- Suggested pick: Re-run every find-it script on the production build of main. Answer the open questions above. Then open one follow-up ADR per group of gaps, so the gaps are tracked and not lost behind Done. (estimate: effort +10%, value +15%)
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: ADR-069 to 079 shipped with open questions unanswered and nothing checked on the live site.
-- Fix: Answer the listed open questions, open one follow-up ADR per gap group, do the live check.
-- Conflicts: none
-- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per N88: every find-it script passed on a local production build after merging main. Remaining: the open questions in G-027 and G-030 to G-042, follow-up ADRs, the live check (G-047).
-- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-047: Nothing live-verified
 
@@ -710,7 +676,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-127, 2026-10-28; found while building (Claude)
-- Missing: Supabase migration not applied, Google sign-in not registered, email settings not set, no live check; the project URL and key are in .github/workflows/deploy.yml:30-31.
+- Missing: Supabase migration not applied, Google sign-in not registered, email settings not set, no live check; the project URL and key are in .github/workflows/deploy.yml:55-56.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts”; answers G-217 Supabase, G-219 my personal account
 - Questions: Create the Supabase project and Google client (docs/supabase-setup.md), then let a session test sign-in, sync and share links against it?
 - Suggested pick: Yes: follow docs/supabase-setup.md, then run a live check (estimate 1 hour of your time)
@@ -722,6 +688,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: 2026-10-28: the user created the project `https://nllwhcxvcbtjfkdhsyse.supabase.co` and gave its publishable key; both are set in `deploy.yml`. Still open: the migration, Google sign-in and the email settings in the dashboard, and a live check.
 - Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
 
 ### G-278: Account and share-link limits
 
@@ -1113,7 +1080,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
-- Missing: Suggest run parts (ADR-061) groups runs from touching pieces only; it does not read stored connections.
+- Missing: Suggest run parts (ADR-061) groups runs with groupRuns (src/core/project.ts:2201): base pieces turned the same way, in line, with gaps up to 150 mm; it does not read stored connections.
 - Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
 - Questions: Should run parts treat side- and corner-connected pieces as one run?
 - Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
@@ -1123,6 +1090,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Run parts ignore stored connections.
 - Fix: Let groupRuns read side and corner connections.
 - Conflicts: none
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
 
 ### G-421: L-shape and diagonal corners and desk pedestal ends share no side
 
@@ -1446,10 +1414,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-208 tests, 2026-11-06; agent could not run it
-- Missing: The real-device AR check was not done: View in AR on an Android phone and AR Quick Look (rel=ar from a blob URL) on an iPhone. AR was only tested with a stubbed navigator.xr in jsdom and Chromium.
+- Missing: AR opened on the user's phone, but taps did nothing (user 2026-11-07, fixed in eec2be62). Placing furniture after that fix and AR Quick Look on an iPhone are not checked on a real device.
 - Request: Not asked in words; ADR-208 Done when lists the check on a real Android phone and an iPhone (user: 'Build only adrs 201-212').
 - Questions: Can you open the live page on an Android phone and an iPhone and try View in AR and Export for AR (.usdz)?
 - Suggested pick: You run the two device checks after the merge and tell Claude the result; Claude records it in N213. (estimate: effort +0 % for Claude, value +10 %: the only proof AR works)
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated after the AR tap fix.
 
 ### G-465: WebGPU render path not run on a real adapter
 
