@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { loadImage } from '../store/libraryStore';
+import { loadImage } from './libraryStore';
 
 /*
  * One object URL per stored picture, shared between the views (ADR-048); moved from `src/persist/images.ts` so storage

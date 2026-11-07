@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import {
   fastenerCounts,
   GUIDANCE,
@@ -12,17 +12,9 @@ import {
 } from '../core/fasteners';
 import { t, tr } from '../core/i18n';
 import { useDesign } from '../store/designStore';
-import { useFastenerList } from '../store/fastenerStore';
+import { useFastenerChoices, useFastenerList } from '../store/fastenerStore';
 import { GuidanceTip, Group, InfoTip } from './controls';
 import { Icon } from './icons';
-
-/** The user's fastener list, read from the device on first use. */
-export function useFastenerChoices(): FastenerChoice[] {
-  const choices = useFastenerList((s) => s.choices);
-  const load = useFastenerList((s) => s.load);
-  useEffect(load, [load]);
-  return choices;
-}
 
 /** Counts for what the result tabs show: the piece being edited, or the whole open project (like useView). */
 export function useFastenerCounts(): FastenerCount[] {

@@ -1,7 +1,7 @@
 import { FEATURES, type FeatureDomain } from './info/features';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
-import { PHONE, useMediaQuery } from './useMediaQuery';
+import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 
 function count(d: FeatureDomain): number {
   return (d.features?.length ?? 0) + (d.children ?? []).reduce((n, c) => n + count(c), 0);

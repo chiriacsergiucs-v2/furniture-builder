@@ -3,7 +3,7 @@ import { t } from '../core/i18n';
 import { wallFinish, type Room, type WallFinish } from '../core/room';
 import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage } from '../persist/images';
-import { useImageUrls } from './useImageUrls';
+import { useImageUrls } from '../store/useImageUrls';
 import { Select } from './controls';
 import { Icon } from './icons';
 import { StraightenPhoto } from './StraightenPhoto';

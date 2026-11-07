@@ -29,7 +29,7 @@ import { cancelTemplateEdit, saveTemplateEdit } from '../store/templatesStore';
 import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
 import { PieceList } from './PieceList';
 import { usePieceList } from '../store/pieceListStore';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 import { Elevation } from './Elevation';
 import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
@@ -39,14 +39,14 @@ import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
 import { SheetHandle, type SheetStop } from './SheetHandle';
 import { rovingKeys, rovingTab } from './controls';
-import { setTheme, useTheme } from './useTheme';
-import { setLook, useLook } from './useLook';
+import { setTheme, useTheme } from '../store/useTheme';
+import { setLook, useLook } from '../store/useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { SceneMenu } from './SceneMenu';
 import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
-import { useMediaQuery } from './useMediaQuery';
+import { useMediaQuery } from '../store/useMediaQuery';
 import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from '../store/uiStore';
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
@@ -54,6 +54,9 @@ import { startAutoBackup } from '../persist/backup';
 import { AccountButton, AccountDialog, SyncStatus } from './Account';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
 import { initAccount } from '../store/accountActions';
+import { useViewStore } from '../store/viewStore';
+import { CountStepper } from './CountStepper';
+import { MoveToButtons } from './MoveTo';
 import {
   bringDrawingForward,
   inOptions,
@@ -74,6 +77,11 @@ const PageLoading = () => (
   <p className="loading" role="status">
     {t('Loading…')}
   </p>
+);
+// What the 3D view draws from the ui (ADR-230: the viewer imports nothing from src/ui).
+const countCard = (className: string) => <CountStepper className={className} foldable />;
+const moveTo = (id: string | readonly string[], className: string) => (
+  <MoveToButtons id={id} className={className} />
 );
 
 function webglAvailable() {
@@ -248,6 +256,12 @@ export function App() {
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const setMaterialOpen = useUi((s) => s.setMaterialOpen);
   const phone = useMediaQuery('(max-width: 760px)');
+  // The phone's slot for the 3D view's quick-count card (G-070), handed to the viewer (ADR-230).
+  const [countDock, setCountDock] = useState<HTMLDivElement | null>(null);
+  // Seams and lit parts the 3D view draws (ADR-230), shown as data attributes for the find-it scripts.
+  const seams = useViewStore((s) => s.seams);
+  const lit = useViewStore((s) => s.lit);
+  const requestFit = useViewStore((s) => s.requestFit);
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
   // The View switch (ADR-081, ADR-144): 2D · 3D · Both, the same in both modes. The choice stays when the mode
@@ -902,11 +916,7 @@ export function App() {
                   </label>
                 )}
                 {shows3d(shown) && (
-                  <button
-                    type="button"
-                    className="btn sm"
-                    onClick={() => window.dispatchEvent(new Event('fb:fit'))}
-                  >
+                  <button type="button" className="btn sm" onClick={requestFit}>
                     <Icon name="refresh" className="sm" />
                     {t('Reset view')}
                   </button>
@@ -957,7 +967,11 @@ export function App() {
                   <Elevation />
                 )}
               </div>
-              <div className={`view three ${shows3d(shown) ? 'active' : ''}`}>
+              <div
+                className={`view three ${shows3d(shown) ? 'active' : ''}`}
+                data-seams={seams ?? undefined}
+                data-lit={lit ?? undefined}
+              >
                 {mount3d ? (
                   <ViewerBoundary>
                     <Suspense
@@ -967,7 +981,7 @@ export function App() {
                         </div>
                       }
                     >
-                      <Viewer3D />
+                      <Viewer3D countCard={countCard} moveTo={moveTo} countDock={countDock} />
                     </Suspense>
                   </ViewerBoundary>
                 ) : has3d ? null : (
@@ -977,7 +991,7 @@ export function App() {
             </div>
           </section>
           {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
-          {phone && <div id="count-dock" className="count-dock-slot" />}
+          {phone && <div id="count-dock" ref={setCountDock} className="count-dock-slot" />}
           <Output />
         </main>
 

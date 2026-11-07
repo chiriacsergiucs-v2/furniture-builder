@@ -32,7 +32,7 @@ import { BoardProduct } from './SellerLinks';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage } from '../persist/images';
-import { useImageUrls } from './useImageUrls';
+import { useImageUrls } from '../store/useImageUrls';
 import { FINISHES, MAX_TILE } from '../core/surface';
 import { usePieceLockHint } from './pieceLockHint';
 

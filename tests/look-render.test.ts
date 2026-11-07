@@ -11,8 +11,8 @@ import { FINISHES, finishLook, isFinish } from '../src/core/surface';
 import type { Design, Material } from '../src/core/types';
 import { loadDesign, saveDesign } from '../src/persist/db';
 import { takePictures, withPictures } from '../src/persist/images';
-import { hasWebGL2, RENDER_SIZES, renderFileName } from '../src/ui/renderSupport';
-import { defaultLook, parseLook } from '../src/ui/useLook';
+import { hasWebGL2, RENDER_SIZES, renderFileName } from '../src/shared/renderSupport';
+import { defaultLook, parseLook } from '../src/store/useLook';
 
 const withFinish = (d: Design, finish: unknown): Design => ({
   ...d,

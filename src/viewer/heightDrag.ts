@@ -4,8 +4,8 @@ import { Raycaster, Vector2 } from 'three';
 import { axisPoint } from '../core/drag3d';
 import { dragHeight, snapWallHeight } from '../core/height';
 import { useDesign } from '../store/designStore';
-import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
-import { snapIsOn } from '../ui/useSnap';
+import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
+import { snapIsOn } from '../store/useSnap';
 import { S } from './pieceDrag';
 
 /** A wall unit whose height is being dragged in 3D (ADR-122): the height it would hang at on release. */

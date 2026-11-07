@@ -2,7 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/assembly/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: a new project with a base cabinet;
 // Build & Preview › Assembly lists the steps with the guidance line; Show step lights the step's parts in the 3D view
-// (the viewer reports how many parts are lit on <body data-lit>); ← → move between steps; a second piece gets its
+// (the viewer reports how many parts are lit on the 3D view's data-lit, ADR-230); ← → move between steps; a second piece gets its
 // own section. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
@@ -59,7 +59,10 @@ for (const width of [1440, 390]) {
     await page.waitForTimeout(150);
     await sheet(false);
   };
-  const lit = () => page.evaluate(() => Number(document.body.dataset.lit ?? '0'));
+  const lit = () =>
+    page.evaluate(() =>
+      Number(document.querySelector('.view.three[data-lit]')?.dataset.lit ?? '0'),
+    );
 
   // 1. Bare app → new project → a base cabinet → Build & Preview › 3D › Assembly.
   await page.goto(url);

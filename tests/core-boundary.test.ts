@@ -40,25 +40,6 @@ const MODEL = [
   'materials',
 ].map((m) => `src/core/${m}.ts`);
 const NESTING = ['place', 'validate', 'types'].map((m) => `src/core/nesting/${m}`);
-// Allowance until ADR-230: the ui modules the viewer imports today, by name (eslint.config.js lists the same).
-// useImageUrls moved from src/persist/images to src/ui (ADR-223); the viewer's import of it followed.
-const VIEWER_UI = [
-  'Clearances',
-  'CountStepper',
-  'MoveTo',
-  'ProblemBanner',
-  'keepProportions',
-  'planDrag',
-  'renderSupport',
-  'useImageUrls',
-  'useLook',
-  'useMediaQuery',
-  'useSnap',
-  'useSolidWalls',
-  'useTheme',
-  'useView',
-  'wallPictures',
-].map((m) => `src/ui/${m}`);
 const CORE_PACKAGE = /^(react|react-dom|three|dexie|zustand)(\/|$)|^@react-three\/|^@supabase\//;
 const APP = /^src\/(store|ui|persist|viewer|online)(\/|$)/;
 const MODEL_UP =
@@ -86,8 +67,8 @@ function violation(file: string, spec: string): string | null {
       return 'nesting engine imports outside itself';
   } else if (/^src\/core\/nesting\/(place|validate)$/.test(target))
     return 'app imports the nesting engine';
-  if (file.startsWith('src/viewer/') && target.startsWith('src/ui/') && !VIEWER_UI.includes(target))
-    return 'viewer imports a new ui module';
+  // ADR-230: the viewer imports nothing from src/ui (no allowance).
+  if (file.startsWith('src/viewer/') && /^src\/ui(\/|$)/.test(target)) return 'viewer imports ui';
   return null;
 }
 
@@ -133,7 +114,10 @@ describe('layer boundaries (ADR-219)', () => {
     expect(violation('src/core/nesting/place.ts', './validate')).toBeNull();
     expect(violation('src/ui/a.tsx', '../core/nesting/place')).not.toBeNull();
     expect(violation('src/viewer/a.tsx', '../ui/x')).not.toBeNull();
-    expect(violation('src/viewer/a.tsx', '../ui/planDrag')).toBeNull();
+    expect(violation('src/viewer/a.tsx', '../ui/planDrag')).not.toBeNull();
+    expect(violation('src/viewer/a.tsx', '../ui/CountStepper')).not.toBeNull();
+    expect(violation('src/viewer/a.tsx', '../store/useView')).toBeNull();
+    expect(violation('src/viewer/a.tsx', '../shared/planDrag')).toBeNull();
     expect(violation('src/ui/a.tsx', './x.md?raw')).not.toBeNull();
     expect(violation('src/core/sellers/index.ts', './regency.json?raw')).toBeNull();
     expect(GLOB.test("const f = import.meta.glob('./*.json');")).toBe(true);
@@ -215,5 +199,15 @@ describe('nesting engine boundary (ADR-228)', () => {
         "import { nest } from './nesting/place';\nexport const b = nest;\n",
       ),
     ).toBe(0);
+    // ADR-230: the viewer imports nothing from src/ui.
+    for (const [spec, n] of [
+      ['../ui/CountStepper', 1],
+      ['../ui/planDrag', 1],
+      ['../store/useView', 0],
+      ['../shared/planDrag', 0],
+    ] as const)
+      expect(
+        await errors('src/viewer/a.tsx', `import { a } from '${spec}';\nexport const b = a;\n`),
+      ).toBe(n);
   }, 60_000);
 });

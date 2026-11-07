@@ -5,7 +5,7 @@ import { floorDrop, floorPoint, modelDrop, type FloorPoint } from '../core/drag3
 import { isLocked, LOCKED_HINT, moveBlocked } from '../core/project';
 import type { SnapResult } from '../core/snap';
 import { useDesign } from '../store/designStore';
-import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
+import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 
 /** mm → metres: the 3D scene's scale, shared with Viewer3D so pointer and boards agree. */
 export const S = 0.001;

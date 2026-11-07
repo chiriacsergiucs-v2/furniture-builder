@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { buildModel } from '../core/build';
-import { PHONE, useMediaQuery } from './useMediaQuery';
+import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import {
   catalogFamilies,
   FUNCTION_LABEL,

@@ -7,12 +7,12 @@ import type { PlacedPiece } from '../core/project';
 import type { Material } from '../core/types';
 import { loadImage } from '../store/libraryStore';
 import { importImage } from '../persist/images';
-import { imageKey, useImageUrls } from './useImageUrls';
+import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { useDesign } from '../store/designStore';
 import { MmField, Select, Toggle } from './controls';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
-import { pictureKey, useWallPictureUrls } from './wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 
 /**
  * Room surfaces on the plan (ADR-208): the plan picture to trace over (G-012), the floor background (G-274), the

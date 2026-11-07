@@ -4,7 +4,7 @@ import { t } from '../core/i18n';
 import { nest } from '../core/nesting';
 import type { NestJob, NestResult } from '../core/nesting/types';
 import type { NestResponse } from '../core/nesting/worker';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 export type NestState =
   | { status: 'idle' }

@@ -83,14 +83,49 @@ for (const width of [390, 1280]) {
   // 3b. The same taps in 3D (phone, Build & Preview): the peek row names the selection.
   if (phone) {
     await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    // A phone opens Build & Preview in 2D (ADR-144): tap "3D" as a user would.
+    const three3d = page.getByRole('radio', { name: '3D', exact: true });
+    if ((await three3d.getAttribute('aria-checked')) !== 'true') await three3d.click();
     await page.waitForTimeout(2500);
     const c = await page.locator('canvas').first().boundingBox();
     const seen = [];
+    // ADR-238: pixels in the selection colour (#2d5b4c, edges and tint) on the canvas, per tap.
+    const green = [];
+    const greenPixels = async () => {
+      const png = (await page.screenshot({ clip: c })).toString('base64');
+      return page.evaluate(async (b64) => {
+        // A data: picture (the page's CSP allows data: images, not a fetch of one).
+        const img = new Image();
+        img.src = `data:image/png;base64,${b64}`;
+        await img.decode();
+        const cv = new OffscreenCanvas(img.width, img.height);
+        const g = cv.getContext('2d');
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, img.width, img.height).data;
+        let n = 0;
+        for (let i = 0; i < d.length; i += 4)
+          if (
+            Math.abs(d[i] - 45) < 30 &&
+            Math.abs(d[i + 1] - 91) < 30 &&
+            Math.abs(d[i + 2] - 76) < 30
+          )
+            n++;
+        return n;
+      }, png);
+    };
     for (let i = 0; i < 4; i++) {
       await page.mouse.click(c.x + c.width * 0.4, c.y + c.height * 0.6);
       await page.waitForTimeout(500);
       seen.push((await said()).split('\n')[0].replace('Selected: ', ''));
+      green.push(await greenPixels());
     }
+    // The hanging space (2nd tap) marks only its own panels: fewer selection pixels than its bay (1st) or the whole
+    // piece (3rd), and some.
+    ck(
+      '3D: selecting one space highlights only its panels',
+      green[1] > 0 && green[1] < green[0] && green[1] < green[2],
+      green.join(' / '),
+    );
     // The tap before these left the right bay selected; the 1st 3D tap lands in the left bay.
     ck(
       '3D: taps at one spot drill in and wrap',

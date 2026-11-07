@@ -9,7 +9,7 @@ import { boardBandRo, drillingRo, hardwareRo, partRo } from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 import { OVERLAP, PAGE, profileTemplates } from '../core/template';
 
 /**

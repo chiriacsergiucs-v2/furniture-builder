@@ -329,7 +329,7 @@ describe('Export for AR (.usdz) (ADR-208 item 7)', () => {
 
 describe('render engine (ADR-208 item 8)', () => {
   it('WebGPU when navigator.gpu gives an adapter, otherwise WebGL 2; never throws', async () => {
-    const { detectEngine } = await import('../src/ui/renderSupport');
+    const { detectEngine } = await import('../src/shared/renderSupport');
     delete nav.gpu;
     expect(await detectEngine()).toBe('WebGL 2');
     setNav('gpu', { requestAdapter: async () => ({}) });

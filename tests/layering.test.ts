@@ -86,11 +86,12 @@ describe('persistence behind the store (ADR-223)', () => {
     expect(hits).toEqual([]);
   });
 
-  it('useImageUrls lives in src/ui', () => {
+  // ADR-223 took the hook out of src/persist; ADR-230 keeps it out of src/ui so the 3D viewer can use it too.
+  it('useImageUrls lives in src/store, outside src/persist', () => {
     const where = SOURCES.filter(({ text }) => /export function useImageUrls\b/.test(text)).map(
       (s) => s.file,
     );
-    expect(where).toEqual(['src/ui/useImageUrls.ts']);
+    expect(where).toEqual(['src/store/useImageUrls.ts']);
   });
 
   it('the allowlist names only files that exist and import persist/db', () => {

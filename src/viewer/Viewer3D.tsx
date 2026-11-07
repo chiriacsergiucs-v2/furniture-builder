@@ -1,9 +1,11 @@
 import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Html, Line, OrbitControls } from '@react-three/drei';
 import {
+  Fragment,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,6 +25,7 @@ import {
   Float32BufferAttribute,
   FrontSide,
   type Intersection,
+  type Material,
   Matrix4,
   Mesh,
   Path,
@@ -46,7 +49,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { useFocusedProblem } from '../ui/ProblemBanner';
+import { useFocusedProblem } from '../store/focusedProblem';
 import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
@@ -69,7 +72,7 @@ import {
   type PictureHandle,
   type WallPatch,
 } from '../core/wallPicture';
-import { pictureKey, useWallPictureUrls } from '../ui/wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 import {
   setPictureFit,
   useAdjustMode,
@@ -80,23 +83,34 @@ import {
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
-import { boxUvs, finishLook, planeUvs } from '../core/surface';
-import { imageKey, useImageUrls } from '../ui/useImageUrls';
+import { boxUvs, planeUvs } from '../core/surface';
+import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { setRooms } from '../core/setRoom';
-import { useView, ViewOverride } from '../ui/useView';
-import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
-import { useTheme } from '../ui/useTheme';
-import { useLook } from '../ui/useLook';
-import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
+import { useView, ViewOverride } from '../store/useView';
+import { useTheme } from '../store/useTheme';
+import { useLook } from '../store/useLook';
+import { setSolidWalls, useSolidWalls } from '../store/useSolidWalls';
 import { SHADOW_CATCHER, setCapture, setStage, useRendering } from './renderBridge';
-import { useClearances } from '../ui/Clearances';
+import { useClearances } from '../store/clearances';
 import type { ClearanceZone } from '../core/envelopes';
-import { CountStepper } from '../ui/CountStepper';
-import { useSnap } from '../ui/useSnap';
-import { MoveToButtons } from '../ui/MoveTo';
+import { useSnap } from '../store/useSnap';
+import { useViewStore } from '../store/viewStore';
+import {
+  boxOf,
+  edgePositions,
+  lookKey,
+  makeMaterial,
+  MergedEdges,
+  panelMatrix,
+  Pool,
+  SELECT,
+  sizeKey,
+  type BoardLook,
+  type EdgeItem,
+} from './panelResources';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
@@ -128,7 +142,6 @@ import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, MaterialImage, Panel, Yaw } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
-const SELECT = '#2d5b4c';
 const HIGHLIGHT = '#f2c230';
 
 const geoCache = new WeakMap<Panel, ExtrudeGeometry>();
@@ -377,7 +390,20 @@ function useTextures(urls: Map<string, string>, repeat = true): Map<string, Text
  * One exception (ADR-093): in a project, the Move button lets a piece be dragged across the floor and the turn
  * buttons or R / Shift+R turn it; both go through the same store actions as the Plan.
  */
-export default function Viewer3D() {
+/**
+ * What the app draws inside the 3D view (ADR-230): the viewer imports nothing from `src/ui`, so the ui pieces it shows
+ * come in as render props. Without them (a shared item's preview) nothing is drawn there.
+ */
+export interface Viewer3DProps {
+  /** The quick-count card (ADR-085) with this class. */
+  countCard?: (className: string) => ReactNode;
+  /** The one-tap Move to buttons (ADR-147) for a piece or a block of pieces, with this class. */
+  moveTo?: (id: string | readonly string[], className: string) => ReactNode;
+  /** On a phone, the slot under the view where the card docks (G-070); null floats it over the view. */
+  countDock?: HTMLElement | null;
+}
+
+export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer3DProps = {}) {
   const view = useView();
   // A shared item's preview (ADR-143): shown only, nothing selected, no tools or cards.
   const preview = !!useContext(ViewOverride);
@@ -428,9 +454,8 @@ export default function Viewer3D() {
   const counts =
     (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering && !preview;
   // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
-  // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
-  const phone = useMediaQuery(PHONE);
-  const dock = phone ? document.getElementById('count-dock') : null;
+  // The slot under the view, which App renders on phones and passes in; floating when it is missing.
+  const dock = countDock;
   const docked = !!dock;
   // A project with nothing in it yet says so over the empty stage (G-059).
   const emptyProject = useDesign(
@@ -764,12 +789,10 @@ export default function Viewer3D() {
               {t('Move to…')}
             </button>
           )}
-          {moving && turnId && moveToOpen && (
-            <MoveToButtons
-              key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}
-              id={moveToIds ?? turnId}
-              className="three-move-to"
-            />
+          {moving && turnId && moveToOpen && moveTo && (
+            <Fragment key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}>
+              {moveTo(moveToIds ?? turnId, 'three-move-to')}
+            </Fragment>
           )}
           <button
             type="button"
@@ -855,10 +878,10 @@ export default function Viewer3D() {
         </div>
       )}
       {/* The docked card (G-070) folds to one row on a phone (G-058). */}
-      {counts && dock && createPortal(<CountStepper className="in-3d docked" foldable />, dock)}
-      {counts && !docked && (
+      {counts && countCard && dock && createPortal(countCard('in-3d docked'), dock)}
+      {counts && countCard && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
-          <CountStepper className="in-3d" foldable />
+          {countCard('in-3d')}
         </div>
       )}
     </>
@@ -1069,7 +1092,6 @@ function useDrillItem() {
 }
 
 /** How much of a panel outside the selected space shows (ADR-087). */
-const FADED = 0.28;
 
 /**
  * The selected space's or piece's box as a thick outline (ADR-087), drawn over the panels so it shows through the
@@ -1110,8 +1132,8 @@ function SelectionOutline({ box }: { box: Box }) {
 /**
  * A thin vertical line along the seam of every connection that still holds (ADR-179), at the pieces' front face,
  * from `connectionSeams`; display only, never picked (ADR-014). Not drawn while exploded or rendering. While
- * isolating (`only`), only seams between two shown pieces. `document.body.dataset.seams` holds the number drawn
- * (for the find-it script, as `data-lit`).
+ * isolating (`only`), only seams between two shown pieces. The view store's `seams` holds the number drawn (ADR-230;
+ * App shows it as `data-seams` on the 3D view for the find-it script).
  */
 function SeamLines({ color, only }: { color: string; only?: readonly string[] }) {
   const project = useDesign((s) => s.project);
@@ -1121,12 +1143,11 @@ function SeamLines({ color, only }: { color: string; only?: readonly string[] })
     const all = connectionSeams(project, pieces);
     return only ? all.filter((c) => c.itemIds.every((id) => only.includes(id))) : all;
   }, [project, pieces, only]);
+  const setSeams = useViewStore((s) => s.setSeams);
   useEffect(() => {
-    document.body.dataset.seams = String(seams.length);
-    return () => {
-      delete document.body.dataset.seams;
-    };
-  }, [seams.length]);
+    setSeams(seams.length);
+    return () => setSeams(null);
+  }, [seams.length, setSeams]);
   const points = useMemo(() => {
     // A few mm in front of the face, so the line does not hide in the door edges.
     const o = 2;
@@ -1935,28 +1956,30 @@ function Fit({ bounds }: { bounds: Box }) {
   const aspect = view.width > 10 && view.height > 10 ? view.width / view.height : 1;
   const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
   const fitDist = (radius / Math.sin(Math.min(vfov, hfov) / 2)) * 1.08;
-  // Frame once per design (and when the user asks); editing dimensions must not yank the camera.
+  // Frame once per design (and when the user asks, through the view store's fit request, ADR-230); editing dimensions
+  // must not yank the camera. A fit request frames what was framed when this mounted, as before.
+  const framed = useRef<{ target: readonly [number, number, number]; dist: number } | null>(null);
   useEffect(() => {
     const dist = fitDist / Math.hypot(0.55, 0.35, 0.85);
+    framed.current = { target, dist };
     camera.position.set(target[0] + dist * 0.55, target[1] + dist * 0.35, target[2] + dist * 0.85);
     camera.lookAt(...target);
     controls.current?.target.set(...target);
     controls.current?.update();
     invalidate();
-    const onFit = () => {
-      camera.position.set(
-        target[0] + dist * 0.55,
-        target[1] + dist * 0.35,
-        target[2] + dist * 0.85,
-      );
-      controls.current?.target.set(...target);
-      controls.current?.update();
-      invalidate();
-    };
-    window.addEventListener('fb:fit', onFit);
-    return () => window.removeEventListener('fb:fit', onFit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const fitRequest = useViewStore((s) => s.fitRequest);
+  const seenFit = useRef(fitRequest);
+  useEffect(() => {
+    if (fitRequest === seenFit.current || !framed.current) return;
+    seenFit.current = fitRequest;
+    const { target: at, dist } = framed.current;
+    camera.position.set(at[0] + dist * 0.55, at[1] + dist * 0.35, at[2] + dist * 0.85);
+    controls.current?.target.set(...at);
+    controls.current?.update();
+    invalidate();
+  }, [fitRequest, camera]);
   return (
     <OrbitControls
       ref={controls}
@@ -2035,12 +2058,30 @@ function Panels({
   // An assembly step lights its parts (ADR-174): the rest goes translucent, as outside a selected space.
   const litIds = useDesign((s) => s.litPanelIds);
   const litSet = useMemo(() => (litIds ? new Set(litIds) : null), [litIds]);
+  // The number lit, in the view store (ADR-230; App shows it as `data-lit` on the 3D view for the find-it script).
+  const setLit = useViewStore((s) => s.setLit);
   useEffect(() => {
-    document.body.dataset.lit = String(litIds?.length ?? 0);
-    return () => {
-      delete document.body.dataset.lit;
-    };
-  }, [litIds]);
+    setLit(litIds?.length ?? 0);
+    return () => setLit(null);
+  }, [litIds, setLit]);
+  // Shared materials and boxes (ADR-238): one per look and per size, kept while a panel uses them.
+  const pools = useMemo(
+    () => ({ materials: new Pool<Material>(), boxes: new Pool<BufferGeometry>() }),
+    [],
+  );
+  const usedLooks = new Set<string>();
+  const usedSizes = new Set<string>();
+  const materialFor = (l: BoardLook) => {
+    const k = lookKey(l);
+    usedLooks.add(k);
+    return pools.materials.get(k, () => makeMaterial(l));
+  };
+  const boxFor = (b: Box) => {
+    usedSizes.add(sizeKey(b.w, b.h, b.d));
+    return boxOf(pools.boxes, b.w, b.h, b.d);
+  };
+  // The Simple look's panel edges, merged into one line per edge style (ADR-238).
+  const edgeItems: EdgeItem[] = [];
   const isFaded = (p: Panel) => {
     if (litSet && !litSet.has(p.id)) return true;
     if (!fadeBox) return false;
@@ -2048,6 +2089,171 @@ function Panels({
     const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;
     return !own || !inSelection(fadeBox, own.box);
   };
+
+  const meshes = panels
+    .filter((p) => showFronts || !FRONT.has(p.role))
+    .map((p) =>
+      yawed(
+        p,
+        (() => {
+          const b = p.box;
+          // The whole piece selected (ADR-083) tints every panel.
+          const selected =
+            !plain &&
+            (view.mode === 'project'
+              ? !preview && selectedIds.includes(p.nodeId.split(':')[0])
+              : selectedId === null || p.nodeId === selectedId);
+          const lit = !plain && hl.has(p.id);
+          const faded = isFaded(p);
+          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+          const tinted = selected && !outline;
+          const own = !!outline && p.nodeId === ownId;
+          // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
+          const img = images.get(p.materialId);
+          const map = img ? textures.get(img.id) : undefined;
+          const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
+          const color = lit
+            ? HIGHLIGHT
+            : tinted
+              ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
+              : base;
+          // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
+          const follow = followUpGeometry(p);
+          const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
+          const material = materialFor({
+            realistic,
+            color,
+            map: map ?? null,
+            faded,
+            side,
+            back: p.role === 'back',
+            finish: finishes.get(p.materialId),
+          });
+          // Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+          // not drawn (an edge outline is a mesh the occlusion pass would smear); the selection outline is.
+          const edges = (g: BufferGeometry, centred: boolean) => {
+            if (!realistic)
+              edgeItems.push({
+                positions: edgePositions(g),
+                matrix: panelMatrix(p, centred),
+                selected: tinted || own,
+                faded,
+              });
+          };
+          // Outside in, one level per tap at the hit point (ADR-083).
+          const onClick = (e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation();
+            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
+            if (drag.clicked() || preview) return;
+            const at = hitToMm(e.point, built.get(p.id), exploded);
+            const n = e.nativeEvent;
+            if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
+              toggleItem(p.nodeId.split(':')[0]);
+            else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+            else tapPiece(at.x, at.y);
+          };
+          const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
+          // A board with a picture has its own texture coordinates; a plain box shares its size's geometry.
+          // A mesh never switches between the two (keyed apart): a removed geometry prop would reset it.
+          const box = map && img ? null : boxFor(b);
+          const geometry = box ? null : <PictureGeometry p={p} img={img!} />;
+          const shared = box ? { geometry: box } : {};
+          const meshKey = box ? p.id : `${p.id}:picture`;
+          if (follow) {
+            edges(follow, false);
+            return (
+              <mesh
+                key={p.id}
+                geometry={follow}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              />
+            );
+          }
+          if (p.shape?.kind === 'profile') {
+            // A picture's copy of the outline has the same edges as the outline.
+            edges(profileGeometry(p), false);
+            return map && img ? (
+              <mesh
+                key={p.id}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
+                <PictureGeometry p={p} img={img} />
+              </mesh>
+            ) : (
+              <mesh
+                key={p.id}
+                geometry={profileGeometry(p)}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              />
+            );
+          }
+          // A picture's box has the same edges as the plain box of its size.
+          edges(box ?? boxOf(pools.boxes, b.w, b.h, b.d), true);
+          if (!box) usedSizes.add(sizeKey(b.w, b.h, b.d));
+          const mesh = (
+            <mesh
+              key={meshKey}
+              position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+              {...shared}
+              material={material}
+              onClick={onClick}
+              onPointerDown={onDown}
+              castShadow={realistic}
+              receiveShadow={realistic}
+            >
+              {geometry}
+            </mesh>
+          );
+          if (p.shape?.kind !== 'tilt') return mesh;
+          // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
+          const s = p.shape,
+            pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
+            a = (s.angleDeg * Math.PI) / 180;
+          return (
+            <group
+              key={p.id}
+              position={[pv[0] * S, pv[1] * S, pv[2] * S]}
+              rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}
+            >
+              <mesh
+                position={[
+                  (b.x + b.w / 2 - pv[0]) * S,
+                  (b.y + b.h / 2 - pv[1]) * S,
+                  (b.z + b.d / 2 - pv[2]) * S,
+                ]}
+                key={meshKey}
+                {...shared}
+                material={material}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
+                {geometry}
+              </mesh>
+            </group>
+          );
+        })(),
+      ),
+    );
+  // After each commit the looks and sizes this render did not use are disposed; everything on unmount.
+  useEffect(() => {
+    pools.materials.sweep(usedLooks);
+    pools.boxes.sweep(usedSizes);
+  });
+  useEffect(() => () => (pools.materials.clear(), pools.boxes.clear()), [pools]);
 
   return (
     <group>
@@ -2062,179 +2268,40 @@ function Panels({
         </YawGroup>
       )}
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
-      {panels
-        .filter((p) => showFronts || !FRONT.has(p.role))
-        .map((p) =>
-          yawed(
-            p,
-            (() => {
-              const b = p.box;
-              // The whole piece selected (ADR-083) tints every panel.
-              const selected =
-                !plain &&
-                (view.mode === 'project'
-                  ? !preview && selectedIds.includes(p.nodeId.split(':')[0])
-                  : selectedId === null || p.nodeId === selectedId);
-              const lit = !plain && hl.has(p.id);
-              const faded = isFaded(p);
-              // With the outline, only the selected space's own panels are marked (green edges), and no tint.
-              const tinted = selected && !outline;
-              const own = !!outline && p.nodeId === ownId;
-              // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
-              const img = images.get(p.materialId);
-              const map = img ? textures.get(img.id) : undefined;
-              const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
-              const color = lit
-                ? HIGHLIGHT
-                : tinted
-                  ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
-                  : base;
-              // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
-              const follow = followUpGeometry(p);
-              const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
-              const look = realistic ? (
-                <>
-                  {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
-                  not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
-                  <meshPhysicalMaterial
-                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                    map={map ?? null}
-                    color={color}
-                    metalness={0}
-                    {...finishLook(finishes.get(p.materialId))}
-                    transparent={faded}
-                    opacity={faded ? FADED : 1}
-                    depthWrite={!faded}
-                    side={side}
-                  />
-                </>
-              ) : (
-                <>
-                  <meshStandardMaterial
-                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                    map={map ?? null}
-                    color={color}
-                    roughness={0.78}
-                    metalness={0}
-                    transparent={p.role === 'back' || faded}
-                    opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
-                    depthWrite={!faded}
-                    side={side}
-                  />
-                  <Edges
-                    threshold={15}
-                    color={tinted || own ? SELECT : '#3b403c'}
-                    lineWidth={tinted || own ? 1.6 : 1}
-                    transparent={faded}
-                    opacity={faded ? FADED : 1}
-                  />
-                </>
-              );
-              // Outside in, one level per tap at the hit point (ADR-083).
-              const onClick = (e: ThreeEvent<MouseEvent>) => {
-                e.stopPropagation();
-                // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-                if (drag.clicked() || preview) return;
-                const at = hitToMm(e.point, built.get(p.id), exploded);
-                const n = e.nativeEvent;
-                if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
-                  toggleItem(p.nodeId.split(':')[0]);
-                else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
-                else tapPiece(at.x, at.y);
-              };
-              const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
-              const geometry =
-                map && img ? (
-                  <PictureGeometry p={p} img={img} />
-                ) : (
-                  <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-                );
-              if (follow)
-                return (
-                  <mesh
-                    key={p.id}
-                    geometry={follow}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {look}
-                  </mesh>
-                );
-              if (p.shape?.kind === 'profile') {
-                return map && img ? (
-                  <mesh
-                    key={p.id}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    <PictureGeometry p={p} img={img} />
-                    {look}
-                  </mesh>
-                ) : (
-                  <mesh
-                    key={p.id}
-                    geometry={profileGeometry(p)}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {look}
-                  </mesh>
-                );
-              }
-              const mesh = (
-                <mesh
-                  key={p.id}
-                  position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-                  onClick={onClick}
-                  onPointerDown={onDown}
-                  castShadow={realistic}
-                  receiveShadow={realistic}
-                >
-                  {geometry}
-                  {look}
-                </mesh>
-              );
-              if (p.shape?.kind !== 'tilt') return mesh;
-              // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
-              const s = p.shape,
-                pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
-                a = (s.angleDeg * Math.PI) / 180;
-              return (
-                <group
-                  key={p.id}
-                  position={[pv[0] * S, pv[1] * S, pv[2] * S]}
-                  rotation={[
-                    s.axis === 'x' ? a : 0,
-                    s.axis === 'y' ? a : 0,
-                    s.axis === 'z' ? a : 0,
-                  ]}
-                >
-                  <mesh
-                    position={[
-                      (b.x + b.w / 2 - pv[0]) * S,
-                      (b.y + b.h / 2 - pv[1]) * S,
-                      (b.z + b.d / 2 - pv[2]) * S,
-                    ]}
-                    onClick={onClick}
-                    onPointerDown={onDown}
-                    castShadow={realistic}
-                    receiveShadow={realistic}
-                  >
-                    {geometry}
-                    {look}
-                  </mesh>
-                </group>
-              );
-            })(),
-          ),
-        )}
+      {meshes}
+      {!realistic && (
+        <PanelEdges
+          items={edgeItems}
+          deps={[
+            panels,
+            showFronts,
+            edgeItems.map((i) => (i.selected ? 1 : 0) + (i.faded ? 2 : 0)).join(''),
+          ]}
+        />
+      )}
     </group>
+  );
+}
+
+/**
+ * The Simple look's panel edges (ADR-238): one line per edge style for the whole model, built again only when the
+ * panels or their styles change, the old lines disposed then; never picked (ADR-014).
+ */
+function PanelEdges({ items, deps }: { items: EdgeItem[]; deps: readonly unknown[] }) {
+  const size = useThree((s) => s.size);
+  const [merged] = useState(() => new MergedEdges());
+  const lines = merged.update(deps, () => items);
+  useEffect(() => () => merged.dispose(), [merged]);
+  useLayoutEffect(() => {
+    for (const l of lines) l.material.resolution.set(size.width, size.height);
+    invalidate();
+  }, [lines, size]);
+  return (
+    <>
+      {lines.map((l) => (
+        <primitive key={l.uuid} object={l} />
+      ))}
+    </>
   );
 }
 

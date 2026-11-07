@@ -16,7 +16,7 @@ import '@fontsource/fira-sans-condensed/cyrillic-500.css';
 import '@fontsource/fira-sans-condensed/cyrillic-600.css';
 import './styles.css';
 import { t } from './core/i18n';
-import { applyTheme } from './ui/useTheme';
+import { applyTheme } from './store/useTheme';
 import { installCutTitles } from './ui/cutTitle';
 import { registerSW } from 'virtual:pwa-register';
 
