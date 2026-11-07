@@ -1374,17 +1374,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
 - Conflicts: none
 
-### G-461: Default L and U rooms give no Fill the room mix
-
-- Status: Open
-- Origin: ADR-193, 2026-11-06; agent found it while building (not caused by ADR-193)
-- Missing: The default L room (3600 x 3000, cut 1500 x 1500) and the U room (offset 600) give no mix in Fill the room: Wall 2 has no stretch of 400 mm, then 'Every mix tried had a problem in the room (60 tried)'. Same with tallPosition left/right, so it predates ADR-193; the find-it uses Use this mix on the rectangle instead.
-- Request: Not a quote: ADR-193 Done-when only asks 'Rectangle -> L shows 6 ticked walls'; the user's request was 'a critique of design ... high and medium issues and fixes per flow'.
-- Questions: Should the default L and U rooms give mixes? Which problem blocks them (corner reservations on the 1500 mm walls, or a clash the model reports as an error)?
-- Suggested pick: Find which error rejects every L/U mix (run suggestRoomMixes on the default L and list the error codes), then fix that cause in a new ADR so the default L and U rooms give cards. Closest to the user's wish for working flows. (estimate: effort +15% of ADR-193, value +10%)
-- Work: Medium
-- Impact: Medium
-
 ### G-462: Fill the room starts U and Alcove with an offset the size check rejects
 
 - Status: Acknowledged (2026-11-06)
@@ -1455,21 +1444,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; found while testing ADR-203 (G-105, models in 3D Move mode).
 - Questions: None; it is a bug.
 - Suggested pick: Reproduce with the piece-safety script, find which unmount removes the node twice, and fix it. (estimate: effort +5 %, value +5 %)
-
-### G-470: Built-in template descriptions are shown nowhere in the app
-
-- Status: Open
-- Origin: ADR-196 item 7 (blind corner template text), found while building 2026-11-06
-- Missing: The built-in templates' descriptions in src/core/design.ts (templates) are not rendered by any screen: TemplateButton in src/ui/Templates.tsx is unused and the New single piece dialog lists catalog items instead. ADR-196 corrected the blind corner text to read cornerDefaults('blind') (610 mm), proven by tests/constructions.test.ts, but there is no visible place to find it in a find-it test.
-- Request: "Split the entire app into domains or flows … critique of design … 1 adr with high and medium issues and fixes per flow" (ADR-196 item 7: the description reads the defaults)
-- Questions: Should the built-in template descriptions be shown somewhere (the Templates source of the catalog, or Fill the room), or be removed as unused data?
-- Suggested pick: Ask the user; closest to the request: keep the corrected text and show nothing new until the user asks (no UI change was asked by ADR-196).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
-- Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
-- Conflicts: none
 
 ### G-471: Catalog page is taller than the 15000 px script limit
 
@@ -1600,3 +1574,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
 - Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
 - Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
+
+### G-484: Start from shows template sizes that differ from the row they sit under
+
+- Status: Open
+- Origin: ADR-216, 2026-11-07; agent found it while building G-470
+- Missing: Start from now shows each built-in template's description under the catalog row of the same id. For base-door, corner-blind and corner-l the catalog row builds a different piece than the template: 820 mm high (plinth included, buildModel bounds) while the template description says 720 (600 x 720 x 560, 1000 x 720 x 560, 900 x 900 x 720). The desk-pedestal and desk-gables rows build the same piece as their templates, but their summary gives W x H x D (1400 x 750 x 700, 1200 x 750 x 600) while the template text right under it gives W x D x H (1400 x 700 x 750, 1200 x 600 x 750).
+- Request: Show them in Start from (user's answer for G-470, 2026-11-07)
+- Questions: Should the three template descriptions be changed to the catalog rows' 820 mm height, should the templates' own height change to 820, or should the description stay the template's as built now? Should the two desk texts be written in W x H x D like the summaries?
+- Suggested pick: Ask the user; closest to the request is to keep showing the descriptions and make the three texts state the height the row builds (820), read from the catalog piece, and write the desk texts as W x H x D. (estimate: effort +5% of ADR-216, value +5%)
+- Work: Low
+- Impact: Low-medium

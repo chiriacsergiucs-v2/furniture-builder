@@ -1,0 +1,79 @@
+# ADR-216: Fill L and U room corners and show template descriptions in Start from
+
+- Status: Implemented
+- Date: 2026-11-07
+- Implemented: 2026-11-07
+- Depends on: ADR-032, ADR-173, ADR-177, ADR-193, ADR-196
+- Design: n/a
+- Backlog: N221
+
+## Context
+
+The user asked to cover two open gaps (2026-11-07, "Cover these too") and answered both questions with the interactive
+question tool:
+
+- **G-461**: the default L room (3600 × 3000, cut 1500 × 1500) and U room (offset 600) give no Fill the room mix. A probe
+  of `suggestRoomMixes` found every mix rejected: a 1500 mm wall gets a corner cabinet at both of its inside corners
+  (`pieces-overlap`, 78 mm); in the U, a corner cabinet longer than the 600 mm wall it stands on pokes through a wall
+  (`outside-room`), and tall cabinets, top boxes and base units on the 600 mm arm's two walls overlap each other and the
+  corner cabinets. Answer: **"One corner per short wall"**: keep the corner cabinet at one end, leave the other corner
+  empty, try both ends and let the fewest-warnings ranking pick; corner cabinets only at inside corners; tall cabinets
+  and top boxes out of the corner zones.
+- **G-470**: the built-in templates' descriptions (`templates` in `src/core/design.ts`) are shown nowhere, and
+  `TemplateButton` is unused. Answer: **"Show them in Start from"**.
+
+## Decision
+
+1. **Corner plans** (`cornerPlans`, `src/core/roomfill.ts`). A corner cabinet stands at an inside corner (`insideCorner`,
+   unchanged) only when its own footprint fits both walls: its length (`cornerTake().along`, measured from the placed
+   template) on the wall holding it and its depth (`across`) on the next wall. Two corner cabinets whose footprints share
+   floor never stand together. The plans are the largest conflict-free sets, the one keeping earlier corners first, at
+   most 4 (a bound on work, not a size). No magic length: "too short" is the footprints' own overlap. The 60
+   combinations a call tries are shared out between the plans, so an L or U call tries no more than a rectangle.
+2. **Each plan is filled** as before (stretches, candidates, tall side, combinations); an empty corner is reserved as
+   corner kind `none` reserves it (the first wall's run reaches it). The mixes of all plans are ranked together by the
+   existing order (fewest warnings, then fewest pieces). A rectangle has one plan, so its mixes, keys and problems are
+   unchanged.
+3. **Runs stay off taken floor** (`trimStretches`): a stretch loses the part whose run (a run's depth, fronts included)
+   would stand on a kept corner cabinet's footprint or on an earlier wall's run, so tall cabinets, top boxes and base
+   units stay out of the corner zones and out of a narrow U arm already filled from its other side. An L or diagonal
+   corner's whole bounding square counts as taken (its doors open into the inner part).
+4. A wall left empty is named by its existing "Wall n has no stretch" note and left off the card (no "Wall n: " line);
+   a mix of corner cabinets only reads "Corner cabinets only". With no mix, every plan's errors are named.
+5. **Start from** (`StartFrom`, `src/ui/Catalog.tsx`): a row whose variant id is a built-in template's id shows that
+   template's description under its summary, through `tr()` (Russian entries already in `ru/data-catalog.ts`); other rows
+   show nothing new. `TemplateButton` is deleted.
+
+Problems stay diagnostics (ADR-008); every offered mix is still built and checked as a project.
+
+## Alternatives considered
+
+- **Shorter corner cabinets on short walls**: invents sizes the catalog does not have (ADR-010); not chosen by the user.
+- **Drop both corners of a short wall**: loses a corner cabinet the wall can hold.
+- **Show descriptions in Fill the room or remove them**: the user picked Start from.
+
+## Scope
+
+- In scope: corner plans, stretch trimming, card text for empty walls, Start from descriptions, feature lines.
+- Out of scope: template texts whose sizes differ from the row they sit under: 720 mm under three rows that build
+  820 mm, and the two desk texts in W × D × H under W × H × D summaries (G-484, found while building; asks the user).
+
+## Consequences
+
+- Positive: the default L and U rooms give error-free mixes; Start from says what each built-in template is.
+- Negative / risks: an L or U call fills up to 4 plans (their tall-side probes add a few builds). Where two runs
+  face each other across a narrow arm, the wall earlier in the outline keeps the floor; only corners are tried both
+  ways.
+
+## Done when
+
+- [x] The default L room (3600 × 3000, cut 1500 × 1500) gives 4 mixes with no error for every corner kind
+      (`tests/roomfill.test.ts`, ADR-216).
+- [x] The default U room (offset 600) gives 4 mixes with no error for every corner kind (same test).
+- [x] `cornerPlans` keeps one corner per 1500 mm wall (both ends tried), never a corner longer than its wall, and all
+      four corners of a rectangle; every corner cabinet in a mix stands at an inside corner (tests).
+- [x] An ordinary rectangle behaves as before: the existing roomfill tests stay green, the 4-wall default under 100 ms.
+- [x] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes.
+- [x] Find-it at 390 and 1280 px: More → New… → Start from shows "1000 × 720 × 560, 610 mm blind section on the left,
+      one door" under the Blind corner row (`tests/find-it/start-from-descriptions.test.tsx`).
+- [x] `TemplateButton` is deleted; feature lines added; G-461 and G-470 set to ADR-216.
