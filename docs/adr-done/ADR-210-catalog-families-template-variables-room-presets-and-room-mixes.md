@@ -15,8 +15,8 @@ Request fields): G-025 "The 14 features you selected at 21:28" (context, not a q
 variables "within the project" (not a quote); G-341 and G-342 "Fill the room"; G-044 "Mark 029 as won't do"; G-396 G-104's
 "Offer repairs such as … 'Move the bed away'?" (not a quote); G-313 "Match products to parts in app". No pick
 conflicts with an implemented ADR. G-044 stays offline:
-[ADR-029](../adr/ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) (the feed) stays won't do, and
-the brand filter of [ADR-027](../adr/ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) (Deferred)
+[ADR-029](ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) (the feed) stays won't do, and
+the brand filter of [ADR-027](ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) (Deferred)
 takes the user's decor list instead. Builds on pending
 [ADR-193](../adr-done/ADR-193-fix-the-start-something-new-fill-a-wall-and-fill-the-room-fl.md) and
 [ADR-204](../adr-done/ADR-204-complete-templates-and-the-fill-a-wall-and-fill-the-room-wizards.md) (Refine fields, compat

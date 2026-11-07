@@ -53,14 +53,17 @@ export const EXEMPT = [
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** { "ADR-012": "2026-10-21", ... } from the "- Implemented:" line of each docs/adr-done file. */
+/** { "ADR-012": "2026-10-21", ... } from the "- Implemented:" line of each Implemented docs/adr-done file. */
 export function implementedDates(repo = REPO) {
   const out = {};
   const dir = join(repo, 'docs/adr-done');
   for (const f of readdirSync(dir)) {
     const m = /^(ADR-\d{3})-.*\.md$/.exec(f);
     if (!m) continue;
-    const d = /^- Implemented: (\d{4}-\d{2}-\d{2})/m.exec(readFileSync(join(dir, f), 'utf8'));
+    const text = readFileSync(join(dir, f), 'utf8');
+    // A Rejected ADR (ADR-217) also lives in docs/adr-done but built nothing.
+    if (!/^- Status: Implemented\s*$/m.test(text)) continue;
+    const d = /^- Implemented: (\d{4}-\d{2}-\d{2})/m.exec(text);
     out[m[1]] = d ? d[1] : '';
   }
   return out;

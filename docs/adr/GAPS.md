@@ -74,23 +74,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-009: Supplier feeds and ordering
-
-- Status: Open
-- Origin: ADR-063, 2026-10-24 15:51 UTC; user decision
-- Missing: Column maps for other suppliers' price files, order files, live feeds, stock and online ordering are not built (ADR-063 Deferred); the Regency export refresh exists (ADR-172).
-- Request: “Put to pending any that require non-free services”.
-- Questions: Build the offline step (supplier price-file column maps and order files)? Which suppliers first?
-- Suggested pick: An offline middle step that needs no service: a column map for each supplier's own price-list file (Egger, Kronospan, Kastamonu, Fundermax) into the ADR-062 price list, and an order file per supplier from the shopping list. This covers most of the value with no backend. (estimate: effort +25%, value +40% of what live feeds give)
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-- Issue: No import maps for other suppliers' price files and no per-supplier order files.
-- Fix: Offline column maps for Egger, Kronospan, Kastamonu, Fundermax price files and per-supplier order files.
-- Conflicts: none
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
-
 ### G-011: Handle projection and exact swing arcs in the check
 
 - Status: Open
@@ -875,7 +858,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-161, 2026-10-30; agent scoped it out
-- Missing: Seller prices and stock are a snapshot bundled in the app build (Regency export of 2026-10-29). The app never updates them itself; ADR-172 added a hand-started workflow (.github/workflows/seller-prices.yml) that takes an export URL and opens a pull request, and a newer file still needs a release. Nothing runs on a schedule. Live feeds stay ADR-063 (Deferred).
+- Missing: Seller prices and stock are a snapshot bundled in the app build (Regency export of 2026-10-29). The app never updates them itself; ADR-172 added a hand-started workflow (.github/workflows/seller-prices.yml) that takes an export URL and opens a pull request, and a newer file still needs a release. Nothing runs on a schedule. Live feeds were rejected (ADR-063, Rejected 2026-11-07).
 - Request: Import these as products for materials, keep it regency agnostic, more sellers will follow
 - Questions: Refresh seller data how often, and by whom?
 - Suggested pick: Re-run the converter on each new export the user provides and release (estimate: effort 5 %, value: prices stay current)

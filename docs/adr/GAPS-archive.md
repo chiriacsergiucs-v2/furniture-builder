@@ -87,6 +87,23 @@ highest id in either file.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: 2026-11-06: ADR-208 takes over WebXR AR and the USDZ export. Shared side panels were built by ADR-190 and the review pack by ADR-121, so nothing else remains.
 
+### G-009: Supplier feeds and ordering
+
+- Status: Done (rejected by the user 2026-11-07, ADR-217)
+- Origin: ADR-063, 2026-10-24 15:51 UTC; user decision
+- Missing: Column maps for other suppliers' price files, order files, live feeds, stock and online ordering are not built (ADR-063 Deferred); the Regency export refresh exists (ADR-172).
+- Request: “Put to pending any that require non-free services”.
+- Questions: Build the offline step (supplier price-file column maps and order files)? Which suppliers first?
+- Suggested pick: An offline middle step that needs no service: a column map for each supplier's own price-list file (Egger, Kronospan, Kastamonu, Fundermax) into the ADR-062 price list, and an order file per supplier from the shopping list. This covers most of the value with no backend. (estimate: effort +25%, value +40% of what live feeds give)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: No import maps for other suppliers' price files and no per-supplier order files.
+- Fix: Offline column maps for Egger, Kronospan, Kastamonu, Fundermax price files and per-supplier order files.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+
 ### G-010: Worktop joints and corner runs
 
 - Status: Done (ADR-205)

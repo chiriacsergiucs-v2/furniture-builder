@@ -1,7 +1,8 @@
 # ADR-052: Run the catalog feed job: search, reconstruct and publish brand entries through a pull request
 
-- Status: Deferred (won't do: depends on ADR-029, which is won't do — user decision 2026-10-25)
+- Status: Rejected (won't do: depends on ADR-029 — user decisions 2026-10-25 and 2026-11-07, ADR-217)
 - Date: 2026-10-24
+- Rejected: 2026-11-07
 - Decided by: user, 2026-10-22 (ADR-029 request); answers 2026-10-23; split out of ADR-029 on 2026-10-24
 - Depends on: ADR-029
 - Design: n/a

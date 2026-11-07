@@ -17,7 +17,7 @@ This changes two settled sentences. [ADR-049](../adr-done/ADR-049-materials-carr
 "**Built-in supplier decors:** never. Decors come only from the user's list." — the user now supplies the seller data
 and chose to bundle it. [ADR-062](../adr-done/ADR-062-cost-estimate-from-the-user-s-own-price-list-no-supplier-serv.md):
 prices "can only come from the user" — the seller's own published prices now count too, below the user's.
-[ADR-063](../adr/ADR-063-supplier-price-feeds-live-stock-and-online-ordering.md) (live feeds, ordering) stays Deferred: this
+[ADR-063](ADR-063-supplier-price-feeds-live-stock-and-online-ordering.md) (live feeds, ordering) stays Deferred: this
 is an offline snapshot, not a feed.
 
 ## Decision

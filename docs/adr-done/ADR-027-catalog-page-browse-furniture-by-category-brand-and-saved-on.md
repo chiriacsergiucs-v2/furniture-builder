@@ -1,7 +1,8 @@
 # ADR-027: Catalog page: browse furniture by category, brand and "Saved on this device"
 
-- Status: Deferred (won't do: depends on ADR-029, which is won't do — user decision 2026-10-25)
+- Status: Rejected (won't do: the brand facet needs the ADR-029 feed; the Catalog page built under ADR-032 stays — user decisions 2026-10-25 and 2026-11-07, ADR-217)
 - Date: 2026-10-22
+- Rejected: 2026-11-07
 - Decided by: user request; defaults below await confirmation
 - Depends on: ADR-052
 - Design: docs/ui-design.md
