@@ -3546,6 +3546,17 @@ table.buy {
   width: 96px;
   height: 34px;
 }
+/* "default" on the picture's corner, over it (user decision 2026-11-07, ADR-195): the meta line keeps its width. */
+.item.compact > .item-default {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  justify-self: start;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  border: 1px solid var(--line-2);
+}
 .item.compact .item-text {
   display: contents;
 }

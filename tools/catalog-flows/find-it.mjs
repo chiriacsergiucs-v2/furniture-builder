@@ -145,6 +145,32 @@ try {
       `${cards.text} px`,
     );
     check('one meta line per card', cards.metaTwoLines === 0, `${cards.metaTwoLines} on two lines`);
+    // Nothing leaves the card (user decision 2026-11-07): parts on every buildable card's meta line, and "default"
+    // shown on every family's first card (on the picture, or on the meta line when there is no picture).
+    const facts = await page.evaluate(() => {
+      const families = [...document.querySelectorAll('.catalog-page article.family')];
+      let noDefault = 0;
+      let noParts = 0;
+      let buildable = 0;
+      for (const f of families) {
+        const first = f.querySelector('li.item');
+        const tag = [...(first?.querySelectorAll('.tag') ?? [])].find(
+          (x) => x.textContent.trim() === 'default',
+        );
+        const r = tag?.getBoundingClientRect();
+        if (!tag || !r || r.width === 0 || r.height === 0) noDefault++;
+      }
+      for (const c of document.querySelectorAll('.catalog-page li.item:has(img.snap)')) {
+        buildable++;
+        if (!/\d+ parts?\b/.test(c.querySelector('.item-meta .num')?.textContent ?? '')) noParts++;
+      }
+      return { families: families.length, noDefault, buildable, noParts };
+    });
+    check(
+      'every first card shows "default"; every buildable card keeps its parts count on the meta line',
+      facts.noDefault === 0 && facts.noParts === 0,
+      `${facts.families} families, ${facts.noDefault} without default; ${facts.buildable} buildable, ${facts.noParts} without parts`,
+    );
     check(
       '"More" shows on exactly the cards with a cut line',
       cards.mismatch === 0,
@@ -153,8 +179,9 @@ try {
     if (phone) {
       check('page under 30 000 px tall', cards.height < 30000, `${cards.height} px`);
       check(
-        'under 30 % of cards show "More"',
-        cards.more / cards.n < 0.3,
+        // ADR-195 item 4 met by user decision 2026-11-07, "Accept 73.8%, ship": at most the measured 135 of 183.
+        '"More" on at most 73.8 % of cards (user-accepted, 2026-11-07)',
+        cards.more / cards.n <= 135 / 183,
         `${cards.more} of ${cards.n} (${pct} %)`,
       );
     } else {

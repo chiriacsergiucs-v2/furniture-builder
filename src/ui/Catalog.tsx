@@ -809,9 +809,12 @@ const SUPPORT_TEXT = {
   reference: t('Reference'),
 };
 
-/** "1600 × 450 × 438 mm · 9 parts · 2 to check": an item's size, parts and checks in one line. */
+/**
+ * "1600 × 450 × 438 · 9 parts · 2 to check": an item's size, parts and checks in one line. The size has no " mm" on
+ * the card (user decision 2026-11-07, ADR-195), so the line fits better beside the picture.
+ */
 const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
-  `${t('{w} × {h} × {d} mm', { w: fx.w, h: fx.h, d: fx.d })} · ${t('{n} parts', { n: fx.parts })}${
+  `${fx.w} × ${fx.h} × ${fx.d} · ${t('{n} parts', { n: fx.parts })}${
     fx.errors
       ? ` · ${t('{n} problems', { n: fx.errors })}`
       : fx.warnings
@@ -877,6 +880,9 @@ function ItemCard({
           alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
         />
       )}
+      {/* On a card with a picture the "default" tag sits on the picture, off the meta line (user decision
+          2026-11-07, ADR-195); a card without one keeps it on the meta line. */}
+      {ok && isDefault && <span className="tag subtle item-default">{t('default')}</span>}
       <div className="item-text">
         <span className="item-name" id={nameId}>
           <strong>{tr(v.name)}</strong>
@@ -896,7 +902,7 @@ function ItemCard({
           )}
         </span>
         <span className="item-meta">
-          {isDefault && <span className="tag subtle">{t('default')}</span>}
+          {!ok && isDefault && <span className="tag subtle">{t('default')}</span>}
           <span
             className={`kind ${v.kind}`}
             title={
