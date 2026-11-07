@@ -34,12 +34,32 @@ export const ru_surfaces = {
   '3D view tools': 'Инструменты 3D-вида',
   'More 3D actions': 'Другие действия в 3D',
   'View in AR': 'Посмотреть в AR',
-  'Tap the screen to place the furniture on the ring.':
-    'Нажмите на экран, чтобы поставить мебель на кольцо.',
-  'Point the phone at the floor and move it slowly until a white ring appears.':
-    'Направьте телефон на пол и медленно ведите его, пока не появится белое кольцо.',
-  'Placed at full size. Walk around it; Turn 90° ↻ turns it, Exit AR goes back.':
-    'Размещено в натуральную величину. Обойдите вокруг; «Повернуть на 90° ↻» поворачивает, «Выйти из AR» возвращает назад.',
+  // AR placement (ADR-213 to ADR-215)
+  'Looking for the floor — move the phone slowly.': 'Ищем пол — медленно ведите телефон.',
+  'Tap the floor in the room corner.': 'Нажмите на пол в углу комнаты.',
+  'Tap the floor along the wall the back goes against.':
+    'Нажмите на пол вдоль стены, к которой встанет задняя сторона.',
+  'Tap to place it on the outline.': 'Нажмите, чтобы поставить по контуру.',
+  'Placed at full size. Fine-tune with the arrows, or Place again.':
+    'Размещено в натуральную величину. Уточните стрелками или разместите заново.',
+  'Back-left': 'Сзади слева',
+  'Back-right': 'Сзади справа',
+  'Point: {name}': 'Точка: {name}',
+  'Room corner': 'Угол комнаты',
+  'Cancel corner': 'Отменить угол',
+  'Fine-tune': 'Точная настройка',
+  'Turn left by the step': 'Повернуть влево на шаг',
+  'Turn right by the step': 'Повернуть вправо на шаг',
+  '↑ Back': '↑ Назад',
+  '↓ Forward': '↓ Вперёд',
+  '← Left': '← Влево',
+  '→ Right': '→ Вправо',
+  'Step: 1 cm / 1°': 'Шаг: 1 см / 1°',
+  'Step: 10 cm / 15°': 'Шаг: 10 см / 15°',
+  'Place again': 'Разместить заново',
+  'W {mm} mm': 'Ш {mm} мм',
+  'H {mm} mm': 'В {mm} мм',
+  'D {mm} mm': 'Г {mm} мм',
   'Exit AR': 'Выйти из AR',
   'Export for AR (.usdz)': 'Экспорт для AR (.usdz)',
   'AR is not available on this device.': 'AR недоступна на этом устройстве.',
@@ -67,6 +87,15 @@ export const ru_surfaces = {
   'On the floor, on the wall or on a piece; dragged with snapping on the plan and in Move mode; kept in project templates.':
     'На полу, на стене или на изделии; перетаскиваются с привязкой на плане и в режиме перемещения; сохраняются в шаблонах проектов.',
   'View in AR and export for AR': 'Просмотр в AR и экспорт для AR',
+  'AR furniture sits on the real floor': 'Мебель в AR стоит на настоящем полу',
+  'Steady floor-only hits, anchors so it does not drift, a soft shadow under it, sharper edges.':
+    'Только устойчивые попадания в пол, якоря против смещения, мягкая тень под мебелью, более чёткие края.',
+  'Place in AR by a corner or into a room corner': 'Размещение в AR по углу или в угол комнаты',
+  'A footprint outline, a Point switch (Centre, Back-left, Back-right) and Room corner by two floor taps.':
+    'Контур основания, переключатель точки (центр, сзади слева, сзади справа) и угол комнаты двумя нажатиями на пол.',
+  'Fine-tune in AR and see its size': 'Точная настройка в AR и размеры',
+  'Move 1 cm or 10 cm, turn 1° or 15°, Place again, and W × H × D labels in mm.':
+    'Сдвиг на 1 или 10 см, поворот на 1° или 15°, повторное размещение и подписи Ш × В × Г в мм.',
   'From the 3D toolbar ⋯: View in AR on phones that offer it, and a .usdz file for AR Quick Look.':
     'Из меню ⋯ панели 3D: просмотр в AR на телефонах, которые это поддерживают, и файл .usdz для AR Quick Look.',
   'WebGPU rendering': 'Рендеринг через WebGPU',

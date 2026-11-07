@@ -103,14 +103,21 @@ import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
 import {
   ARBridge,
+  cancelARCorner,
+  cycleARPoint,
   enterAR,
   exitAR,
   exportUsdz,
   keepTapsForButtons,
+  nudgeAR,
+  placeARAgain,
+  startARCorner,
+  toggleARStep,
   turnAR,
-  useARFloorFound,
+  turnARStep,
   useARState,
   useARSupported,
+  useARUi,
 } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
@@ -848,8 +855,8 @@ export default function Viewer3D() {
  */
 function ThreeMore({ name }: { name: string }) {
   const canAR = useARSupported();
-  const ar = useARState();
-  const floorFound = useARFloorFound();
+  const arUi = useARUi();
+  const ar = arUi.state;
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const overlay = useRef<HTMLDivElement>(null);
@@ -861,14 +868,25 @@ function ThreeMore({ name }: { name: string }) {
     el.addEventListener('beforexrselect', keepTapsForButtons);
     return () => el.removeEventListener('beforexrselect', keepTapsForButtons);
   }, []);
+  // AR hints (ADR-213 to ADR-215): look for the floor first, then what a tap does in the current mode.
   const hint =
     ar === 'placing'
-      ? floorFound
-        ? t('Tap the screen to place the furniture on the ring.')
-        : t('Point the phone at the floor and move it slowly until a white ring appears.')
+      ? !arUi.found
+        ? t('Looking for the floor — move the phone slowly.')
+        : arUi.corner === 'first'
+          ? t('Tap the floor in the room corner.')
+          : arUi.corner === 'second'
+            ? t('Tap the floor along the wall the back goes against.')
+            : t('Tap to place it on the outline.')
       : ar === 'placed'
-        ? t('Placed at full size. Walk around it; Turn 90° ↻ turns it, Exit AR goes back.')
+        ? t('Placed at full size. Fine-tune with the arrows, or Place again.')
         : '';
+  const pointName =
+    arUi.point === 'centre'
+      ? t('Centre')
+      : arUi.point === 'back-left'
+        ? t('Back-left')
+        : t('Back-right');
   return (
     <>
       <details className="menu three-more" ref={menu}>
@@ -912,13 +930,70 @@ function ThreeMore({ name }: { name: string }) {
         </p>
         <div className="ar-actions">
           {ar === 'placed' && (
-            <button type="button" className="btn" onClick={turnAR}>
-              {t('Turn 90° ↻')}
-            </button>
+            <div className="ar-pad" role="group" aria-label={t('Fine-tune')}>
+              <button
+                type="button"
+                className="btn"
+                aria-label={t('Turn left by the step')}
+                onClick={() => turnARStep(false)}
+              >
+                ↺
+              </button>
+              <button type="button" className="btn" onClick={() => nudgeAR('back')}>
+                {t('↑ Back')}
+              </button>
+              <button
+                type="button"
+                className="btn"
+                aria-label={t('Turn right by the step')}
+                onClick={() => turnARStep(true)}
+              >
+                ↻
+              </button>
+              <button type="button" className="btn" onClick={() => nudgeAR('left')}>
+                {t('← Left')}
+              </button>
+              <button type="button" className="btn" onClick={() => nudgeAR('forward')}>
+                {t('↓ Forward')}
+              </button>
+              <button type="button" className="btn" onClick={() => nudgeAR('right')}>
+                {t('→ Right')}
+              </button>
+            </div>
           )}
-          <button type="button" className="btn solid" onClick={exitAR}>
-            {t('Exit AR')}
-          </button>
+          <div className="ar-row">
+            {ar === 'placing' && !arUi.corner && (
+              <>
+                <button type="button" className="btn" onClick={cycleARPoint}>
+                  {t('Point: {name}', { name: pointName })}
+                </button>
+                <button type="button" className="btn" onClick={startARCorner}>
+                  {t('Room corner')}
+                </button>
+              </>
+            )}
+            {ar === 'placing' && arUi.corner && (
+              <button type="button" className="btn" onClick={cancelARCorner}>
+                {t('Cancel corner')}
+              </button>
+            )}
+            {ar === 'placed' && (
+              <>
+                <button type="button" className="btn" onClick={toggleARStep}>
+                  {arUi.fine ? t('Step: 1 cm / 1°') : t('Step: 10 cm / 15°')}
+                </button>
+                <button type="button" className="btn" onClick={turnAR}>
+                  {t('Turn 90° ↻')}
+                </button>
+                <button type="button" className="btn" onClick={placeARAgain}>
+                  {t('Place again')}
+                </button>
+              </>
+            )}
+            <button type="button" className="btn solid" onClick={exitAR}>
+              {t('Exit AR')}
+            </button>
+          </div>
         </div>
       </div>
     </>

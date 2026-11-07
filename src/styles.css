@@ -7422,9 +7422,28 @@ ul.plain {
 }
 .ar-overlay .ar-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  pointer-events: auto;
+}
+/* ADR-214, ADR-215: one bottom panel; the rows wrap so nothing scrolls sideways on a phone. */
+.ar-overlay .ar-row {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: var(--s-2);
-  pointer-events: auto;
+  max-width: 100%;
+}
+.ar-overlay .ar-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-1);
+  width: min(100%, 22rem);
+}
+.ar-overlay .ar-pad .btn {
+  min-height: 44px;
 }
 
 /* ADR-205: sink and hob cut-outs and worktop corner joints on the plan. */
