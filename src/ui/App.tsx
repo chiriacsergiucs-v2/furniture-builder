@@ -23,10 +23,6 @@ import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
 import { RoomFillDialog } from './RoomFill';
 import { PrintAssembly } from './Assembly';
-import { CatalogPage } from './Catalog';
-import { ResearchPage } from './Research';
-import { GapsPage } from './Gaps';
-import { InfoPage } from './Info';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { cancelTemplateEdit, saveTemplateEdit } from '../store/templatesStore';
@@ -69,6 +65,16 @@ import {
 } from './viewChoice';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
+// Pages opened on demand load on first use (ADR-222).
+const CatalogPage = lazy(() => import('./CatalogPage').then((m) => ({ default: m.CatalogPage })));
+const ResearchPage = lazy(() => import('./Research').then((m) => ({ default: m.ResearchPage })));
+const GapsPage = lazy(() => import('./Gaps').then((m) => ({ default: m.GapsPage })));
+const InfoPage = lazy(() => import('./Info').then((m) => ({ default: m.InfoPage })));
+const PageLoading = () => (
+  <p className="loading" role="status">
+    {t('Loading…')}
+  </p>
+);
 
 function webglAvailable() {
   try {
@@ -791,18 +797,20 @@ export function App() {
         {page === 'projects' && (
           <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
         )}
-        {page === 'catalog' && (
-          <CatalogPage
-            onDone={() => setPage('editor')}
-            designOpen={designOpen}
-            onNewPiece={() => openWizard(null)}
-          />
-        )}
-        {page === 'research' && (
-          <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
-        )}
-        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
-        {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
+        <Suspense fallback={<PageLoading />}>
+          {page === 'catalog' && (
+            <CatalogPage
+              onDone={() => setPage('editor')}
+              designOpen={designOpen}
+              onNewPiece={() => openWizard(null)}
+            />
+          )}
+          {page === 'research' && (
+            <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
+          )}
+          {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
+          {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
+        </Suspense>
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
           hidden={page !== 'editor'}

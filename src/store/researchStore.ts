@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { canonical, defaultMark, storedOf, type StoredBundle } from '../core/research/catalog';
-import { SHIPPED_RESEARCH } from '../core/research';
 import type { ResearchBundle, ResearchMark } from '../core/research/types';
 import {
   listResearchBundles,
@@ -27,8 +26,8 @@ interface ResearchState {
 }
 
 const now = () => new Date().toISOString();
-const shipped = (): StoredBundle[] =>
-  SHIPPED_RESEARCH.map((b) => storedOf(b, '2026-10-23T00:00:00.000Z'));
+const shipped = (bundles: ResearchBundle[]): StoredBundle[] =>
+  bundles.map((b) => storedOf(b, '2026-10-23T00:00:00.000Z'));
 
 /** Shipped editions win over a stored copy of the same edition (research records are never edited by the user). */
 export function seedShipped(
@@ -46,12 +45,16 @@ export function seedShipped(
 }
 
 export const useResearch = create<ResearchState>((set, get) => ({
-  stored: shipped(),
+  // Empty until `init` loads the shipped papers: they are a chunk of their own, loaded on first use (ADR-222).
+  stored: [],
   marks: {},
   loaded: false,
   error: null,
   init: async () => {
     if (get().loaded) return;
+    const { SHIPPED_RESEARCH } = await import('../core/research');
+    // The shipped papers show at once; storage adds the user's imports and decisions.
+    if (!get().stored.length) set({ stored: shipped(SHIPPED_RESEARCH) });
     try {
       const rows = await listResearchBundles();
       const seed = seedShipped(rows, SHIPPED_RESEARCH, now());
