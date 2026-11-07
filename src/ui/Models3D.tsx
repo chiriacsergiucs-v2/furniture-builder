@@ -9,6 +9,7 @@ import {
   type ModelTurn,
 } from '../core/model3d';
 import { newId } from '../core/design';
+import { frontEdge } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
@@ -507,17 +508,6 @@ const onEnter = (f: () => void) => (e: KeyboardEvent) => {
     f();
   }
 };
-
-/** The edge of a box its front faces, on the plan (x right, z away from the back wall). */
-function frontEdge(b: Box, yaw: ModelTurn): [number, number, number, number] {
-  return yaw === 0
-    ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
-    : yaw === 90
-      ? [b.x + b.w, b.z, b.x + b.w, b.z + b.d]
-      : yaw === 180
-        ? [b.x, b.z, b.x + b.w, b.z]
-        : [b.x, b.z, b.x, b.z + b.d];
-}
 
 /** Screen point → plan mm, through the plan's own drawing. */
 function planAt(e: ReactPointerEvent<SVGGElement>): PointerAt {

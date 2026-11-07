@@ -54,11 +54,18 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) unit tests pin today's results: `suggestRoomSize` for an empty room, one piece and a deep piece;
+- [x] (test first) unit tests pin today's results: `suggestRoomSize` for an empty room, one piece and a deep piece;
       `seatingDefaults` for three widths (backrest at the `width / 3` and 650 boundaries); `frontEdge` for 0, 90,
-      180 and 270°.
-- [ ] (test first) jsdom find-it at 390 and 1280 px: the room section shows the same suggested room width text as
-      before for a sample project.
-- [ ] No sizing literal (3000, 1000, 380, 220, 650) remains in those components (checked by `rg`).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      180 and 270°. Evidence: `tests/sizing-defaults.test.ts` (13 tests: `suggestRoomSize (ADR-232)`,
+      `seatingDefaults (ADR-232)`, `frontEdge (ADR-232)`).
+- [x] (test first) jsdom find-it at 390 and 1280 px: the room section shows the same suggested room width text as
+      before for a sample project. Evidence: `tests/find-it/room-suggested-size.test.tsx` (sideboard → Add the room →
+      "Rectangle · 3000 × 3000 × 2500 mm", 1280 and 390 px), green on the unchanged UI and after the move.
+- [x] No sizing literal (3000, 1000, 380, 220, 650) remains in those components (checked by `rg`).
+      Evidence: the moved room auto-size, seating defaults and front-edge ternary are gone from `Project.tsx`,
+      `Editors.tsx` and `Models3D.tsx` (grep); unrelated uses of the same numbers (field maxima, the plan's 1000 mm
+      minimum span) stay.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
+      Evidence (run 2026-11-07, local): all six pass; `pnpm test` 1761 tests, 1746 before. The failures in that run also
+      fail on the base before the change, or are find-it timeouts under machine load that pass when run alone.
