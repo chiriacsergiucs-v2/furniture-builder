@@ -14,10 +14,10 @@ import type {
   Panel,
   SellerItem,
 } from '../core/types';
-import { useDesign } from '../store/designStore';
+import { useDesign } from './designStore';
 import { buildModel } from '../core/build';
 import { fixingNote, fixingPositions, type FixingPart } from '../core/fasteners';
-import { useFastenerChoices } from './Fasteners';
+import { useFastenerChoices } from './fastenerStore';
 
 /** What the result panels, 3D and printout show: the piece being edited, or the whole open project. */
 export interface ViewData {

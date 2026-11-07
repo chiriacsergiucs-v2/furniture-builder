@@ -19,7 +19,7 @@ import { online, useAccount } from '../store/accountStore';
 import { useDesign } from '../store/designStore';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
-import { ViewOverride, type ViewData } from './useView';
+import { ViewOverride, type ViewData } from '../store/useView';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 const appBase = () => `${location.origin}${location.pathname}`;

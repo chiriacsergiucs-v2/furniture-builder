@@ -18,7 +18,7 @@ import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { InfoTip, MmField, Segmented, Select, Toggle } from './controls';
-import { useKeepProportions } from './keepProportions';
+import { useKeepProportions } from '../store/keepProportions';
 import { Icon } from './icons';
 import {
   arrowMove,
@@ -27,8 +27,8 @@ import {
   releasePointer,
   type DragGesture,
   type PointerAt,
-} from './planDrag';
-import { useSnap } from './useSnap';
+} from '../shared/planDrag';
+import { useSnap } from '../store/useSnap';
 import { modelDrop } from '../core/modelPlace';
 import { placementBases } from '../core/project';
 import type { ModelPlacement } from '../core/model3d';

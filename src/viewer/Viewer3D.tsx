@@ -1,6 +1,7 @@
 import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
 import {
+  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -46,7 +47,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { useFocusedProblem } from '../ui/ProblemBanner';
+import { useFocusedProblem } from '../store/focusedProblem';
 import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
@@ -69,7 +70,7 @@ import {
   type PictureHandle,
   type WallPatch,
 } from '../core/wallPicture';
-import { pictureKey, useWallPictureUrls } from '../ui/wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 import {
   setPictureFit,
   useAdjustMode,
@@ -81,22 +82,20 @@ import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
-import { imageKey, useImageUrls } from '../persist/images';
+import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { setRooms } from '../core/setRoom';
-import { useView, ViewOverride } from '../ui/useView';
-import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
-import { useTheme } from '../ui/useTheme';
-import { useLook } from '../ui/useLook';
-import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
+import { useView, ViewOverride } from '../store/useView';
+import { useTheme } from '../store/useTheme';
+import { useLook } from '../store/useLook';
+import { setSolidWalls, useSolidWalls } from '../store/useSolidWalls';
 import { SHADOW_CATCHER, setCapture, setStage, useRendering } from './renderBridge';
-import { useClearances } from '../ui/Clearances';
+import { useClearances } from '../store/clearances';
 import type { ClearanceZone } from '../core/envelopes';
-import { CountStepper } from '../ui/CountStepper';
-import { useSnap } from '../ui/useSnap';
-import { MoveToButtons } from '../ui/MoveTo';
+import { useSnap } from '../store/useSnap';
+import { useViewStore } from '../store/viewStore';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
@@ -377,7 +376,20 @@ function useTextures(urls: Map<string, string>, repeat = true): Map<string, Text
  * One exception (ADR-093): in a project, the Move button lets a piece be dragged across the floor and the turn
  * buttons or R / Shift+R turn it; both go through the same store actions as the Plan.
  */
-export default function Viewer3D() {
+/**
+ * What the app draws inside the 3D view (ADR-230): the viewer imports nothing from `src/ui`, so the ui pieces it shows
+ * come in as render props. Without them (a shared item's preview) nothing is drawn there.
+ */
+export interface Viewer3DProps {
+  /** The quick-count card (ADR-085) with this class. */
+  countCard?: (className: string) => ReactNode;
+  /** The one-tap Move to buttons (ADR-147) for a piece or a block of pieces, with this class. */
+  moveTo?: (id: string | readonly string[], className: string) => ReactNode;
+  /** On a phone, the slot under the view where the card docks (G-070); null floats it over the view. */
+  countDock?: HTMLElement | null;
+}
+
+export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer3DProps = {}) {
   const view = useView();
   // A shared item's preview (ADR-143): shown only, nothing selected, no tools or cards.
   const preview = !!useContext(ViewOverride);
@@ -428,9 +440,8 @@ export default function Viewer3D() {
   const counts =
     (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering && !preview;
   // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
-  // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
-  const phone = useMediaQuery(PHONE);
-  const dock = phone ? document.getElementById('count-dock') : null;
+  // The slot under the view, which App renders on phones and passes in; floating when it is missing.
+  const dock = countDock;
   const docked = !!dock;
   // A project with nothing in it yet says so over the empty stage (G-059).
   const emptyProject = useDesign(
@@ -764,12 +775,10 @@ export default function Viewer3D() {
               {t('Move to…')}
             </button>
           )}
-          {moving && turnId && moveToOpen && (
-            <MoveToButtons
-              key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}
-              id={moveToIds ?? turnId}
-              className="three-move-to"
-            />
+          {moving && turnId && moveToOpen && moveTo && (
+            <Fragment key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}>
+              {moveTo(moveToIds ?? turnId, 'three-move-to')}
+            </Fragment>
           )}
           <button
             type="button"
@@ -855,10 +864,10 @@ export default function Viewer3D() {
         </div>
       )}
       {/* The docked card (G-070) folds to one row on a phone (G-058). */}
-      {counts && dock && createPortal(<CountStepper className="in-3d docked" foldable />, dock)}
-      {counts && !docked && (
+      {counts && countCard && dock && createPortal(countCard('in-3d docked'), dock)}
+      {counts && countCard && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
-          <CountStepper className="in-3d" foldable />
+          {countCard('in-3d')}
         </div>
       )}
     </>
@@ -1110,8 +1119,8 @@ function SelectionOutline({ box }: { box: Box }) {
 /**
  * A thin vertical line along the seam of every connection that still holds (ADR-179), at the pieces' front face,
  * from `connectionSeams`; display only, never picked (ADR-014). Not drawn while exploded or rendering. While
- * isolating (`only`), only seams between two shown pieces. `document.body.dataset.seams` holds the number drawn
- * (for the find-it script, as `data-lit`).
+ * isolating (`only`), only seams between two shown pieces. The view store's `seams` holds the number drawn (ADR-230;
+ * App shows it as `data-seams` on the 3D view for the find-it script).
  */
 function SeamLines({ color, only }: { color: string; only?: readonly string[] }) {
   const project = useDesign((s) => s.project);
@@ -1121,12 +1130,11 @@ function SeamLines({ color, only }: { color: string; only?: readonly string[] })
     const all = connectionSeams(project, pieces);
     return only ? all.filter((c) => c.itemIds.every((id) => only.includes(id))) : all;
   }, [project, pieces, only]);
+  const setSeams = useViewStore((s) => s.setSeams);
   useEffect(() => {
-    document.body.dataset.seams = String(seams.length);
-    return () => {
-      delete document.body.dataset.seams;
-    };
-  }, [seams.length]);
+    setSeams(seams.length);
+    return () => setSeams(null);
+  }, [seams.length, setSeams]);
   const points = useMemo(() => {
     // A few mm in front of the face, so the line does not hide in the door edges.
     const o = 2;
@@ -1935,28 +1943,30 @@ function Fit({ bounds }: { bounds: Box }) {
   const aspect = view.width > 10 && view.height > 10 ? view.width / view.height : 1;
   const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
   const fitDist = (radius / Math.sin(Math.min(vfov, hfov) / 2)) * 1.08;
-  // Frame once per design (and when the user asks); editing dimensions must not yank the camera.
+  // Frame once per design (and when the user asks, through the view store's fit request, ADR-230); editing dimensions
+  // must not yank the camera. A fit request frames what was framed when this mounted, as before.
+  const framed = useRef<{ target: readonly [number, number, number]; dist: number } | null>(null);
   useEffect(() => {
     const dist = fitDist / Math.hypot(0.55, 0.35, 0.85);
+    framed.current = { target, dist };
     camera.position.set(target[0] + dist * 0.55, target[1] + dist * 0.35, target[2] + dist * 0.85);
     camera.lookAt(...target);
     controls.current?.target.set(...target);
     controls.current?.update();
     invalidate();
-    const onFit = () => {
-      camera.position.set(
-        target[0] + dist * 0.55,
-        target[1] + dist * 0.35,
-        target[2] + dist * 0.85,
-      );
-      controls.current?.target.set(...target);
-      controls.current?.update();
-      invalidate();
-    };
-    window.addEventListener('fb:fit', onFit);
-    return () => window.removeEventListener('fb:fit', onFit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const fitRequest = useViewStore((s) => s.fitRequest);
+  const seenFit = useRef(fitRequest);
+  useEffect(() => {
+    if (fitRequest === seenFit.current || !framed.current) return;
+    seenFit.current = fitRequest;
+    const { target: at, dist } = framed.current;
+    camera.position.set(at[0] + dist * 0.55, at[1] + dist * 0.35, at[2] + dist * 0.85);
+    controls.current?.target.set(...at);
+    controls.current?.update();
+    invalidate();
+  }, [fitRequest, camera]);
   return (
     <OrbitControls
       ref={controls}
@@ -2035,12 +2045,12 @@ function Panels({
   // An assembly step lights its parts (ADR-174): the rest goes translucent, as outside a selected space.
   const litIds = useDesign((s) => s.litPanelIds);
   const litSet = useMemo(() => (litIds ? new Set(litIds) : null), [litIds]);
+  // The number lit, in the view store (ADR-230; App shows it as `data-lit` on the 3D view for the find-it script).
+  const setLit = useViewStore((s) => s.setLit);
   useEffect(() => {
-    document.body.dataset.lit = String(litIds?.length ?? 0);
-    return () => {
-      delete document.body.dataset.lit;
-    };
-  }, [litIds]);
+    setLit(litIds?.length ?? 0);
+    return () => setLit(null);
+  }, [litIds, setLit]);
   const isFaded = (p: Panel) => {
     if (litSet && !litSet.has(p.id)) return true;
     if (!fadeBox) return false;

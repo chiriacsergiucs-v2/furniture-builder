@@ -16,7 +16,7 @@ import {
 import { GradientEquirectTexture, WebGLPathTracer } from 'three-gpu-pathtracer';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
 import { t } from '../core/i18n';
-import type { RenderEngineName } from '../ui/renderSupport';
+import type { RenderEngineName } from '../shared/renderSupport';
 
 /**
  * A photo-quality still of the 3D view (ADR-068): the scene the user is looking at, path-traced on this device's

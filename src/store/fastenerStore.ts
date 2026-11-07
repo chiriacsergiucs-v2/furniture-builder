@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import type { FastenerChoice, JointType } from '../core/fasteners';
 import { t } from '../core/i18n';
@@ -53,4 +54,12 @@ function failed(set: (p: Partial<FastenerState>) => void, error: string) {
   listFasteners()
     .then((choices) => set({ choices }))
     .catch(() => set({ choices: [] }));
+}
+
+/** The user's fastener list, read from the device on first use. */
+export function useFastenerChoices(): FastenerChoice[] {
+  const choices = useFastenerList((s) => s.choices);
+  const load = useFastenerList((s) => s.load);
+  useEffect(load, [load]);
+  return choices;
 }

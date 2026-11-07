@@ -6,7 +6,7 @@ import { useDesign } from '../store/designStore';
 import { PieceElevation } from './Elevation';
 import { useUi } from '../store/uiStore';
 import { useEstimate } from './useEstimate';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 /**
  * Client sheet (ADR-206): one A4 page to sell from, in the print language (ADR-157) — the piece or project name and

@@ -13,7 +13,7 @@ import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { Assembly } from './Assembly';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
@@ -23,7 +23,7 @@ import { useUi } from '../store/uiStore';
 import { captureStill } from '../viewer/renderBridge';
 import { mayRepair, problemPanels } from '../core/repairs';
 import { useProblem } from '../store/problemStore';
-import { PHONE, useMediaQuery } from './useMediaQuery';
+import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 
 export function Output() {
   const tab = useDesign((s) => s.tab);

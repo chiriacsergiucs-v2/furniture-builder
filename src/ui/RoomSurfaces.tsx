@@ -11,7 +11,7 @@ import { useDesign } from '../store/designStore';
 import { MmField, Select, Toggle } from './controls';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
-import { pictureKey, useWallPictureUrls } from './wallPictures';
+import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
 
 /**
  * Room surfaces on the plan (ADR-208): the plan picture to trace over (G-012), the floor background (G-274), the

@@ -16,11 +16,12 @@ import { sinkList } from '../core/project';
 import { productIndex, sellerPriceLookup } from '../core/sellers';
 import { shoppingList, type ShopLine } from '../core/shopping';
 import { useDesign } from '../store/designStore';
-import { useFastenerChoices, useFastenerCounts } from './Fasteners';
+import { useFastenerCounts } from './Fasteners';
+import { useFastenerChoices } from '../store/fastenerStore';
 import { usePrices } from '../store/priceStore';
 import { useSellerCatalogs } from './ProductPicker';
 import { useNesting } from './useNesting';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 export interface EstimateView {
   lines: ShopLine[];

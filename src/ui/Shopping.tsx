@@ -43,7 +43,7 @@ import { usePrices } from '../store/priceStore';
 import { useEstimate } from './useEstimate';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'boards', title: 'Boards' },

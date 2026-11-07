@@ -31,7 +31,7 @@ import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import type { AssemblyEdit, Design, FurnitureModel, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { printPieceName } from '../core/catalog/printName';
-import { useFastenerChoices } from './Fasteners';
+import { useFastenerChoices } from '../store/fastenerStore';
 import { askConfirm, askText } from './Confirm';
 import { GuidanceTip } from './controls';
 import { PieceElevation } from './Elevation';
@@ -42,7 +42,7 @@ import { captureStill, hasStill } from '../viewer/renderBridge';
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 /** A step's picture in the assembly print (ADR-206). */
 const stepPictureKey = (piece: string, step: string) => `${piece}:${step}`;
-import { useView } from './useView';
+import { useView } from '../store/useView';
 
 interface PieceSteps {
   key: string;

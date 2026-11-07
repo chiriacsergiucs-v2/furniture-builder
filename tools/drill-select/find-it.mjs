@@ -83,6 +83,9 @@ for (const width of [390, 1280]) {
   // 3b. The same taps in 3D (phone, Build & Preview): the peek row names the selection.
   if (phone) {
     await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    // A phone opens Build & Preview in 2D (ADR-144): tap "3D" as a user would.
+    const three3d = page.getByRole('radio', { name: '3D', exact: true });
+    if ((await three3d.getAttribute('aria-checked')) !== 'true') await three3d.click();
     await page.waitForTimeout(2500);
     const c = await page.locator('canvas').first().boundingBox();
     const seen = [];

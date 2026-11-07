@@ -5,7 +5,7 @@
 // cabinet → Against the wall on its card ("Connected to against wall 1"); a wall cabinet moved over it → Connected →
 // "(stacked)" on the card; a dragged wall unit over its base moves with it; Link 2 identical pieces → "Linked: 2
 // copies"; a blind corner and a base cabinet → Shared sides; Build & Preview › 3D › Assembly → Show step on "Fit
-// hardware to the sides" lights the 3D view (`document.body.dataset.lit`), Move step up, Reset the steps; New single
+// hardware to the sides" lights the 3D view (`data-lit` on the 3D view, ADR-230), Move step up, Reset the steps; New single
 // piece → Lounger → Settings → Backrest end → Right. No page errors. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
@@ -291,7 +291,9 @@ for (const width of [1280, 390]) {
   let lit = '0';
   for (let i = 0; i < 40 && lit === '0'; i++) {
     await page.waitForTimeout(250);
-    lit = await page.evaluate(() => document.body.dataset.lit ?? '0');
+    lit = await page.evaluate(
+      () => document.querySelector('.view.three[data-lit]')?.dataset.lit ?? '0',
+    );
   }
   check(
     width,

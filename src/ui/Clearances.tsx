@@ -3,7 +3,7 @@
  * Clearances overlay that draws every zone the core derived, hatched and coloured by its worst problem.
  * Nothing here computes geometry: zones come from `buildProjectModel` (ADR-004).
  */
-import { useId, useState, useSyncExternalStore } from 'react';
+import { useId, useState } from 'react';
 import {
   MAX_ZONE_DEPTH,
   kneeSpan,
@@ -164,30 +164,6 @@ const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
   warning: t('warning'),
   error: t('error'),
 };
-
-// The Clearances toggle is shared by the plan and the 3D view (ADR-205): one switch shows the zones in both. A view
-// setting for this page only, never saved in the project.
-let clearancesOn = false;
-const clearanceListeners = new Set<() => void>();
-export function setClearances(v: boolean) {
-  clearancesOn = v;
-  clearanceListeners.forEach((f) => f());
-}
-const subscribeClearances = (l: () => void) => {
-  clearanceListeners.add(l);
-  return () => clearanceListeners.delete(l);
-};
-/** Whether Clearances is on, and its setter (ADR-073 on the plan, ADR-205 in 3D). */
-export function useClearances(): [boolean, (v: boolean) => void] {
-  return [
-    useSyncExternalStore(
-      subscribeClearances,
-      () => clearancesOn,
-      () => false,
-    ),
-    setClearances,
-  ];
-}
 
 /** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-112). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {

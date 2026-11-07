@@ -96,7 +96,7 @@ describe('resize handles in 3D (ADR-102)', () => {
 
 describe('Keep proportions switch (ADR-102)', () => {
   it('is on for a model, holds off until the selection changes, then is on again', async () => {
-    const { keepProportionsNow, setKeepProportions } = await import('../src/ui/keepProportions');
+    const { keepProportionsNow, setKeepProportions } = await import('../src/store/keepProportions');
     const { useDesign } = await import('../src/store/designStore');
     expect(keepProportionsNow('a')).toBe(true);
     setKeepProportions('a', false);

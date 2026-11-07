@@ -4,8 +4,8 @@ import { Raycaster, Vector2 } from 'three';
 import { axisPoint } from '../core/drag3d';
 import { dragResize, type ModelItem, type ModelSize } from '../core/model3d';
 import { useDesign } from '../store/designStore';
-import { keepProportionsNow } from '../ui/keepProportions';
-import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
+import { keepProportionsNow } from '../store/keepProportions';
+import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 import { S } from './pieceDrag';
 
 /** A 3D model being resized with a handle (ADR-102): the size it would get on release. */

@@ -4,7 +4,7 @@ import { Raycaster, Vector2 } from 'three';
 import { setWallFinish, wallFinish, wallLength, type WallRect } from '../core/room';
 import { dragPicture, pictureRect, wallPlanePoint, type PictureHandle } from '../core/wallPicture';
 import { useDesign } from '../store/designStore';
-import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
+import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 import { S } from './pieceDrag';
 
 /** A tiny store outside React state (as the Move ghost): a pointer move re-renders only what reads it. */

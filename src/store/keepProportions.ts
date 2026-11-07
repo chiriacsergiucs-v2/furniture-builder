@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { useDesign } from '../store/designStore';
+import { useDesign } from './designStore';
 
 /**
  * Keep proportions for the selected 3D model (ADR-102): screen state only, never saved (G-111). It is on each time a

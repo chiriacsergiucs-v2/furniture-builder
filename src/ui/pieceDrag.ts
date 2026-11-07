@@ -4,8 +4,8 @@ import { makeItem, placeItem } from '../core/project';
 import { dropNewPiece } from '../core/snap';
 import { useDesign } from '../store/designStore';
 import { usePieceList, type NewPieceDrag } from '../store/pieceListStore';
-import { DRAG_THRESHOLD_PX } from './planDrag';
-import { snapIsOn } from './useSnap';
+import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
+import { snapIsOn } from '../store/useSnap';
 
 /**
  * The piece list beside the plan (ADR-094): **Add a piece** in Compose opens it (closed by default) — a side panel
