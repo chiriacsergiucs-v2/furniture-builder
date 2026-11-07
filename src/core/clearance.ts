@@ -20,10 +20,13 @@ export function localClearances(model: FurnitureModel): Clearance[] {
   for (const p of model.panels) {
     const b = p.box;
     const front = b.z + b.d;
+    // The role says door or drawer front; only the label tells a sliding door, a flap, a lift-up flap or a fixed front
+    // apart, so these four tests stay on the English label until a panel kind field exists (ADR-225, G-492).
     if (p.role === 'door') {
-      if (/^Sliding door/.test(p.label)) continue;
+      if (/^Sliding door/.test(p.label)) continue; // G-492
+      // G-492: a flap and a lift-up flap are told apart by label only.
       if (/flap/i.test(p.label)) {
-        const up = /^Lift-up/.test(p.label);
+        const up = /^Lift-up/.test(p.label); // G-492
         out.push({
           panelId: p.id,
           label: p.label,
@@ -38,6 +41,7 @@ export function localClearances(model: FurnitureModel): Clearance[] {
           box: { x: b.x, y: b.y, z: front, w: b.w, h: b.h, d: b.w },
         });
     } else if (p.role === 'drawer-front' && !/^Fixed front/.test(p.label)) {
+      // G-492: a fixed front has no travel; only its label says so.
       const travel = Math.max(
         0,
         ...model.panels

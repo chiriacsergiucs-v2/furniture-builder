@@ -3,6 +3,7 @@
  * design, whether it came from the catalog or was built by hand. Thresholds are typical values the user can change
  * (`design.settings.rules`); every rule is a warning or a hardware reminder, never an error.
  */
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t, tr } from './i18n';
 import type {
   Design,
@@ -45,7 +46,12 @@ export interface Rule {
 }
 
 const none = (): RuleResult => ({ diagnostics: [], hardware: [] });
-const warn = (code: string, message: string, nodeId?: string, panelIds?: string[]): Diagnostic => ({
+const warn = (
+  code: DiagnosticCode,
+  message: string,
+  nodeId?: string,
+  panelIds?: string[],
+): Diagnostic => ({
   severity: 'warning',
   code,
   message,

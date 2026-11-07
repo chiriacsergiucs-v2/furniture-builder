@@ -4,6 +4,7 @@
  * are warnings, except a piece marked "assembled lying down" that cannot be tipped up under the ceiling (an error).
  * The chair depth and the service zone size come from the user (ADR-010): nothing here has a default.
  */
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t, tr } from './i18n';
 import { buildModel } from './build';
 import { overlaps, union } from './geometry';
@@ -135,7 +136,7 @@ export function envelopeChecks(
   for (const pc of pieces)
     for (const e of pc.envelopes) {
       let worst: Severity = 'none';
-      const flag = (s: Exclude<Severity, 'none'>, code: string, message: string) => {
+      const flag = (s: Exclude<Severity, 'none'>, code: DiagnosticCode, message: string) => {
         diagnostics.push({ severity: s, code, message, nodeId: pc.id });
         if (s === 'error' || worst === 'none') worst = s;
       };

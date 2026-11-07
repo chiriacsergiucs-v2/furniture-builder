@@ -1,4 +1,5 @@
 import type { Room } from './catalog/types';
+import type { DiagnosticCode } from './diagnosticCodes';
 /**
  * Core domain types. Pure data: no React, no storage, no three.js.
  *
@@ -283,7 +284,7 @@ export type Severity = 'error' | 'warning';
 
 export interface Diagnostic {
   severity: Severity;
-  code: string;
+  code: DiagnosticCode;
   message: string;
   nodeId?: string;
   panelIds?: string[];

@@ -7,6 +7,7 @@
  * ADR-204 adds the tall cabinet height and the wall cabinet depth to Refine, one round width per base kind (ranked after
  * the shared width), and carcasses of 3 or 4 equal fronts.
  */
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t } from './i18n';
 import { buildModel } from './build';
 import {
@@ -152,8 +153,12 @@ const PIECE_NAME: Record<PieceKind, string> = {
   door: 'Base, door + shelves',
 };
 
-const err = (code: string, message: string): Diagnostic => ({ severity: 'error', code, message });
-const info = (code: string, message: string): Diagnostic => ({
+const err = (code: DiagnosticCode, message: string): Diagnostic => ({
+  severity: 'error',
+  code,
+  message,
+});
+const info = (code: DiagnosticCode, message: string): Diagnostic => ({
   severity: 'warning',
   code,
   message,
@@ -183,7 +188,7 @@ export type WallIssue = Diagnostic & { field: WallField };
 /** Problems with the input itself; the wizard shows them and suggests nothing (ADR-008: never clamp). */
 export function checkWall(input: WallInput): WallIssue[] {
   const out: WallIssue[] = [];
-  const bad = (field: WallField, code: string, message: string) =>
+  const bad = (field: WallField, code: DiagnosticCode, message: string) =>
     out.push({ ...err(code, message), field });
   const pos = (field: WallField, v: unknown, label: string) => {
     if (!whole(v) || v <= 0)

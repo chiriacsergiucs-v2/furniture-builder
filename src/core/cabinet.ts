@@ -1,3 +1,4 @@
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx, tr } from './i18n';
 import { box, distribute, equalParts } from './geometry';
 import type {
@@ -266,9 +267,9 @@ export function buildCabinet(
   const prefix = opts.idPrefix ?? '';
   const o = opts.origin ?? { x: 0, y: 0, z: 0 };
   const mapNode = opts.mapNodeId ?? ((id: string) => id);
-  const err = (code: string, message: string, nodeId?: string) =>
+  const err = (code: DiagnosticCode, message: string, nodeId?: string) =>
     out.diagnostics.push({ severity: 'error', code, message, nodeId: nodeId && mapNode(nodeId) });
-  const warn = (code: string, message: string, nodeId?: string) =>
+  const warn = (code: DiagnosticCode, message: string, nodeId?: string) =>
     out.diagnostics.push({ severity: 'warning', code, message, nodeId: nodeId && mapNode(nodeId) });
 
   const body = materials.get(p.bodyMaterialId);
@@ -710,7 +711,7 @@ export function buildCabinet(
       // A bar across the flap, centred, 40 mm from its free edge (ADR-196): not beside the hinge.
       placeHandle(s.handle, 'drawer', w, h, null, s.id, defaultHandlePosition(fl));
       if (w < 100 || h < 100)
-        err('door-small', tx('Flap {w}×{h} mm is too small.', { w, h }), s.id);
+        err('flap-small', tx('Flap {w}×{h} mm is too small.', { w, h }), s.id);
       hw({
         nodeId: s.id,
         kind: 'flap-stay',
@@ -789,7 +790,7 @@ export function buildCabinet(
     const innerOpening =
       hasDoors && inset && s.front?.kind !== 'sliding' ? { ...op, d: op.d - tf } : op;
     if (innerOpening.d <= 0) {
-      err('space-too-small', tx('No depth left behind the inset doors.'), s.id);
+      err('inset-doors-depth', tx('No depth left behind the inset doors.'), s.id);
       return;
     }
     const inner: Ctx = { ...c, opening: innerOpening, behindDoors: c.behindDoors || hasDoors };
@@ -940,7 +941,7 @@ export function buildCabinet(
         const fz = zoneOf(c);
         const custom = s.heights && s.heights.length === n ? s.heights : undefined;
         if (s.heights && !custom) {
-          err('drawer-heights', tx('Give one height per drawer ({n}).', { n }), s.id);
+          err('drawer-heights-count', tx('Give one height per drawer ({n}).', { n }), s.id);
           return;
         }
         const frontRoom = fz.y1 - fz.y0 - (n - 1) * g;

@@ -1,3 +1,4 @@
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx } from './i18n';
 import {
   attachHandle,
@@ -142,7 +143,7 @@ function buildDiagonal(
   materials: Map<string, Material>,
   out: PartialModel,
 ): PartialModel {
-  const err = (code: string, message: string) => {
+  const err = (code: DiagnosticCode, message: string) => {
     out.diagnostics.push({ severity: 'error', code, message, nodeId: id });
     return out;
   };
@@ -170,7 +171,7 @@ function buildDiagonal(
     );
   if (W - D < 300)
     return err(
-      'corner-size',
+      'diagonal-proportion',
       tx('The diagonal needs the width ({w} mm) at least 300 mm more than the depth ({d} mm).', {
         w: W,
         d: D,
@@ -457,9 +458,9 @@ function buildCornerUnit(
   materials: Map<string, Material>,
 ): PartialModel {
   const out: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
-  const err = (code: string, message: string) =>
+  const err = (code: DiagnosticCode, message: string) =>
     out.diagnostics.push({ severity: 'error', code, message, nodeId: id });
-  const warn = (code: string, message: string) =>
+  const warn = (code: DiagnosticCode, message: string) =>
     out.diagnostics.push({ severity: 'warning', code, message, nodeId: id });
   const body = materials.get(p.bodyMaterialId),
     front = materials.get(p.frontMaterialId);

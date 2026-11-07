@@ -14,6 +14,7 @@
  * of them and leaves the other corner empty (each choice is filled, ranked together); runs stay off floor a corner
  * cabinet or an earlier wall's run already takes (the narrow arm of a U).
  */
+import type { DiagnosticCode } from './diagnosticCodes';
 import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
 import { t } from './i18n';
@@ -120,8 +121,12 @@ const PER_STRETCH = 6;
 /** Whole-room projects built at most per call. */
 const MAX_BUILDS = 60;
 
-const err = (code: string, message: string): Diagnostic => ({ severity: 'error', code, message });
-const note = (code: string, message: string): Diagnostic => ({
+const err = (code: DiagnosticCode, message: string): Diagnostic => ({
+  severity: 'error',
+  code,
+  message,
+});
+const note = (code: DiagnosticCode, message: string): Diagnostic => ({
   severity: 'warning',
   code,
   message,
