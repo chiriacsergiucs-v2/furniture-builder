@@ -1,7 +1,8 @@
 # ADR-220: Turn on incremental type-checking and cache its state in CI
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-197
 - Design: n/a
 - Backlog: N225
@@ -63,7 +64,7 @@ TDD (review section 9): every item starts from a test written first that pins to
 - [x] A second local `pnpm typecheck` after one edited file is faster than the first, and an introduced type error
       still fails it (checked by hand, timings in the backlog row). Evidence: backlog N225 (cold 43 s, no edit 0.2 s,
       one edited file 7–10 s, a type error rc=1).
-- [ ] A CI run on the branch restores or saves the cache; its run id is cited in the backlog row.
+- [x] A CI run on the branch restores or saves the cache; its run id is cited in the backlog row (main push run 42349990030 saved it, `actions/cache/save` step 11 of `checks`).
 - [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).
       Evidence (ran 2026-11-07, local, branch `wip/b1a` at the ADR-220 commit): all six pass; `pnpm test` 1725 passed /

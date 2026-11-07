@@ -241,7 +241,7 @@ describe('saving pieces at an angle (ADR-011)', () => {
 });
 
 describe('mirror a selection (ADR-121, G-085)', () => {
-  beforeEach(() => useDesign.getState().closeProject());
+  beforeEach(() => useDesign.getState().load(useDesign.getState().design));
 
   it('mirrors positions and designs about the selection centre, angles become −θ', () => {
     const p0 = run(['base-door', 'base-door', 'chest']);

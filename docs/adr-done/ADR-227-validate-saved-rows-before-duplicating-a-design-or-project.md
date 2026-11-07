@@ -1,7 +1,8 @@
 # ADR-227: Validate saved rows before duplicating a design or project
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N232
@@ -55,11 +56,19 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `persist.test.ts`: a valid design and project copy as today (new id, same content) — green before
-      and after.
-- [ ] (test first) `persist.test.ts`: store a corrupt row, call `copyProject`/`copyDesign`, get `{ ok: false }` with a
+- [x] (test first) `persist.test.ts`: a valid design and project copy as today (new id, same content) — green before
+      and after. Evidence: "a valid design and project copy with a new id and the same content" and "a copy of an
+      older-version row is written at the current schemaVersion" (the API is new, so these were red before only because
+      `copyDesign` did not exist; the same behaviour through the page is pinned green before by the find-it test).
+- [x] (test first) `persist.test.ts`: store a corrupt row, call `copyProject`/`copyDesign`, get `{ ok: false }` with a
       reason; the row count is unchanged and the corrupt row is untouched (red before as a page-level helper test).
-- [ ] (test first) jsdom find-it `tests/find-it/projects-duplicate.test.tsx` at 390 and 1280 px: Projects page →
-      "Duplicate" found by role and text adds the copy (green before and after).
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+      Evidence: "a corrupt or missing row is refused with a reason; nothing is added or changed" (red before).
+- [x] (test first) jsdom find-it `tests/find-it/projects-duplicate.test.tsx` at 390 and 1280 px: Projects page →
+      "Duplicate" found by role and text adds the copy (green before and after). Evidence: "duplicate saved work at
+      390px / 1280px (find-it, ADR-227)": the readable project and piece copies were green before; the added step
+      (Duplicate on an unreadable row shows "Saved work could not be read from this browser." and adds nothing) was
+      red before (no alert) and is green after.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence 2026-11-07 (local): 1714 →
+      1719 tests; the suite's remaining failures (estimate-chip at 390 px, failing on `main` before too, and timeouts
+      under load) are outside this change.

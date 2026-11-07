@@ -255,5 +255,5 @@ describe('project-wide settings (ADR-124, G-162)', () => {
 });
 
 beforeEach(() => {
-  useDesign.getState().closeProject();
+  useDesign.getState().load(useDesign.getState().design);
 });

@@ -23,7 +23,15 @@ import {
   type LocalTable,
 } from '../core/sync';
 import { zipStore } from '../core/zip';
-import { db, saveDesign, saveTemplate, type StoredImage } from '../persist/db';
+import {
+  db,
+  deleteDesign,
+  deleteTemplate,
+  saveDesign,
+  saveImage,
+  saveTemplate,
+  type StoredImage,
+} from '../persist/db';
 import { onSavedChange } from '../persist/events';
 import { onlineConfigured } from './origins';
 
@@ -169,7 +177,7 @@ async function storeLocal(
   const img = decodeRow(JSON.stringify(body)) as StoredImage;
   if (!img || typeof img !== 'object' || !(img.bytes instanceof ArrayBuffer)) return null;
   // Pictures keep their id: designs refer to them by it. One already here is never overwritten.
-  if (!(await db.images.get(img.id))) await db.images.put(img);
+  if (!(await db.images.get(img.id))) await saveImage(img);
   return JSON.parse(encodeRow(img));
 }
 
@@ -463,8 +471,8 @@ export async function signOut(accountId: string, removeCopies = false): Promise<
   if (removeCopies) {
     for (const l of await links(accountId)) {
       if (!l.remoteId) continue;
-      if (l.table === 'designs') await db.designs.delete(l.localId);
-      else if (l.table === 'templates') await db.templates.delete(l.localId);
+      if (l.table === 'designs') await deleteDesign(l.localId);
+      else if (l.table === 'templates') await deleteTemplate(l.localId);
       await dropLink(l);
     }
   }

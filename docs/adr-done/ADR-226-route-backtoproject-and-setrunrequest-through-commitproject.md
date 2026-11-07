@@ -1,7 +1,8 @@
 # ADR-226: Route backToProject and setRunRequest through commitProject
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N231
@@ -55,13 +56,18 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) store test: edit a bound size in the piece editor, `backToProject`, the binding is reapplied
-      (red before, green after).
-- [ ] (test first) store test: a size-locked linked copy rewritten through the piece editor is refused with the same
-      notice `updateItem` gives (red before).
-- [ ] (test first) store test: `setRunRequest` result equals `commitProject` of the same next project (sets synced,
-      prunes applied, `schemaVersion` stamped).
-- [ ] `tests/project-undo.test.ts`, `linked.test.ts` and `place-and-undo.test.ts` pass unchanged; one undo step still
-      reverts a whole piece-editor session.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] (test first) store test: edit a bound size in the piece editor, `backToProject`, the binding is reapplied
+      (red before, green after). Evidence: `tests/back-to-project-commit.test.ts` › "a bound size edited in the piece
+      editor takes its variable again on Back to project".
+- [x] (test first) store test: a size-locked linked copy rewritten through the piece editor is refused with the same
+      notice `updateItem` gives (red before). Evidence: `tests/back-to-project-commit.test.ts` › "a size-locked linked
+      copy rewritten through the piece editor is refused with the notice Update gives".
+- [x] (test first) store test: `setRunRequest` result equals `commitProject` of the same next project (sets synced,
+      prunes applied, `schemaVersion` stamped). Evidence: `tests/back-to-project-commit.test.ts` › "setRunRequest
+      equals the project commit of the same next project" (green before: `setRunRequest` already ended in
+      `commitProject`; its own `schemaVersion` stamp was dropped as redundant).
+- [x] `tests/project-undo.test.ts`, `linked.test.ts` and `place-and-undo.test.ts` pass unchanged; one undo step still
+      reverts a whole piece-editor session. Evidence: those files unchanged and green;
+      `tests/back-to-project-commit.test.ts` › "one undo step still reverts a whole piece-editor session".
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42350405704 (PR #198) green on every job.

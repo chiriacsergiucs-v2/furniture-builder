@@ -26,7 +26,7 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
  * ADR layout and skills; 053 pnpm, Prettier and Node 24; 066 light acceptance; 082 gaps ledger; 108 find-it in jsdom;
  * 114 one control height; 115 high-severity layout fixes; 116 heading scale and spacing; 120 lower-severity critique
  * fixes; 127 backend choice; 131 secure sessions and CSP; 150 delete the research tests; 183 feature-tree details; 197 faster CI;
- * 201 failing and missing acceptance checks; 219, 224, 236, 237 architecture review internals (no feature).
+ * 201 failing and missing acceptance checks; 219, 220, 224, 226, 227, 231, 235, 236, 237 architecture review internals (no feature).
  */
 export const EXEMPT = [
   'ADR-001',
@@ -50,7 +50,12 @@ export const EXEMPT = [
   'ADR-197',
   'ADR-201',
   'ADR-219',
+  'ADR-220',
   'ADR-224',
+  'ADR-226',
+  'ADR-227',
+  'ADR-231',
+  'ADR-235',
   'ADR-236',
   'ADR-237',
 ];
