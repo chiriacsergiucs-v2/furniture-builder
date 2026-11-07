@@ -78,7 +78,7 @@ export function useView(): ViewData {
           for (const [k, v] of f.parts) fixings.parts.set(k, v);
           fixings.tooShort += f.tooShort;
         }
-      const rows = withFixingNotes(projectCutlist(project), fixings.parts);
+      const rows = withFixingNotes(projectCutlist(project, projectModel), fixings.parts);
       return {
         mode: 'project',
         title: project.name,
@@ -86,7 +86,7 @@ export function useView(): ViewData {
         pieces: projectModel.piecePanels,
         materials: projectModel.materials,
         rows,
-        hardware: projectHardware(project),
+        hardware: projectHardware(project, projectModel),
         diagnostics: projectModel.diagnostics,
         kerf: project.cutting?.kerf ?? 4,
         jobs: () => projectNestingJobs(project, rows, projectModel.materials),
