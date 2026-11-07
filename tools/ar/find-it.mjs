@@ -139,8 +139,14 @@ for (const width of [1280, 390]) {
   await page.getByRole('button', { name: 'New single piece' }).click();
   await dlg.locator('.start-group .row-btn').first().click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
-  else await page.getByRole('radio', { name: '3D', exact: true }).click();
+  // A phone shows 3D in Build & Preview (ADR-079) once the editor sheet is folded down.
+  const peek = page.locator('.sheet-peek');
+  if (phone && (await peek.isVisible().catch(() => false)))
+    if ((await peek.getAttribute('aria-expanded')) === 'true') await peek.click();
+  const build = page.getByRole('radio', { name: /Build & Preview/ });
+  if (await build.isVisible().catch(() => false)) await build.click();
+  const r3d = page.getByRole('radio', { name: '3D', exact: true });
+  if (await r3d.isVisible().catch(() => false)) await r3d.click();
   await page.locator('.view.three canvas').first().waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
   await page.locator('details.three-more > summary').click();

@@ -630,7 +630,7 @@ class Preview {
       this.ring.visible = true;
       return;
     }
-    let pl: Placement | null = null;
+    let pl: Placement | null;
     if (ui.corner === 'second' && cornerSpot) {
       this.cornerDot.position.set(cornerSpot.x, cornerSpot.y + y, cornerSpot.z);
       this.cornerDot.visible = true;
@@ -712,7 +712,7 @@ function dimensionSprites(b: Box): Group | null {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 64;
-    let ctx: CanvasRenderingContext2D | null = null;
+    let ctx: CanvasRenderingContext2D | null;
     try {
       ctx =
         typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)

@@ -924,78 +924,82 @@ function ThreeMore({ name }: { name: string }) {
           {note}
         </span>
       )}
-      <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
-        <p className="ar-hint" role="status">
-          {hint}
-        </p>
-        <div className="ar-actions">
-          {ar === 'placed' && (
-            <div className="ar-pad" role="group" aria-label={t('Fine-tune')}>
-              <button
-                type="button"
-                className="btn"
-                aria-label={t('Turn left by the step')}
-                onClick={() => turnARStep(false)}
-              >
-                ↺
-              </button>
-              <button type="button" className="btn" onClick={() => nudgeAR('back')}>
-                {t('↑ Back')}
-              </button>
-              <button
-                type="button"
-                className="btn"
-                aria-label={t('Turn right by the step')}
-                onClick={() => turnARStep(true)}
-              >
-                ↻
-              </button>
-              <button type="button" className="btn" onClick={() => nudgeAR('left')}>
-                {t('← Left')}
-              </button>
-              <button type="button" className="btn" onClick={() => nudgeAR('forward')}>
-                {t('↓ Forward')}
-              </button>
-              <button type="button" className="btn" onClick={() => nudgeAR('right')}>
-                {t('→ Right')}
+      {/* On the page body, so no toolbar stacking context puts it under the app bar (in-page overlay). */}
+      {createPortal(
+        <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
+          <p className="ar-hint" role="status">
+            {hint}
+          </p>
+          <div className="ar-actions">
+            {ar === 'placed' && (
+              <div className="ar-pad" role="group" aria-label={t('Fine-tune')}>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('Turn left by the step')}
+                  onClick={() => turnARStep(false)}
+                >
+                  ↺
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('back')}>
+                  {t('↑ Back')}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  aria-label={t('Turn right by the step')}
+                  onClick={() => turnARStep(true)}
+                >
+                  ↻
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('left')}>
+                  {t('← Left')}
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('forward')}>
+                  {t('↓ Forward')}
+                </button>
+                <button type="button" className="btn" onClick={() => nudgeAR('right')}>
+                  {t('→ Right')}
+                </button>
+              </div>
+            )}
+            <div className="ar-row">
+              {ar === 'placing' && !arUi.corner && (
+                <>
+                  <button type="button" className="btn" onClick={cycleARPoint}>
+                    {t('Point: {name}', { name: pointName })}
+                  </button>
+                  <button type="button" className="btn" onClick={startARCorner}>
+                    {t('Room corner')}
+                  </button>
+                </>
+              )}
+              {ar === 'placing' && arUi.corner && (
+                <button type="button" className="btn" onClick={cancelARCorner}>
+                  {t('Cancel corner')}
+                </button>
+              )}
+              {ar === 'placed' && (
+                <>
+                  <button type="button" className="btn" onClick={toggleARStep}>
+                    {arUi.fine ? t('Step: 1 cm / 1°') : t('Step: 10 cm / 15°')}
+                  </button>
+                  <button type="button" className="btn" onClick={turnAR}>
+                    {t('Turn 90° ↻')}
+                  </button>
+                  <button type="button" className="btn" onClick={placeARAgain}>
+                    {t('Place again')}
+                  </button>
+                </>
+              )}
+              <button type="button" className="btn solid" onClick={exitAR}>
+                {t('Exit AR')}
               </button>
             </div>
-          )}
-          <div className="ar-row">
-            {ar === 'placing' && !arUi.corner && (
-              <>
-                <button type="button" className="btn" onClick={cycleARPoint}>
-                  {t('Point: {name}', { name: pointName })}
-                </button>
-                <button type="button" className="btn" onClick={startARCorner}>
-                  {t('Room corner')}
-                </button>
-              </>
-            )}
-            {ar === 'placing' && arUi.corner && (
-              <button type="button" className="btn" onClick={cancelARCorner}>
-                {t('Cancel corner')}
-              </button>
-            )}
-            {ar === 'placed' && (
-              <>
-                <button type="button" className="btn" onClick={toggleARStep}>
-                  {arUi.fine ? t('Step: 1 cm / 1°') : t('Step: 10 cm / 15°')}
-                </button>
-                <button type="button" className="btn" onClick={turnAR}>
-                  {t('Turn 90° ↻')}
-                </button>
-                <button type="button" className="btn" onClick={placeARAgain}>
-                  {t('Place again')}
-                </button>
-              </>
-            )}
-            <button type="button" className="btn solid" onClick={exitAR}>
-              {t('Exit AR')}
-            </button>
           </div>
-        </div>
-      </div>
+        </div>,
+        document.body,
+      )}
     </>
   );
 }

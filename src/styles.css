@@ -7401,6 +7401,8 @@ ul.plain {
 .ar-overlay {
   position: fixed;
   inset: 0;
+  /* Above the app bar and sheets where the browser shows the overlay in the page (no dom-overlay fullscreen). */
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
