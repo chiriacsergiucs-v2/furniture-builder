@@ -1,7 +1,8 @@
 # ADR-230: Keep the 3D viewer free of ui imports and DOM side channels
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N235

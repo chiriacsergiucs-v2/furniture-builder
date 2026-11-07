@@ -1,7 +1,8 @@
 # ADR-238: Share viewer materials and geometries and merge panel edges
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-230
 - Design: n/a
 - Backlog: N243
@@ -22,7 +23,7 @@ Verified by the review: `Panels` in `src/viewer/Viewer3D.tsx` creates one `<boxG
 `<meshStandardMaterial>` and one drei `<Edges>` per panel, so 40 panels make ≈ 80 geometries and ≈ 80 materials; the
 saving is reasoned, not profiled. ADR-014 (lazy preview, mounts only when visible) is unchanged; this is the 3D view,
 so acceptance is the browser script. Depends on
-[ADR-230](ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md), which settles the viewer's imports
+[ADR-230](../adr-done/ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md), which settles the viewer's imports
 first.
 
 ## Decision

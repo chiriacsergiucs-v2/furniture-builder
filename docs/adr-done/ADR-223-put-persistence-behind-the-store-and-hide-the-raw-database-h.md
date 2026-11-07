@@ -1,7 +1,8 @@
 # ADR-223: Put persistence behind the store and hide the raw database handle
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N228
@@ -69,5 +70,5 @@ TDD (review section 9): every item starts from a test written first that pins to
       `tests/find-it/library-saves.test.tsx`, 10 tests, green before and after the change.
 - [x] `src/persist` imports no `react`; `useImageUrls` lives in `src/ui`. Evidence: `tests/layering.test.ts`
       "useImageUrls lives in src/ui" and the React rule of the scan.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
-      test count is not lower than on `main` before the change (review section 9).
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+      test count is not lower than on `main` before the change (review section 9). Evidence: CI run 42357588326 (PR #202) green on every job.
