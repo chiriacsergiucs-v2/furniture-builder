@@ -97,16 +97,16 @@ describe('editable templates on this device (ADR-034)', () => {
       rooms: ['hallway'],
     });
     expect(validateLocalTemplate(t)).toEqual([]);
-    expect(validateLocalTemplate({ ...t, family: { ...t.family, rooms: ['moon'] } })).toContain(
-      'Rooms must be known room names',
-    );
+    expect(
+      validateLocalTemplate({ ...t, family: { ...t.family, rooms: ['moon'] } }),
+    ).toContainEqual({ code: 'bad-rooms' });
     expect(
       validateLocalTemplate({
         ...t,
         family: { ...t.family, variants: Array(6).fill(t.family.variants[0]) },
       }),
-    ).toContain('A template has 1 to 5 variants');
-    expect(validateLocalTemplate(null)).toEqual(['Template must be an object']);
+    ).toContainEqual({ code: 'variant-count' });
+    expect(validateLocalTemplate(null)).toEqual([{ code: 'not-object' }]);
   });
 });
 

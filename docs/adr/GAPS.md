@@ -1524,3 +1524,79 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
 - Questions: Should Mirror also reverse the door planes and the width remainder of a sliding set (a real mirror image), or keep the planes as the design convention?
 - Suggested pick: Reverse both for new mirrored copies: widths by remainderFirst, and the plane parity from the right. (estimate: effort +5 %, value +3 %)
+
+### G-477: AR corner snap does not detect walls automatically
+
+- Status: Open
+- Origin: ADR-214, 2026-11-07
+- Missing: The room corner is set by two floor taps; walls are not found from WebXR wall hits.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add automatic wall detection with the two-tap fallback?
+- Suggested pick: Leave it out until the two-tap snap is tried on a phone (estimate: work +60 %, value +5 %: plain walls are often not detected)
+- Work: Medium-high
+- Impact: Low
+
+### G-478: AR corner snap has no wall gap or skirting offset
+
+- Status: Open
+- Origin: ADR-214, 2026-11-07
+- Missing: In a room corner the furniture's back and side touch the tapped lines exactly; no gap for skirting boards or uneven walls.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Should corner snap leave a gap from the walls, and how many mm?
+- Suggested pick: Use the fine-tune buttons (ADR-215) to move it off the wall; add an offset only if you ask (estimate: work +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+
+### G-479: AR has no depth occlusion or light estimation
+
+- Status: Open
+- Origin: ADR-213, 2026-11-07
+- Missing: Real objects in front of the AR furniture do not hide it, and its lighting does not follow the room's light.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add WebXR depth-sensing occlusion and light-estimation where the phone offers them?
+- Suggested pick: Leave out for now (estimate: work +80 %, value +10 %; few phones offer depth sensing in the browser)
+- Work: High
+- Impact: Low-medium
+
+### G-480: AR has no finger drag to move the furniture
+
+- Status: Open
+- Origin: ADR-215, 2026-11-07
+- Missing: After placing, the furniture moves only with the 1 cm / 10 cm buttons, not by dragging it across the floor.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add one-finger drag on top of the buttons?
+- Suggested pick: Leave out (user picked buttons only, 2026-11-07; estimate: work +45 %, value +10 %)
+- Work: Medium
+- Impact: Low
+
+### G-481: AR shows only overall dimensions, not per piece
+
+- Status: Open
+- Origin: ADR-215, 2026-11-07
+- Missing: In a project, AR labels only the overall W x H x D of everything shown, not each piece.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Add per-piece dimension labels in AR?
+- Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
+- Work: Medium
+- Impact: Low
+
+### G-482: Real-phone check of the AR grounding, corner and fine-tune work
+
+- Status: Open
+- Origin: ADR-213 to ADR-215, 2026-11-07; agent cannot run a real AR session
+- Missing: Floor grounding, anchors, shadow, corner placement, fine-tune and dimension labels were tested only with a simulated WebXR, not on a phone.
+- Request: Enhance ar corners/floating/accuracy
+- Questions: Can you try View in AR on your Android phone after the merge and report what you see?
+- Suggested pick: You run it after the deploy and tell Claude; Claude records it in the backlog (estimate: effort +0 % for Claude, value +15 %: the only proof AR works)
+- Work: Low
+- Impact: Medium-high
+
+### G-483: Catalog cards: meta line still cut on most cards at 390 px
+
+- Status: Acknowledged (2026-11-07)
+- Origin: ADR-195 item 4, built 2026-11-06 (implementer could not meet the Done-when item; user not yet asked)
+- Missing: Done-when 'At 390 px under 30 % of cards show More' is not met. With Open under the picture (column 1, rows 3–4) the text column is 214 px at 390 px (281 px at 1280), not the ≈240 px the ADR estimated, and the meta line (kind chip + size · parts · checks) needs 272 px at the median and 292 px at the 70th percentile (measured by tools/catalog-flows/find-it.mjs on the production build). Result: 178 of 183 cards (97.3 %) still show More at 390 px (was 182), 91 of 183 at 1280 px (was 98). The page stays under 30 000 px (29 734 px) and every card keeps one meta line.
+- Request: Nearly every card is cut … Fix: Open under the picture (column 1, rows 3–4): ≈240 px for text, same height, one meta line (ADR-118), 'More' where still cut. Done when: At 390 px under 30 % of cards show 'More'; the page stays under 30 000 px; one meta line per card.
+- Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
+- Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
+- Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.

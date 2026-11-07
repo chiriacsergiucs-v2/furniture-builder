@@ -1,6 +1,6 @@
 import { newId, validateDesign } from './design';
 import { validateProject, type Project } from './project';
-import { validateLocalTemplate, type LocalTemplate } from './catalog/local';
+import { templateProblemTexts, validateLocalTemplate, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
 import { t } from './i18n';
 
@@ -164,7 +164,7 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
           ? validateDesign(value)
           : table === 'projects'
             ? validateProject(value)
-            : validateLocalTemplate(value);
+            : templateProblemTexts(validateLocalTemplate(value));
       if (errs.length) {
         plan.skipped.push({ path: f.path, reason: errs.slice(0, 2).join('; ') });
         continue;

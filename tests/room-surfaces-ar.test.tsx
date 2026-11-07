@@ -119,7 +119,8 @@ describe('View in AR (ADR-208 item 7)', () => {
     ];
     expect(mode).toBe('immersive-ar');
     expect(init.requiredFeatures).toEqual(['hit-test']);
-    expect(init.optionalFeatures).toEqual(['dom-overlay']);
+    // ADR-213 adds anchors (optional).
+    expect(init.optionalFeatures).toEqual(['dom-overlay', 'anchors']);
     expect(init.domOverlay).toEqual({ root: overlay });
     expect(gl.xr.enabled).toBe(true);
     expect(gl.xr.setSession).toHaveBeenCalledWith(session);
@@ -205,19 +206,26 @@ describe('AR taps and hints (fix: nothing happened on taps)', () => {
             hit ? [{ getPose: () => ({ transform: { matrix: floor } }) }] : [],
         }),
       );
-    const tap = () => act(() => selects.forEach((f) => f()));
+    // A tap is handled in the frame after it (hit results and anchors need an animation frame).
+    const tap = (hit: boolean) => {
+      act(() => selects.forEach((f) => f()));
+      frame(hit);
+    };
+    const steadyFloor = () => {
+      for (let n = 0; n < 6; n++) frame(true);
+    };
     frame(false);
     expect(st.result.current).toEqual(['placing', false]);
-    tap();
+    tap(false);
     expect(st.result.current[0]).toBe('placing');
-    frame(true);
+    // The floor counts once it is steady for 6 frames (ADR-213).
+    steadyFloor();
     expect(st.result.current).toEqual(['placing', true]);
-    // The ring went away again (phone moved off the floor): the last spot is not used.
-    frame(false);
-    tap();
+    // The floor went away again (phone moved off the floor): the last spot is not used.
+    tap(false);
     expect(st.result.current[0]).toBe('placing');
-    frame(true);
-    tap();
+    steadyFloor();
+    tap(true);
     expect(st.result.current[0]).toBe('placed');
     await act(async () => ar.exitAR());
     expect(st.result.current).toEqual(['off', false]);

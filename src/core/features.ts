@@ -943,6 +943,26 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-208'],
             checked: '2026-11-06',
           },
+          {
+            name: 'AR furniture sits on the real floor',
+            detail:
+              'Steady floor-only hits, anchors so it does not drift, a soft shadow under it, sharper edges.',
+            adrs: ['ADR-213'],
+            checked: '2026-11-07',
+          },
+          {
+            name: 'Place in AR by a corner or into a room corner',
+            detail:
+              'A footprint outline, a Point switch (Centre, Back-left, Back-right) and Room corner by two floor taps.',
+            adrs: ['ADR-214'],
+            checked: '2026-11-07',
+          },
+          {
+            name: 'Fine-tune in AR and see its size',
+            detail: 'Move 1 cm or 10 cm, turn 1° or 15°, Place again, and W × H × D labels in mm.',
+            adrs: ['ADR-215'],
+            checked: '2026-11-07',
+          },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },
         ],
@@ -1180,9 +1200,10 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Save as a project template', adrs: ['ADR-060', 'ADR-200'], checked: '2026-11-06' },
       {
         name: 'Project variables and formulas',
-        detail: 'Bind a size, a division or a position to a named value; change it once.',
-        adrs: ['ADR-166'],
-        checked: '2026-11-05',
+        detail:
+          'Bind a size, a division or a position to a named value; change it once. Formula fields keep the full keyboard.',
+        adrs: ['ADR-166', 'ADR-195'],
+        checked: '2026-11-06',
       },
       {
         name: 'Variables in a piece',
@@ -1228,17 +1249,33 @@ export const FEATURES: FeatureDomain[] = [
   {
     name: 'Catalog and templates',
     features: [
-      { name: 'Browse by room or type, with search', adrs: ['ADR-032'], checked: '2026-11-05' },
+      {
+        name: 'Browse by room or type, with search',
+        detail: 'Group chips and headings count the items the search shows.',
+        adrs: ['ADR-032', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       { name: '1–5 variants per family', adrs: ['ADR-033'], checked: '2026-11-05' },
       { name: 'Catalog pictures', adrs: ['ADR-042'], checked: '2026-11-05' },
-      { name: 'Compact cards with More', adrs: ['ADR-118', 'ADR-119'], checked: '2026-11-05' },
+      {
+        name: 'Compact cards with More',
+        detail: 'Open under the picture, so the text has the card’s width.',
+        adrs: ['ADR-118', 'ADR-119', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Edit templates on this device',
-        detail: 'Shipped templates never change; reset or compare with the shipped one.',
-        adrs: ['ADR-034'],
-        checked: '2026-11-05',
+        detail:
+          'Shipped templates never change; reset or compare with the shipped one. One save is one revision; Cancel keeps the draft; a failed save or read is shown.',
+        adrs: ['ADR-034', 'ADR-195'],
+        checked: '2026-11-06',
       },
-      { name: 'Save a design as a template', adrs: ['ADR-034'], checked: '2026-11-05' },
+      {
+        name: 'Save a design as a template',
+        detail: 'Name, room and type, with a link to the new family.',
+        adrs: ['ADR-034', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Choose which edit to keep on template import',
         detail: 'An imported template for a family you edited asks; Keep mine is the default.',
@@ -1246,6 +1283,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-06',
       },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
+      {
+        name: 'Safety-regulated items',
+        detail: 'A bunk bed or cradle card says you check it yourself, with "I check it myself".',
+        adrs: ['ADR-035', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
       {
         name: 'Brands',

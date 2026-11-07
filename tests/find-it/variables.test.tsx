@@ -89,4 +89,27 @@ describe.each(WIDTHS)('ADR-166 at %ipx (find-it)', (width) => {
     await waitFor(() => expect(height.disabled).toBe(false));
     expect(height.value).toBe('450');
   });
+
+  it('formula fields keep the full keyboard: no inputMode on value, set value or the Compose strip (ADR-195)', async () => {
+    const { user } = await renderApp(width);
+    await projectWithTwoPieces(user);
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    const settings = await screen.findByRole('dialog', { name: /^Settings: / });
+    const formula = within(settings).getByLabelText('Value or formula');
+    expect(formula.getAttribute('inputmode')).toBeNull();
+    await user.type(within(settings).getByLabelText('New variable'), 'bottom height');
+    await user.type(formula, '400');
+    await user.click(within(settings).getByRole('button', { name: 'Add variable' }));
+    expect(
+      within(settings).getByLabelText('Value of bottom height').getAttribute('inputmode'),
+    ).toBeNull();
+    await user.click(within(settings).getByRole('button', { name: 'Add set' }));
+    const setValue = await within(settings).findByLabelText(/: value of bottom height$/);
+    expect(setValue.getAttribute('inputmode')).toBeNull();
+    await user.click(within(settings).getByRole('button', { name: 'Done' }));
+    const strip = screen.getByRole('region', { name: 'Variables' });
+    expect(
+      within(strip).getByLabelText('Value of bottom height').getAttribute('inputmode'),
+    ).toBeNull();
+  });
 });
