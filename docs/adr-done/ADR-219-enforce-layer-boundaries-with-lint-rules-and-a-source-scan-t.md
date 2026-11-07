@@ -1,7 +1,8 @@
 # ADR-219: Enforce layer boundaries with lint rules and a source-scan test
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N224
@@ -36,7 +37,7 @@ cutlist, materials`): no `./project`, `./catalog/*`, `./i18n/print`, `./nesting/
     `./research/*`, `./sellers/*`. **Allowance:** `desk.ts → ./design` until diagnostics leave the model (G-491).
   - `src/{ui,store,persist,viewer,online}/**`: no `core/nesting/place` or `core/nesting/validate`.
   - `src/viewer/**`: no `../ui/*`. **Allowance:** the 14 `../ui/*` modules the viewer imports today, listed by
-    name, until [ADR-230](ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md) moves them.
+    name, until [ADR-230](../adr/ADR-230-keep-the-3d-viewer-free-of-ui-imports-and-dom-side-channels.md) moves them.
 - `no-restricted-syntax` for `import.meta.glob` and `?raw` imports outside `src/core/catalog/brands`,
   `src/core/sellers` and `src/core/research`.
 - `tests/core-boundary.test.ts`, modelled on `tests/network-boundary.test.ts`, scans `src/` for the same forbidden

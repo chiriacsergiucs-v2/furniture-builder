@@ -1,7 +1,8 @@
 # ADR-236: Housekeeping: dead code, misplaced modules, type cycle and store locations
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N241

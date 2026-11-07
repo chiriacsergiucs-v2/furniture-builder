@@ -1,7 +1,8 @@
 # ADR-224: Share find-it helpers and assert by role and text instead of class names
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: none
 - Design: n/a
 - Backlog: N229
