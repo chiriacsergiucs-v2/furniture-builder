@@ -7,6 +7,8 @@ pnpm-lock.yaml
 # catalog pictures.
 docs/catalog.md
 docs/samples/*.project.json
+# The diagnostic and clearance goldens (ADR-225), rewritten by WRITE_GOLDEN=1.
+tests/fixtures/*-golden.json
 public/catalog/
 # Research papers kept verbatim; their lines are audited by tests/research.test.ts (ADR-043).
 docs/research/

@@ -403,9 +403,12 @@ describe('ADR-193: tall side and room sizes', () => {
     expect(r.mixes[0].warnings.length).toBeLessThanOrEqual(4);
     // The clear side is the right end here: the tall cabinet no longer stands against the corner's door.
     expect(r.mixes[0].key).toMatch(/\|right/);
-    expect(r.mixes[0].warnings.map((w) => w.message).join('\n')).not.toMatch(
-      /cannot open fully: it hits Tall cabinet/,
-    );
+    expect(
+      r.mixes[0].warnings
+        .filter((w) => w.code === 'opening-blocked')
+        .map((w) => w.message)
+        .join('\n'),
+    ).not.toMatch(/hits Tall cabinet/);
   });
   it('tallPosition left is still obeyed: no tall moved to the right end', () => {
     const r = suggestRoomMixes(wizard({ tallPosition: 'left' }));

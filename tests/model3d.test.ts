@@ -332,9 +332,11 @@ describe('model items in a project (ADR-076)', () => {
       { ...base, items: [door] },
       fridge({ position: { x: 0, y: 0, z: 600 } }),
     );
-    expect(buildProjectModel(blocked).diagnostics.some((d) => d.message.includes('Fridge'))).toBe(
-      true,
-    );
+    expect(
+      buildProjectModel(blocked).diagnostics.some(
+        (d) => d.code === 'opening-blocked' && d.message.includes('Fridge'),
+      ),
+    ).toBe(true);
   });
 });
 

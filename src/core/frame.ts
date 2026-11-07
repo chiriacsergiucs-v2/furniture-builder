@@ -1,3 +1,4 @@
+import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx } from './i18n';
 import type { PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
@@ -28,7 +29,7 @@ export function buildFrame(
   materials: Map<string, Material>,
 ): PartialModel {
   const out: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
-  const err = (code: string, message: string) => {
+  const err = (code: DiagnosticCode, message: string) => {
     out.diagnostics.push({ severity: 'error', code, message, nodeId: id });
     return out;
   };
@@ -364,7 +365,7 @@ export function buildFrame(
   return out;
 }
 
-type Err = (code: string, message: string) => PartialModel;
+type Err = (code: DiagnosticCode, message: string) => PartialModel;
 type Tilt = (from: number, axis: Axis, angleDeg: number, pivot: [Mm, Mm, Mm]) => void;
 
 /**
