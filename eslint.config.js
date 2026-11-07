@@ -80,7 +80,11 @@ export default tseslint.config(
     files: ['src/core/nesting/{place,validate,types}.ts'],
     rules: restrict([...CORE, NESTING]),
   },
-  { files: ['src/{ui,store,persist,viewer,online}/**/*.{ts,tsx}'], rules: restrict(APP) },
+  // The app outside core, including src/main.tsx and src/langInit.ts (ADR-228).
+  {
+    files: ['src/*.{ts,tsx}', 'src/{ui,store,persist,viewer,online}/**/*.{ts,tsx}'],
+    rules: restrict(APP),
+  },
   { files: ['src/viewer/**/*.{ts,tsx}'], rules: restrict([...APP, VIEWER]) },
   // Vite-only module syntax stays in the data loaders (ADR-219). Allowance: src/ui/Gaps.tsx reads the gaps ledger
   // as text (G-503).
