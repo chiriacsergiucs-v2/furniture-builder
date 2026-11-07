@@ -20,7 +20,7 @@ export interface Option {
   help?: string;
 }
 
-export type FieldKind =
+type FieldKind =
   /** Free text (name). */
   | 'text'
   /** Whole number; `unit: 'mm'` for sizes. */

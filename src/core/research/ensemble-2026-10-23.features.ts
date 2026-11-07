@@ -15,8 +15,8 @@ import {
 import { APP_CHECKED, ENSEMBLE_APP_STATUS, ENSEMBLE_MERGES } from './ensemble-2026-10-23.app';
 import type { Assessment, Contradiction, ResearchFeature } from './types';
 
-export const NOT_EVALUATED = 'not evaluated';
-export const UNKNOWN = 'unknown';
+const NOT_EVALUATED = 'not evaluated';
+const UNKNOWN = 'unknown';
 
 const LINES = text.split('\n');
 const clean = (s: string) =>

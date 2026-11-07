@@ -12,8 +12,8 @@ import type { Diagnostic } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
-import { useProblem } from './problemStore';
-import { useUi } from './shell/uiStore';
+import { useProblem } from '../store/problemStore';
+import { useUi } from '../store/uiStore';
 
 export interface FocusedProblem {
   d: Diagnostic;

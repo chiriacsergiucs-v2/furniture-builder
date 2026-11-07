@@ -15,7 +15,7 @@ import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
 import { useAccount } from '../../store/accountStore';
-import { useUi } from './uiStore';
+import { useUi } from '../../store/uiStore';
 import { LanguageMenu } from './LanguageMenu';
 import { t } from '../../core/i18n';
 

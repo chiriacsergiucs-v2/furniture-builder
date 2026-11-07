@@ -16,7 +16,7 @@ import {
 } from './project';
 import type { Box, CabinetParams, Design, Material, Mm } from './types';
 
-export interface MergeCandidate {
+interface MergeCandidate {
   /** The touching piece. */
   item: ProjectItem;
   /** Whether it is on the selected piece's own left or right (as seen from the selected piece's front). */

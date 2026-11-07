@@ -1,7 +1,7 @@
 // The sync rule (user 2026-11-05, CLAUDE.md): every feature line carries the date a sync verified it, and
 // `pnpm sync:pending` (scripts/sync-pending.mjs) lists nothing a sync still has to check.
 import { describe, expect, it } from 'vitest';
-import { FEATURES } from '../src/core/features';
+import { FEATURES } from '../src/ui/info/features';
 import {
   EXEMPT,
   featureLines,

@@ -214,7 +214,7 @@ export function validateGapMark(v: unknown): v is GapMark {
 
 /** The kind tag of a gap-marks file (ADR-212, G-100). */
 export const GAP_MARKS_KIND = 'furniture-builder-gap-marks';
-export interface GapMarksFile {
+interface GapMarksFile {
   kind: typeof GAP_MARKS_KIND;
   version: 1;
   exportedAt: string;
@@ -236,7 +236,7 @@ export function gapMarksFile(marks: readonly GapMark[], exportedAt: string): Gap
   };
 }
 
-export interface GapMarksImport {
+interface GapMarksImport {
   /** Marks to write: newer than the one on this device, or for a gap with none. */
   apply: GapMark[];
   /** Valid rows for a gap in the ledger (applied or older than the device's mark). */

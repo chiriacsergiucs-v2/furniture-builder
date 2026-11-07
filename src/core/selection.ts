@@ -228,7 +228,7 @@ export function ungroup(project: Project, groupId: string): Project {
 }
 
 /** Each piece's placed footprint, by id; the project model's `pieces` already hold them. */
-export type Footprints = ReadonlyMap<string, Box>;
+type Footprints = ReadonlyMap<string, Box>;
 const footprints = (project: Project): Footprints =>
   new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 

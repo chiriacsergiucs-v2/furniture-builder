@@ -21,7 +21,7 @@ import { sameProblem } from './repairs';
 import type { Design, Diagnostic, Mm } from './types';
 
 /** How a piece stands: on the floor, hung on the wall, or on (or above) another piece (ADR-031). */
-export type PlaceKind = 'floor' | 'wall' | 'above';
+type PlaceKind = 'floor' | 'wall' | 'above';
 
 /** The design's own mount: hung on the wall or standing. */
 const mountOf = (d: Design): 'floor' | 'wall' => (isWallHung(d) ? 'wall' : 'floor');

@@ -39,7 +39,7 @@ import { pt } from '../core/i18n/print';
 import { printPieceName } from '../core/catalog/printName';
 import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { usePrices } from './priceStore';
+import { usePrices } from '../store/priceStore';
 import { useEstimate } from './useEstimate';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';

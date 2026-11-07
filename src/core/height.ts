@@ -65,7 +65,7 @@ export function setWallHeight(project: Project, id: string, height: number): Mov
 }
 
 /** A wall unit's height after snapping (ADR-205): where it lands and the hint naming the line, or null when free. */
-export interface HeightSnap {
+interface HeightSnap {
   height: Mm;
   hint: string | null;
 }

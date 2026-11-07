@@ -11,7 +11,7 @@ const files = import.meta.glob<Design>(['./*.json', '!./*.evidence.json'], {
   import: 'default',
 });
 
-export interface BrandEntry {
+interface BrandEntry {
   catalogId: string;
   design: Design;
 }

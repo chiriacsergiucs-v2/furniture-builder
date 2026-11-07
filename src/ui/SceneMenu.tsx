@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
 import { fileName } from './shell/files';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 
 /**
  * The 3D toolbar's ⋯ beside Render (ADR-206): Export scene (.glb). The exporter (three's GLTFExporter) is loaded only

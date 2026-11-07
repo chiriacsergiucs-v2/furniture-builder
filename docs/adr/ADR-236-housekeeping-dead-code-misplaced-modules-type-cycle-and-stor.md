@@ -59,10 +59,15 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) a test that imports the feature tree and the six stores from their new paths and asserts their
-      shape (red before the move, green after); every existing test passes with updated imports.
-- [ ] `rg wallCount src` is empty; the type cycle is gone (a scan of `shopping`, `fasteners`, `prices` imports).
-- [ ] No `samples/mobila` under `src`; `CLAUDE.md` names `src/ui/info/features.ts` and the four viewer exceptions.
+- [x] (test first) a test that imports the feature tree and the six stores from their new paths and asserts their
+      shape (red before the move, green after); every existing test passes with updated imports. Evidence:
+      `tests/store-locations.test.ts` › "the six stores import from src/store with their state and actions", "the feature
+      tree imports from src/ui/info" (red before: the modules did not resolve).
+- [x] `rg wallCount src` is empty; the type cycle is gone (a scan of `shopping`, `fasteners`, `prices` imports).
+      Evidence: `tests/store-locations.test.ts` › "no sample generator and no wallCount under src", "shopping, fasteners
+      and prices do not import each other in a cycle".
+- [x] No `samples/mobila` under `src`; `CLAUDE.md` names `src/ui/info/features.ts` and the four viewer exceptions.
+      Evidence: `tests/store-locations.test.ts` › "no sample generator and no wallCount under src"; `CLAUDE.md` diff.
 - [ ] `tests/core-boundary.test.ts` (ADR-219) passes; no Zustand `create(` remains under `src/ui`.
 - [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).

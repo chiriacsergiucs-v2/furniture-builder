@@ -9,7 +9,7 @@ import type { Project, ProjectItem } from './project';
 import type { Design } from './types';
 
 /** The other items linked to `id` (not `id` itself); empty when it is not linked. */
-export function linkedWith(project: Project, id: string): ProjectItem[] {
+function linkedWith(project: Project, id: string): ProjectItem[] {
   const it = project.items.find((i) => i.id === id);
   if (!it?.linkId) return [];
   return project.items.filter((i) => i.id !== id && i.linkId === it.linkId);

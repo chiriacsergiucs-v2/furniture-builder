@@ -20,7 +20,7 @@ import {
 import { CURRENCY_ID, DEFAULT_CURRENCY, formatMoney, parseMoney } from '../core/prices';
 import { builtInStyles, yourStyles, type Style } from '../core/styles';
 import { listProjects } from '../persist/db';
-import { usePrices } from './priceStore';
+import { usePrices } from '../store/priceStore';
 import {
   checkRoom,
   isRectangle,

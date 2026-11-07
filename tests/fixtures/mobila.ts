@@ -10,10 +10,10 @@
  * request), the RHS workbench (an envelope with no member list) and the variants the file marks as not for production
  * (nightstand B, the simplified bed) are not built.
  */
-import { findFamily } from '../catalog';
-import { defaultDrawers, defaultMaterials, fr, mm } from '../design';
-import type { Placement, Project, ProjectItem } from '../project';
-import type { CabinetParams, Design, LoosePanel, Material, Product } from '../types';
+import { findFamily } from '../../src/core/catalog';
+import { defaultDrawers, defaultMaterials, fr, mm } from '../../src/core/design';
+import type { Placement, Project, ProjectItem } from '../../src/core/project';
+import type { CabinetParams, Design, LoosePanel, Material, Product } from '../../src/core/types';
 
 const STAMP = '2026-10-22T00:00:00.000Z';
 const LIVING_STAMP = '2026-10-24T00:00:00.000Z';

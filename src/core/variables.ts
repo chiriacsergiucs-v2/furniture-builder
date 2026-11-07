@@ -37,7 +37,7 @@ export interface ProjectVariable {
  * What a binding drives: the piece's outer size, its mount height (a wall cabinet's `mountHeight` and the wall
  * placement height), its room position, or one fixed size of a split (`split:<spaceId>:<index>`).
  */
-export type BindTarget = 'width' | 'height' | 'depth' | 'mountHeight' | 'x' | 'y' | 'z' | string;
+type BindTarget = 'width' | 'height' | 'depth' | 'mountHeight' | 'x' | 'y' | 'z' | string;
 
 export interface Binding {
   target: BindTarget;
@@ -110,7 +110,7 @@ const CMPS = new Set<Op>(['<', '<=', '>', '>=', '=', '<>']);
  * Formula functions (ADR-206): a name followed by `(` is a call. One entry per function: how many values it takes and
  * what it does; a later function (ADR-209) is one more entry. Their names are reserved for new variables.
  */
-export interface FormulaFunction {
+interface FormulaFunction {
   /** Fewest and most values; `max` absent = any number from `min`. */
   min: number;
   max?: number;
@@ -355,7 +355,7 @@ export function evaluateExpr(
 }
 
 /** The names a formula refers to (empty when it does not parse). */
-export function namesIn(expr: string, names: readonly string[]): string[] {
+function namesIn(expr: string, names: readonly string[]): string[] {
   const tk = tokenize(expr, names);
   if ('problem' in tk) return [];
   return [...new Set(tk.tokens.flatMap((x) => (x.kind === 'name' ? [x.name] : [])))];
@@ -380,7 +380,7 @@ export function renameInExpr(
   return out + expr.slice(last);
 }
 
-export interface Evaluated {
+interface Evaluated {
   /** The whole-mm value the bound fields take; absent when the variable has a problem. */
   value?: Mm;
   /** The unrounded result, when it differs from `value`. */
@@ -476,23 +476,21 @@ export function evaluatedText(e: Evaluated): string {
 // ---------------------------------------------------------------------------
 
 /** The split and index a `split:` target names, or null. */
-export function splitTarget(target: string): { spaceId: string; index: number } | null {
+function splitTarget(target: string): { spaceId: string; index: number } | null {
   const m = SPLIT_TARGET.exec(target);
   return m ? { spaceId: m[1], index: Number(m[2]) } : null;
 }
 
-export const TARGET_LABEL: Record<
-  'width' | 'height' | 'depth' | 'mountHeight' | 'x' | 'y' | 'z',
-  string
-> = {
-  width: t('Width'),
-  height: t('Height'),
-  depth: t('Depth'),
-  mountHeight: t('Underside above the floor'),
-  x: t('From left'),
-  y: t('Above floor'),
-  z: t('From back'),
-};
+const TARGET_LABEL: Record<'width' | 'height' | 'depth' | 'mountHeight' | 'x' | 'y' | 'z', string> =
+  {
+    width: t('Width'),
+    height: t('Height'),
+    depth: t('Depth'),
+    mountHeight: t('Underside above the floor'),
+    x: t('From left'),
+    y: t('Above floor'),
+    z: t('From back'),
+  };
 
 export function targetLabel(target: string): string {
   const s = splitTarget(target);
@@ -540,7 +538,7 @@ export function readTarget(item: ProjectItem, target: string): number | undefine
 }
 
 /** The whole-mm range a target accepts (the same limits as its field); null when the piece has no such part. */
-export function targetRange(item: ProjectItem, target: string): { min: Mm; max: Mm } | null {
+function targetRange(item: ProjectItem, target: string): { min: Mm; max: Mm } | null {
   const s = splitTarget(target);
   if (s) return hasTarget(item, target) ? { min: 1, max: 10000 } : null;
   switch (target) {
@@ -562,7 +560,7 @@ export function targetRange(item: ProjectItem, target: string): { min: Mm; max: 
 }
 
 /** Why a value cannot go into a target, or null: outside the field's range (ADR-008: never clamped silently). */
-export function rangeProblem(item: ProjectItem, target: string, value: Mm): string | null {
+function rangeProblem(item: ProjectItem, target: string, value: Mm): string | null {
   const r = targetRange(item, target);
   if (!r) return null;
   if (value < r.min || value > r.max)
@@ -571,7 +569,7 @@ export function rangeProblem(item: ProjectItem, target: string, value: Mm): stri
 }
 
 /** Whether the piece has the part a target names (so it can be bound). */
-export function hasTarget(item: ProjectItem, target: string): boolean {
+function hasTarget(item: ProjectItem, target: string): boolean {
   const s = splitTarget(target);
   if (s) {
     const sp = findSplit(item.design.product, s.spaceId);
@@ -691,7 +689,7 @@ export const REQUEST_TARGET_LABEL: Record<RequestTarget, string> = {
 };
 
 /** Whether a request has the field a target names: overhangs on a worktop, a height on a crown or pelmet. */
-export const requestHasTarget = (r: RunRequest, target: string): target is RequestTarget =>
+const requestHasTarget = (r: RunRequest, target: string): target is RequestTarget =>
   target === 'height'
     ? r.kind === 'crown' || r.kind === 'pelmet'
     : (target === 'front' || target === 'side') && r.kind === 'worktop';
@@ -705,7 +703,7 @@ function requestRangeProblem(target: RequestTarget, value: Mm): string | null {
 }
 
 /** Every run request's bindings evaluated with set 1's values and written into it; the same project when none change. */
-export function applyRequestBindings(project: Project): Project {
+function applyRequestBindings(project: Project): Project {
   const reqs = project.runRequests;
   if (!reqs?.some((r) => r.bindings?.length)) return project;
   const scope = variableScope(project.variables ?? []);

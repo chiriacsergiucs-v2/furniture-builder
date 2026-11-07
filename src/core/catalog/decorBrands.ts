@@ -6,7 +6,7 @@
 import { makerName, type Decor } from '../materials';
 import type { Design, MaterialMaker } from '../types';
 
-export interface DecorBrand {
+interface DecorBrand {
   /** `egger`, or `other:<written maker>` for an `other` row. */
   key: string;
   /** "Egger", or the maker as written in the file. */

@@ -11,13 +11,13 @@ import type { Mm, Panel } from './types';
 export const PAGE = { w: 186, h: 255 };
 export const OVERLAP = 10;
 
-export interface TemplateTile {
+interface TemplateTile {
   col: number;
   row: number;
   x0: Mm;
   y0: Mm;
 }
-export interface ProfileTemplate {
+interface ProfileTemplate {
   key: string;
   label: string;
   materialId: string;

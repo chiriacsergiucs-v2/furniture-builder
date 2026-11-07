@@ -21,7 +21,7 @@ import type { Box } from './types';
 
 export type AlignHow = 'left' | 'centre' | 'right' | 'back' | 'front' | 'top' | 'bottom';
 
-export interface ArrangeResult {
+interface ArrangeResult {
   project: Project;
   /** The pieces that stayed where they are and why ("Tall 600 is locked …"). */
   skipped: string[];

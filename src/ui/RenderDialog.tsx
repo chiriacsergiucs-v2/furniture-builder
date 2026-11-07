@@ -4,7 +4,7 @@ import type { RenderJob } from '../viewer/pathtrace';
 import { Segmented } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
-import { useUi } from './shell/uiStore';
+import { useUi } from '../store/uiStore';
 import {
   detectEngine,
   hasWebGL2,

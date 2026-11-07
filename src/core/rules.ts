@@ -26,9 +26,9 @@ export const RULE_DEFAULTS: Required<Omit<RuleSettings, 'roomHeight'>> = {
 };
 
 /** Storage taller than this gets an anti-tip wall fixing in the hardware list. */
-export const ANTI_TIP_HEIGHT = 1000;
+const ANTI_TIP_HEIGHT = 1000;
 
-export interface RuleResult {
+interface RuleResult {
   diagnostics: Diagnostic[];
   hardware: HardwareItem[];
 }

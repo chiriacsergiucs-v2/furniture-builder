@@ -124,7 +124,7 @@ export interface MaterialImage {
 }
 
 /** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-009). */
-export interface StockSheet {
+interface StockSheet {
   length: Mm;
   width: Mm;
   /** Unusable margin trimmed off each edge before cutting parts. */
@@ -340,7 +340,7 @@ export interface DoorsFront {
 }
 
 /** Sliding doors in two planes in front of the carcass (ADR-037). The track system is the user's choice. */
-export interface SlidingFront {
+interface SlidingFront {
   kind: 'sliding';
   count: 2 | 3 | 4;
   /** How far neighbouring doors overlap (default 30). */
@@ -391,17 +391,17 @@ export interface ApplianceNiche {
   d: Mm;
 }
 
-export interface EmptySpace extends SpaceBase {
+interface EmptySpace extends SpaceBase {
   kind: 'empty';
   appliance?: ApplianceNiche;
 }
-export interface ShelvesSpace extends SpaceBase {
+interface ShelvesSpace extends SpaceBase {
   kind: 'shelves';
   count: number;
   /** Loose shelves on pins: shortened by the shelf clearance; the neighbouring panels get pin rows (ADR-023). */
   adjustable?: boolean;
 }
-export interface HangingSpace extends SpaceBase {
+interface HangingSpace extends SpaceBase {
   kind: 'hanging';
   /** Rail distance below the top of the space. */ railDrop: Mm;
 }
@@ -421,7 +421,7 @@ export interface DrawersSpace extends SpaceBase {
    */
   heights?: SplitSize[];
 }
-export interface SplitSpace extends SpaceBase {
+interface SplitSpace extends SpaceBase {
   kind: 'split';
   /** 'x' = vertical dividers, children left→right. 'y' = horizontal dividers, children top→bottom. */
   axis: 'x' | 'y';
@@ -680,7 +680,7 @@ export interface LoosePanel {
  * width up, length along x or z. `up-*`: standing on its end, length up, width along x or z.
  */
 export type PanelLie = 'flat-x' | 'flat-z' | 'edge-x' | 'edge-z' | 'up-x' | 'up-z';
-export interface PanelPlace {
+interface PanelPlace {
   x: Mm;
   y: Mm;
   z: Mm;
@@ -688,7 +688,7 @@ export interface PanelPlace {
 }
 
 /** Two placed panels screwed together (ADR-041 amendment); listed in the hardware schedule, screws chosen by the user. */
-export interface PanelJoint {
+interface PanelJoint {
   a: string;
   b: string;
   kind: 'screwed';
@@ -816,7 +816,7 @@ export interface DesignVariable {
 }
 
 /** A binding of a piece's own size to its variables (ADR-210). */
-export interface DesignBinding {
+interface DesignBinding {
   target: string;
   expr: string;
 }

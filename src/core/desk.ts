@@ -8,7 +8,7 @@ import type { CabinetParams, DeskParams, Material, Panel } from './types';
  * Desk = worktop + supports. Supports are panel gables or drawer pedestals; a pedestal is a real
  * cabinet built by the same generator (shared children, specialist root).
  */
-export function pedestalParams(
+function pedestalParams(
   p: DeskParams,
   side: 'left' | 'right',
   deskId: string,

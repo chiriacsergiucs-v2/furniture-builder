@@ -5,7 +5,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const t = (iso?: string) => (iso ? Date.parse(iso) : NaN);
 
 /** The device-only notice comes back this many days after Dismiss (G-261). */
-export const NOTICE_SNOOZE_DAYS = 7;
+const NOTICE_SNOOZE_DAYS = 7;
 
 /**
  * "Your designs are only on this device" shows while something is saved, no backup was ever made and nothing is in

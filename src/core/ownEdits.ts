@@ -15,8 +15,8 @@ import { materialKey, type ProjectItem } from './project';
 import type { Design, Material } from './types';
 
 /** Path ("interior.children.1.handle") → the piece's value; `UNSET` where it removed a setting. */
-export type Overrides = Record<string, unknown>;
-export const UNSET = { $unset: true } as const;
+type Overrides = Record<string, unknown>;
+const UNSET = { $unset: true } as const;
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v);
@@ -87,7 +87,7 @@ export function settingsDiff(template: Design, piece: Design): Overrides {
  * A fresh copy of the template a design was taken from, when the catalog has that variant at that revision (or at
  * any revision with `anyRevision`); null otherwise.
  */
-export function templateOf(
+function templateOf(
   d: Design,
   families: readonly Pick<CatalogFamily, 'id' | 'name' | 'catalogVersion' | 'variants'>[],
   anyRevision = false,
@@ -114,7 +114,7 @@ export function ownEdits(
 }
 
 /** "interior.children.2.handle" → "interior space 3 handle". */
-export function editLabel(path: string): string {
+function editLabel(path: string): string {
   return path
     .split('.')
     .map((s) => (/^\d+$/.test(s) ? String(Number(s) + 1) : s === 'children' ? 'space' : s))
@@ -207,7 +207,7 @@ function errorCount(d: Design): number {
   }
 }
 
-export interface CarryResult {
+interface CarryResult {
   design: Design;
   /** Labels of the settings carried. */
   kept: string[];
