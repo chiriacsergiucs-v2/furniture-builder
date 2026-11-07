@@ -59,6 +59,11 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id: string) => VENDOR_CHUNKS.find(([re]) => re.test(id))?.[1],
+        // The lazy Russian dictionary (ADR-229) is its own chunk; name it so only the entry is called `index-*`.
+        chunkFileNames: (chunk) =>
+          chunk.facadeModuleId?.endsWith('/src/core/i18n/ru/index.ts')
+            ? 'assets/i18n-ru-[hash].js'
+            : 'assets/[name]-[hash].js',
         // Only the modules named above go in those chunks: their shared dependencies (React, the i18n tables) stay
         // where Rollup would put them, or `index` would import the 3D chunks statically.
         onlyExplicitManualChunks: true,
