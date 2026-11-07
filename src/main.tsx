@@ -1,5 +1,6 @@
-// First: the chosen language, before any module makes its texts (ADR-153).
-import './langInit';
+// First: the chosen language, before any module makes its texts (ADR-153); its dictionary loads before the app
+// (ADR-229).
+import { langReady } from './langInit';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource/barlow/400.css';
@@ -14,7 +15,6 @@ import '@fontsource/fira-sans/cyrillic-600.css';
 import '@fontsource/fira-sans-condensed/cyrillic-500.css';
 import '@fontsource/fira-sans-condensed/cyrillic-600.css';
 import './styles.css';
-import { App } from './ui/App';
 import { t } from './core/i18n';
 import { applyTheme } from './ui/useTheme';
 import { installCutTitles } from './ui/cutTitle';
@@ -22,11 +22,21 @@ import { registerSW } from 'virtual:pwa-register';
 
 applyTheme();
 installCutTitles();
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+
+/**
+ * The app is imported only after the language's dictionary has loaded (ADR-229): its modules call `t()` at load, and
+ * the Russian dictionary is a lazy chunk English users never fetch.
+ */
+async function start(): Promise<void> {
+  await langReady;
+  const { App } = await import('./ui/App');
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}
+void start();
 
 // Offline support. New versions wait for the user instead of reloading mid-edit.
 const updateSW = registerSW({

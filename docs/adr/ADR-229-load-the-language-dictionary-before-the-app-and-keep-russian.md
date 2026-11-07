@@ -58,10 +58,15 @@ Decided by Claude under the user's ownership grant, 2026-11-07.
 TDD (review section 9): every item starts from a test written first that pins today's behaviour and passes on
 `main` before the change; the change keeps it green (or turns the stated red test green).
 
-- [ ] (test first) `tests/i18n.test.ts` passes unchanged; removing a Russian entry still fails `pnpm typecheck`.
-- [ ] (test first) jsdom find-it `language.test.tsx` at 390 and 1280 px: after More → Language → Russian, Russian
+- [x] (test first) `tests/i18n.test.ts` passes (its cases unchanged; one `beforeAll(() => loadDictionary('ru'))` setup
+      line added, as the Decision asks of tests that switch to Russian); removing the Russian entry of
+      `3D preview is not available in this browser` fails `pnpm typecheck` (TS2345 at `src/ui/viewChoice.ts`, run
+      2026-11-07).
+- [x] (test first) jsdom find-it `language.test.tsx` at 390 and 1280 px: after More → Language → Russian, Russian
       labels are found by role and text (green before and after).
-- [ ] (test first) a boot test with Russian stored renders Russian module-scope labels on first paint.
-- [ ] `tests/bundle-cyrillic.test.ts` passes with the budget; `index` gzip before and after in the backlog row.
-- [ ] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
+- [x] (test first) a boot test with Russian stored renders Russian module-scope labels on first paint
+      (`tests/lang-boot.test.tsx`: `NO_3D_REASON` and the Places navigation in Russian; English stays English; main.tsx
+      imports the app only after `langReady`; the i18n core imports the dictionary as a type only).
+- [x] `tests/bundle-cyrillic.test.ts` passes with the budget; `index` gzip before and after in the backlog row.
+- [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm docs:check` pass; the
       test count is not lower than on `main` before the change (review section 9).

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { hasRu } from '../src/core/i18n';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { hasRu, loadDictionary } from '../src/core/i18n';
 import {
   ENSEMBLE_BIBLIOGRAPHY,
   ENSEMBLE_BUNDLE,
@@ -11,6 +11,9 @@ import {
   RANKED_ROWS,
   RECOMMENDATION_ROWS,
 } from '../src/core/research/ensemble-2026-10-23';
+
+// The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
+beforeAll(() => loadDictionary('ru'));
 
 /**
  * Every user-visible text of the paper's own record (ADR-155). Not translated: ids, URLs, dates, product names
