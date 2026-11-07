@@ -1,7 +1,8 @@
 # ADR-216: Fill L and U room corners and show template descriptions in Start from
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-07
 - Depends on: ADR-032, ADR-173, ADR-177, ADR-193, ADR-196
 - Design: n/a
 - Backlog: N221
@@ -66,13 +67,13 @@ Problems stay diagnostics (ADR-008); every offered mix is still built and checke
 
 ## Done when
 
-- [ ] The default L room (3600 × 3000, cut 1500 × 1500) gives 4 mixes with no error for every corner kind
+- [x] The default L room (3600 × 3000, cut 1500 × 1500) gives 4 mixes with no error for every corner kind
       (`tests/roomfill.test.ts`, ADR-216).
-- [ ] The default U room (offset 600) gives 4 mixes with no error for every corner kind (same test).
-- [ ] `cornerPlans` keeps one corner per 1500 mm wall (both ends tried), never a corner longer than its wall, and all
+- [x] The default U room (offset 600) gives 4 mixes with no error for every corner kind (same test).
+- [x] `cornerPlans` keeps one corner per 1500 mm wall (both ends tried), never a corner longer than its wall, and all
       four corners of a rectangle; every corner cabinet in a mix stands at an inside corner (tests).
-- [ ] An ordinary rectangle behaves as before: the existing roomfill tests stay green, the 4-wall default under 100 ms.
-- [ ] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes.
-- [ ] Find-it at 390 and 1280 px: More → New… → Start from shows "1000 × 720 × 560, 610 mm blind section on the left,
+- [x] An ordinary rectangle behaves as before: the existing roomfill tests stay green, the 4-wall default under 100 ms.
+- [x] `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes.
+- [x] Find-it at 390 and 1280 px: More → New… → Start from shows "1000 × 720 × 560, 610 mm blind section on the left,
       one door" under the Blind corner row (`tests/find-it/start-from-descriptions.test.tsx`).
-- [ ] `TemplateButton` is deleted; feature lines added; G-461 and G-470 set to ADR-216.
+- [x] `TemplateButton` is deleted; feature lines added; G-461 and G-470 set to ADR-216.

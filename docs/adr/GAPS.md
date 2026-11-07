@@ -1406,17 +1406,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
 - Conflicts: none
 
-### G-461: Default L and U rooms give no Fill the room mix
-
-- Status: ADR-216
-- Origin: ADR-193, 2026-11-06; agent found it while building (not caused by ADR-193)
-- Missing: The default L room (3600 x 3000, cut 1500 x 1500) and the U room (offset 600) give no mix in Fill the room: Wall 2 has no stretch of 400 mm, then 'Every mix tried had a problem in the room (60 tried)'. Same with tallPosition left/right, so it predates ADR-193; the find-it uses Use this mix on the rectangle instead.
-- Request: Not a quote: ADR-193 Done-when only asks 'Rectangle -> L shows 6 ticked walls'; the user's request was 'a critique of design ... high and medium issues and fixes per flow'.
-- Questions: Should the default L and U rooms give mixes? Which problem blocks them (corner reservations on the 1500 mm walls, or a clash the model reports as an error)?
-- Suggested pick: Find which error rejects every L/U mix (run suggestRoomMixes on the default L and list the error codes), then fix that cause in a new ADR so the default L and U rooms give cards. Closest to the user's wish for working flows. (estimate: effort +15% of ADR-193, value +10%)
-- Work: Medium
-- Impact: Medium
-
 ### G-462: Fill the room starts U and Alcove with an offset the size check rejects
 
 - Status: Acknowledged (2026-11-06)
@@ -1486,21 +1475,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; found while testing ADR-203 (G-105, models in 3D Move mode).
 - Questions: None; it is a bug.
 - Suggested pick: Reproduce with the piece-safety script, find which unmount removes the node twice, and fix it. (estimate: effort +5 %, value +5 %)
-
-### G-470: Built-in template descriptions are shown nowhere in the app
-
-- Status: ADR-216
-- Origin: ADR-196 item 7 (blind corner template text), found while building 2026-11-06
-- Missing: The built-in templates' descriptions in src/core/design.ts (templates) are not rendered by any screen: TemplateButton in src/ui/Templates.tsx is unused and the New single piece dialog lists catalog items instead. ADR-196 corrected the blind corner text to read cornerDefaults('blind') (610 mm), proven by tests/constructions.test.ts, but there is no visible place to find it in a find-it test.
-- Request: "Split the entire app into domains or flows … critique of design … 1 adr with high and medium issues and fixes per flow" (ADR-196 item 7: the description reads the defaults)
-- Questions: Should the built-in template descriptions be shown somewhere (the Templates source of the catalog, or Fill the room), or be removed as unused data?
-- Suggested pick: Ask the user; closest to the request: keep the corrected text and show nothing new until the user asks (no UI change was asked by ADR-196).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
-- Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
-- Conflicts: none
 
 ### G-471: Catalog page is taller than the 15000 px script limit
 
