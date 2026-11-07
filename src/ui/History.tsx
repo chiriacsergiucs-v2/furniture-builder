@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FinishScope } from '../core/finish';
 import { getLang, t, tr } from '../core/i18n';
 import { VERSION_KIND_TEXT, type ProjectVersion } from '../core/projectVersion';
 import { builtInStyles, HANDLE_NAMES, yourStyles, type Style } from '../core/styles';
-import { deleteProjectVersion, listProjects, listProjectVersions } from '../persist/db';
+import {
+  deleteProjectVersion,
+  listOrphanVersions,
+  listProjects,
+  listProjectVersions,
+  saveProject,
+} from '../persist/db';
+import { newId } from '../core/design';
+import { onSavedChange } from '../persist/events';
 import { useDesign } from '../store/designStore';
 import { restoreVersion, saveVersionNow } from '../store/versions';
 import { askConfirm } from './Confirm';
@@ -17,32 +25,64 @@ const when = (iso: string) =>
     timeStyle: 'short',
   });
 
-/**
- * History of the open project (ADR-123): Edit history (the named undo steps of this session) and the kept versions,
- * with Save a version, Restore and Delete. Versions are kept until the user deletes them (G-156).
- */
+/** A project switch remounts its history, so no rows or pending messages leak to the next project (ADR-200). */
 export function ProjectHistory() {
+  const id = useDesign((s) => s.project!.id);
+  return <HistoryForProject key={id} />;
+}
+function HistoryForProject() {
   const project = useDesign((s) => s.project)!;
   const dirtyAt = useDesign((s) => s.projectDirtyAt);
+  const id = project.id;
   const [steps, setSteps] = useState(false);
   const [versions, setVersions] = useState<ProjectVersion[]>([]);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [readError, setReadError] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [reload, setReload] = useState(0);
-  const id = project.id;
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
   useEffect(() => {
     let live = true;
     listProjectVersions(id)
-      .then((v) => live && setVersions(v))
-      .catch(() => live && setVersions([]));
+      .then((v) => {
+        if (live) {
+          setVersions(v);
+          setReadError(false);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (live) {
+          setReadError(true);
+          setLoading(false);
+        }
+      });
     return () => {
       live = false;
     };
-    // A session version is kept at the first change after opening: the list follows changes too.
   }, [id, reload, dirtyAt]);
-  const again = () => setReload((n) => n + 1);
+  const again = () => {
+    setLoading(true);
+    setReload((n) => n + 1);
+  };
+  const run = async (work: () => Promise<void>, errorText: string) => {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setMsg(null);
+    try {
+      await work();
+      if (useDesign.getState().project?.id === id) again();
+    } catch {
+      setMsg({ ok: false, text: errorText });
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  };
   return (
     <Group
-      // The kept versions are counted in the title, so the folded row says what is inside (ADR-160).
       title={
         versions.length
           ? t('History · {n|# version|# versions}', { n: versions.length })
@@ -58,29 +98,51 @@ export function ProjectHistory() {
       }
     >
       <div className="split-actions">
-        <button type="button" className="btn outline" onClick={() => setSteps(true)}>
+        <button
+          type="button"
+          className="btn outline"
+          disabled={busy}
+          onClick={() => setSteps(true)}
+        >
           {t('Edit history')}
         </button>
         <button
           type="button"
           className="btn outline"
-          onClick={async () => {
-            await saveVersionNow();
-            setMsg(t('Version saved.'));
-            again();
-          }}
+          disabled={busy}
+          onClick={() =>
+            void run(async () => {
+              const v = await saveVersionNow();
+              if (v && useDesign.getState().project?.id === id)
+                setMsg({ ok: true, text: t('Version saved.') });
+            }, t('The version could not be saved on this device.'))
+          }
         >
           {t('Save a version')}
         </button>
       </div>
       {msg && (
-        <p className="hint" role="status">
-          {msg}
+        <p className={msg.ok ? 'hint' : 'alert error'} role={msg.ok ? 'status' : 'alert'}>
+          {msg.text}
         </p>
       )}
-      {versions.length === 0 ? (
+      {readError && (
+        <p className="alert error" role="alert">
+          <span>{t('Versions could not be read from this device.')}</span>
+          <button type="button" className="btn outline sm" disabled={loading} onClick={again}>
+            {t('Retry')}
+          </button>
+        </p>
+      )}
+      {loading && (
+        <p className="hint" role="status">
+          {t('Loading…')}
+        </p>
+      )}
+      {!loading && !readError && versions.length === 0 && (
         <p className="hint">{t('No versions kept yet.')}</p>
-      ) : (
+      )}
+      {versions.length > 0 && (
         <ul className="versions" aria-label={t('Kept versions')}>
           {versions.map((v) => (
             <li key={v.id} className="version-row">
@@ -95,44 +157,61 @@ export function ProjectHistory() {
                 <button
                   type="button"
                   className="btn sm outline"
-                  onClick={async () => {
-                    if (
-                      !(await askConfirm(
-                        t(
-                          'Restore the version of {when}? The project as it is now is kept as a version first.',
-                          { when: when(v.savedAt) },
-                        ),
-                        { confirmLabel: t('Restore') },
-                      ))
-                    )
-                      return;
-                    if (await restoreVersion(v))
-                      setMsg(t('Restored the version of {when}.', { when: when(v.savedAt) }));
-                    again();
-                  }}
+                  disabled={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      if (
+                        !(await askConfirm(
+                          t(
+                            'Restore the version of {when}? The project as it is now is kept as a version first.',
+                            { when: when(v.savedAt) },
+                          ),
+                          { confirmLabel: t('Restore') },
+                        ))
+                      )
+                        return;
+                      if (useDesign.getState().project?.id !== id) return;
+                      const restored = await restoreVersion(v);
+                      if (useDesign.getState().project?.id === id)
+                        setMsg(
+                          restored
+                            ? {
+                                ok: true,
+                                text: t('Restored the version of {when}.', {
+                                  when: when(v.savedAt),
+                                }),
+                              }
+                            : {
+                                ok: false,
+                                text: t(
+                                  'The project changed while saving the version. Try restoring again.',
+                                ),
+                              },
+                        );
+                    }, t('The version could not be restored.'))
+                  }
                 >
                   {t('Restore')}
                 </button>
                 <button
                   type="button"
                   className="btn sm ghost"
+                  disabled={busy}
                   aria-label={t('Delete the version of {when}', { when: when(v.savedAt) })}
-                  onClick={async () => {
-                    if (
-                      !(await askConfirm(
-                        t('Delete the version of {when}? It cannot be undone.', {
-                          when: when(v.savedAt),
-                        }),
-                        {
-                          confirmLabel: t('Delete'),
-                          danger: true,
-                        },
-                      ))
-                    )
-                      return;
-                    await deleteProjectVersion(v.id);
-                    again();
-                  }}
+                  onClick={() =>
+                    void run(async () => {
+                      if (
+                        !(await askConfirm(
+                          t('Delete the version of {when}? It cannot be undone.', {
+                            when: when(v.savedAt),
+                          }),
+                          { confirmLabel: t('Delete'), danger: true },
+                        ))
+                      )
+                        return;
+                      await deleteProjectVersion(v.id);
+                    }, t('The version could not be deleted from this device.'))
+                  }
                 >
                   <Icon name="trash" className="sm" />
                 </button>
@@ -141,7 +220,122 @@ export function ProjectHistory() {
           ))}
         </ul>
       )}
+      <OrphanVersions reload={reload} />
       <EditHistory open={steps} onClose={() => setSteps(false)} />
+    </Group>
+  );
+}
+
+/**
+ * Versions of deleted projects (ADR-211, G-389): kept versions whose project was deleted with Keep versions (ADR-203).
+ * Restore as a new project saves a copy under a new id and opens it; the version stays. Delete removes only the tapped
+ * version, after asking. Nothing here deletes anything on its own (ADR-012, G-156).
+ */
+function OrphanVersions({ reload }: { reload: number }) {
+  const openProject = useDesign((s) => s.openProject);
+  const [rows, setRows] = useState<ProjectVersion[]>([]);
+  const [again, setAgain] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => {
+    let live = true;
+    listOrphanVersions()
+      .then((v) => live && setRows(v))
+      .catch(() => live && setRows([]));
+    return () => {
+      live = false;
+    };
+  }, [reload, again]);
+  // The editor stays mounted while Projects is shown: a project deleted there (keeping its versions), or a version
+  // saved or deleted anywhere, reads the list again.
+  useEffect(
+    () =>
+      onSavedChange((c) => {
+        if ((c.table === 'projects' && c.deleted) || c.table === 'projectVersions')
+          setAgain((n) => n + 1);
+      }),
+    [],
+  );
+  if (!rows.length) return null;
+  const run = async (work: () => Promise<void>, errorText: string) => {
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      await work();
+    } catch {
+      setMsg({ ok: false, text: errorText });
+    } finally {
+      setBusy(false);
+      setAgain((n) => n + 1);
+    }
+  };
+  const restore = (v: ProjectVersion) =>
+    run(async () => {
+      const now = new Date().toISOString();
+      const copy = {
+        ...structuredClone(v.project),
+        id: newId(),
+        name: t('{name} (restored)', { name: v.project.name }),
+        createdAt: now,
+        updatedAt: now,
+      };
+      await saveProject(copy);
+      openProject(copy);
+    }, t('The version could not be restored.'));
+  const remove = (v: ProjectVersion) =>
+    run(async () => {
+      if (
+        !(await askConfirm(
+          t('Delete the version of {when}? It cannot be undone.', { when: when(v.savedAt) }),
+          { confirmLabel: t('Delete'), danger: true },
+        ))
+      )
+        return;
+      await deleteProjectVersion(v.id);
+    }, t('The version could not be deleted from this device.'));
+  return (
+    <Group title={t('Versions of deleted projects ({n})', { n: rows.length })} defaultOpen={false}>
+      {msg && (
+        <p className={msg.ok ? 'hint' : 'alert error'} role={msg.ok ? 'status' : 'alert'}>
+          {msg.text}
+        </p>
+      )}
+      <ul
+        className="versions"
+        aria-label={t('Versions of deleted projects ({n})', { n: rows.length })}
+      >
+        {rows.map((v) => (
+          <li key={v.id} className="version-row orphan">
+            <span>
+              <strong>{v.project.name}</strong>
+              <span className="sub">
+                {when(v.savedAt)} · {tr(VERSION_KIND_TEXT[v.kind])} ·{' '}
+                {t('{n|# piece|# pieces}', { n: v.project.items.length })}
+              </span>
+            </span>
+            <span className="split-actions">
+              <button
+                type="button"
+                className="btn sm outline"
+                disabled={busy}
+                onClick={() => void restore(v)}
+              >
+                {t('Restore as a new project')}
+              </button>
+              <button
+                type="button"
+                className="btn sm ghost"
+                disabled={busy}
+                aria-label={t('Delete the version of {when}', { when: when(v.savedAt) })}
+                onClick={() => void remove(v)}
+              >
+                <Icon name="trash" className="sm" />
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
     </Group>
   );
 }

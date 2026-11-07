@@ -5,6 +5,7 @@
  */
 import { defaultMaterials, defaultSheetFor, fr, mm, newId } from '../design';
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
+import { boardLabel } from '../boards';
 import { materialKey } from '../project';
 import { t, type Key } from '../i18n';
 import type {
@@ -154,11 +155,24 @@ let offeredVersion = 0;
 export function setWizardBoards(
   choices: readonly { key: string; label: string; board: Material }[] | null,
   def?: Material,
+  piece?: Design | null,
 ): void {
   const same = (m: Material) => BUILT_IN.find((b) => materialKey(b.board) === materialKey(m));
   offered = choices?.length
     ? choices.map((c) => ({ value: same(c.board)?.value ?? c.key, label: c.label, board: c.board }))
     : null;
+  // A reopened piece also offers its own board (ADR-194), once: it takes the place of a decor entry of the same board,
+  // so the Board list does not show it twice and a stored decor answer never waits for the decor list.
+  const own = piece && pieceBoard(piece);
+  if (own) {
+    const value = same(own)?.value ?? materialKey(own);
+    const list = offered ?? BUILT_IN;
+    if (!list.some((b) => b.value === value))
+      offered = [
+        ...list.filter((b) => materialKey(b.board) !== materialKey(own)),
+        { value, label: boardLabel(own), board: own },
+      ];
+  }
   const d = def && (offered ?? BUILT_IN).find((b) => materialKey(b.board) === materialKey(def));
   offeredDefault = d?.value ?? 'pal18';
   offeredVersion++;
@@ -172,6 +186,33 @@ export function boardOptions(current?: string): Option[] {
   const list = offered ?? BUILT_IN;
   const extra = BUILT_IN.find((b) => b.value === current && !list.some((x) => x.value === current));
   return [...list, ...(extra ? [extra] : [])].map(({ value, label }) => ({ value, label }));
+}
+
+/** The board `putBoard` put on a piece: its carcass board, or its panels' board (ADR-194). */
+export function pieceBoard(d: Design): Material | undefined {
+  const p = d.product;
+  const id =
+    p.kind === 'cabinet' || p.kind === 'corner' || p.kind === 'desk'
+      ? p.params.bodyMaterialId
+      : p.kind === 'frame'
+        ? p.params.panelMaterialId
+        : p.kind === 'panel'
+          ? p.params.materialId
+          : undefined;
+  return d.materials.find((m) => m.id === id);
+}
+
+/**
+ * The offered value for a piece's own board (ADR-194; `setWizardBoards(…, piece)` offers it): a stored `decor:` answer
+ * is resolved to it by `materialKey`, so a reopened piece never depends on the decor list (loaded later, or the decor
+ * since removed).
+ */
+export function ownBoardValue(d: Design): string | undefined {
+  const m = pieceBoard(d);
+  if (!m) return undefined;
+  const value =
+    BUILT_IN.find((b) => materialKey(b.board) === materialKey(m))?.value ?? materialKey(m);
+  return [...(offered ?? []), ...BUILT_IN].some((b) => b.value === value) ? value : undefined;
 }
 
 const boardFor = (value: string) =>
@@ -240,7 +281,7 @@ export const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
 export const contentUses = (kind: string) =>
   CONTENT_KINDS.find((k) => k.value === kind)?.uses ?? [];
 
-function contentText(c: Compartment): string {
+export function contentText(c: Compartment): string {
   switch (c.kind) {
     case 'open':
       return t('open');
@@ -359,6 +400,7 @@ export const STEPS: StepDef[] = [
       {
         id: 'widths',
         label: 'Width of each compartment (0 = share the rest)',
+        reviewLabel: 'Compartment widths',
         kind: 'perCompartmentMm',
         unit: 'mm',
         default: [],
@@ -448,7 +490,11 @@ export const STEPS: StepDef[] = [
         id: 'frontsPer',
         label: 'Doors on compartment',
         kind: 'perCompartment',
-        default: [],
+        // By hand as by the cards (ADR-191): one door on every compartment without drawers.
+        fill: (a) =>
+          compartmentsOf(a).map((c) =>
+            contentUses(c.kind).includes('drawers') ? 'none' : 'single',
+          ),
         count: compartmentCount,
         options: [
           { value: 'none', label: 'None' },

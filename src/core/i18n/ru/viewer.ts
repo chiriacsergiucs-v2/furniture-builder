@@ -110,6 +110,10 @@ export const ru_viewer = {
     'Все дверцы одной ширины; внутреннее наполнение остаётся пустым, чтобы настроить позже.',
   'Wall cabinet height': 'Высота настенных шкафов',
   'Wall cabinet tops sit at the wall height.': 'Верх настенных шкафов — на высоте стены.',
+  // ADR-204: Refine fields of Fill a wall and Fill the room.
+  'Tall cabinet height': 'Высота пеналов',
+  'Wall cabinet depth': 'Глубина настенных шкафов',
+
   'Wall cabinets': 'Навесные шкафы',
   Any: 'Любые',
   Always: 'Всегда',
@@ -121,8 +125,8 @@ export const ru_viewer = {
   'Both ends': 'По краям',
   Centre: 'По центру',
   'Suggested mixes': 'Предложенные наборы',
-  '{width} mm wall · best {n}, checked by the model':
-    'Стена {width} мм · лучшие {n}, проверены моделью',
+  '{width} mm wall · best {n}, each checked for problems':
+    'Стена {width} мм · лучшие {n}, каждый проверен на проблемы',
   'Show suggestions': 'Показать варианты',
   'Suggest again': 'Предложить снова',
 
@@ -264,8 +268,16 @@ export const ru_viewer = {
   Room: 'Комната',
   Walls: 'Стены',
   'Fill the room steps': 'Шаги заполнения комнаты',
-  'A ready shape and its sizes, in mm (ADR-059). Doors and windows come from a project’s own room: open the project and use Fill the room from its ⋯ menu.':
-    'Готовая форма и её размеры в мм (ADR-059). Двери и окна берутся из комнаты проекта: откройте проект и выберите «Заполнить комнату» в его меню ⋯.',
+  'A ready shape and its sizes, in mm, with its doors, windows and other features.':
+    'Готовая форма и её размеры в мм, с дверями, окнами и другими элементами.',
+  // ADR-193: the room sizes checked on Next, the cabinet depths on the Walls step.
+  'Cut width {a} mm must be less than the width, {w} mm.':
+    'Ширина выреза {a} мм должна быть меньше ширины, {w} мм.',
+  'Cut depth {b} mm must be less than the depth, {d} mm.':
+    'Глубина выреза {b} мм должна быть меньше глубины, {d} мм.',
+  'Cut offset {o} mm plus cut width {a} mm must be less than the width, {w} mm.':
+    'Смещение выреза {o} мм плюс ширина выреза {a} мм должны быть меньше ширины, {w} мм.',
+  Cabinets: 'Шкафы',
   Shape: 'Форма',
   Rectangle: 'Прямоугольник',
   L: 'Г',
@@ -287,8 +299,8 @@ export const ru_viewer = {
   'Blind corner': 'Глухой угол',
   'L corner': 'Г-образный угол',
   'Suggested room mixes': 'Предложенные наборы для комнаты',
-  '{n|# wall|# walls} · best {k}, checked as a project':
-    '{n|# стена|# стены|# стен} · лучшие {k}, проверены как проект',
+  '{n|# wall|# walls} · best {k}, each checked for problems':
+    '{n|# стена|# стены|# стен} · лучшие {k}, каждый проверен на проблемы',
   'Room mix: {summary}': 'Набор для комнаты: {summary}',
   'Wall {n}: {w} mm': 'Стена {n}: {w} мм',
   '{summary} · {n|# corner cabinet|# corner cabinets}':
@@ -297,4 +309,26 @@ export const ru_viewer = {
   Next: 'Далее',
   'Fill the room…': 'Заполнить комнату…',
   'every wall of this room at once': 'все стены этой комнаты сразу',
+  'Type the walkway width to place an island.': 'Введите ширину прохода, чтобы поставить остров.',
+  'The walkway width must be a whole number of mm above 0.':
+    'Ширина прохода должна быть целым числом мм больше 0.',
+  'An island needs a rectangle room.': 'Для острова нужна прямоугольная комната.',
+  'The room is too small for an island with this walkway.':
+    'Комната слишком мала для острова с таким проходом.',
+  'Island: {summary}': 'Остров: {summary}',
+  'Estimate {total} {currency}': 'Оценка {total} {currency}',
+  '{n|# line|# lines} without a price': '{n|# строка|# строки|# строк} без цены',
+  'Budget ceiling': 'Предел бюджета',
+  'Mixes whose estimate is above it are hidden.': 'Наборы с оценкой выше него скрыты.',
+  Style: 'Стиль',
+  'The budget ceiling is not an amount; it is not applied.':
+    'Предел бюджета — не сумма; он не применён.',
+  'Add an island': 'Добавить остров',
+  'Walkway width': 'Ширина прохода',
+  'Your walkway around the island, in front of it and behind it.':
+    'Ваш проход вокруг острова — перед ним и за ним.',
+  '{n|# mix|# mixes} over the budget hidden':
+    '{n|# набор|# набора|# наборов} дороже бюджета скрыто',
+  'No mix fits the budget; the cheapest is {total}.':
+    'Ни один набор не укладывается в бюджет; самый дешёвый — {total}.',
 } satisfies Record<string, string>;

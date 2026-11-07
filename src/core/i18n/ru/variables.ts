@@ -2,11 +2,11 @@
 export const ru_variables = {
   // features
   'Project variables and formulas': 'Переменные и формулы проекта',
-  'Bind a size, a division or a position to a named value; change it once.':
-    'Привяжите размер, деление или положение к именованному значению; меняйте его один раз.',
+  'Bind a size, a division or a position to a named value; change it once. Formula fields keep the full keyboard.':
+    'Привяжите размер, деление или положение к именованному значению; меняйте его один раз. Поля формул открывают полную клавиатуру.',
   'Value sets': 'Наборы значений',
-  'Duplicate every bound piece with other values, with the room; save a set as a project.':
-    'Дублируйте каждое привязанное изделие с другими значениями, вместе с комнатой; сохраните набор как проект.',
+  'Duplicate every bound piece with other values, with the room; set 1’s run parts, run handles and sinks are copied onto each set and kept in step; save a set as a project.':
+    'Дублируйте каждое привязанное изделие с другими значениями, вместе с комнатой; детали ряда, ручки ряда и мойки набора 1 копируются в каждый набор и остаются согласованными; сохраните набор как проект.',
   // validation
   'Invalid variables': 'Недопустимые переменные',
   'Variables need project schemaVersion {v}': 'Переменным нужна версия схемы проекта {v}',
@@ -129,4 +129,23 @@ export const ru_variables = {
   '{n} mm is outside {min}–{max} mm.': '{n} мм вне диапазона {min}–{max} мм.',
   '{name}, {field}: {problem} The field keeps {n} mm.':
     '{name}, {field}: {problem} Поле сохраняет {n} мм.',
+  // formula functions (ADR-206)
+  '“{name}” is the name of a formula function; pick another name.':
+    '«{name}» — имя функции формулы; выберите другое имя.',
+  '“{fn}” takes exactly {n|# value|# values}.':
+    '«{fn}» принимает ровно {n|# значение|# значения|# значений}.',
+  '“{fn}” takes at least {n|# value|# values}.':
+    '«{fn}» принимает не меньше {n|# значения|# значений|# значений}.',
+  '“{fn}” takes at most {n|# value|# values}.':
+    '«{fn}» принимает не больше {n|# значения|# значений|# значений}.',
+  'Formula functions': 'Функции в формулах',
+  'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.':
+    'min, max, floor, ceil и round в переменных и привязках; значения в вызове разделяются запятой или точкой с запятой.',
+  '{problem} The field keeps {n} mm.': '{problem} Поле сохраняет {n} мм.',
+  'No variables yet. Add them under Variables in this piece’s settings.':
+    'Переменных пока нет. Добавьте их в разделе «Переменные» в настройках изделия.',
+  '{n|# size|# sizes}': '{n|# размер|# размера|# размеров}',
+  'used by {n|# size|# sizes}': 'используют {n|# размер|# размера|# размеров}',
+  'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.':
+    'Именованные числа или формулы этого изделия. Привяжите к ним ширину, высоту, глубину или высоту низа кнопкой ƒ рядом с полем; они переходят вместе с изделием в проекты и шаблоны.',
 } satisfies Record<string, string>;

@@ -219,6 +219,11 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Acknowledge** and **Make ADR** (pressed state, tap again to clear) and **Your note** for Open and ADR gaps.
   Copy decisions shows the text in **Decisions to paste to Claude** and copies it when the browser allows. At
   ≤ 520 px the field list stacks label over value.
+  ADR-187 adds three rating filter groups under the toolbar, **Work**, **Impact** and **Necessity**, each with the
+  five chips **Low, Low-medium, Medium, Medium-high, High (N)** (multi-select; none pressed shows all; counts follow
+  the status filter and search) and **Clear filters**. Each gap card shows **Issue:** and **Fix:** lines under its
+  title and small chips **Work: L**, **Impact: L**, **Necessity: L**; a conflict shows as a warning chip
+  **Conflicts: ADR-NNN: why**.
 - _Material sheet (ADR-163)._ A **Material** icon button sits in the header bar tools next to Settings on the
   editor page (a piece, a project, Build & Preview). It opens the **Material** dialog (phone: full-width sheet):
   **Apply to** as a radio row **Part · Item · Group · Whole project** (Group and Whole project only in a project;
@@ -233,10 +238,24 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Board**) lists the project's boards (or the piece's), then the decor list as "maker code name, thickness mm (your
   list)"; the built-in boards only when there is nothing else. The wizard's Board starts on the project's carcass
   board and its help says every part takes it.
+- _Wizard critique fixes (ADR-191)._ The footer's defaults button reads **Use defaults** (on Type: **Use <first type>**),
+  no tooltip. The untouched Type step shows **Choose a construction type.** as a hint. Review opens with **Answers**:
+  one row per step ("Label: value") with **Edit**. The side panel lists other steps' problems only; a size typo
+  reads **Fix the marked fields.** Types are radios. A backdrop click never closes the wizard; × and Esc ask
+  **Discard the answers?** when anything changed.
 - _Common top and bottom (ADR-165)._ With two or more pieces selected, the selected-pieces card shows a group
-  **Common top and bottom** with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
+  **Common top, bottom and sides** (ADR-190 renamed it from "Common top and bottom") with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
   that cannot be switched on is disabled with its reason below it ("Wardrobe is not the same height or floor
   level."). The Parts list shows **Common top** / **Common bottom** as one row of its own.
+- _Material: run parts and bands (ADR-188)._ In a project the Parts chips add **Run worktop, Fillers and covers, Run
+  plinth, Trims** when a reached item has them; the Part select lists the item's run parts ("Run: Worktop — board").
+  Under Board, **Edge band**: Keep the board's band · the project's bands · seller bands for the board · **Your own
+  band…** (Band type, Band thickness (mm), Band width, Band code).
+- _Common top across gaps, corners, desks (ADR-189)._ The same **Common top / Common bottom** toggles now take a
+  corner unit or a desk and pieces in line with a gap; a bridged gap gives the warning "The common top spans a 600 mm
+  gap with nothing under it."; a shaped common top shows "cut to template" in the Parts list.
+- _Shared sides (ADR-190)._ The same group has a third toggle **Shared sides** (info tip; disabled with its reason).
+  On, the Parts list counts one side less per joint; fronts meet over the middle of the shared side.
 
 ## 5. Rollout
 

@@ -27,6 +27,8 @@ export interface ProfileTemplate {
   h: Mm;
   /** Outline on paper, mm from the blank's top-left corner. */
   points: [Mm, Mm][];
+  /** Holes cut through it (ADR-205), on paper like the outline. */
+  holes: [Mm, Mm][][];
   cols: number;
   rows: number;
   tiles: TemplateTile[];
@@ -45,8 +47,10 @@ export function profileTemplates(panels: Panel[]): ProfileTemplate[] {
     const w = size(ua),
       h = size(va);
     // Paper runs down the page: depth (z) from the back reads downwards as seen from above; height (y) is flipped.
-    const points = p.shape.points.map(([u, v]) => [u, va === 'y' ? h - v : v] as [Mm, Mm]);
-    const key = `${p.materialId}|${w}|${h}|${JSON.stringify(points)}`;
+    const paper = (pts: [Mm, Mm][]) => pts.map(([u, v]) => [u, va === 'y' ? h - v : v] as [Mm, Mm]);
+    const points = paper(p.shape.points);
+    const holes = (p.shape.holes ?? []).map(paper);
+    const key = `${p.materialId}|${w}|${h}|${JSON.stringify(points)}|${JSON.stringify(holes)}`;
     const hit = out.get(key);
     if (hit) {
       hit.quantity++;
@@ -66,6 +70,7 @@ export function profileTemplates(panels: Panel[]): ProfileTemplate[] {
       w,
       h,
       points,
+      holes,
       cols,
       rows,
       tiles,

@@ -1,5 +1,13 @@
 import { t as tx } from './i18n';
-import { buildCabinet, hingeBand, hingeCount, type PartialModel } from './cabinet';
+import {
+  attachHandle,
+  buildCabinet,
+  cornerHingeNote,
+  handleHardware,
+  hingeCount,
+  noFrontRoomMessage,
+  type PartialModel,
+} from './cabinet';
 import { box, equalParts } from './geometry';
 import type {
   Box,
@@ -38,7 +46,10 @@ function carcass(
     bodyMaterialId: p.bodyMaterialId,
     frontMaterialId: p.frontMaterialId,
     backMaterialId: p.backMaterialId,
-    top: p.top,
+    // In a common top or bottom (ADR-189) the carcass is built with its top over (bottom under) the sides.
+    top: p.join?.top ? 'over' : p.top,
+    ...(p.join?.top ? { topKind: 'panel' as const } : {}),
+    ...(p.join?.bottom ? { bottom: 'under' as const } : {}),
     ...(p.topLayers === 2 ? { topLayers: 2 as const } : {}),
     back: p.back,
     backInset: p.backInset,
@@ -212,12 +223,16 @@ function buildDiagonal(
       [],
     );
   }
+  // In a common top or bottom (ADR-189) the returns stop under the top (stand on the bottom), which covers them.
+  const tt0 = p.topLayers === 2 ? 2 * t : t;
+  const retY = p.join?.bottom ? ph + t : ph;
+  const retH = (p.join?.top ? H - tt0 : H) - retY;
   add(
     'side-r',
     'side',
     'Side return right',
     body.id,
-    box(W - t, ph, bt, t, H - ph, D - bt),
+    box(W - t, retY, bt, t, retH, D - bt),
     'x',
     'y',
     ['+z'],
@@ -227,7 +242,7 @@ function buildDiagonal(
     'side',
     'Side return left',
     body.id,
-    box(bt, ph, W - t, D - bt, H - ph, t),
+    box(bt, retY, W - t, D - bt, retH, t),
     'z',
     'y',
     ['+x'],
@@ -241,22 +256,50 @@ function buildDiagonal(
     [D - bt, Wb],
     [0, Wb],
   ];
-  const board = (key: string, role: Panel['role'], label: string, y: number) =>
-    add(key, role, label, body.id, box(bt, y, bt, Wb, t, Wb), 'y', 'x', ['+x', '+z'], {
-      kind: 'profile',
-      points: pent,
-    });
-  board('bottom', 'bottom', 'Bottom', ph);
-  board('top', 'top', 'Top', H - t);
+  // Over (under) the returns: the same five sides, out to the returns' outer faces.
+  const Wo = W - bt;
+  const pentOver: [number, number][] = [
+    [0, 0],
+    [Wo, 0],
+    [Wo, D - bt],
+    [D - bt, Wo],
+    [0, Wo],
+  ];
+  const board = (key: string, role: Panel['role'], label: string, y: number, over = false) =>
+    add(
+      key,
+      role,
+      label,
+      body.id,
+      over ? box(bt, y, bt, Wo, t, Wo) : box(bt, y, bt, Wb, t, Wb),
+      'y',
+      'x',
+      ['+x', '+z'],
+      { kind: 'profile', points: over ? pentOver : pent },
+    );
+  board('bottom', 'bottom', 'Bottom', ph, !!p.join?.bottom);
+  board('top', 'top', 'Top', H - t, !!p.join?.top);
   // A doubled top (ADR-105): a second board under the first; the outer height stays.
-  const tt = p.topLayers === 2 ? 2 * t : t;
-  if (tt > t) board('top/1', 'top', 'Top', H - tt);
+  const tt = tt0;
+  if (tt > t) board('top/1', 'top', 'Top', H - tt, !!p.join?.top);
   const room = H - ph - t - tt - s.count * t;
   if (s.count < 0 || room < (s.count + 1) * 20)
     return err(
       'shelves-crowded',
       tx('{n} shelves do not fit in {h} mm.', { n: s.count, h: H - ph - t - tt }),
     );
+  // Five-sided shelves have no straight pair of sides for pin rows (ADR-196): an error that blocks export, and no
+  // shelf supports scheduled — as for any adjustable space with no panel on one side.
+  const adjustable = !!s.adjustable && s.count > 0;
+  if (adjustable)
+    out.diagnostics.push({
+      severity: 'error',
+      code: 'diagonal-adjustable',
+      message: tx(
+        'A diagonal corner has no straight sides for shelf pins; make the shelves fixed.',
+      ),
+      nodeId: s.id,
+    });
   let y = ph + t;
   for (const [i, gap] of equalParts(room, s.count + 1)
     .slice(0, -1)
@@ -296,6 +339,8 @@ function buildDiagonal(
       n = doors.count,
       dh = H - ph - 2 * r;
     const leaf = Math.floor((span - 2 * r - (n - 1) * g) / n);
+    // A gap that leaves the doors no size (ADR-196) names the gap and the diagonal opening.
+    if (leaf <= 0 || dh <= 0) return err('front-gap', noFrontRoomMessage(g, span, H - ph));
     if (leaf < 100 || dh < 100)
       return err('door-small', tx('Door {w}×{h} mm is too small.', { w: leaf, h: dh }));
     for (let i = 0; i < n; i++) {
@@ -311,16 +356,30 @@ function buildDiagonal(
         ['-x', '+x', '-y', '+y'],
         { kind: 'tilt', axis: 'y', angleDeg: 45, pivot: [0, 0, 0] },
       );
+      // The handle on the opening edge, by the cabinet's rule (ADR-196): the meeting edges of a pair, else the
+      // edge away from the hinge. Mirroring for a right-hand corner flips it with the door.
+      attachHandle(
+        local.panels[local.panels.length - 1],
+        s.handle,
+        'door',
+        leaf,
+        dh,
+        n === 2 ? (i === 0 ? 'right' : 'left') : doors.hinge === 'right' ? 'left' : 'right',
+        local.diagnostics,
+        s.id,
+      );
     }
     local.hardware.push({
       nodeId: s.id,
       kind: 'hinge',
       label: 'Concealed hinge for a 45° diagonal corner door',
       quantity: n * hingeCount(dh),
-      note: `${hingeCount(dh)} per door (typical for ${hingeBand(dh)}); choose the hinge maker's 45° corner hinge or angled plate`,
+      note: cornerHingeNote(dh),
     });
   } else if (doors) return err('diagonal-front', tx('A diagonal corner takes one door or a pair.'));
-  if (s.count)
+  const handles = doors ? handleHardware(s.id, s.handle, doors.count) : null;
+  if (handles) local.hardware.push(handles);
+  if (s.count && !adjustable)
     local.hardware.push({
       nodeId: s.id,
       kind: 'shelf-pin',
@@ -444,27 +503,49 @@ function buildCornerUnit(
       materials,
       { idPrefix: `${id}/blind:`, productNodeId: id, mapNodeId: () => id },
     );
-    const main = buildCabinet(carcass(p, usable, p.interior), materials, {
-      idPrefix: `${id}/main:`,
-      productNodeId: id,
-      origin: { x: p.blindWidth, y: 0, z: 0 },
-    });
+    // Sharing a side at its straight end (ADR-207, as ADR-190): drawn on the right here. A left corner leaves its
+    // right side out (the neighbour's serves); a right corner keeps it and its front stops over its middle.
+    const leaves = p.side === 'left' && !!p.shared?.right;
+    const keeps = p.side === 'right' && !!p.shared?.left;
+    const main = buildCabinet(
+      { ...carcass(p, usable, p.interior), ...(leaves ? { shared: { right: true } } : {}) },
+      materials,
+      {
+        idPrefix: `${id}/main:`,
+        productNodeId: id,
+        origin: { x: p.blindWidth, y: 0, z: 0 },
+        ...(keeps ? { frontTrim: { right: lo(t) + Math.ceil(g / 2) - lo(g) } } : {}),
+      },
+    );
     const local: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
     merge(local, blind);
     merge(local, main);
+    // The pin rows the neighbour's side needs for this corner's shelves (only unmirrored: a left corner).
+    if (leaves && main.sharedPins) out.sharedPins = main.sharedPins;
     // Fixed blind panel in front of the blind section, one gap from the usable section's door.
     const ph = plinthOf(p);
-    local.panels.push({
-      id: `${id}/blind-panel`,
-      nodeId: id,
-      role: 'blind-panel',
-      label: 'Blind panel',
-      materialId: front.id,
-      box: box(r, ph + r, D, p.blindWidth - r - (g - r), p.height - ph - 2 * r, tf),
-      thicknessAxis: 'z',
-      grainAxis: 'y',
-      banded: ['-x', '+x', '-y', '+y'],
-    });
+    const bw = p.blindWidth - r - (g - r),
+      bh = p.height - ph - 2 * r;
+    // A gap that leaves it no size (ADR-196): one error naming the gap and the blind section, and no panel.
+    if (bw <= 0 || bh <= 0)
+      local.diagnostics.push({
+        severity: 'error',
+        code: 'front-gap',
+        message: noFrontRoomMessage(g, p.blindWidth, p.height - ph),
+        nodeId: id,
+      });
+    else
+      local.panels.push({
+        id: `${id}/blind-panel`,
+        nodeId: id,
+        role: 'blind-panel',
+        label: 'Blind panel',
+        materialId: front.id,
+        box: box(r, ph + r, D, bw, bh, tf),
+        thicknessAxis: 'z',
+        grainAxis: 'y',
+        banded: ['-x', '+x', '-y', '+y'],
+      });
     merge(out, p.side === 'left' ? local : mirror(local, p.width));
     return out;
   }
@@ -488,6 +569,9 @@ function buildCornerUnit(
     idPrefix: `${id}/b:`,
     productNodeId: id,
     omitSide: 'right',
+    noPinSide: tx(
+      'The side-wall wing has no side at the corner, so its shelves cannot rest on pins; make them fixed.',
+    ),
   });
   // Wing B's plinth runs on past the corner edge until it butts against the front face of wing A's plinth (no notch).
   if (plinthOf(p) > 0)

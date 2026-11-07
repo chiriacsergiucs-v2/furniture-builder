@@ -1,5 +1,8 @@
 /** Russian text for inspector (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_inspector = {
+  'Enter a positive whole number of millimetres.': 'Введите положительное целое число миллиметров.',
+  'Enter a finite share greater than 0 and less than 1000.':
+    'Введите конечную долю больше 0 и меньше 1000.',
   Empty: 'Пусто',
   Shelves: 'Полки',
   Drawers: 'Ящики',
@@ -159,6 +162,10 @@ export const ru_inspector = {
     'Сверьтесь с паспортом направляющих; для боковых обычно 12,5–13 мм.',
   'Height clearance': 'Зазор по высоте',
   'Space behind runner': 'Место за направляющей',
+  'About the inner front': 'О внутренней передней стенке',
+  'Box has an inner front': 'У короба есть внутренняя передняя стенка',
+  'Off: the drawer front closes the box, as on many flat-pack drawers.':
+    'Выкл.: фасад ящика закрывает короб, как у многих мебельных ящиков из плит.',
   'Drawer bottom': 'Дно ящика',
   'Runner lengths you can buy': 'Доступные длины направляющих',
   'About runner lengths': 'О длинах направляющих',
@@ -256,4 +263,6 @@ export const ru_inspector = {
   'Doors on each bay': 'Дверцы на каждой секции',
   One: 'Одна',
   Pair: 'Пара',
+  'Set by Handles for this run': 'Задано в «Ручки для этого ряда»',
+  'Up one level': 'На уровень выше',
 } satisfies Record<string, string>;

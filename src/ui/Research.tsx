@@ -47,6 +47,7 @@ import { t, tr } from '../core/i18n';
 import { askConfirm } from './Confirm';
 import { tNode } from './i18n';
 import { Icon } from './icons';
+import { rovingKeys, rovingTab } from './controls';
 
 /** Features (with the assessment dashboard above the list) and Competitors (ADR-110). */
 export type Tab = 'features' | 'competitors';
@@ -89,8 +90,11 @@ export function ResearchPage({
   onDone,
   initialTab = 'features',
   initialDetail = null,
+  designOpen = true,
 }: {
   onDone: () => void;
+  /** Back to the editor only with a design open, as the Catalog (ADR-120, ADR-211). */
+  designOpen?: boolean;
   initialTab?: Tab;
   initialDetail?: string | null;
 }) {
@@ -138,10 +142,12 @@ export function ResearchPage({
             )}
           </p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-left" className="sm" />
-          {t('Back to the editor')}
-        </button>
+        {designOpen && (
+          <button type="button" className="btn outline" onClick={onDone}>
+            <Icon name="chevron-left" className="sm" />
+            {t('Back to the editor')}
+          </button>
+        )}
       </header>
       {error && (
         <p className="alert warning" role="status">
@@ -153,13 +159,19 @@ export function ResearchPage({
         className="segmented small research-tabs"
         role="tablist"
         aria-label={t('Research sections')}
+        onKeyDown={rovingKeys}
       >
-        {TABS.map(([tb, label]) => (
+        {TABS.map(([tb, label], i) => (
           <button
             key={tb}
             type="button"
             role="tab"
             aria-selected={tab === tb}
+            tabIndex={rovingTab(
+              tab === tb,
+              i,
+              TABS.some(([x]) => x === tab),
+            )}
             className={tab === tb ? 'on' : ''}
             onClick={() => go(tb)}
           >
@@ -374,11 +386,13 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
         className="segmented small"
         role="radiogroup"
         aria-label={t('Features in the assessment')}
+        onKeyDown={rovingKeys}
       >
         <button
           type="button"
           role="radio"
           aria-checked={scope === 'left'}
+          tabIndex={rovingTab(scope === 'left', 0, true)}
           className={scope === 'left' ? 'on' : ''}
           onClick={() => setScope('left')}
         >
@@ -388,6 +402,7 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
           type="button"
           role="radio"
           aria-checked={scope === 'all'}
+          tabIndex={rovingTab(scope === 'all', 1, true)}
           className={scope === 'all' ? 'on' : ''}
           onClick={() => setScope('all')}
         >

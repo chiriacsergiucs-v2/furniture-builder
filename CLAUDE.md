@@ -143,7 +143,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - **R2 No avoidance:** never drop or relabel a requirement ("reference", "waits", "gap", "deferred") to skip
   building it; ask instead.
 - **R3 Find-it test:** UI acceptance starts from the bare app and finds features by role and visible text at
-  phone and desktop widths. Default find-it mode: **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
+  phone and desktop widths. Default find-it mode (toggle `find-it-jsdom-default`; while it is off the default is the
+  browser script): **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
   `tests/find-it/setup.tsx` helper (390 and 1280 px), run by `pnpm test` and CI. An ADR that changes layout or CSS,
   or touches the 3D view or Move mode, sets `- Acceptance: browser`: `tools/<area>/find-it.mjs` against the
   production build in Chromium (the rule before ADR-108). To revert every ADR to the browser script, change the
@@ -153,9 +154,23 @@ changed and push only on the user's explicit approval. Model, document, storage 
   tests (jsdom, or the browser script for layout/CSS or 3D work, on the production build of `main` or the live URL).
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
+## Toggleable rules
+
+A rule listed here applies only while its state is **on**. The user turns a rule off or back on by name (e.g. "turn
+on snapshot-before-tests"); the change updates this table with the date and the user's words. A rule that is off is
+skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
+on restores it unchanged.
+
+| Toggle                  | Rule                                                                                  | State | Changed                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+
 ## Process (standing user rules)
 
-- Snapshot before tests (user rule 2026-10-27): for a UI change, before running any tests or checks, show the user a
+- Snapshot before tests (user rule 2026-10-27; toggle `snapshot-before-tests`, see _Toggleable rules_ — applies only
+  while that toggle is **on**): for a UI change, before running any tests or checks, show the user a
   screenshot of the fix attempt (dev or production build, phone and desktop width where relevant) and wait. Proceed
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
   screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
@@ -168,6 +183,9 @@ changed and push only on the user's explicit approval. Model, document, storage 
   only if someone opened the published URL and checked it.
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
+- Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
+  sets `checked` (the date) on the feature lines it verifies (`src/core/features.ts`); Done gaps live in
+  `docs/adr/GAPS-archive.md` and are never re-checked.
 - Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
   change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add`
   with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
@@ -186,7 +204,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
   in the same run (new and next together, above) shares one branch and one pull request with its implementation.
-- Open the pull request automatically (user rule 2026-10-29): as soon as an implementation is done (its checks pass
+- Open the pull request automatically (user rule 2026-10-29; toggle `auto-open-pr` — while it is off, ask before
+  opening): as soon as an implementation is done (its checks pass
   and it is pushed to its branch), open the pull request without asking, using the repo's template if one exists.
   Not for `ff` (no pull request) or an ADR-only change that is not approved for building. Merging still waits for the
   user's instruction.
@@ -194,6 +213,7 @@ changed and push only on the user's explicit approval. Model, document, storage 
   `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
   on its branch (`ship-adr`) and merged once green, without asking again. Ship pull requests are always merged
   straight after the ship commit is pushed, without waiting for CI on it (user rule 2026-10-29); run
-  `pnpm docs:check` and `pnpm format:check` locally first. CI skips `verify` on a pull request whose latest commit
+  `pnpm docs:check`, `pnpm format:check` and `pnpm exec vitest run tests/sync-pending.test.ts` locally first (the last
+  added by the user on 2026-11-06, after a ship broke it on main: "Add sync-pending test"). CI skips `verify` on a pull request whose latest commit
   starts with `Ship ADR-` (`ship-check` job in `ci.yml`); pushes to `main` always run it.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

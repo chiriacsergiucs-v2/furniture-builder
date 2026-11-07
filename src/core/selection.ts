@@ -255,6 +255,29 @@ export function itemsInBox(
 }
 
 /**
+ * The pieces whose front-view extent (x along the back wall, y up from the floor) touches the rectangle drawn in the
+ * room's front view (room mm, any corner order), in the project's order (ADR-211, G-308). Pass the placed boxes when
+ * they are at hand (the front view has them), so nothing is built again.
+ */
+export function itemsInFrontBox(
+  project: Project,
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  placed: Footprints = footprints(project),
+): string[] {
+  const x0 = Math.min(a.x, b.x),
+    x1 = Math.max(a.x, b.x),
+    y0 = Math.min(a.y, b.y),
+    y1 = Math.max(a.y, b.y);
+  return project.items
+    .filter((it) => {
+      const f = placed.get(it.id);
+      return !!f && f.x <= x1 && f.x + f.w >= x0 && f.y <= y1 && f.y + f.h >= y0;
+    })
+    .map((it) => it.id);
+}
+
+/**
  * The pieces under a plan point (room mm), in drawing order (the project's order), for cycling taps. Strictly inside:
  * a point on the edge two neighbours share is under neither.
  */

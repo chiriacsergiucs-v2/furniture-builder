@@ -1,3 +1,4 @@
+import { rolesOf } from './roles';
 import { t as tx, tr } from './i18n';
 import { buildCabinet, slidingTrackDepth } from './cabinet';
 import { buildCorner } from './corner';
@@ -7,6 +8,7 @@ import { buildFrame } from './frame';
 import { buildPanel } from './panel';
 import { bandFor, bandText } from './materials';
 import { runRules } from './rules';
+import { designVariableDiagnostics } from './variables';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';
 import type { Design, Diagnostic, EdgeBand, FurnitureModel, Material, Panel } from './types';
@@ -47,7 +49,30 @@ export function buildModel(design: Design): FurnitureModel {
           : null;
     return id ? { ...p, materialId: id } : p;
   });
+  // An edge band chosen for one part or its role (ADR-188): the part's own, then its role's, then its board's.
+  const ownBand = design.partBands ?? {};
+  const roleBand = design.roleBands ?? {};
+  if (Object.keys(ownBand).length || Object.keys(roleBand).length)
+    for (let i = 0; i < panels.length; i++) {
+      const p = panels[i];
+      const band =
+        ownBand[p.id] ??
+        rolesOf(p.role)
+          .map((r) => roleBand[r])
+          .find(Boolean);
+      if (band) panels[i] = { ...p, band };
+    }
   const built = new Set(panels.map((p) => p.id));
+  const lostBands = Object.keys(ownBand).filter((id) => !built.has(id));
+  if (lostBands.length)
+    diagnostics.push({
+      severity: 'warning',
+      code: 'part-band-lost',
+      message: tx(
+        '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.',
+        { n: lostBands.length },
+      ),
+    });
   const lost = Object.keys(own).filter((id) => !built.has(id));
   if (lost.length)
     diagnostics.push({
@@ -147,12 +172,15 @@ export function buildModel(design: Design): FurnitureModel {
     const { width: W, height: H, depth: D } = prod.params;
     const env = box(0, 0, 0, W, H, D);
     const front = materials.get(prod.params.frontMaterialId);
-    // Sliding doors run on a track in front of the carcass (ADR-037).
+    // Sliding doors run on a track in front of the carcass (ADR-037). Fronts over a shared side reach over half of
+    // the neighbour's side (ADR-190).
+    const body = materials.get(prod.params.bodyMaterialId);
+    const over = prod.params.shared?.right ? Math.floor((body?.thickness ?? 0) / 2) : 0;
     const frontEnv = box(
       0,
       0,
       0,
-      W,
+      W + over,
       H,
       D + Math.max(front?.thickness ?? 0, slidingTrackDepth(prod.params.interior)),
     );
@@ -180,7 +208,7 @@ export function buildModel(design: Design): FurnitureModel {
   for (const p of panels) {
     if (!p.banded.length) continue;
     const m = materials.get(p.materialId);
-    const band = m && bandFor(m, p.role);
+    const band = m && (p.band ?? bandFor(m, p.role));
     if (!m || !band) continue;
     const t = cutDimensions(p, m.grain).thickness;
     if (band.width >= t) continue;
@@ -232,9 +260,12 @@ export function buildModel(design: Design): FurnitureModel {
     hardware: partial.hardware,
     diagnostics,
     bounds: union(panels.map(aabbOf)),
+    ...(partial.sharedPins ? { sharedPins: partial.sharedPins } : {}),
   };
   // Construction guidance (ADR-035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials);
+  // The piece's own variables and bindings (ADR-210): a problem is an error and blocks export (ADR-008).
+  model.diagnostics.push(...designVariableDiagnostics(design));
   model.diagnostics.push(...ruled.diagnostics);
   model.hardware.push(...ruled.hardware);
   return model;

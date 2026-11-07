@@ -72,7 +72,7 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog');
     await user.click(within(settings).getByRole('button', { name: 'Save as project template' }));
-    const name = await screen.findByRole('dialog', { name: 'Confirm' });
+    const name = await screen.findByRole('dialog', { name: 'Save as project template' });
     await user.click(within(name).getByRole('button', { name: 'Save template' }));
     await within(settings).findByText(/Saved as project template/);
     await user.click(within(settings).getByRole('button', { name: 'Close' }));

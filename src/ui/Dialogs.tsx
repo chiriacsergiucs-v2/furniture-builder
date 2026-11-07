@@ -1,17 +1,29 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
 import { t } from '../core/i18n';
 import {
+  BAND_COLUMNS,
   DECOR_COLUMNS,
   decorPatch,
   KINDS,
   MAKERS,
+  parseBandList,
   parseDecorList,
+  type Band,
   type Decor,
 } from '../core/materials';
 import { newProject } from '../core/project';
-import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/db';
+import { roomPresets } from '../core/catalog/roomPresets';
+import { projectFromTemplate, type ProjectTemplate } from '../core/projectTemplate';
+import {
+  clearDecors,
+  listBands,
+  listDecors,
+  replaceBands,
+  replaceDecors,
+  saveProject,
+} from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -21,6 +33,7 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, useImageUrls } from '../persist/images';
 import { FINISHES, MAX_TILE } from '../core/surface';
+import { usePieceLockHint } from './pieceLockHint';
 
 const FINISH_LABEL: Record<BoardFinish, string> = {
   matte: t('Matte'),
@@ -46,6 +59,7 @@ export function Dialog({
   footer,
   wide,
   info,
+  backdropClose = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -55,9 +69,21 @@ export function Dialog({
   wide?: boolean;
   /** An `InfoTip` beside the title (ADR-113); Esc while it is open closes only the tip. */
   info?: ReactNode;
+  /** `false`: a click on the backdrop does not close the dialog (the wizard, ADR-191). */
+  backdropClose?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const backdropPointer = useRef<number | null>(null);
+  const backdropClick = useRef(false);
+  const onBackdrop = (e: { target: EventTarget; clientX: number; clientY: number }) => {
+    const d = ref.current;
+    if (!d || e.target !== d) return false;
+    const b = d.getBoundingClientRect();
+    return e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom;
+  };
   useEffect(() => {
+    backdropPointer.current = null;
+    backdropClick.current = false;
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) d.showModal();
@@ -71,8 +97,27 @@ export function Dialog({
       onClose={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      // Esc asks the owner to close (`open` → false), so a close guard (ADR-191) sees it like the × button.
+      onCancel={(e) => {
+        e.preventDefault();
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onPointerDownCapture={(e) => {
+        backdropClick.current = false;
+        backdropPointer.current = onBackdrop(e) ? e.pointerId : null;
+      }}
+      onPointerUpCapture={(e) => {
+        backdropClick.current = backdropPointer.current === e.pointerId && onBackdrop(e);
+        backdropPointer.current = null;
+      }}
+      onPointerCancelCapture={() => {
+        backdropPointer.current = null;
+        backdropClick.current = false;
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        const dismiss = backdropClick.current && onBackdrop(e);
+        backdropClick.current = false;
+        if (backdropClose && dismiss) onClose();
       }}
       aria-label={title}
     >
@@ -120,9 +165,38 @@ export function NewDialog({
 }) {
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // A failed save is said only while the dialog stays open: each opening starts without it.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSaveError(null);
+  }
+  // Set from the tap that saves a new project until the dialog closes or the save fails.
+  const saving = useRef(false);
+  useEffect(() => {
+    if (open) saving.current = false;
+  }, [open]);
   const opened = () => {
     onClose();
     onOpened?.();
+  };
+  // ADR-193: the new project is saved before it opens; a storage failure is said here and nothing opens. Another
+  // tap while it saves, or before the dialog has closed, does nothing, so one tap makes one project.
+  const newProjectOpened = async () => {
+    if (saving.current) return;
+    saving.current = true;
+    const p = newProject();
+    try {
+      await saveProject(p);
+    } catch {
+      saving.current = false;
+      setSaveError(t('The project could not be saved in this browser’s storage.'));
+      return;
+    }
+    setSaveError(null);
+    openProject(p);
+    opened();
   };
   return (
     <Dialog
@@ -151,16 +225,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
-      <button
-        type="button"
-        className="row-btn"
-        onClick={() => {
-          const p = newProject();
-          void saveProject(p);
-          openProject(p);
-          opened();
-        }}
-      >
+      <button type="button" className="row-btn" onClick={() => void newProjectOpened()}>
         <span className="glyph">
           <Icon name="project" />
         </span>
@@ -174,10 +239,16 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
+      {saveError && (
+        <p className="alert error" role="alert">
+          <Icon name="alert-circle" className="sm" />
+          <span>{saveError}</span>
+        </p>
+      )}
       {onFillWall && (
         <button type="button" className="row-btn" onClick={onFillWall}>
           <span className="glyph">
-            <Icon name="project" />
+            <Icon name="wall" />
           </span>
           <span>
             <strong>{t('Fill a wall')}</strong>
@@ -193,7 +264,7 @@ export function NewDialog({
       {onFillRoom && (
         <button type="button" className="row-btn" onClick={onFillRoom}>
           <span className="glyph">
-            <Icon name="project" />
+            <Icon name="room-plan" />
           </span>
           <span>
             <strong>{t('Fill the room')}</strong>
@@ -206,6 +277,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
+      <RoomPresets onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
@@ -220,11 +292,82 @@ export function NewDialog({
 }
 
 /**
+ * New… → Room preset (ADR-210): the shipped room presets; one becomes a project with its room, saved on this device and
+ * opened (ADR-060). Presets are built when the row opens.
+ */
+function RoomPresets({ onOpened }: { onOpened: () => void }) {
+  const openProject = useDesign((s) => s.openProject);
+  const [shown, setShown] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const presets = useMemo(() => (shown ? roomPresets() : []), [shown]);
+  const use = async (template: ProjectTemplate) => {
+    try {
+      const p = projectFromTemplate(template);
+      await saveProject(p);
+      openProject(p);
+      onOpened();
+    } catch {
+      setError(t('The project could not be created on this device.'));
+    }
+  };
+  return (
+    <>
+      <button
+        type="button"
+        className="row-btn"
+        aria-expanded={shown}
+        onClick={() => setShown((v) => !v)}
+      >
+        <span className="glyph">
+          <Icon name="project" />
+        </span>
+        <span>
+          <strong>{t('Room preset')}</strong>
+          <span className="sub">
+            {t(
+              'A ready room with its pieces against the walls: a bedroom, a home office, a kitchen and desk.',
+            )}
+          </span>
+        </span>
+        <Icon name={shown ? 'chevron-down' : 'chevron-right'} className="chev sm" />
+      </button>
+      {shown && (
+        <ul className="home-list" aria-label={t('Room presets')}>
+          {presets.map((pr) => (
+            <li key={pr.id}>
+              <button type="button" className="row-btn" onClick={() => void use(pr.template)}>
+                <span className="glyph">
+                  <Icon name="project" />
+                </span>
+                <span>
+                  <strong>{pr.name}</strong>
+                  <span className="sub">
+                    {t('{n|# piece|# pieces}', { n: pr.template.items.length })}
+                    {t(', with the room')}
+                  </span>
+                </span>
+                <Icon name="chevron-right" className="chev sm" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && (
+        <p className="alert error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
+  );
+}
+
+/**
  * Every board in this piece, the saw cut and the user's decor list (ADR-049), shown inline under Configure
  * (ADR-079; it was the Materials dialog).
  */
 export function MaterialsPanel() {
   const materials = useDesign((s) => s.design.materials);
+  const boardsLock = usePieceLockHint('boards');
   const kerf = useDesign((s) => kerfOf(s.design));
   const setKerf = useDesign((s) => s.setKerf);
   const update = useDesign((s) => s.updateMaterial);
@@ -239,6 +382,42 @@ export function MaterialsPanel() {
       .then(setDecors)
       .catch(() => setDecors([]));
   }, []);
+  // The user's band list (ADR-212, G-038): offered in each board's band editor once imported.
+  const [bands, setBands] = useState<Band[]>([]);
+  const [bandMsg, setBandMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => {
+    listBands()
+      .then(setBands)
+      .catch(() => setBands([]));
+  }, []);
+  const importBands = async (f: File) => {
+    let text: string;
+    try {
+      text = await f.text();
+    } catch {
+      setBandMsg({ ok: false, text: t('{file} could not be read.', { file: f.name }) });
+      return;
+    }
+    const r = parseBandList(text, f.name);
+    if (!r.bands.length) {
+      setBandMsg({
+        ok: false,
+        text: t('No bands imported. {problems}', { problems: r.problems.slice(0, 4).join(' ') }),
+      });
+      return;
+    }
+    try {
+      await replaceBands(r.bands);
+    } catch {
+      setBandMsg({ ok: false, text: t('The band list could not be saved on this device.') });
+      return;
+    }
+    setBands(r.bands);
+    setBandMsg({
+      ok: r.problems.length === 0,
+      text: `${t('{n|# band|# bands} imported from {file}.', { n: r.bands.length, file: f.name })}${r.problems.length ? ` ${t('{n|# row|# rows} skipped: {problems}', { n: r.problems.length, problems: r.problems.slice(0, 4).join(' ') })}` : ''}`,
+    });
+  };
   const importDecors = async (f: File) => {
     let text: string;
     try {
@@ -292,6 +471,7 @@ export function MaterialsPanel() {
       title={t('Boards, sheets and saw cut')}
       id="g-boards"
       defaultOpen={false}
+      locked={boardsLock}
       info={
         <InfoTip label={t('About boards and sheets')}>
           {t(
@@ -375,6 +555,47 @@ export function MaterialsPanel() {
           >
             <Icon name={decorMsg.ok ? 'info' : 'alert-circle'} className="sm" />
             <span>{decorMsg.text}</span>
+          </p>
+        )}
+      </div>
+      <div className="decor-list">
+        <p className="hint">
+          {bands.length
+            ? t('Band list: {list}, {n|# band|# bands}.', {
+                list: bands[0].list,
+                n: bands.length,
+              })
+            : t('Band list: none.')}{' '}
+          <InfoTip label={t('About the band list')} align="start">
+            {t(
+              'Import your own CSV with the columns {columns} (thickness in mm with one decimal, width whole mm, #rrggbb; decor optional) to pick bands in each board’s edge band.',
+              { columns: BAND_COLUMNS },
+            )}
+          </InfoTip>
+        </p>
+        <div className="mat-picture-row">
+          <label className="btn sm outline file-btn">
+            <Icon name="upload" className="sm" />
+            {t('Import band list (CSV)')}
+            <input
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              aria-label={t('Import band list (CSV)')}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importBands(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+        {bandMsg && (
+          <p
+            className={`alert ${bandMsg.ok ? 'info' : 'error'}`}
+            role={bandMsg.ok ? 'status' : 'alert'}
+          >
+            <Icon name={bandMsg.ok ? 'info' : 'alert-circle'} className="sm" />
+            <span>{bandMsg.text}</span>
           </p>
         )}
       </div>
@@ -479,7 +700,7 @@ export function MaterialsPanel() {
                 }
               />
             </div>
-            <BoardBand key={`${m.id}-band`} m={m} />
+            <BoardBand key={`${m.id}-band`} m={m} bands={bands} />
             <MaterialPicture m={m} />
             <div className="mat-actions">
               <button

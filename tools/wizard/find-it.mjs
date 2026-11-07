@@ -93,9 +93,7 @@ for (const width of [1440, 375]) {
       `${t.label}: the wizard opens on the Type step`,
       (await wizard.locator('.steps [aria-current="step"] .lbl').innerText()) === 'Type',
     );
-    await wizard
-      .getByRole('button', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) })
-      .click();
+    await wizard.getByRole('radio', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) }).click();
     await wizard.getByRole('button', { name: 'Next' }).click();
     const name = `Find-it ${t.label.split(' ')[0]} ${width}`;
     await wizard.getByLabel('Name').fill(name);
@@ -169,13 +167,13 @@ for (const width of [1440, 375]) {
       await wizard.getByLabel(/^Height/).blur();
       await rail('Type').click();
       await page.waitForTimeout(150);
-      // "Use this" fills the wizard.
+      // "Use this: <label>" (ADR-194) fills the wizard.
       const pick = wizard
         .locator('.wz-card')
         .filter({ hasText: n === 0 ? /drawer/ : /slatted top/ })
         .first();
       const picked = await pick.locator('.wz-card-label').innerText();
-      await pick.getByRole('button', { name: 'Use this' }).click();
+      await pick.getByRole('button', { name: /^Use this: / }).click();
       const at = await wizard.locator('.steps [aria-current="step"] .lbl').innerText();
       check(
         width,
@@ -212,7 +210,7 @@ for (const width of [1440, 375]) {
         );
       }
     } else {
-      await wizard.getByRole('button', { name: 'Start blank' }).click();
+      await wizard.getByRole('button', { name: 'Continue by hand' }).click();
     }
 
     // Walk to Review with Next.

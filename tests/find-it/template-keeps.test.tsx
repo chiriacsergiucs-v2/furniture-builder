@@ -54,7 +54,7 @@ describe.each(WIDTHS)('templates keep variables at %ipx (find-it, ADR-170)', (wi
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const again = await screen.findByRole('dialog', { name: /^Settings: / });
     await user.click(within(again).getByRole('button', { name: 'Save as project template' }));
-    const name = await screen.findByRole('dialog', { name: 'Confirm' });
+    const name = await screen.findByRole('dialog', { name: 'Save as project template' });
     await user.click(within(name).getByRole('button', { name: 'Save template' }));
     await within(again).findByText(/Saved as project template/);
     await user.click(within(again).getByRole('button', { name: 'Done' }));
@@ -80,7 +80,7 @@ describe.each(WIDTHS)('templates keep variables at %ipx (find-it, ADR-170)', (wi
     await user.click(await screen.findByRole('button', { name: /Information and guides/ }));
     expect(
       await screen.findByText(
-        /connections, variables and bindings; pieces inserted into a project take its settings/,
+        /connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings/,
       ),
     ).toBeTruthy();
   });

@@ -15,12 +15,15 @@ import { data_wizard } from './data-wizard';
 import { ru_editors } from './editors';
 import { ru_info } from './info';
 import { ru_inspector } from './inspector';
+import { ru_kitchen } from './kitchen';
 import { ru_material } from './material';
 import { ru_project } from './project';
+import { ru_prints } from './prints';
 import { ru_research } from './research';
 import { ru_sellers } from './sellers';
 import { ru_variables } from './variables';
 import { ru_shell } from './shell';
+import { ru_surfaces } from './surfaces';
 import { ru_viewer } from './viewer';
 import { ru_wizard } from './wizard';
 
@@ -41,6 +44,9 @@ export const ru = {
   ...ru_sellers,
   ...ru_variables,
   ...ru_material,
+  ...ru_prints,
+  ...ru_surfaces,
+  ...ru_kitchen,
 };
 
 export const ruData: Record<string, string> = {

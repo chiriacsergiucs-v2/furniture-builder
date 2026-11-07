@@ -10,16 +10,20 @@ import {
   type ProjectItem,
 } from '../src/core/project';
 import {
+  cornerPlans,
   cornerWalls,
   freeStretches,
   insideCorner,
+  checkRoom,
   suggestRoomMixes,
+  tallAtRight,
+  trimStretches,
   turnFor,
   wallRowParts,
   type RoomInput,
 } from '../src/core/roomfill';
 import { shapeOutline, wallBox, wallLength, type Room, type RoomFeature } from '../src/core/room';
-import { MIXES_FIRST, WALL_HEIGHT } from '../src/core/wallfill';
+import { BASE_HEIGHT, MIXES_FIRST, WALL_HEIGHT } from '../src/core/wallfill';
 
 const rect = (features: RoomFeature[] = []): Room => ({
   height: 2500,
@@ -437,5 +441,261 @@ describe('wall rows beside a window (ADR-177)', () => {
         wi,
       ),
     ).toEqual([]);
+  });
+});
+
+// ADR-193: the tall cabinet tried at both ends of each stretch on auto; the room's sizes checked.
+describe('ADR-193: tall side and room sizes', () => {
+  const sizes = { width: 3600, depth: 3000, cutWidth: 1500, cutDepth: 1500, offset: 0 };
+  // The wizard's default room (Fill the room's start values).
+  const typed: Room = {
+    height: 2500,
+    outline: shapeOutline('rectangle', sizes),
+    features: [],
+    shape: { kind: 'rectangle', sizes },
+  };
+  const wizard = (over: Partial<RoomInput> = {}): RoomInput => ({
+    room: typed,
+    walls: [0, 1, 2, 3],
+    depth: 560,
+    minWidth: 400,
+    maxWidth: 1200,
+    baseHeight: BASE_HEIGHT,
+    wallRow: 'always',
+    wallHeight: WALL_HEIGHT,
+    corner: 'blind',
+    atLeast: {},
+    ...over,
+  });
+  it('the default room (3600 × 3000, 4 walls): the first card has at most 4 warnings', () => {
+    const r = suggestRoomMixes(wizard());
+    expect(r.problems).toEqual([]);
+    expect(r.mixes.length).toBe(MIXES_FIRST);
+    expect(r.mixes[0].warnings.length).toBeLessThanOrEqual(4);
+    // The clear side is the right end here: the tall cabinet no longer stands against the corner's door.
+    expect(r.mixes[0].key).toMatch(/\|right/);
+    expect(r.mixes[0].warnings.map((w) => w.message).join('\n')).not.toMatch(
+      /cannot open fully: it hits Tall cabinet/,
+    );
+  });
+  it('tallPosition left is still obeyed: no tall moved to the right end', () => {
+    const r = suggestRoomMixes(wizard({ tallPosition: 'left' }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) expect(m.key).not.toMatch(/\|right/);
+  });
+  // The fastest of 5 warm runs is its own cost; a busy test machine slows single runs (retried, never loosened).
+  it('the 4-wall default stays under 100 ms', { retry: 2 }, () => {
+    suggestRoomMixes(wizard());
+    const runs = [0, 1, 2, 3, 4].map(() => {
+      const t0 = performance.now();
+      suggestRoomMixes(wizard());
+      return performance.now() - t0;
+    });
+    expect(Math.min(...runs)).toBeLessThan(100);
+  });
+  it('tallAtRight: the one tall cabinet moves to the right end, a new signature; none without a single tall', () => {
+    const c = {
+      slots: [
+        { kind: 'tall' as const, width: 600 },
+        { kind: 'drawers' as const, width: 500 },
+        { kind: 'door' as const, width: 400 },
+      ],
+      score: [0],
+      signature: 's',
+    };
+    expect(tallAtRight(c)).toEqual({
+      ...c,
+      slots: [c.slots[1], c.slots[2], c.slots[0]],
+      signature: 's|right',
+    });
+    expect(tallAtRight({ ...c, slots: [c.slots[1], c.slots[0]] })).toBeNull();
+    expect(tallAtRight({ ...c, slots: [c.slots[0], c.slots[1], c.slots[0]] })).toBeNull();
+    expect(tallAtRight({ ...c, slots: [c.slots[1]] })).toBeNull();
+  });
+  it('a wrong room size is named by checkRoom, never a "NaN mm" wall or a mix', () => {
+    for (const width of [Number('abc'), 0, -100]) {
+      const s = { ...sizes, width };
+      const room: Room = {
+        ...typed,
+        outline: shapeOutline('rectangle', s),
+        shape: { kind: 'rectangle', sizes: s },
+      };
+      const r = suggestRoomMixes(wizard({ room }));
+      expect(r.mixes).toEqual([]);
+      expect(r.problems.map((p) => p.message)).toEqual([
+        'Width must be a whole number of mm above 0.',
+      ]);
+      expect(checkRoom(wizard({ room }))[0]).toMatchObject({ code: 'room-size', field: 'width' });
+    }
+    // A room height of 0 is named once, as the room's height.
+    const low = suggestRoomMixes(wizard({ room: { ...typed, height: 0 } }));
+    expect(low.problems.map((p) => p.message)).toEqual([
+      'Room height must be a whole number of mm above 0.',
+    ]);
+  });
+});
+
+// ADR-204: the wall cabinet depth and the tall cabinet height from Refine apply to the whole room.
+describe('Refine in Fill the room (ADR-204)', () => {
+  const depth = (it: ProjectItem) => (it.design.product.params as { depth: number }).depth;
+  it('wallDepth 350: every wall cabinet and every wall corner cabinet is 350 deep', () => {
+    for (const corner of ['blind', 'l-shape'] as const) {
+      const r = suggestRoomMixes(input(lRoom(), { corner, wallDepth: 350 }));
+      expect(r.mixes.length).toBeGreaterThan(0);
+      for (const m of r.mixes) {
+        expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+        const wc = wallCorners(m.project.items);
+        expect(wc.length).toBeGreaterThan(0);
+        expect(wc).toHaveLength(m.corners);
+        const row = wallRow(m.project.items).filter((i) => !i.design.name.startsWith('Top box'));
+        expect(row.length).toBeGreaterThan(0);
+        for (const it of [...wc, ...row]) expect(depth(it)).toBe(350);
+      }
+    }
+  });
+  it('tallHeight 2000: every tall cabinet stands 2000 high, no above-height warning in a 2100 room', () => {
+    const r = suggestRoomMixes(
+      input({ ...rect(), height: 2100 }, { tallHeight: 2000, tallCount: 1, wallRow: 'never' }),
+    );
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) {
+      const talls = m.model.pieces.filter((p) => p.item.design.name.startsWith('Tall'));
+      expect(talls.length).toBeGreaterThan(0);
+      for (const p of talls) expect(p.bounds.y + p.bounds.h).toBe(2000);
+      expect(m.warnings.map((w) => w.code)).not.toContain('wall-too-tall');
+    }
+  });
+  it('a wrong wall depth or tall height is named, no mixes', () => {
+    const r = suggestRoomMixes(input(rect(), { wallDepth: Number('abc') }));
+    expect(r.mixes).toEqual([]);
+    expect(r.problems.map((p) => p.message)).toContain(
+      'Wall cabinet depth must be a whole number of mm above 0.',
+    );
+    const t = suggestRoomMixes(input(rect(), { tallHeight: 0 }));
+    expect(t.mixes).toEqual([]);
+    expect(t.problems.map((p) => p.message)).toContain(
+      'Tall cabinet height must be a whole number of mm above 0.',
+    );
+  });
+});
+
+// ADR-216: the default L and U rooms (Fill the room's start sizes) give mixes: a wall too short for a corner cabinet
+// at both ends keeps one of them, corner cabinets stand only at inside corners, runs stay off taken floor.
+describe('ADR-216: one corner per short wall', () => {
+  const sizes = (offset: number) => ({
+    width: 3600,
+    depth: 3000,
+    cutWidth: 1500,
+    cutDepth: 1500,
+    offset,
+  });
+  const shaped = (kind: 'l-shape' | 'u-shape', offset: number): Room => ({
+    height: 2500,
+    outline: shapeOutline(kind, sizes(offset)),
+    features: [],
+    shape: { kind, sizes: sizes(offset) },
+  });
+  const wizard = (room: Room, over: Partial<RoomInput> = {}): RoomInput => ({
+    room,
+    walls: room.outline.map((_, i) => i),
+    depth: 560,
+    minWidth: 400,
+    maxWidth: 1200,
+    baseHeight: BASE_HEIGHT,
+    wallRow: 'always',
+    wallHeight: WALL_HEIGHT,
+    corner: 'blind',
+    atLeast: {},
+    ...over,
+  });
+  /** The blind corner cabinet's own footprint, as Fill the room measures it. */
+  const blindTake = () => {
+    const r = suggestRoomMixes(input(rect(), { walls: [0, 1], tallCount: 0 }));
+    const c = r.mixes[0].project.items.find(
+      (i) => i.design.product.kind === 'corner' && i.placement?.kind !== 'wall',
+    )!;
+    const b = placedBounds({ ...c, rotationY: 0 });
+    return { along: b.w, across: b.d };
+  };
+  const floorCorners = (items: ProjectItem[]) =>
+    items.filter((i) => i.design.product.kind === 'corner' && i.placement?.kind !== 'wall');
+
+  for (const [kind, offset, walls] of [
+    ['l-shape', 0, 6],
+    ['u-shape', 600, 8],
+  ] as const)
+    it(`the default ${kind} room gives ${MIXES_FIRST} mixes with no error, for every corner kind`, () => {
+      const room = shaped(kind, offset);
+      expect(room.outline).toHaveLength(walls);
+      for (const corner of ['blind', 'l-shape', 'diagonal', 'none'] as const) {
+        const r = suggestRoomMixes(wizard(room, { corner }));
+        expect(r.mixes, `${kind} ${corner}`).toHaveLength(MIXES_FIRST);
+        expect(r.problems.filter((p) => p.severity === 'error')).toEqual([]);
+        for (const m of r.mixes) {
+          expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+          expect(validateProject(m.project)).toEqual([]);
+          // Every corner cabinet stands at an inside corner: one of its plan corners is that room corner.
+          for (const it of floorCorners(m.project.items)) {
+            const b = placedBounds(it);
+            const pts = [
+              [b.x, b.z],
+              [b.x + b.w, b.z],
+              [b.x, b.z + b.d],
+              [b.x + b.w, b.z + b.d],
+            ];
+            const at = room.outline.findIndex((p) =>
+              pts.some(([x, z]) => x === p[0] && z === p[1]),
+            );
+            expect(at, `${kind} ${corner}`).toBeGreaterThanOrEqual(0);
+            expect(insideCorner(room, (at - 1 + walls) % walls)).toBe(true);
+          }
+          expect(floorCorners(m.project.items)).toHaveLength(m.corners);
+          // A wall left empty is not listed on the card.
+          expect(m.walls.every((w) => w.widths !== '')).toBe(true);
+        }
+        // Ranked by the fewest warnings across every corner plan.
+        const counts = r.mixes.map((m) => m.warnings.length);
+        expect(counts).toEqual([...counts].sort((a, b) => a - b));
+      }
+    });
+  it('cornerPlans: a 1500 wall keeps the corner at one end or the other; a corner longer than its wall never stands; a rectangle keeps all four', () => {
+    const take = blindTake();
+    const l = shaped('l-shape', 0);
+    const lc = cornerWalls(wizard(l), wizard(l).walls!);
+    expect(lc).toEqual([0, 1, 3, 4, 5]);
+    // Wall 2 (1500 mm) is shorter than both footprints on it: one corner at each end, never both.
+    expect(take.along + take.across).toBeGreaterThan(wallLength(l, 1));
+    expect(cornerPlans(l, lc, take)).toEqual([
+      [0, 3, 4, 5],
+      [1, 3, 4, 5],
+    ]);
+    const u = shaped('u-shape', 600);
+    const uc = cornerWalls(wizard(u), wizard(u).walls!);
+    expect(uc).toEqual([0, 1, 2, 5, 6, 7]);
+    const plans = cornerPlans(u, uc, take);
+    // Wall 7 (600 mm) is shorter than the cabinet: no corner at its end; wall 3 keeps one of its two.
+    expect(wallLength(u, 6)).toBeLessThan(take.along);
+    expect(plans.every((p) => !p.includes(6))).toBe(true);
+    expect(plans.every((p) => !(p.includes(1) && p.includes(2)))).toBe(true);
+    expect(plans.some((p) => p.includes(1)) && plans.some((p) => p.includes(2))).toBe(true);
+    expect(cornerPlans(rect(), [0, 1, 2, 3], take)).toEqual([[0, 1, 2, 3]]);
+  });
+  it('trimStretches: a run meeting taken floor is cut at its edge; parts below the minimum go; nothing taken keeps it', () => {
+    const r = rect();
+    const s = { wall: 0, from: 0, to: 3600, noWallRow: [[1000, 2000]] as [number, number][] };
+    expect(trimStretches(r, [s], [], 600, 400)).toEqual([s]);
+    // A box over 3000..3600 on wall 0's floor: the run stops at 3000.
+    const cut = trimStretches(r, [s], [{ x: 3000, y: 0, z: 0, w: 600, h: 1, d: 600 }], 600, 400);
+    expect(cut.map((c) => [c.from, c.to])).toEqual([[0, 3000]]);
+    // A box in the middle splits it; the window range follows each part.
+    const mid = trimStretches(r, [s], [{ x: 1500, y: 0, z: 0, w: 200, h: 1, d: 100 }], 600, 400);
+    expect(mid.map((c) => [c.from, c.to, c.noWallRow])).toEqual([
+      [0, 1500, [[1000, 1500]]],
+      [1700, 3600, [[0, 300]]],
+    ]);
+    // A part shorter than the minimum is dropped.
+    expect(trimStretches(r, [s], [{ x: 300, y: 0, z: 0, w: 3300, h: 1, d: 10 }], 600, 400)).toEqual(
+      [],
+    );
   });
 });

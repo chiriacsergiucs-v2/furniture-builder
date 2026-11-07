@@ -13,6 +13,8 @@ interface Ask {
   /** The other answer's label when it is a choice, not a cancel ("Keep" / "Remove", ADR-167). */
   cancelLabel?: string;
   danger: boolean;
+  /** The safe answer is the default: it takes the focus, so Enter keeps (ADR-203, G-469). */
+  cancelFirst?: boolean;
   input?: string;
   resolve: (v: string | boolean | null) => void;
 }
@@ -20,7 +22,12 @@ const useAsk = create<{ ask: Ask | null }>(() => ({ ask: null }));
 
 export const askConfirm = (
   message: string,
-  opts: { confirmLabel?: string; cancelLabel?: string; danger?: boolean } = {},
+  opts: {
+    confirmLabel?: string;
+    cancelLabel?: string;
+    danger?: boolean;
+    cancelFirst?: boolean;
+  } = {},
 ): Promise<boolean> =>
   new Promise((resolve) =>
     useAsk.setState({
@@ -29,6 +36,7 @@ export const askConfirm = (
         confirmLabel: opts.confirmLabel ?? t('OK'),
         cancelLabel: opts.cancelLabel,
         danger: !!opts.danger,
+        cancelFirst: !!opts.cancelFirst,
         resolve: (v) => resolve(v === true),
       },
     }),
@@ -56,6 +64,8 @@ export function ConfirmHost() {
   const ref = useRef<HTMLDialogElement>(null);
   const [text, setText] = useState('');
   const opener = useRef<Element | null>(null);
+  const cancelBtn = useRef<HTMLButtonElement>(null);
+  const okBtn = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -63,6 +73,8 @@ export function ConfirmHost() {
       opener.current = document.activeElement;
       setText(ask.input ?? '');
       d.showModal();
+      // The default answer takes the focus, so Enter gives it: Keep when the safe answer is the default (G-469).
+      if (ask.input === undefined) (ask.cancelFirst ? cancelBtn : okBtn).current?.focus();
     }
     if (!ask && d.open) d.close();
   }, [ask]);
@@ -108,6 +120,7 @@ export function ConfirmHost() {
             <button
               type="button"
               className="btn outline"
+              ref={cancelBtn}
               onClick={() => done(ask.input !== undefined ? null : false)}
             >
               {ask.cancelLabel ?? t('Cancel')}
@@ -115,7 +128,7 @@ export function ConfirmHost() {
             <button
               type="submit"
               className={`btn ${ask.danger ? 'danger solid' : 'primary'}`}
-              autoFocus={ask.input === undefined}
+              ref={okBtn}
             >
               {ask.confirmLabel}
             </button>

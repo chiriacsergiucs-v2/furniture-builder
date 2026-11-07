@@ -1,7 +1,8 @@
 # ADR-029: The catalog is fed by a scheduled search-and-extract job with a local PDF extraction script, gated by PR
 
-- Status: Deferred (won't do: no access to IKEA data — user decision 2026-10-24)
+- Status: Rejected (won't do: no access to IKEA data — user decisions 2026-10-24 and 2026-11-07, ADR-217)
 - Date: 2026-10-22
+- Rejected: 2026-11-07
 - Decided by: user request; defaults below await confirmation
 - Depends on: none
 - Design: n/a

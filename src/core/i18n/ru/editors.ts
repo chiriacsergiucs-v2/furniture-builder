@@ -268,6 +268,9 @@ export const ru_editors = {
   'Ungroup {name}': 'Разгруппировать «{name}»',
   'Edge band for {name}': 'Кромка для «{name}»',
   'Edge band': 'Кромка',
+  'From your band list': 'Из вашего списка кромок',
+  'Matching bands': 'Подходящие кромки',
+  'Other bands in your list': 'Другие кромки из списка',
   "Not named: the shopping list puts this board's banding under To choose before buying.":
     'Не указана: список покупок помещает кромку этой плиты в «Выбрать перед покупкой».',
   'Fronts banded differently': 'Другая кромка на фасадах',
@@ -505,9 +508,8 @@ export const ru_editors = {
   'drawer halves': 'ящичные половинки',
   'mounting plates': 'монтажные планки',
   'cups and arms, on the doors': 'чашки и плечи, на дверцах',
-  'Materials › Fasteners': 'Материалы › Крепёж',
-  '{count} — choose your fastener (Materials › Fasteners)':
-    '{count} — выберите крепёж (Материалы › Крепёж)',
+  'Settings › Fasteners': 'Настройки › Крепёж',
+  '{count} — choose your fastener ({path})': '{count} — выберите крепёж ({path})',
   '{n|# long edge|# long edges}': '{n|# длинная сторона|# длинные стороны|# длинных сторон}',
   '{n|# short edge|# short edges}': '{n|# короткая сторона|# короткие стороны|# коротких сторон}',
   'band {what}': 'кромка: {what}',

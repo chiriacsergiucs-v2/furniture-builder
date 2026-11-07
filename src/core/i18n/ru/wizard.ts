@@ -57,4 +57,9 @@ export const ru_wizard = {
   'These answers cannot be built ({reason}).':
     'По этим ответам нельзя построить изделие ({reason}).',
   'unknown problem': 'неизвестная проблема',
+  // Wizard draft for the session (ADR-211)
+  'Close the wizard? Your answers stay as a draft until you close the app.':
+    'Закрыть мастер? Ваши ответы сохранятся как черновик, пока вы не закроете приложение.',
+  'Continue where you left off': 'Продолжить с того же места',
+  'Start over': 'Начать заново',
 } satisfies Record<string, string>;

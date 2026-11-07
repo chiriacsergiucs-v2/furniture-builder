@@ -2,9 +2,10 @@ import { useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Raycaster, Vector2 } from 'three';
 import { axisPoint } from '../core/drag3d';
-import { dragHeight } from '../core/height';
+import { dragHeight, snapWallHeight } from '../core/height';
 import { useDesign } from '../store/designStore';
 import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
+import { snapIsOn } from '../ui/useSnap';
 import { S } from './pieceDrag';
 
 /** A wall unit whose height is being dragged in 3D (ADR-122): the height it would hang at on release. */
@@ -12,6 +13,8 @@ export interface HeightPreview {
   id: string;
   /** Its underside above the floor, mm (may be below 0 while dragging: release then refuses and says why). */
   height: number;
+  /** The line it snapped to (ADR-205): "Snapped to the worktop line, 900 mm"; null when placed freely. */
+  hint?: string | null;
 }
 
 // Outside React state, as the move ghost: a pointer move re-renders only the ghost and its label.
@@ -80,7 +83,14 @@ export function useHeightDrag() {
         if (!dragging) return;
         const now = along(ev.clientX, ev.clientY, at);
         if (now !== null) by = now - from;
-        setPreview({ id, height: dragHeight(start, by) });
+        const free = dragHeight(start, by);
+        // Snap on and Alt not held: the underside or top snaps to the worktop and wall-unit lines (ADR-205).
+        const st = useDesign.getState();
+        const snapped =
+          snapIsOn() && !ev.altKey && st.project && st.projectModel
+            ? snapWallHeight(st.project, st.projectModel.pieces, id, free)
+            : { height: free, hint: null };
+        setPreview({ id, height: snapped.height, hint: snapped.hint });
       };
       const onUp = (ev: PointerEvent) => {
         if (ev.pointerId !== pointerId) return;

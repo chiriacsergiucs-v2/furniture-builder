@@ -11,7 +11,7 @@ HOW TO USE THIS TEMPLATE
 - Copy to docs/adr/ADR-NNN-short-kebab-title.md (3-digit number, next free one).
 - Header lines are machine-read by the next-adr and ship-adr skills. Keep them exactly in
   the "- Key: value" form, one per line, right under the title.
-- Allowed status values: Pending, Deferred (<reason>), Implemented. Never set Implemented
+- Allowed status values: Pending, Deferred (<reason>), Implemented, Rejected (<reason>, ADR-217). Never set Implemented
   by hand — the ship-adr skill does it (and moves the file to docs/adr-done/).
 - The dependency line takes "none" or a comma-separated list, e.g. "ADR-001, ADR-004".
 - The design line takes a path or link to the design reference (e.g. docs/ui-design.md),

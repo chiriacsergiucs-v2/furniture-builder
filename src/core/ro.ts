@@ -184,17 +184,53 @@ export function partRo(label: string): string {
 /** Drilling summary in the print language (pin rows and handle holes). */
 export function drillingRo(text: string): string {
   if (!text) return '';
-  return text
-    .replace(
-      /(\d+) rows × (\d+) holes ø(\d+), (\d+) mm from edges/g,
-      pt('$1 rânduri × $2 găuri ø$3, la $4 mm de margini'),
-    )
-    .replace(/\(both faces, offset 16 mm\)/g, pt('(ambele fețe, decalat 16 mm)'))
-    .replace(/, one face/g, pt(', o față'))
-    .replace(/handle holes ø(\d+) at/g, pt('găuri mâner ø$1 la'))
-    .replace(/handle hole ø(\d+) at/g, pt('gaură mâner ø$1 la'))
-    .replace(/mm from left\/bottom/g, pt('mm de la stânga/jos'))
-    .replace(/cut to template \((\d+) points\)/g, pt('tăiere după șablon ($1 puncte)'));
+  return (
+    text
+      // Cut-outs, sink and hob cut-outs and worktop joints (ADR-205), before the shorter patterns below.
+      .replace(/cut-out (\d+) × (\d+) mm at (\d+)\/(\d+) mm from left\/bottom/g, (_, w, h, u, v) =>
+        pt('decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos', { w, h, u, v }),
+      )
+      // Placed cut-outs, moulding profiles, worktop edges and fixing positions (ADR-209).
+      .replace(
+        /(sink|hob) cut-out (\d+) × (\d+) mm at (\d+) mm from left and (\d+) mm from front/g,
+        (_, what, w, d, x, z) =>
+          pt('decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față', {
+            what: what === 'sink' ? pt('chiuvetă') : pt('plită'),
+            w,
+            d,
+            x,
+            z,
+          }),
+      )
+      .replace(/profile (\d+) × (\d+) mm, drawn by you/g, (_, w, h) =>
+        pt('profil {w} × {h} mm, desenat de tine', { w, h }),
+      )
+      .replace(/rounded edge R(\d+) mm/g, (_, s) => pt('cant rotunjit R{s} mm', { s }))
+      .replace(/bevelled edge (\d+) mm/g, (_, s) => pt('cant teșit {s} mm', { s }))
+      .replace(/fixing holes at ([\d, /]+) mm, guidance from your values/g, (_, list) =>
+        pt('găuri de fixare la {list} mm, orientativ, din valorile tale', { list }),
+      )
+      .replace(/sink cut-out (\d+) × (\d+) mm/g, (_, w, d) =>
+        pt('decupaj chiuvetă {w} × {d} mm', { w, d }),
+      )
+      .replace(/hob cut-out (\d+) × (\d+) mm/g, (_, w, d) =>
+        pt('decupaj plită {w} × {d} mm', { w, d }),
+      )
+      .replace(/mitre joint/g, pt('îmbinare la 45°'))
+      .replace(/butt joint against ([^;]+)/g, (_, other) =>
+        pt('îmbinare cap la cap cu {other}', { other }),
+      )
+      .replace(
+        /(\d+) rows × (\d+) holes ø(\d+), (\d+) mm from edges/g,
+        pt('$1 rânduri × $2 găuri ø$3, la $4 mm de margini'),
+      )
+      .replace(/\(both faces, offset 16 mm\)/g, pt('(ambele fețe, decalat 16 mm)'))
+      .replace(/, one face/g, pt(', o față'))
+      .replace(/handle holes ø(\d+) at/g, pt('găuri mâner ø$1 la'))
+      .replace(/handle hole ø(\d+) at/g, pt('gaură mâner ø$1 la'))
+      .replace(/mm from left\/bottom/g, pt('mm de la stânga/jos'))
+      .replace(/cut to template \((\d+) points\)/g, pt('tăiere după șablon ($1 puncte)'))
+  );
 }
 
 export function hardwareRo(h: Pick<HardwareItem, 'kind' | 'label' | 'note'>): {
@@ -344,9 +380,16 @@ export const csvHeaders = (): string[] => CSV_HEADERS_RO.map((h) => pt(h));
 /**
  * Parts CSV for panel shops: semicolon-separated (Romanian Excel's list separator), UTF-8 with BOM so
  * diacritics and Cyrillic open correctly, formula-leading cells escaped. Sizes are finished sizes (ADR-009).
- * Words in the print language (ADR-157).
+ * Words in the print language (ADR-157). `pieceNames` maps a stored piece name to its printed name
+ * (`printPieceNames`, ADR-212): the `Piece:` prefix of each label is swapped for it.
  */
-export function cutlistCsvRo(rows: CutRow[]): string {
+export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, string>): string {
+  const label = (l: string) => {
+    if (pieceNames)
+      for (const [stored, printed] of pieceNames)
+        if (l.startsWith(`${stored}: `)) return `${printed}: ${partRo(l.slice(stored.length + 2))}`;
+    return partRo(l);
+  };
   const esc = (v: string | number) => {
     const s = String(v);
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
@@ -355,7 +398,7 @@ export function cutlistCsvRo(rows: CutRow[]): string {
   const lines = [
     csvHeaders(),
     ...rows.map((r) => [
-      [...new Set(r.labels.map(partRo))].join(' / '),
+      [...new Set(r.labels.map(label))].join(' / '),
       r.materialName,
       r.thickness,
       r.length,

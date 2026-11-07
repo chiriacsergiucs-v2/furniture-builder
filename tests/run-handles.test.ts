@@ -149,12 +149,14 @@ describe('run sinks (ADR-125)', () => {
     const p0 = run([t('base-door'), t('base-door')]);
     return { ...p0, runParts: suggestRunParts(p0) };
   };
-  it('a sink over the chosen base is a note on the worktop row and a shopping line with the user size', () => {
+  it('a sink over the chosen base is a note in the worktop row’s notes column and a shopping line with the user size', () => {
     const p0 = withTop();
     const p = { ...p0, sinks: [{ id: 's1', baseId: p0.items[1].id, w: 500, d: 400 }] };
     const rows = projectCutlist(p);
     const top = rows.find((r) => r.labels.some((l) => l.startsWith('Run: Worktop')))!;
-    expect(top.labels.join()).toContain('sink cut-out 500 × 400 mm');
+    // ADR-205: the note moved from the row label into the notes column (printed in the print language).
+    expect(top.labels).toEqual(['Run: Worktop']);
+    expect(top.drilling).toContain('sink cut-out 500 × 400 mm');
     const lines = shoppingList({
       rows,
       materials: [],

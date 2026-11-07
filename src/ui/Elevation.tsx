@@ -8,6 +8,7 @@ import { useDesign } from '../store/designStore';
 import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
+import { WallBehind } from './WallBehind';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -54,12 +55,14 @@ export function Elevation() {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const patId = (materialId: string, turned: boolean) =>
     `${uid}-pic-${materialId.replace(/[^a-zA-Z0-9_-]/g, '')}-${turned ? 1 : 0}`;
-  const fillOf = (p: Panel) => {
+  /** The board's picture pattern, or undefined while it has none on this device. */
+  const pictureOf = (p: Panel) => {
     const m = mats.get(p.materialId);
     const url = m?.image ? urls.get(m.image.id) : undefined;
-    if (!m?.image || !url || url === 'missing') return m?.color;
+    if (!m?.image || !url || url === 'missing') return undefined;
     return `url(#${patId(m.id, faceMapping(p, m.image, 'x', 'y').u[0] === 0)})`;
   };
+  const fillOf = (p: Panel) => pictureOf(p) ?? mats.get(p.materialId)?.color;
 
   const b = model.bounds;
   const pad = Math.max(b.w, b.h) * 0.09;
@@ -140,7 +143,7 @@ export function Elevation() {
           {design.materials.flatMap((m) => {
             const url = m.image ? urls.get(m.image.id) : undefined;
             if (!m.image || !url || url === 'missing') return [];
-            const { tileLength: L, tileWidth: W } = m.image;
+            const { tileLength: L, tileWidth: W, id: imageId } = m.image;
             return [false, true].map((turned) => (
               <pattern
                 key={`${m.id}-${turned}`}
@@ -149,12 +152,15 @@ export function Elevation() {
                 width={L}
                 height={W}
                 patternTransform={turned ? 'rotate(90)' : undefined}
+                data-image={imageId}
               >
                 <image href={url} width={L} height={W} preserveAspectRatio="none" />
               </pattern>
             ));
           })}
         </defs>
+        {/* A piece opened from a project with a room shows the wall behind it (ADR-208). */}
+        <WallBehind b={b} />
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
         {backs.map((p) => (
           <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
@@ -190,10 +196,20 @@ export function Elevation() {
             data-plain={mats.get(p.materialId)?.color}
           />
         ))}
+        {/* Fronts fill with their board's picture as carcass panels do, dashed outline kept (ADR-206). */}
         {showFronts &&
-          fronts.map((p) => (
-            <polygon key={p.id} className={`el-front${fade(p.box)}`} points={outlinePoints(p)} />
-          ))}
+          fronts.map((p) => {
+            const pic = pictureOf(p);
+            return (
+              <polygon
+                key={p.id}
+                className={`el-front${fade(p.box)}`}
+                points={outlinePoints(p)}
+                style={pic ? { fill: pic } : undefined}
+                data-plain={pic ? mats.get(p.materialId)?.color : undefined}
+              />
+            );
+          })}
         {showFronts &&
           fronts
             .filter((p) => p.handleHoles)

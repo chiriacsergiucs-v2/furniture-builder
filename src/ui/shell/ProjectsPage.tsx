@@ -4,7 +4,9 @@ import { newProject } from '../../core/project';
 import {
   deleteDesign,
   deleteProject,
+  deleteProjectVersions,
   listDesigns,
+  listProjectVersions,
   listProjects,
   saveDesign,
   saveProject,
@@ -144,8 +146,23 @@ export function ProjectsPage({
       ))
     )
       return;
-    if (kind === 'project') await deleteProject(r.id);
-    else await deleteDesign(r.id);
+    if (kind === 'project') {
+      // Its kept versions (ADR-123) are asked about apart; Keep (also Esc) deletes none (ADR-203, G-190, ADR-012).
+      const versions = await listProjectVersions(r.id).catch(() => []);
+      const dropVersions =
+        versions.length > 0 &&
+        (await askConfirm(
+          t('Also delete its {n|# kept version|# kept versions}?', { n: versions.length }),
+          {
+            confirmLabel: t('Delete versions'),
+            cancelLabel: t('Keep them'),
+            danger: true,
+            cancelFirst: true,
+          },
+        ));
+      await deleteProject(r.id);
+      if (dropVersions) await deleteProjectVersions(versions.map((v) => v.id));
+    } else await deleteDesign(r.id);
     refresh();
   };
   const when = (iso: string) => new Date(iso).toLocaleDateString();

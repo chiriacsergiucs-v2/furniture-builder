@@ -1,4 +1,4 @@
-import { isSizeLocked, lockedAxes, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import { axesText, isSizeLocked, lockedAxes } from '../core/sizeLock';
 import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -20,12 +20,15 @@ import {
   unsplit,
   usesPedestal,
 } from '../core/design';
+import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
-import { materialKey } from '../core/project';
+import { materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../persist/db';
-import type { Selection } from '../core/selectPath';
+import { parentOf as parentSel, type Selection } from '../core/selectPath';
+import { useMediaQuery } from './useMediaQuery';
+import { usePieceLockHint } from './pieceLockHint';
 import type {
   CabinetParams,
   CornerParams,
@@ -42,6 +45,8 @@ import type {
   SplitSize,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { DimensionField } from './DimensionField';
+import { SizeShareField } from './SizeShareField';
 import {
   Counter,
   Group,
@@ -59,7 +64,13 @@ import {
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
 import { PieceSize } from './PieceSize';
-import { BindButton, bindingHint } from './Variables';
+import {
+  BindButton,
+  bindingHint,
+  DesignBindButton,
+  designBindingHint,
+  VariablesPanel,
+} from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import { tNode } from './i18n';
@@ -120,6 +131,8 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
     <>
       <SizeLockNote />
       {editor}
+      {/* The piece's own variables (ADR-210): its sizes bind to them with the ƒ button beside each size. */}
+      <VariablesPanel scope="design" />
     </>
   );
 }
@@ -128,15 +141,16 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
  * A project piece open in the editor with its size locked (ADR-122): says so, and why the last size edit was refused.
  */
 function SizeLockNote() {
-  const locked = useDesign((s) => {
+  const axesKey = useDesign((s) => {
     const id = s.editingItemId ?? s.drillItemId;
-    return isSizeLocked(s.project?.items.find((i) => i.id === id));
+    return lockedAxes(s.project?.items.find((i) => i.id === id)).join(',');
   });
   const notice = useDesign((s) => s.notice);
-  if (!locked) return null;
+  if (!axesKey && !notice) return null;
+  const axes = axesKey.split(',').filter(Boolean) as SizeAxis[];
   return (
     <p className="alert info size-lock-note" role="status">
-      {tr(SIZE_LOCKED_HINT)}.{' '}
+      {axes.length > 0 && <>{t('{axes} locked — unlock to change', { axes: axesText(axes) })}. </>}
       {notice ?? t('Edits that change its width, height or depth are refused.')}
     </p>
   );
@@ -353,6 +367,9 @@ function Crumbs({
   wholeLabel: string;
 }) {
   const select = useDesign((s) => s.select);
+  const model = useDesign((s) => s.model);
+  // Phones get a plain Up one level beside the path (ADR-211, G-388); desktop has Esc (ADR-203).
+  const phone = useMediaQuery('(max-width: 760px)');
   const chain: Space[] = [];
   let cur: Space | undefined = findSpace(root, id);
   while (cur) {
@@ -361,6 +378,16 @@ function Crumbs({
   }
   return (
     <nav className="crumbs" aria-label={t('Where this space sits')}>
+      {phone && (
+        <button
+          type="button"
+          className="up-level"
+          onClick={() => select(parentSel(model, id) ?? null)}
+        >
+          <Icon name="chevron-up" className="sm" />
+          {t('Up one level')}
+        </button>
+      )}
       <button type="button" onClick={() => select(null)}>
         {wholeLabel}
       </button>
@@ -400,6 +427,13 @@ function SpaceEditor({
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
   const set = (fn: (s: Space) => Space) => update(space.id, fn);
   const parent = parentOf(root, space.id);
+  // A run handle reaching this project piece (ADR-125) sets its handles: shown read-only (ADR-203, G-211).
+  const project = useDesign((s) => s.project);
+  const pieceId = useDesign((s) => s.editingItemId ?? s.drillItemId);
+  const runHandle = useMemo(
+    () => (project && pieceId ? runHandleFor(project, pieceId) : undefined),
+    [project, pieceId],
+  );
   // Doors and handles go on the outside only: a space inside other doors gets none (N109).
   const behindDoors = insideDoors(root, space.id);
 
@@ -583,7 +617,9 @@ function SpaceEditor({
               </p>
             )}
             <FrontEditor space={space} onChange={set} />
-            {space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
+            {runHandle && (space.front || (space.kind === 'drawers' && !behindDoors)) ? (
+              <RunHandleNote handle={runHandle.handle} />
+            ) : space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
               <HandleEditor space={space} onChange={set} />
             ) : (
               <p className="hint">{t('Handles appear once there are doors or drawers.')}</p>
@@ -605,6 +641,29 @@ function SpaceEditor({
 }
 
 const BAR_SPACINGS = [96, 128, 160, 192, 224, 256, 320];
+
+/** The run handle's kind and hole spacing, read-only: the run sets them, the piece's own stay in its design (ADR-203). */
+function RunHandleNote({ handle }: { handle: RunHandle['handle'] }) {
+  const kind =
+    handle.kind === 'bar' ? t('Bar') : handle.kind === 'knob' ? t('Knob') : t('Push to open');
+  return (
+    <div className="run-handle-note">
+      <p className="hint">{t('Set by Handles for this run')}</p>
+      <dl className="dims2">
+        <div>
+          <dt>{t('Handles')}</dt>
+          <dd>{kind}</dd>
+        </div>
+        {handle.kind === 'bar' && (
+          <div>
+            <dt>{t('Hole centres')}</dt>
+            <dd>{t('{n} mm', { n: handle.holeSpacing ?? 128 })}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
+}
 
 function HandleEditor({
   space,
@@ -648,7 +707,7 @@ function HandleEditor({
           )}
           <Select<'top' | 'centre' | 'bottom'>
             label={t('Position')}
-            value={h.position ?? (space.front ? 'centre' : 'top')}
+            value={h.position ?? defaultHandlePosition(space.front)}
             options={[
               { value: 'top', label: t('Near the top') },
               { value: 'centre', label: t('Middle') },
@@ -733,20 +792,16 @@ function DrawerHeights({
                 <option value="fr">{t('Share')}</option>
                 <option value="mm">{t('Fixed')}</option>
               </select>
-              <input
-                aria-label={
+              <SizeShareField
+                label={
                   z.mode === 'mm'
                     ? t('Drawer {n} front height in mm', { n: i + 1 })
                     : t('Drawer {n} share', { n: i + 1 })
                 }
-                inputMode={z.mode === 'mm' ? 'numeric' : 'decimal'}
-                defaultValue={z.value}
-                key={`${i}-${z.mode}-${z.value}`}
-                onBlur={(e) => {
-                  const v = Number(e.target.value);
-                  if (z.mode === 'mm' ? Number.isInteger(v) && v > 0 : v > 0 && v < 1000)
-                    setH(i, { mode: z.mode, value: v } as SplitSize);
-                }}
+                mode={z.mode}
+                value={z.value}
+                key={`${i}-${z.mode}`}
+                onChange={(v) => setH(i, { mode: z.mode, value: v } as SplitSize)}
               />
               <span className="result">
                 {fronts[i] ? t('{n} mm', { n: fronts[i].box.h }) : '—'}
@@ -860,35 +915,21 @@ function SplitEditor({
                   <option value="fr">{t('Share')}</option>
                   <option value="mm">{t('Fixed')}</option>
                 </select>
-                {z.mode === 'mm' ? (
-                  <input
-                    aria-label={
-                      across
+                <SizeShareField
+                  label={
+                    z.mode === 'mm'
+                      ? across
                         ? t('{name} width in mm', { name: names(i) })
                         : t('{name} height in mm', { name: names(i) })
-                    }
-                    inputMode="numeric"
-                    defaultValue={z.value}
-                    key={`${c.id}-${z.value}`}
-                    disabled={!!bound(c.id, i)}
-                    title={bound(c.id, i)}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      if (Number.isInteger(v) && v > 0) setSize(i, { mode: 'mm', value: v });
-                    }}
-                  />
-                ) : (
-                  <input
-                    aria-label={t('{name} share', { name: names(i) })}
-                    inputMode="decimal"
-                    defaultValue={z.value}
-                    key={`${c.id}-${z.value}`}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      if (v > 0 && v < 1000) setSize(i, { mode: 'fr', value: v });
-                    }}
-                  />
-                )}
+                      : t('{name} share', { name: names(i) })
+                  }
+                  mode={z.mode}
+                  value={z.value}
+                  key={`${c.id}-${z.mode}`}
+                  disabled={z.mode === 'mm' && !!bound(c.id, i)}
+                  title={bound(c.id, i)}
+                  onChange={(v) => setSize(i, { mode: z.mode, value: v } as SplitSize)}
+                />
                 <span className="result">
                   {actual ? t('{n} mm', { n: space.axis === 'x' ? actual.w : actual.h }) : '—'}
                 </span>
@@ -907,6 +948,9 @@ function SplitEditor({
 
 function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCabinet);
+  const constructionLock = usePieceLockHint('construction');
+  // Bound to the piece's own variable (ADR-210): the field is off and says what it follows.
+  const mountBound = useDesign((s) => designBindingHint(s.design, 'mountHeight'));
   const select = useDesign((s) => s.select);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
@@ -934,21 +978,24 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       </header>
       <PieceInfo />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={t('Width')}
           value={p.width}
           min={100}
           max={4000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={100}
           max={3000}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={100}
@@ -978,10 +1025,14 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}
-          hint={t('Position only; brackets and a rail are added to the hardware list.')}
+          disabled={!!mountBound}
+          hint={
+            mountBound ?? t('Position only; brackets and a rail are added to the hardware list.')
+          }
+          trailing={<DesignBindButton target="mountHeight" />}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1165,6 +1216,16 @@ function DrawerSettingsGroup({
         step={1}
         onChange={(v) => onChange({ ...d, rearClearance: v })}
       />
+      <Toggle
+        label={t('Box has an inner front')}
+        checked={d.innerFront !== false}
+        onChange={(v) => onChange({ ...d, innerFront: v ? undefined : false })}
+        info={
+          <InfoTip label={t('About the inner front')} align="start">
+            {t('Off: the drawer front closes the box, as on many flat-pack drawers.')}
+          </InfoTip>
+        }
+      />
       <div className="field">
         <div className="label-row">
           <label htmlFor="runner-lengths">{t('Runner lengths you can buy')}</label>
@@ -1191,6 +1252,7 @@ function DrawerSettingsGroup({
 
 function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCorner);
+  const constructionLock = usePieceLockHint('construction');
   const select = useDesign((s) => s.select);
   const blind = p.variant === 'blind',
     diagonal = p.variant === 'diagonal';
@@ -1266,21 +1328,24 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
         onChange={(v) => set({ side: v })}
       />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={blind ? t('Width') : diagonal ? t('Along each wall') : t('Back wing')}
           value={p.width}
           min={300}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={300}
           max={2500}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={200}
@@ -1346,7 +1411,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           hint={t('Position only; the hardware list asks you to choose the hanging brackets.')}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1688,6 +1753,7 @@ function DeskEditor({
 }) {
   const select = useDesign((s) => s.select);
   const set = useDesign((s) => s.updateDesk);
+  const constructionLock = usePieceLockHint('construction');
   const ped = p.support !== 'gables';
   const sides = (['left', 'right'] as const).filter((sd) => usesPedestal(p, sd));
   const steps: Step[] = [
@@ -1717,21 +1783,24 @@ function DeskEditor({
       </header>
       <PieceInfo />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={t('Width')}
           value={p.width}
           min={400}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={400}
           max={1200}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={300}
@@ -1783,7 +1852,7 @@ function DeskEditor({
           </div>
         </div>
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <MmField
           label={t('Top overhang at the front')}
           value={p.frontOverhang}

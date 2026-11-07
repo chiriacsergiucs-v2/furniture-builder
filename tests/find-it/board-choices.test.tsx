@@ -54,7 +54,7 @@ describe.each(WIDTHS)('board choices at %ipx (find-it, ADR-164)', (width) => {
     list = await screen.findByRole('dialog', { name: 'Add a piece' });
     await user.click(within(list).getByRole('button', { name: /New piece, step by step/ }));
     const wiz = await screen.findByRole('dialog', { name: 'New piece' });
-    await user.click(within(wiz).getByRole('button', { name: 'Skip' }));
+    await user.click(within(wiz).getByRole('button', { name: 'Use Cabinet (closed box)' }));
     const board = await within(wiz).findByRole('combobox', { name: 'Board' });
     expect((board as HTMLSelectElement).selectedOptions[0].textContent).toBe('PAL 18 oak, 18 mm');
     expect(

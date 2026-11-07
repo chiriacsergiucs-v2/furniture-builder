@@ -52,6 +52,46 @@ export interface Room {
   shape?: { kind: RoomShape; sizes: ShapeSizes };
   /** Wall backgrounds (ADR-145, project schemaVersion 14), at most one per wall. Absent = the plain see-through grey. */
   walls?: WallFinish[];
+  /**
+   * The floor's background (ADR-208, project schemaVersion 21): a colour, or a picture from this device with its
+   * average colour. A picture's `fit` is in plan mm: `x` from the left, `y` the distance from the back (z). Absent =
+   * the plain floor.
+   */
+  floor?: FloorFinish;
+}
+
+/** A floor background (ADR-208): the wall finish's shape without a wall number. */
+export interface FloorFinish {
+  colour: string;
+  image?: WallImage;
+}
+
+/** The plan rectangle a floor picture covers (ADR-208): its `fit` (x, then z as `y`), or the outline's bounds. */
+export function floorRect(r: Room, img: WallImage): { x: Mm; z: Mm; w: Mm; d: Mm } {
+  if (img.fit) return { x: img.fit.x, z: img.fit.y, w: img.fit.w, d: img.fit.h };
+  const xs = r.outline.map((p) => p[0]),
+    zs = r.outline.map((p) => p[1]);
+  const x = Math.min(...xs),
+    z = Math.min(...zs);
+  return { x, z, w: Math.max(1, Math.max(...xs) - x), d: Math.max(1, Math.max(...zs) - z) };
+}
+
+/** How deep a wall's colour band reaches into the room on the plan (ADR-208). */
+export const WALL_BAND: Mm = 50;
+
+/**
+ * The colour bands of the walls with a background on the plan (ADR-208): a `WALL_BAND` mm strip inside each wall
+ * line, in the wall's colour (a picture's average colour). Empty while the outline has problems.
+ */
+export function wallBands(r: Room): { wall: number; colour: string; box: Box }[] {
+  if (outlineIssues(r.outline).length) return [];
+  return (r.walls ?? [])
+    .filter((f) => f.wall >= 0 && f.wall < r.outline.length)
+    .map((f) => ({
+      wall: f.wall,
+      colour: f.colour,
+      box: wallBox(r, f.wall, 0, wallLength(r, f.wall), WALL_BAND, 0, 0),
+    }));
 }
 
 /**
@@ -163,6 +203,54 @@ export function shapeOutline(shape: RoomShape, s: ShapeSizes): Pt[] {
         [0, D],
       ];
   }
+}
+
+/** The size a problem names (ADR-193), so the form can mark that field. */
+export type RoomSizeField = keyof ShapeSizes | 'height';
+export type RoomSizeIssue = Diagnostic & { field: RoomSizeField };
+
+/**
+ * Problems with a ready shape's sizes (ADR-193): every size it uses is a whole number of mm above 0, and the cut-out
+ * (L), notch (U) or alcove lies inside the room's width (and, for L and U, its depth), not on or past its edge,
+ * where a wall would have no length. Diagnostics, never a clamp (ADR-008).
+ */
+export function checkRoomSizes(shape: RoomShape, s: ShapeSizes, height: Mm): RoomSizeIssue[] {
+  const out: RoomSizeIssue[] = [];
+  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v > 0;
+  const pos = (field: RoomSizeField, v: unknown, label: string) => {
+    if (!ok(v))
+      out.push({
+        severity: 'error',
+        code: 'room-size',
+        field,
+        message: t('{label} must be a whole number of mm above 0.', { label }),
+      });
+  };
+  const outside = (field: RoomSizeField, message: string) =>
+    out.push({ severity: 'error', code: 'room-size', field, message });
+  pos('width', s.width, t('Width'));
+  pos('depth', s.depth, t('Depth'));
+  pos('height', height, t('Room height'));
+  if (shape === 'rectangle') return out;
+  pos('cutWidth', s.cutWidth, t('Cut width'));
+  pos('cutDepth', s.cutDepth, t('Cut depth'));
+  if (shape !== 'l-shape') pos('offset', s.offset, t('Cut offset'));
+  const { width: W, depth: D, cutWidth: a, cutDepth: b, offset: o } = s;
+  // The cut's width is checked on its own, so it is named even while the offset is wrong.
+  if (ok(W) && ok(a) && a >= W)
+    outside('cutWidth', t('Cut width {a} mm must be less than the width, {w} mm.', { a, w: W }));
+  if (shape !== 'alcove' && ok(D) && ok(b) && b >= D)
+    outside('cutDepth', t('Cut depth {b} mm must be less than the depth, {d} mm.', { b, d: D }));
+  if (shape !== 'l-shape' && ok(W) && ok(a) && a < W && ok(o) && o + a >= W)
+    outside(
+      'offset',
+      t('Cut offset {o} mm plus cut width {a} mm must be less than the width, {w} mm.', {
+        o,
+        a,
+        w: W,
+      }),
+    );
+  return out;
 }
 
 export const wallCount = (r: Room) => r.outline.length;
@@ -408,8 +496,8 @@ export function roomChecks(
     /** The piece as one box, turned when typed at an angle (ADR-121); absent = `bounds`. */
     outline?: Box;
     hitsPanels: (b: Box) => boolean;
-    /** The back, plinth or worktop panel (its role) that enters a box, or null (ADR-072). */
-    covers?: (b: Box) => string | null;
+    /** The back, plinth or worktop panel (its role) that enters a feature's box, or null (ADR-072, ADR-205). */
+    covers?: (b: Box, featureId?: string) => string | null;
     clearances: { label: string; box: Box; need: Mm; panelId?: string }[];
   }[],
 ): {
@@ -594,7 +682,12 @@ export const TALL_UNIT_HEIGHT = 1600;
  */
 export function serviceChecks(
   room: Room,
-  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+  pc: {
+    id: string;
+    name: string;
+    bounds: Box;
+    covers?: (b: Box, featureId?: string) => string | null;
+  },
 ): Diagnostic[] {
   const out: Diagnostic[] = [];
   for (const f of room.features) {
@@ -607,7 +700,12 @@ export function serviceChecks(
 function serviceIssue(
   f: RoomFeature,
   zone: Box,
-  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+  pc: {
+    id: string;
+    name: string;
+    bounds: Box;
+    covers?: (b: Box, featureId?: string) => string | null;
+  },
 ): Diagnostic | null {
   const b = pc.bounds;
   if (
@@ -627,7 +725,7 @@ function serviceIssue(
       }),
       nodeId: pc.id,
     };
-  const part = pc.covers?.(zone);
+  const part = pc.covers?.(zone, f.id);
   if (!part) return null;
   return {
     severity: 'warning',
@@ -639,6 +737,8 @@ function serviceIssue(
       { name: pc.name, label: f.label, part },
     ),
     nodeId: pc.id,
+    // A back can be cut around it (ADR-205, "Cut the back around it").
+    ...(part === 'back' ? { featureId: f.id, itemIds: [pc.id] } : {}),
   };
 }
 
@@ -797,8 +897,27 @@ export function validateRoom(r: unknown): string[] {
         else seen.add(f.wall as number);
       }
   }
+  if (r.floor !== undefined) {
+    const f = r.floor;
+    if (!isObj(f) || typeof f.colour !== 'string' || !HEX.test(f.colour) || !validImage(f.image))
+      errs.push(t('Invalid floor background'));
+  }
   return errs;
 }
+
+/** A wall or floor picture reference (ADR-145, ADR-146, ADR-208), or none. */
+const validImage = (img: unknown) =>
+  img === undefined ||
+  (isObj(img) &&
+    typeof img.id === 'string' &&
+    !!img.id &&
+    img.id.length <= 200 &&
+    typeof img.name === 'string' &&
+    img.name.length <= 500 &&
+    (img.tileWidth === undefined || isTile(img.tileWidth)) &&
+    (img.tileHeight === undefined || isTile(img.tileHeight)) &&
+    (img.fit === undefined || isWallRect(img.fit)) &&
+    (img.straighten === undefined || isQuad(img.straighten)));
 
 /**
  * Walls for the 3D view (ADR-058): thin boxes just outside the outline, full room height, with door and window

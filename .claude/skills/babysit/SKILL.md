@@ -9,7 +9,7 @@ Drives a pull request **Claude opened** to merged (user rules 2026-10-29). For a
 the user only asked to watch, report each event and ask before pushing anything.
 
 Project: **Furniture Builder** — offline PWA. CI (`.github/workflows/ci.yml`) is the source of
-truth; `deploy.yml` publishes `main` to GitHub Pages.
+truth; `deploy.yml` publishes `main` to GitHub Pages once CI on main passes (ADR-197).
 
 ## Start
 
@@ -37,9 +37,9 @@ truth; `deploy.yml` publishes `main` to GitHub Pages.
    - Larger asks (several files, model or storage shape, a new decision): ask the user. A changed
      decision gets a new ADR (`new-adr`), never an edit to an implemented one.
    - A finding that would invent a hardware or supplier fact (ADR-010): ask the user.
-4. **Visible change in a push** → the snapshot rule of `CLAUDE.md` still holds: show the
-   screenshots last in the reply, above the questions, and wait for confirmation before the
-   next tests.
+4. **Visible change in a push** → while the `snapshot-before-tests` toggle in `CLAUDE.md` is on,
+   the snapshot rule holds: show the screenshots last in the reply, above the questions, and wait
+   for confirmation before the next tests. While it is off, run the checks without waiting.
 5. **Ledger** → each push that changes behaviour updates the backlog row with the evidence
    that ran (command output or CI run id), and `docs/adr/GAPS.md` for anything not built.
 
@@ -55,8 +55,8 @@ Green = CI passes on the latest commit, no merge conflict, no review thread wait
 every `Done when` item has evidence, and the user confirmed the screenshots.
 
 1. Run the `ship-adr` skill for the pull request's ADR **on the branch** and push the ship
-   commit (`Ship ADR-NNN: <short title> — mark implemented`) after `pnpm docs:check` and
-   `pnpm format:check` pass locally. Do not wait for CI on the ship commit (user rule 2026-10-29).
+   commit (`Ship ADR-NNN: <short title> — mark implemented`) after `pnpm docs:check`,
+   `pnpm format:check` and `pnpm exec vitest run tests/sync-pending.test.ts` pass locally. Do not wait for CI on the ship commit (user rule 2026-10-29).
 2. Merge the pull request into `main` (merge commit; never force-push `main`).
 3. Wait for the `Deploy GitHub Pages` run on `main` and cite its run id. Say "deployed", not
    "live-verified", unless the published URL was opened and checked.

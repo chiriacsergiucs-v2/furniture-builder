@@ -29,7 +29,7 @@ describe('editable templates on this device (ADR-034)', () => {
     const Db = mod.db.constructor as new (n: string) => typeof mod.db;
     const fresh = new Db(name);
     await fresh.open();
-    expect(fresh.verno).toBe(11);
+    expect(fresh.verno).toBe(12);
     expect(await fresh.designs.count()).toBe(1);
     expect(await fresh.projects.count()).toBe(1); // unreadable rows are kept
     expect(await fresh.templates.count()).toBe(0);
@@ -97,16 +97,16 @@ describe('editable templates on this device (ADR-034)', () => {
       rooms: ['hallway'],
     });
     expect(validateLocalTemplate(t)).toEqual([]);
-    expect(validateLocalTemplate({ ...t, family: { ...t.family, rooms: ['moon'] } })).toContain(
-      'Rooms must be known room names',
-    );
+    expect(
+      validateLocalTemplate({ ...t, family: { ...t.family, rooms: ['moon'] } }),
+    ).toContainEqual({ code: 'bad-rooms' });
     expect(
       validateLocalTemplate({
         ...t,
         family: { ...t.family, variants: Array(6).fill(t.family.variants[0]) },
       }),
-    ).toContain('A template has 1 to 5 variants');
-    expect(validateLocalTemplate(null)).toEqual(['Template must be an object']);
+    ).toContainEqual({ code: 'variant-count' });
+    expect(validateLocalTemplate(null)).toEqual([{ code: 'not-object' }]);
   });
 });
 

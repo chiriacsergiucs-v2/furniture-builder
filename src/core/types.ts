@@ -1,3 +1,4 @@
+import type { Room } from './catalog/types';
 /**
  * Core domain types. Pure data: no React, no storage, no three.js.
  *
@@ -200,6 +201,15 @@ export interface Panel {
   handleHoles?: { at: [Mm, Mm][]; diameter: Mm };
   /** Shaped part (ADR-040): `box` stays the whole-mm cut blank; absent = a plain box. */
   shape?: PanelShape;
+  /** The edge band chosen for this part or its role (ADR-188); absent = its board's band. */
+  band?: EdgeBand;
+  /**
+   * A moulding's cross-section (ADR-209): whole-mm points [across, up] from the box's back-bottom corner, drawn in 3D
+   * extruded along the box's length (x). Display only: the cut size is `box`.
+   */
+  section?: [Mm, Mm][];
+  /** A worktop's front edge shape (ADR-209): drawn in 3D on the edge `face`, `size` mm; display only. */
+  edgeProfile?: { kind: 'rounded' | 'bevel'; size: Mm; face: Face };
 }
 
 /**
@@ -209,7 +219,17 @@ export interface Panel {
  */
 export type PanelShape =
   | { kind: 'tilt'; axis: Axis; angleDeg: number; pivot: [Mm, Mm, Mm] }
-  | { kind: 'profile'; points: [Mm, Mm][] };
+  | {
+      kind: 'profile';
+      points: [Mm, Mm][];
+      /** Holes cut through the board (ADR-205), whole-mm polygons in the same [u, v] terms as `points`. */
+      holes?: [Mm, Mm][][];
+      /**
+       * The rectangular cut-outs (notches or holes) made in it, for the cut-list note (ADR-205): `u`/`v` from the blank's
+       * left and bottom (its minimum corner on the in-plane axes), `w` × `h` mm.
+       */
+      cutouts?: { u: Mm; v: Mm; w: Mm; h: Mm }[];
+    };
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
 export interface PinRows {
@@ -252,6 +272,11 @@ export interface HardwareItem {
   /** Nominal size in mm where meaningful (runner length, rail length). */
   sizeMm?: Mm;
   note?: string;
+  /**
+   * The panels this item fixes to (ADR-207), model only, never saved: a hinge's side or divider its mounting plates
+   * go on, a runner pair's two panels either side of its opening. Absent = not known (the panel is in another piece).
+   */
+  panelIds?: string[];
 }
 
 export type Severity = 'error' | 'warning';
@@ -268,6 +293,8 @@ export interface Diagnostic {
   box?: Box;
   /** How much, mm (ADR-071): the overlap, the missing opening space or the distance outside the room. */
   amount?: Mm;
+  /** The room pipe or outlet a back covers (ADR-205): what "Cut the back around it" cuts round. */
+  featureId?: string;
 }
 
 /** The clear interior of an editable space, for selection and labelling. */
@@ -291,6 +318,11 @@ export interface FurnitureModel {
   diagnostics: Diagnostic[];
   /** Overall bounding box including fronts. */
   bounds: Box;
+  /**
+   * Shelf-pin rows this cabinet needs on the neighbour's side it shares (ADR-190), measured as on that side: face
+   * `-x`, rows from its rear edge, holes from its bottom edge. Absent = none.
+   */
+  sharedPins?: PinRows[];
 }
 
 // ---------------------------------------------------------------------------
@@ -395,6 +427,11 @@ export interface SplitSpace extends SpaceBase {
   axis: 'x' | 'y';
   sizes: SplitSize[];
   children: Space[];
+  /**
+   * The rounding remainder goes to the first flexible part instead of the last (ADR-205, schemaVersion 9): set on
+   * mirrored copies so the remainder stays on the same physical part. Absent = the last.
+   */
+  remainderFirst?: true;
 }
 
 export type Space = EmptySpace | ShelvesSpace | HangingSpace | DrawersSpace | SplitSpace;
@@ -411,6 +448,8 @@ export interface DrawerSettings {
   runnerLengths: Mm[];
   boxMaterialId: string;
   bottomMaterialId: string;
+  /** `false`: the drawer front closes the box, no inner front; drawers behind doors keep theirs (ADR-192). Absent = true. */
+  innerFront?: boolean;
 }
 
 export interface CabinetParams {
@@ -427,6 +466,11 @@ export interface CabinetParams {
   top: 'over' | 'between';
   /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-036). */
   topKind?: 'panel' | 'rails';
+  /**
+   * Set only while the cabinet shares a side with a neighbour (ADR-190), never saved. `right`: its right side is left
+   * out (the neighbour's left side serves); `left`: its left side is shared. Fronts meet over the shared side's middle.
+   */
+  shared?: { left?: boolean; right?: boolean };
   /** Depth of each top rail (default 100). */
   railDepth?: Mm;
   /** 2: two body panels glued as the top, the second under the first; outer height unchanged (ADR-105). Absent = 1. */
@@ -470,6 +514,11 @@ export interface DeskParams {
   drawers: DrawerSettings;
   frontMaterialId: string;
   frontGap: Mm;
+  /**
+   * Set only while the desk shares a side with a cabinet (ADR-207), never saved: the gable at that end is left out and
+   * the cabinet's side serves (a gable stops under the worktop, so the cabinet's side is always the shared one).
+   */
+  omitGable?: { left?: boolean; right?: boolean };
 }
 
 /** Corner cabinets (ADR-025): built from two carcasses by the cabinet generator. */
@@ -478,6 +527,11 @@ export interface CornerParams {
   variant: 'blind' | 'l-shape' | 'diagonal';
   /** Which end the corner is at. */
   side: 'left' | 'right';
+  /**
+   * Set only while a blind corner shares a side at its straight end (ADR-207, as ADR-190), never saved: `right` its
+   * right side is left out (the neighbour's serves), `left` its left side is shared. Fronts meet over its middle.
+   */
+  shared?: { left?: boolean; right?: boolean };
   /** Blind: overall width. L-shape: length of the wing along the back wall. */
   width: Mm;
   /** L-shape: length of the wing along the side wall, including the corner. */
@@ -499,6 +553,11 @@ export interface CornerParams {
   top: 'over' | 'between';
   /** 2: a doubled top, as on a cabinet (ADR-105). Absent = 1. */
   topLayers?: 1 | 2;
+  /**
+   * Set only while the unit is in a common top or bottom (ADR-189), never saved: its top over (bottom under) the
+   * sides or returns, so the common panel covers them.
+   */
+  join?: { top?: boolean; bottom?: boolean };
   back: 'none' | 'applied' | 'inset';
   backInset: Mm;
   plinthHeight: Mm;
@@ -572,9 +631,10 @@ export interface FrameParams {
   } | null;
   /**
    * Lounger backrest (ADR-040): the first `length` mm of a slatted seat lift on a hinge, on a bought prop. Positions
-   * are seat-to-back angles (default 100°, 120°, 150°); 180° would be flat.
+   * are seat-to-back angles (default 100°, 120°, 150°); 180° would be flat. `end` (ADR-207, design schemaVersion 9):
+   * the end it lifts at; absent = left.
    */
-  backrest?: { length: Mm; positions: number[]; at: number } | null;
+  backrest?: { length: Mm; positions: number[]; at: number; end?: 'right' } | null;
   /** Arm posts on the seat at the front corners and arm rests back to the back posts; armrest top above the floor. */
   arms?: { height: Mm } | null;
   /** Chair only: `bought` = seat and back boards on a bought base (gas lift, mechanism, five-star base); no legs. */
@@ -589,8 +649,10 @@ export interface FrameParams {
     headboardHeight: Mm;
     /** 0 = no footboard (low foot rail only). */
     footboardHeight: Mm;
-    /** Back panel along the left side (daybed). 0 = none. */
+    /** Back panel along one side (daybed), the left unless `sidePanelEnd` says right. 0 = none. */
     sidePanelHeight: Mm;
+    /** The side the daybed's side panel is on (ADR-207, design schemaVersion 9); absent = left. */
+    sidePanelEnd?: 'right';
     /** Second bed above (bunk) with this clear gap between decks. 0 = single. */
     tierGap: Mm;
     guardHeight: Mm;
@@ -668,6 +730,11 @@ export interface CatalogMeta {
     productName: string;
     sourceUrl?: string;
     takenAt: string;
+    /**
+     * The rooms of the user's own family it was inserted from (ADR-210, schemaVersion 9): the family rule checks a
+     * piece of an `own-…` family by them. Absent for shipped families (looked up by id) and older pieces.
+     */
+    rooms?: Room[];
   };
 }
 
@@ -687,9 +754,12 @@ export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
-   * (`roleMaterials`, ADR-163). Older files are upgraded in memory on load.
+   * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
+   * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
+   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
+   * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   id: string;
   name: string;
   createdAt: string;
@@ -712,12 +782,68 @@ export interface Design {
    * sides, shelves or dividers. A part's own board (`partMaterials`) wins over it. Absent = the group's board.
    */
   roleMaterials?: Partial<Record<RoleBoardRole, string>>;
+  /**
+   * An edge band for every part of a role instead of its board's band (schemaVersion 8, ADR-188), keyed by the
+   * Material dialog's roles (`src/core/roles.ts`): a role's own entry wins over `body`. Absent = the board's band.
+   */
+  roleBands?: Partial<Record<string, EdgeBand>>;
+  /** An edge band for one part (schemaVersion 8, ADR-188): panel id → band; wins over `roleBands`. Kept when lost. */
+  partBands?: Record<string, EdgeBand>;
+  /**
+   * The user's assembly steps (ADR-207, schemaVersion 9): their order and own names. Steps the order does not name
+   * keep their generated place; unknown ids are ignored; an empty name keeps the generated title. Absent = generated.
+   */
+  assembly?: AssemblyEdit;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
   /** Seller products chosen for hardware lines, by shopping-list line key `hw:<label>[, <size> mm]` (ADR-161). */
   hardwareProducts?: Record<string, HardwareProduct>;
   /** Seller products added to this piece's shopping list (ADR-161). */
   sellerItems?: SellerItem[];
+  /**
+   * The piece's own variables (ADR-210, schemaVersion 9): the same shape and limits as a project's (ADR-166). Its
+   * bindings drive width, height, depth, mountHeight and `split:*` (no positions); evaluated on each commit.
+   */
+  variables?: DesignVariable[];
+  bindings?: DesignBinding[];
+}
+
+/** A piece's own variable (ADR-210): a named number or formula, as a project variable (ADR-166). */
+export interface DesignVariable {
+  id: string;
+  name: string;
+  expr: string;
+}
+
+/** A binding of a piece's own size to its variables (ADR-210). */
+export interface DesignBinding {
+  target: string;
+  expr: string;
+}
+
+/** The assembly steps a piece can have (ADR-174, ADR-185, ADR-186), in their generated order (`STEP_ORDER`). */
+export type StepId =
+  | 'prepare'
+  | 'fit-hardware'
+  | 'bottom'
+  | 'sides'
+  | 'fixed'
+  | 'top'
+  | 'back'
+  | 'plinth'
+  | 'adjustable'
+  | 'drawers'
+  | 'fronts'
+  | 'handles'
+  | 'hang'
+  | 'fit'
+  | 'loose'
+  | 'also';
+
+/** The user's assembly steps (ADR-207): their order, and their own names by step. */
+export interface AssemblyEdit {
+  order: StepId[];
+  names?: Partial<Record<StepId, string>>;
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */

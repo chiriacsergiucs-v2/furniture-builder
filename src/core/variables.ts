@@ -9,10 +9,21 @@
  */
 import { t } from './i18n';
 import { mapProductSpace, newId, setProductParams } from './design';
-import { SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
+import {
+  REQUEST_RANGE,
+  requestKey,
+  requestName,
+  SIZE_AXES,
+  type Project,
+  type ProjectItem,
+  type RequestTarget,
+  type RunRequest,
+  type SizeAxis,
+} from './project';
 import { isAxisLocked } from './sizeLock';
 import { sizeFields } from './pieceSize';
-import type { Diagnostic, Mm, Product, Space } from './types';
+import type { Design, DesignVariable, Diagnostic, Mm, Product, Space } from './types';
+import { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE, SPLIT_TARGET } from './varLimits';
 
 export interface ProjectVariable {
   id: string;
@@ -34,24 +45,27 @@ export interface Binding {
   expr: string;
 }
 
-export const MAX_VARIABLE_NAME = 60;
-export const MAX_EXPR = 200;
-export const MAX_VARIABLES = 100;
-const SPLIT_TARGET = /^split:([^:]+):(\d+)$/;
-const NAME_RE = /^[\p{L}][\p{L}\p{N} _]*$/u;
+export { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES };
 
 export const isBindTarget = (s: unknown): s is BindTarget =>
   typeof s === 'string' &&
   (['width', 'height', 'depth', 'mountHeight', 'x', 'y', 'z'].includes(s) || SPLIT_TARGET.test(s));
 
 /** Why a variable name cannot be used, or null. */
-export function nameProblem(name: string, others: readonly ProjectVariable[] = []): string | null {
+export function nameProblem(
+  name: string,
+  others: readonly ProjectVariable[] = [],
+  /** False when reading a stored variable: a name taken before a function had it still loads (ADR-206). */
+  reserved = true,
+): string | null {
   const n = name.trim();
   if (!n) return t('A variable needs a name.');
   if (n.length > MAX_VARIABLE_NAME)
     return t('A variable name is at most {n} characters.', { n: MAX_VARIABLE_NAME });
   if (!NAME_RE.test(n))
     return t('A variable name is letters, digits and spaces, starting with a letter.');
+  if (reserved && isFunctionName(n))
+    return t('“{name}” is the name of a formula function; pick another name.', { name: n });
   if (others.some((v) => v.name.toLowerCase() === n.toLowerCase()))
     return t('A variable named “{name}” already exists.', { name: n });
   return null;
@@ -61,12 +75,16 @@ export function nameProblem(name: string, others: readonly ProjectVariable[] = [
 // Formulas
 // ---------------------------------------------------------------------------
 
+/** Comparisons (ADR-209): 1 when true, 0 when not. */
+type Cmp = '<' | '<=' | '>' | '>=' | '=' | '<>';
+type Op = '+' | '-' | '*' | '/' | '(' | ')' | ',' | Cmp;
 type Token =
   | { kind: 'num'; value: number; at: number; text: string }
   | { kind: 'name'; name: string; at: number; text: string }
-  | { kind: 'op'; op: '+' | '-' | '*' | '/' | '(' | ')'; at: number; text: string };
+  | { kind: 'fn'; name: string; at: number; text: string }
+  | { kind: 'op'; op: Op; at: number; text: string };
 
-const OPS: Record<string, '+' | '-' | '*' | '/' | '(' | ')'> = {
+const OPS: Record<string, Op> = {
   '+': '+',
   '-': '-',
   '−': '-',
@@ -77,11 +95,71 @@ const OPS: Record<string, '+' | '-' | '*' | '/' | '(' | ')'> = {
   '÷': '/',
   '(': '(',
   ')': ')',
+  '<': '<',
+  '>': '>',
+  '=': '=',
+  '≤': '<=',
+  '≥': '>=',
+  '≠': '<>',
 };
+/** Two-character comparisons, matched before the one-character operators (ADR-209). */
+const OPS2: Record<string, Op> = { '<=': '<=', '>=': '>=', '<>': '<>' };
+const CMPS = new Set<Op>(['<', '<=', '>', '>=', '=', '<>']);
+
+/**
+ * Formula functions (ADR-206): a name followed by `(` is a call. One entry per function: how many values it takes and
+ * what it does; a later function (ADR-209) is one more entry. Their names are reserved for new variables.
+ */
+export interface FormulaFunction {
+  /** Fewest and most values; `max` absent = any number from `min`. */
+  min: number;
+  max?: number;
+  apply: (args: number[]) => number;
+  /** Why these values cannot be used (ADR-209: a rounding step of 0), or null; a diagnostic, never a throw. */
+  problem?: (args: number[]) => string | null;
+  /** Only this value's problem counts (ADR-209: `if` takes the chosen branch); the index from the values. */
+  uses?: (args: number[]) => number[];
+}
+export const FUNCTIONS: Record<string, FormulaFunction> = {
+  min: { min: 2, apply: (a) => Math.min(...a) },
+  max: { min: 2, apply: (a) => Math.max(...a) },
+  floor: { min: 1, max: 1, apply: ([x]) => Math.floor(x) },
+  ceil: { min: 1, max: 1, apply: ([x]) => Math.ceil(x) },
+  // `round(x, step)` (ADR-209): the nearest multiple of step.
+  round: {
+    min: 1,
+    max: 2,
+    apply: ([x, step]) => (step === undefined ? Math.round(x) : Math.round(x / step) * step),
+    problem: ([, step]) =>
+      step !== undefined && !(step > 0) ? t('The step of “round” must be more than 0.') : null,
+  },
+  // `if(c, a, b)` (ADR-209): a when c is not 0, else b.
+  if: {
+    min: 3,
+    max: 3,
+    apply: ([c, a, b]) => (c !== 0 ? a : b),
+    uses: ([c]) => [0, c !== 0 ? 1 : 2],
+  },
+};
+/** Whether a name is a formula function's, compared without case. */
+export const isFunctionName = (name: string): boolean =>
+  Object.hasOwn(FUNCTIONS, name.trim().toLowerCase());
+
+/** Why a call has the wrong number of values, or null. */
+function arityProblem(name: string, f: FormulaFunction, n: number): string | null {
+  if (f.max !== undefined && f.min === f.max && n !== f.min)
+    return t('“{fn}” takes exactly {n|# value|# values}.', { fn: name, n: f.min });
+  if (n < f.min) return t('“{fn}” takes at least {n|# value|# values}.', { fn: name, n: f.min });
+  if (f.max !== undefined && n > f.max)
+    return t('“{fn}” takes at most {n|# value|# values}.', { fn: name, n: f.max });
+  return null;
+}
 
 /**
  * Split a formula into tokens. Variable names may hold spaces, so the known names are matched first, longest
- * first, without case; anything else that starts with a letter is an unknown name (reported by the parser).
+ * first, without case; anything else that starts with a letter is an unknown name (reported by the parser). A
+ * function name followed by `(` is a call (ADR-206), even when a variable has that name; inside a call's
+ * parentheses `,` or `;` separates the values, so decimals there take a point.
  */
 export function tokenize(
   expr: string,
@@ -89,6 +167,8 @@ export function tokenize(
 ): { tokens: Token[] } | { problem: string } {
   const sorted = [...names].sort((a, b) => b.length - a.length);
   const tokens: Token[] = [];
+  /** Open parentheses: true for a call's. */
+  const parens: boolean[] = [];
   let i = 0;
   const lower = expr.toLowerCase();
   while (i < expr.length) {
@@ -97,16 +177,37 @@ export function tokenize(
       i++;
       continue;
     }
+    const inCall = parens.length > 0 && parens[parens.length - 1];
+    if (inCall && (c === ',' || c === ';')) {
+      tokens.push({ kind: 'op', op: ',', at: i, text: c });
+      i++;
+      continue;
+    }
+    const two = OPS2[expr.slice(i, i + 2)];
+    if (two) {
+      tokens.push({ kind: 'op', op: two, at: i, text: expr.slice(i, i + 2) });
+      i += 2;
+      continue;
+    }
     const op = OPS[c];
     if (op) {
+      const prev = tokens[tokens.length - 1];
+      if (op === '(') parens.push(prev?.kind === 'fn');
+      if (op === ')') parens.pop();
       tokens.push({ kind: 'op', op, at: i, text: c });
       i++;
       continue;
     }
-    const num = /^\d+(?:[.,]\d+)?/.exec(expr.slice(i));
+    const num = (inCall ? /^\d+(?:\.\d+)?/ : /^\d+(?:[.,]\d+)?/).exec(expr.slice(i));
     if (num) {
       tokens.push({ kind: 'num', value: Number(num[0].replace(',', '.')), at: i, text: num[0] });
       i += num[0].length;
+      continue;
+    }
+    const call = /^([\p{L}_][\p{L}\p{N}_]*)\s*\(/u.exec(expr.slice(i));
+    if (call && isFunctionName(call[1])) {
+      tokens.push({ kind: 'fn', name: call[1].toLowerCase(), at: i, text: call[1] });
+      i += call[1].length;
       continue;
     }
     const hit = sorted.find((n) => {
@@ -152,8 +253,47 @@ export function evaluateExpr(
     if (tok.kind === 'num') return tok.value;
     if (tok.kind === 'name')
       return values.get(tok.name) ?? fail(t('Unknown variable “{name}”.', { name: tok.name }));
+    if (tok.kind === 'fn') {
+      // A call (ADR-206): name `(` value {, value} `)`; the tokenizer saw the `(` after the name.
+      const f = FUNCTIONS[tok.name];
+      pos++;
+      const args: number[] = [];
+      // The problem each value raised, if it was the first (ADR-209: `if` keeps only its chosen branch's).
+      const raised: (string | null)[] = [];
+      const close = peek();
+      if (close && close.kind === 'op' && close.op === ')') pos++;
+      else
+        for (;;) {
+          const had = problem;
+          args.push(compare());
+          raised.push(had === null && problem !== null ? problem : null);
+          const nx = peek();
+          if (nx && nx.kind === 'op' && nx.op === ',') {
+            pos++;
+            continue;
+          }
+          if (!nx || nx.kind !== 'op' || nx.op !== ')') return fail(t('A “(” is not closed.'));
+          pos++;
+          break;
+        }
+      const bad = arityProblem(tok.text, f, args.length);
+      if (bad) return fail(bad);
+      // A value the call does not use (the other branch of `if`) may have no value, e.g. a division by zero there.
+      if (f.uses && raised.some(Boolean)) {
+        const used = new Set(f.uses(args));
+        // Only a value problem is dropped; a formula that does not parse stays a problem wherever it is.
+        const soft = [t('Division by zero.'), t('The step of “round” must be more than 0.')];
+        if (raised.every((r, i) => !r || (!used.has(i) && soft.includes(r)))) problem = null;
+        else return NaN;
+        const v = f.apply(args);
+        return Number.isFinite(v) ? v : fail(t('The formula has no value.'));
+      }
+      const why = f.problem?.(args);
+      if (why) return fail(why);
+      return f.apply(args);
+    }
     if (tok.op === '(') {
-      const v = sum();
+      const v = compare();
       const close = peek();
       if (!close || close.kind !== 'op' || close.op !== ')') return fail(t('A “(” is not closed.'));
       pos++;
@@ -185,7 +325,28 @@ export function evaluateExpr(
       v = tok.op === '+' ? v + r : v - r;
     }
   };
-  const raw = sum();
+  /** A comparison (ADR-209): 1 when it holds, 0 when not; one per expression level, no chains. */
+  const compare = (): number => {
+    const v = sum();
+    const tok = peek();
+    if (!tok || tok.kind !== 'op' || !CMPS.has(tok.op)) return v;
+    pos++;
+    const r = sum();
+    const holds =
+      tok.op === '<'
+        ? v < r
+        : tok.op === '<='
+          ? v <= r
+          : tok.op === '>'
+            ? v > r
+            : tok.op === '>='
+              ? v >= r
+              : tok.op === '='
+                ? v === r
+                : v !== r;
+    return holds ? 1 : 0;
+  };
+  const raw = compare();
   if (problem) return { problem };
   if (pos < tokens.length)
     return { problem: t('Unexpected “{text}” in the formula.', { text: tokens[pos].text }) };
@@ -489,7 +650,9 @@ export function scopeFor(project: Project, item: Pick<ProjectItem, 'set'>): Map<
  * Every binding evaluated and written into its item. The same project when nothing changes. Problems are left to
  * `variableDiagnostics`; a binding with a problem leaves its field as it is.
  */
-export function applyBindings(project: Project): Project {
+export function applyBindings(input: Project): Project {
+  // Run requests follow their variables too (ADR-209).
+  const project = applyRequestBindings(input);
   if (!project.items.some((i) => i.bindings?.length)) return project;
   const scopes = new Map<string, Map<string, number>>();
   const scopeOf = (item: ProjectItem) => {
@@ -516,9 +679,119 @@ export function applyBindings(project: Project): Project {
   return changed ? { ...project, items } : project;
 }
 
+// ---------------------------------------------------------------------------
+// Bindings on run requests (ADR-209)
+// ---------------------------------------------------------------------------
+
+/** The request fields a variable can drive (ADR-209): worktop overhangs and a crown's or pelmet's height. */
+export const REQUEST_TARGET_LABEL: Record<RequestTarget, string> = {
+  front: t('Front overhang'),
+  side: t('Side overhang'),
+  height: t('Trim height'),
+};
+
+/** Whether a request has the field a target names: overhangs on a worktop, a height on a crown or pelmet. */
+export const requestHasTarget = (r: RunRequest, target: string): target is RequestTarget =>
+  target === 'height'
+    ? r.kind === 'crown' || r.kind === 'pelmet'
+    : (target === 'front' || target === 'side') && r.kind === 'worktop';
+
+/** Why a value cannot go into a request field (ADR-008: never clamped silently), or null. */
+function requestRangeProblem(target: RequestTarget, value: Mm): string | null {
+  const r = REQUEST_RANGE[target];
+  return value < r.min || value > r.max
+    ? t('{n} mm is outside {min}–{max} mm.', { n: value, min: r.min, max: r.max })
+    : null;
+}
+
+/** Every run request's bindings evaluated with set 1's values and written into it; the same project when none change. */
+export function applyRequestBindings(project: Project): Project {
+  const reqs = project.runRequests;
+  if (!reqs?.some((r) => r.bindings?.length)) return project;
+  const scope = variableScope(project.variables ?? []);
+  let changed = false;
+  const runRequests = reqs.map((r) => {
+    let next = r;
+    for (const b of r.bindings ?? []) {
+      if (!requestHasTarget(r, b.target)) continue;
+      const e = evaluateBinding(b.expr, scope);
+      if (e.value === undefined || requestRangeProblem(b.target, e.value)) continue;
+      if (next[b.target] !== e.value) next = { ...next, [b.target]: e.value };
+    }
+    if (next !== r) changed = true;
+    return next;
+  });
+  return changed ? { ...project, runRequests } : project;
+}
+
+/** Set, replace or (with `expr` null) remove the binding on a request field (ADR-209). */
+export function setRequestBinding(
+  project: Project,
+  key: string,
+  target: RequestTarget,
+  expr: string | null,
+): Project {
+  const runRequests = (project.runRequests ?? []).map((r) => {
+    if (requestKey(r) !== key) return r;
+    const rest = (r.bindings ?? []).filter((b) => b.target !== target);
+    const bindings = expr === null ? rest : [...rest, { target, expr: expr.trim() }];
+    if (bindings.length) return { ...r, bindings };
+    const { bindings: _b, ...without } = r;
+    void _b;
+    return without;
+  });
+  return { ...project, runRequests };
+}
+
+/** Problems of request bindings (ADR-209), as for pieces' bindings: errors that block export. */
+function requestBindingDiagnostics(project: Project): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  const reqs = (project.runRequests ?? []).filter((r) => r.bindings?.length);
+  if (!reqs.length) return out;
+  const scope = variableScope(project.variables ?? []);
+  for (const r of reqs)
+    for (const b of r.bindings!) {
+      const name = requestName(r, project);
+      const nodeId = `request:${requestKey(r)}`;
+      const field = REQUEST_TARGET_LABEL[b.target as RequestTarget] ?? b.target;
+      if (!requestHasTarget(r, b.target)) {
+        out.push({
+          severity: 'error',
+          code: 'binding-target',
+          message: t('{name} has no {field} to bind.', { name, field }),
+          nodeId,
+        });
+        continue;
+      }
+      const e = evaluateBinding(b.expr, scope);
+      const range = e.value !== undefined ? requestRangeProblem(b.target, e.value) : null;
+      if (e.problem)
+        out.push({
+          severity: 'error',
+          code: 'binding-problem',
+          message: t('{name}, {field}: {problem}', { name, field, problem: e.problem }),
+          nodeId,
+        });
+      else if (range)
+        out.push({
+          severity: 'error',
+          code: 'binding-range',
+          message: t('{name}, {field}: {problem} The field keeps {n} mm.', {
+            name,
+            field,
+            problem: range,
+            n: r[b.target] ?? 0,
+          }),
+          nodeId,
+        });
+    }
+  return out;
+}
+
 /** Problems of variables and bindings (ADR-008): errors block export; a bound size on a size-locked piece warns. */
 export function variableDiagnostics(project: Project): Diagnostic[] {
-  const out: Diagnostic[] = [];
+  // Run requests' bindings (ADR-209) are checked even without variables: a name then is unknown.
+  const out: Diagnostic[] = requestBindingDiagnostics(project);
   const vars = project.variables ?? [];
   if (!vars.length) return out;
   const report = (setName: string | null, values?: Record<string, string>) => {
@@ -705,6 +978,16 @@ export function updateVariable(
           ? { ...i, bindings: i.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) }
           : i,
       ),
+      // Run requests' bindings follow a rename too (ADR-209).
+      ...(next.runRequests?.some((r) => r.bindings?.length)
+        ? {
+            runRequests: next.runRequests.map((r) =>
+              r.bindings?.length
+                ? { ...r, bindings: r.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) }
+                : r,
+            ),
+          }
+        : {}),
       ...(next.variableSets
         ? {
             variableSets: next.variableSets.map((s) => ({
@@ -734,6 +1017,15 @@ export function deleteVariable(project: Project, id: string): Project {
     void _b;
     return without;
   });
+  // A run request's binding on it goes too; the field keeps its number (ADR-209).
+  const runRequests = project.runRequests?.map((r) => {
+    if (!r.bindings?.some((b) => refers(b.expr))) return r;
+    const bindings = r.bindings.filter((b) => !refers(b.expr));
+    if (bindings.length) return { ...r, bindings };
+    const { bindings: _b, ...without } = r;
+    void _b;
+    return without;
+  });
   const variables = vars.filter((x) => x.id !== id);
   const variableSets = project.variableSets?.map((s) => {
     const { [id]: _gone, ...values } = s.values;
@@ -743,6 +1035,7 @@ export function deleteVariable(project: Project, id: string): Project {
   return {
     ...project,
     items,
+    ...(runRequests ? { runRequests } : {}),
     ...(variables.length ? { variables } : { variables: undefined }),
     ...(variableSets ? { variableSets } : {}),
   };
@@ -777,4 +1070,178 @@ export function heldByBinding(
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// A piece's own variables (ADR-210)
+// ---------------------------------------------------------------------------
+
+/** A stand-in project item for a design alone, so the target helpers above serve a piece's own bindings. */
+const asItem = (d: Design): ProjectItem => ({
+  id: '',
+  design: d,
+  quantity: 1,
+  position: { x: 0, y: 0, z: 0 },
+  rotationY: 0,
+});
+
+/** The values of a piece's own variables that evaluate, by name. */
+export const designScope = (d: Pick<Design, 'variables'>): Map<string, number> =>
+  variableScope(d.variables ?? []);
+
+/**
+ * The piece's own bindings evaluated with its own variables and written into its sizes (ADR-210). Targets in `skip`
+ * are left alone (a project binding on the same target wins). The same design when nothing changes; problems are
+ * left to `designVariableDiagnostics`, and a binding with a problem leaves its field as it is.
+ */
+export function applyDesignBindings(d: Design, skip: readonly string[] = []): Design {
+  if (!d.bindings?.length) return d;
+  const scope = designScope(d);
+  let item = asItem(d);
+  for (const b of d.bindings) {
+    if (skip.includes(b.target)) continue;
+    const e = evaluateBinding(b.expr, scope);
+    if (e.value === undefined || rangeProblem(item, b.target, e.value)) continue;
+    item = writeTarget(item, b.target, e.value);
+  }
+  return item.design;
+}
+
+/** Problems of a piece's own variables and bindings (ADR-008): errors, so export is blocked. */
+export function designVariableDiagnostics(d: Design): Diagnostic[] {
+  const vars = d.variables ?? [];
+  if (!vars.length && !d.bindings?.length) return [];
+  const out: Diagnostic[] = [];
+  const ev = evaluateVariables(vars);
+  for (const v of vars) {
+    const r = ev.get(v.id);
+    if (r?.problem)
+      out.push({
+        severity: 'error',
+        code: 'variable-problem',
+        message: t('Variable “{name}”: {problem}', { name: v.name, problem: r.problem }),
+        nodeId: `var:${v.id}`,
+      });
+  }
+  const scope = designScope(d);
+  const item = asItem(d);
+  for (const b of d.bindings ?? []) {
+    const e = evaluateBinding(b.expr, scope);
+    const field = targetLabel(b.target);
+    const range = e.value !== undefined ? rangeProblem(item, b.target, e.value) : null;
+    const problem = e.problem
+      ? e.problem
+      : range
+        ? t('{problem} The field keeps {n} mm.', {
+            problem: range,
+            n: readTarget(item, b.target) ?? 0,
+          })
+        : !hasTarget(item, b.target)
+          ? t('{name} has no {field} to bind.', { name: d.name, field })
+          : null;
+    if (problem)
+      out.push({
+        severity: 'error',
+        code: 'binding-problem',
+        message: t('{name}, {field}: {problem}', { name: d.name, field, problem }),
+        nodeId: d.product.id,
+      });
+  }
+  return out;
+}
+
+export function addDesignVariable(
+  d: Design,
+  name: string,
+  expr: string,
+): { design: Design; id: string } {
+  const id = newId();
+  const variables = [...(d.variables ?? []), { id, name: name.trim(), expr: expr.trim() }];
+  return { design: { ...d, variables }, id };
+}
+
+/** Rename or change a piece's own variable; a rename follows into its formulas and bindings. */
+export function updateDesignVariable(
+  d: Design,
+  id: string,
+  patch: { name?: string; expr?: string },
+): Design {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return d;
+  const name = patch.name?.trim() ?? v.name;
+  const names = vars.map((x) => x.name);
+  const ren = (expr: string) => (name === v.name ? expr : renameInExpr(expr, v.name, name, names));
+  return {
+    ...d,
+    variables: vars.map((x) =>
+      x.id === id
+        ? { ...x, name, expr: patch.expr?.trim() ?? x.expr }
+        : { ...x, expr: ren(x.expr) },
+    ),
+    ...(d.bindings ? { bindings: d.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) } : {}),
+  };
+}
+
+/** Remove a piece's own variable; the bindings that used it go and their fields keep their numbers. */
+export function deleteDesignVariable(d: Design, id: string): Design {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return d;
+  const names = vars.map((x) => x.name);
+  const refers = (expr: string) =>
+    namesIn(expr, names).some((n) => n.toLowerCase() === v.name.toLowerCase());
+  const variables = vars.filter((x) => x.id !== id);
+  const bindings = (d.bindings ?? []).filter((b) => !refers(b.expr));
+  return {
+    ...d,
+    variables: variables.length ? variables : undefined,
+    bindings: bindings.length ? bindings : undefined,
+  };
+}
+
+/** Set, replace or (with `expr` null) remove a piece's own binding on `target`. */
+export function setDesignBinding(d: Design, target: string, expr: string | null): Design {
+  const rest = (d.bindings ?? []).filter((b) => b.target !== target);
+  const bindings = expr === null ? rest : [...rest, { target, expr: expr.trim() }];
+  return { ...d, bindings: bindings.length ? bindings : undefined };
+}
+
+/** How many of the piece's bindings and which of its other variables refer to its variable `id`. */
+export function designVariableUsers(
+  d: Design,
+  id: string,
+): { bindings: number; vars: DesignVariable[] } {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return { bindings: 0, vars: [] };
+  const names = vars.map((x) => x.name);
+  const refers = (expr: string) =>
+    namesIn(expr, names).some((n) => n.toLowerCase() === v.name.toLowerCase());
+  return {
+    bindings: (d.bindings ?? []).filter((b) => refers(b.expr)).length,
+    vars: vars.filter((x) => x.id !== id && refers(x.expr)),
+  };
+}
+
+/**
+ * Every project piece's own bindings, evaluated with its own variables only (ADR-210): the piece's parameters. A
+ * project binding on the same target wins (it is left to `applyBindings`), and a locked size keeps its value
+ * (ADR-171). The same project when nothing changes.
+ */
+export function applyPieceBindings(project: Project): Project {
+  if (!project.items.some((i) => i.design.bindings?.length)) return project;
+  let changed = false;
+  const items = project.items.map((item) => {
+    if (!item.design.bindings?.length) return item;
+    const skip = [
+      ...(item.bindings ?? []).map((b) => b.target),
+      ...SIZE_AXES.filter((a) => isAxisLocked(item, a)),
+    ];
+    const design = applyDesignBindings(item.design, skip);
+    if (design === item.design) return item;
+    changed = true;
+    return { ...item, design };
+  });
+  return changed ? { ...project, items } : project;
 }

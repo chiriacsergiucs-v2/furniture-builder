@@ -31,21 +31,26 @@ import {
 import {
   mergeCatalog,
   shadowOf,
-  templateFromDesign,
+  templateProblemTexts,
   validateLocalTemplate,
   type LocalTemplate,
   type ViewFamily,
 } from '../core/catalog/local';
 import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
-import { newId } from '../core/design';
+import { newId, templates } from '../core/design';
 import type { Design } from '../core/types';
-import { listDesigns, type StoredDesign } from '../persist/db';
+import { listDecors, listDesigns, type StoredDesign } from '../persist/db';
+import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
+import { kindName, type Decor } from '../core/materials';
 import { useDesign } from '../store/designStore';
-import { useTemplates } from '../store/templatesStore';
+import { saveRevision, useTemplates } from '../store/templatesStore';
+import { saveDesignToCatalog } from '../store/saveToCatalog';
 import { ProjectTemplateList } from './ProjectTemplates';
-import { askConfirm, askText } from './Confirm';
-import { InfoTip } from './controls';
+import { askConfirm } from './Confirm';
+import { Dialog } from './Dialogs';
+import { CatalogSaveForm } from './SaveToCatalog';
+import { InfoTip, rovingKeys, rovingTab } from './controls';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { Icon } from './icons';
@@ -133,8 +138,6 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
   return groups.filter((g) => g.items.length);
 }
 
-const itemCount = (g: Group) => g.items.reduce((n, i) => n + i.family.variants.length, 0);
-
 /** `short`: the phone catalog's one switches row (ADR-118) shows "Room" / "Type"; the names stay "By room" / "By type". */
 function GroupToggle({
   value,
@@ -146,11 +149,17 @@ function GroupToggle({
   short?: boolean;
 }) {
   return (
-    <div className="segmented small" role="radiogroup" aria-label={t('Group by')}>
+    <div
+      className="segmented small"
+      role="radiogroup"
+      aria-label={t('Group by')}
+      onKeyDown={rovingKeys}
+    >
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
+        tabIndex={rovingTab(value === 'room', 0, true)}
         aria-label={short ? t('By room') : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
@@ -161,6 +170,7 @@ function GroupToggle({
         type="button"
         role="radio"
         aria-checked={value === 'type'}
+        tabIndex={rovingTab(value === 'type', 1, true)}
         aria-label={short ? t('By type') : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
@@ -188,6 +198,14 @@ const matches = (f: ViewFamily, v: CatalogVariant, q: string) =>
     tr(v.name),
     ...f.aliases.map((a) => tr(a)),
   ].some((s) => s.toLowerCase().includes(q));
+/** The items of a group that match the search, so its chip and heading count the cards shown (ADR-195). */
+const itemCount = (g: Group, q: string) =>
+  g.items.reduce((n, i) => n + i.family.variants.filter((v) => matches(i.family, v, q)).length, 0);
+/** A built item that waits only for the user's own safety confirmation (ADR-035, ADR-195). */
+const safetyOnly = (v: CatalogVariant) => {
+  const missing = missingCapabilities(v);
+  return !!v.create && missing.length === 1 && missing[0] === 'safety:user-confirmed';
+};
 
 /** The catalog's own actions; on a phone they fold under one button so the list starts higher up. */
 function CatalogActions({ phone, children }: { phone: boolean; children: ReactNode }) {
@@ -202,6 +220,11 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
     </details>
   );
 }
+
+/** Each built-in template's description by its id, shown under the Start from row of that id (ADR-216). */
+const TEMPLATE_TEXT = new Map(
+  templates.filter((x) => x.description).map((x) => [x.id, x.description]),
+);
 
 /**
  * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
@@ -281,6 +304,10 @@ export function StartFrom({
                         {tr(f.name)}: {tr(v.name)}
                       </strong>
                       <span className="sub">{tr(v.summary)}</span>
+                      {/* The built-in template's description, under the row of the same id (ADR-216). */}
+                      {TEMPLATE_TEXT.has(v.id) && (
+                        <span className="sub">{tr(TEMPLATE_TEXT.get(v.id) ?? '')}</span>
+                      )}
                       {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (
                         <span className="sub ro-line" lang="ro">
@@ -337,8 +364,34 @@ export function CatalogPage({
   const [grouping, setGrouping] = useGrouping();
   const [source, setSource] = useState<Source>('templates');
   const [query, setQuery] = useState('');
-  const [editing, setEditing] = useState<LocalTemplate | null>(null);
+  // A draft handed back by template mode (Cancel, or a Save that could not be stored) opens again here (ADR-195).
+  const [editing, setEditing] = useState<LocalTemplate | null>(() => useTemplates.getState().draft);
+  useEffect(() => {
+    if (useTemplates.getState().draft) useTemplates.getState().setDraft(null);
+  }, []);
+  const storageError = useTemplates((s) => s.error);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  // A new storage failure is brought into view: the Save that failed may be far below it (ADR-195).
+  useEffect(() => {
+    if (storageError) errorRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [storageError]);
   const [msg, setMsg] = useState<string | null>(null);
+  /** The family just made by "Save this piece as a template", linked from its confirmation (ADR-195). */
+  const [savedFamily, setSavedFamily] = useState<{ id: string; name: string } | null>(null);
+  // A new object per tap, so tapping the link again scrolls again; scrolled once the list has rendered.
+  const [jump, setJump] = useState<{ id: string } | null>(null);
+  const jumpTo = (id: string) => {
+    setSource('templates');
+    setQuery('');
+    setEditing(null);
+    setJump({ id });
+  };
+  useEffect(() => {
+    if (!jump) return;
+    document
+      .querySelector<HTMLElement>(`[data-family="${jump.id.replace(/["\\]/g, '\\$&')}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [jump]);
   const [safety, setSafety] = useState(isSafetyConfirmed());
   const project = useDesign((s) => s.project);
   const editingItem = useDesign((s) => s.editingItemId);
@@ -357,13 +410,14 @@ export function CatalogPage({
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
   const sources = (
-    <div className="segmented small" role="tablist" aria-label={t('Source')}>
-      {(['templates', 'saved', 'brands'] as const).map((s) => (
+    <div className="segmented small" role="tablist" aria-label={t('Source')} onKeyDown={rovingKeys}>
+      {(['templates', 'saved', 'brands'] as const).map((s, i) => (
         <button
           key={s}
           type="button"
           role="tab"
           aria-selected={source === s}
+          tabIndex={rovingTab(source === s, i, true)}
           aria-label={phone && s === 'saved' ? t('Saved on this device') : undefined}
           className={source === s ? 'on' : ''}
           onClick={() => setSource(s)}
@@ -427,17 +481,40 @@ export function CatalogPage({
       const data = JSON.parse(await file.text()) as { templates?: unknown[] };
       const list = Array.isArray(data.templates) ? data.templates : [];
       let ok = 0,
-        bad = 0;
-      for (const tpl of list) {
-        if (validateLocalTemplate(tpl).length) {
+        bad = 0,
+        kept = 0;
+      for (const raw of list) {
+        if (validateLocalTemplate(raw).length) {
           bad++;
           continue;
         }
-        await useTemplates.getState().save(tpl as LocalTemplate);
-        ok++;
+        const tpl = raw as LocalTemplate;
+        // A family already edited on this device, or earlier in this file (saved by then), is asked about: Keep mine
+        // (the default, also Esc) skips the imported one; only Use the imported one replaces the edit (ADR-203, G-363).
+        const store = useTemplates.getState();
+        const edited = tpl.shadows ? store.locals.filter((l) => l.shadows === tpl.shadows) : [];
+        if (edited.length) {
+          const use = await askConfirm(
+            t('“{name}” is already edited on this device. Keep yours or use the imported one?', {
+              name: tr(tpl.family.name),
+            }),
+            {
+              confirmLabel: t('Use the imported one'),
+              cancelLabel: t('Keep mine'),
+              cancelFirst: true,
+            },
+          );
+          if (!use) {
+            kept++;
+            continue;
+          }
+          for (const l of edited) if (l.id !== tpl.id) await store.remove(l.id);
+        }
+        // A refused write is shown as the storage alert and not counted as imported (ADR-195).
+        if (await store.save(tpl)) ok++;
       }
       setMsg(
-        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}.`,
+        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}${kept ? t(', {n} kept as they were', { n: kept }) : ''}.`,
       );
     } catch {
       setMsg(t('That file could not be read as a templates file.'));
@@ -505,7 +582,8 @@ export function CatalogPage({
               )}
             </InfoTip>
           </span>
-          <SaveAsTemplate />
+          {/* Only when a design is open to save (ADR-195). */}
+          {designOpen && <SaveAsTemplate onSaved={setSavedFamily} />}
           <details className="menu catalog-files">
             <summary
               aria-label={t('Template files')}
@@ -541,10 +619,40 @@ export function CatalogPage({
           </details>
         </CatalogActions>
       )}
+      {storageError && (
+        <p className="alert error" role="alert" ref={errorRef}>
+          <Icon name="alert-circle" className="sm" />
+          <span>{storageError}</span>
+          <button
+            type="button"
+            className="btn sm ghost"
+            onClick={() => useTemplates.getState().clearError()}
+          >
+            {t('Dismiss')}
+          </button>
+        </p>
+      )}
       {msg && (
         <p className="alert info" role="status">
           <Icon name="info" className="sm" />
           <span>{msg}</span>
+        </p>
+      )}
+      {savedFamily && (
+        <p className="alert info" role="status">
+          <Icon name="check" className="sm" />
+          <span>
+            {t('Saved to the catalog.')}{' '}
+            <a
+              href={`#fam-${savedFamily.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                jumpTo(savedFamily.id);
+              }}
+            >
+              {t('Show “{name}”', { name: savedFamily.name })}
+            </a>
+          </span>
         </p>
       )}
       {source === 'templates' && editing && (
@@ -579,17 +687,25 @@ export function CatalogPage({
                   document.getElementById(`cat-${g.key}`)?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                {g.label} <span className="count">{itemCount(g)}</span>
+                {g.label} <span className="count">{itemCount(g, q)}</span>
               </a>
             ))}
           </nav>
         ))}
+      {source === 'templates' && !editing && grouping === 'room' && groups.length > 0 && (
+        <p className="hint">
+          {t(
+            'A family can sit in several rooms, so the room counts add up to more than the total.',
+          )}
+        </p>
+      )}
       {source === 'templates' &&
         !editing &&
         groups.map((g) => (
           <section key={g.key} id={`cat-${g.key}`} className="catalog-group" aria-label={g.label}>
             <h2 className="group-head">
-              {g.label} <span className="count">{t('{n} items', { n: itemCount(g) })}</span>
+              {g.label}{' '}
+              <span className="count">{t('{n|# item|# items}', { n: itemCount(g, q) })}</span>
             </h2>
             {g.items.map(({ family, also }) => (
               <FamilyBlock
@@ -598,6 +714,8 @@ export function CatalogPage({
                 also={also}
                 q={q}
                 toProject={toProject}
+                safety={safety}
+                onConfirmSafety={() => toggleSafety(true)}
                 onTake={take}
                 onEdit={() => startEdit(family)}
               />
@@ -607,46 +725,44 @@ export function CatalogPage({
       {source === 'saved' && (
         <>
           <SavedList onTake={take} />
+          {/* The project templates list reports its own read failure. */}
           <ProjectTemplateList manage onOpened={onDone} />
         </>
       )}
-      {source === 'brands' &&
-        (brandEntries.length === 0 ? (
-          <p className="empty center">
-            <Icon name="catalog" />
-            {t(
-              "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.",
-            )}
-          </p>
-        ) : (
-          <ul className="template-list template-grid">
-            {brandEntries.map((e) => (
-              <li key={e.catalogId}>
-                <button
-                  type="button"
-                  className="row-btn"
-                  onClick={() => take(copyBrandEntry(e, newId()))}
-                >
-                  <span className="glyph">
-                    <Icon name={templateGlyph(e.design.product.kind)} />
-                  </span>
-                  <span>
-                    <strong>
-                      {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
-                    </strong>
-                    <span className="sub">
-                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
-                      {e.design.catalog!.articleNumber
-                        ? ` · ${e.design.catalog!.articleNumber}`
-                        : ''}
+      {source === 'brands' && (
+        <DecorBrandList onTake={take}>
+          {brandEntries.length > 0 && (
+            <ul className="template-list template-grid">
+              {brandEntries.map((e) => (
+                <li key={e.catalogId}>
+                  <button
+                    type="button"
+                    className="row-btn"
+                    onClick={() => take(copyBrandEntry(e, newId()))}
+                  >
+                    <span className="glyph">
+                      <Icon name={templateGlyph(e.design.product.kind)} />
                     </span>
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ))}
+                    <span>
+                      <strong>
+                        {e.design.catalog!.brand}{' '}
+                        {e.design.catalog!.productName ?? tr(e.design.name)}
+                      </strong>
+                      <span className="sub">
+                        {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
+                        {e.design.catalog!.articleNumber
+                          ? ` · ${e.design.catalog!.articleNumber}`
+                          : ''}
+                      </span>
+                    </span>
+                    <Icon name="chevron-right" className="chev sm" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DecorBrandList>
+      )}
     </main>
   );
 }
@@ -702,9 +818,12 @@ const SUPPORT_TEXT = {
   reference: t('Reference'),
 };
 
-/** "1600 × 450 × 438 mm · 9 parts · 2 to check": an item's size, parts and checks in one line. */
+/**
+ * "1600 × 450 × 438 · 9 parts · 2 to check": an item's size, parts and checks in one line. The size has no " mm" on
+ * the card (user decision 2026-11-07, ADR-195), so the line fits better beside the picture.
+ */
 const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
-  `${t('{w} × {h} × {d} mm', { w: fx.w, h: fx.h, d: fx.d })} · ${t('{n} parts', { n: fx.parts })}${
+  `${fx.w} × ${fx.h} × ${fx.d} · ${t('{n} parts', { n: fx.parts })}${
     fx.errors
       ? ` · ${t('{n} problems', { n: fx.errors })}`
       : fx.warnings
@@ -730,6 +849,7 @@ function ItemCard({
   facts,
   toProject,
   onTake,
+  onConfirmSafety,
 }: {
   f: ViewFamily;
   v: CatalogVariant;
@@ -737,6 +857,8 @@ function ItemCard({
   facts: ReturnType<typeof itemFacts> | undefined;
   toProject: boolean;
   onTake: (d: Design) => void;
+  /** "I check it myself" on a safety-regulated item: ticks the catalog's safety switch (ADR-195). */
+  onConfirmSafety: () => void;
 }) {
   const ok = insertable(v);
   const ref = useRef<HTMLLIElement>(null);
@@ -767,6 +889,9 @@ function ItemCard({
           alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
         />
       )}
+      {/* On a card with a picture the "default" tag sits on the picture, off the meta line (user decision
+          2026-11-07, ADR-195); a card without one keeps it on the meta line. */}
+      {ok && isDefault && <span className="tag subtle item-default">{t('default')}</span>}
       <div className="item-text">
         <span className="item-name" id={nameId}>
           <strong>{tr(v.name)}</strong>
@@ -786,7 +911,7 @@ function ItemCard({
           )}
         </span>
         <span className="item-meta">
-          {isDefault && <span className="tag subtle">{t('default')}</span>}
+          {!ok && isDefault && <span className="tag subtle">{t('default')}</span>}
           <span
             className={`kind ${v.kind}`}
             title={
@@ -808,7 +933,23 @@ function ItemCard({
         {v.hardware && (
           <span className="sub">{t('You choose: {hardware}', { hardware: tr(v.hardware) })}</span>
         )}
-        {!ok && (
+        {!ok && safetyOnly(v) && (
+          // Waits only for the user's own check (ADR-195): said as it is, with the switch at hand.
+          <span className="safety-gate">
+            <span className="sub waits-why">
+              {t('Safety-regulated: you check it against the standards yourself')}
+            </span>
+            <button
+              type="button"
+              className="btn sm"
+              aria-describedby={nameId}
+              onClick={onConfirmSafety}
+            >
+              {t('I check it myself')}
+            </button>
+          </span>
+        )}
+        {!ok && !safetyOnly(v) && (
           <span className="sub waits-why">
             {t('Not available yet: {why}', { why: waitsFor(v.requires) || t('no design') })}
           </span>
@@ -838,6 +979,8 @@ function FamilyBlock({
   also,
   q,
   toProject,
+  safety,
+  onConfirmSafety,
   onTake,
   onEdit,
 }: {
@@ -845,12 +988,19 @@ function FamilyBlock({
   also?: boolean;
   q: string;
   toProject: boolean;
+  /** The safety switch: safety-regulated items build once it is on, so their facts are worked out again. */
+  safety: boolean;
+  onConfirmSafety: () => void;
   onTake: (d: Design) => void;
   onEdit: () => void;
 }) {
   const remove = useTemplates((s) => s.remove);
   const items = f.variants.filter((v) => matches(f, v, q));
-  const facts = useMemo(() => new Map(f.variants.map((v) => [v.id, itemFacts(f, v)])), [f]);
+  const facts = useMemo(
+    () => new Map(f.variants.map((v) => [v.id, itemFacts(f, v)])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `safety` changes what `itemFacts` can build.
+    [f, safety],
+  );
   const [about, setAbout] = useState(false);
   const aboutId = useId();
   const aliases = f.aliases.length > 0 && (
@@ -859,7 +1009,7 @@ function FamilyBlock({
     </span>
   );
   return (
-    <article className={`family support-${f.support}`} aria-label={tr(f.name)}>
+    <article className={`family support-${f.support}`} aria-label={tr(f.name)} data-family={f.id}>
       <header className="family-head">
         <span className="glyph">
           <Icon name={familyGlyph(f)} />
@@ -938,6 +1088,7 @@ function FamilyBlock({
             facts={facts.get(v.id)}
             toProject={toProject}
             onTake={onTake}
+            onConfirmSafety={onConfirmSafety}
           />
         ))}
       </ul>
@@ -1004,8 +1155,9 @@ function ShippedUpdated({ f }: { f: ViewFamily }) {
         type="button"
         className="btn sm"
         onClick={() => {
+          // Hides the notice for this shipped revision only; the template's own revision stays (ADR-195).
           const mine = useTemplates.getState().locals.find((x) => x.id === f.localId);
-          if (mine) void save({ ...mine, basedOn: shipped.catalogVersion, updatedAt: now() });
+          if (mine) void save({ ...mine, seenShipped: shipped.catalogVersion, updatedAt: now() });
         }}
       >
         {t('Keep mine')}
@@ -1029,38 +1181,167 @@ function ShippedUpdated({ f }: { f: ViewFamily }) {
   );
 }
 
-function SaveAsTemplate() {
+/**
+ * "Save this piece as a template" (ADR-195): the Save to catalog form (name, room, type, ADR-107) for the open piece;
+ * the confirmation links to the new family.
+ */
+function SaveAsTemplate({ onSaved }: { onSaved: (f: { id: string; name: string }) => void }) {
   const design = useDesign((s) => s.design);
   const project = useDesign((s) => s.project),
     editingItem = useDesign((s) => s.editingItemId);
-  const save = useTemplates((s) => s.save);
-  const [done, setDone] = useState(false);
+  const [open, setOpen] = useState(false);
   if (project && !editingItem) return null;
   return (
-    <button
-      type="button"
-      className="btn sm"
-      disabled={done}
-      onClick={async () => {
-        const name = (await askText(t('Name of the new template'), design.name))?.trim();
-        if (!name) return;
-        void save(templateFromDesign(design, { name, function: 'storage', rooms: ['other'] })).then(
-          () => setDone(true),
-        );
-      }}
-    >
-      {done ? t('Saved as a template') : t('Save this piece as a template')}
-    </button>
+    <>
+      <button type="button" className="btn sm" onClick={() => setOpen(true)}>
+        {t('Save this piece as a template')}
+      </button>
+      <Dialog open={open} onClose={() => setOpen(false)} title={t('Save to catalog')}>
+        {open && (
+          <CatalogSaveForm
+            design={design}
+            save={(meta) => saveDesignToCatalog(design, meta)}
+            onCancel={() => setOpen(false)}
+            onSaved={(tpl) => {
+              setOpen(false);
+              onSaved({ id: tpl.family.id, name: tpl.family.name });
+            }}
+          />
+        )}
+      </Dialog>
+    </>
+  );
+}
+
+/**
+ * Catalog → Brands (ADR-210, G-044): a chip per manufacturer of the decor list on this device, with its count, beside
+ * any shipped brand entry (`children`). A chip lists that maker's decors and the saved pieces with a board of it.
+ * Nothing is fetched (ADR-002).
+ */
+function DecorBrandList({
+  onTake,
+  children,
+}: {
+  onTake: (d: Design) => void;
+  children?: ReactNode;
+}) {
+  const [data, setData] = useState<{ decors: Decor[]; saved: StoredDesign[] } | 'error' | null>(
+    null,
+  );
+  const [picked, setPicked] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    Promise.all([listDecors(), listDesigns().catch(() => [] as StoredDesign[])])
+      .then(([decors, saved]) => live && setData({ decors, saved }))
+      .catch(() => live && setData('error'));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const brands = useMemo(() => (data && data !== 'error' ? decorBrands(data.decors) : []), [data]);
+  if (data === null) return <p className="loading">{t('Loading…')}</p>;
+  if (data === 'error')
+    return (
+      <>
+        <p className="alert error" role="alert">
+          <Icon name="alert-circle" className="sm" />
+          <span>{t('The decor list could not be read on this device.')}</span>
+        </p>
+        {children}
+      </>
+    );
+  if (!brands.length && !children)
+    return (
+      <p className="empty center">
+        <Icon name="catalog" />
+        {t('No brands yet. Import your decor list under Boards to see its manufacturers here.')}
+      </p>
+    );
+  const brand = brands.find((b) => b.key === picked);
+  const pieces = brand ? data.saved.filter((r) => usesBrand(r.design, brand)) : [];
+  return (
+    <>
+      {brands.length > 0 && (
+        <div className="chips" role="group" aria-label={t('Brands from your decor list')}>
+          {brands.map((b) => (
+            <button
+              key={b.key}
+              type="button"
+              className={`chip ${picked === b.key ? 'on' : ''}`}
+              aria-pressed={picked === b.key}
+              onClick={() => setPicked(picked === b.key ? null : b.key)}
+            >
+              {t('{brand} ({n})', { brand: b.label, n: b.decors.length })}
+            </button>
+          ))}
+        </div>
+      )}
+      {brand && (
+        <section aria-label={brand.label}>
+          <h3 className="list-head">{t('{brand} decors', { brand: brand.label })}</h3>
+          <ul className="template-list">
+            {brand.decors.map((d) => (
+              <li key={d.id} className="decor-row">
+                <span className="swatch" style={{ background: d.color }} aria-hidden="true" />
+                <span>
+                  <strong>
+                    {d.code} {d.name}
+                  </strong>
+                  <span className="sub">
+                    {t('{n} mm', { n: d.thickness })} · {kindName(d.kind) ?? d.kind}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <h3 className="list-head">
+            {t('Saved pieces with a {brand} board', { brand: brand.label })}
+          </h3>
+          {pieces.length ? (
+            <ul className="template-list template-grid">
+              {pieces.map((r) => (
+                <li key={r.id}>
+                  <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
+                    <span className="glyph">
+                      <Icon name={templateGlyph(r.design.product.kind)} />
+                    </span>
+                    <span>
+                      <strong>{r.name}</strong>
+                    </span>
+                    <Icon name="chevron-right" className="chev sm" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
+          )}
+        </section>
+      )}
+      {children}
+    </>
   );
 }
 
 function SavedList({ onTake }: { onTake: (d: Design) => void }) {
   const [rows, setRows] = useState<StoredDesign[] | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     listDesigns()
       .then(setRows)
-      .catch(() => setRows([]));
+      .catch(() => {
+        // A failed read is said as such, never as an empty list (ADR-195).
+        setFailed(true);
+        setRows([]);
+      });
   }, []);
+  if (failed)
+    return (
+      <p className="alert error" role="alert">
+        <Icon name="alert-circle" className="sm" />
+        <span>{t('Designs saved on this device could not be read.')}</span>
+      </p>
+    );
   if (!rows) return <p className="loading">{t('Loading…')}</p>;
   if (!rows.length)
     return (
@@ -1104,7 +1385,7 @@ function TemplateEditor({
   onEditDesign: (t: LocalTemplate, variantId: string) => void;
 }) {
   const [tpl, setT] = useState(initial);
-  const save = useTemplates((s) => s.save);
+  const [busy, setBusy] = useState(false);
   const f = tpl.family;
   const setF = (patch: Partial<typeof f>) => setT({ ...tpl, family: { ...f, ...patch } });
   const setV = (i: number, patch: Partial<(typeof f.variants)[number]>) =>
@@ -1116,12 +1397,8 @@ function TemplateEditor({
     [vs[i], vs[j]] = [vs[j], vs[i]];
     setF({ variants: vs });
   };
-  const errs = validateLocalTemplate({ ...tpl, updatedAt: now() });
-  const commit = async (next = tpl) => {
-    const stamped = { ...next, revision: next.revision + 1, updatedAt: now() };
-    await save(stamped);
-    return stamped;
-  };
+  // Each problem as a sentence for the user, never the validator's code (ADR-195).
+  const errs = templateProblemTexts(validateLocalTemplate({ ...tpl, updatedAt: now() }));
   return (
     <section className="template-editor" aria-label={t('Edit template {name}', { name: f.name })}>
       <div className="card-title">
@@ -1245,7 +1522,8 @@ function TemplateEditor({
                   type="button"
                   className="btn sm"
                   disabled={!v.design}
-                  onClick={async () => onEditDesign(await commit(), v.id)}
+                  // The unsaved draft goes along; nothing is stored until "Save to template" (ADR-195).
+                  onClick={() => onEditDesign(tpl, v.id)}
                 >
                   {t('Edit design')}
                 </button>
@@ -1286,17 +1564,20 @@ function TemplateEditor({
       {errs.length > 0 && (
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
-          <span>{errs.slice(0, 3).join('; ')}</span>
+          <span>{errs.slice(0, 3).join(' ')}</span>
         </p>
       )}
       <div className="split-actions">
         <button
           type="button"
           className="btn primary"
-          disabled={errs.length > 0}
+          disabled={errs.length > 0 || busy}
           onClick={async () => {
-            await commit();
-            onDone(t('Template “{name}” saved on this device.', { name: f.name }));
+            setBusy(true);
+            const saved = await saveRevision(tpl);
+            setBusy(false);
+            // A refused write keeps the draft open; the storage alert above says why (ADR-195).
+            if (saved) onDone(t('Template “{name}” saved on this device.', { name: f.name }));
           }}
         >
           {t('Save template')}

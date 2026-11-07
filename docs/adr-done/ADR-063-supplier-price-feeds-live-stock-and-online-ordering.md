@@ -1,7 +1,8 @@
 # ADR-063: Supplier price feeds, live stock and online ordering
 
-- Status: Deferred (needs a non-free supplier service and a change to ADR-002; the user chooses the supplier)
+- Status: Rejected (won't do: prices stay the user's list and seller exports, orders stay the shopping-list file — user decision 2026-11-07, ADR-217)
 - Date: 2026-10-24
+- Rejected: 2026-11-07
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-002, ADR-062
 - Design: n/a

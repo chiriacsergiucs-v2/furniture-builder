@@ -26,12 +26,12 @@ if [ ! -d "$ADR_DIR" ]; then
   exit 0
 fi
 
-# True if ADR number $1 (any zero-padding) exists in docs/adr-done/.
+# True if ADR number $1 (any zero-padding) is Implemented in docs/adr-done/ (a Rejected one is not, ADR-217).
 dep_done() {
   local n matches
   n="$(printf '%03d' "$((10#$1))")"
   matches=("$DONE_DIR"/ADR-"$n"-*.md)
-  [ "${#matches[@]}" -gt 0 ]
+  [ "${#matches[@]}" -gt 0 ] && grep -qE '^- Status: Implemented[[:space:]]*$' "${matches[0]}"
 }
 
 next=""

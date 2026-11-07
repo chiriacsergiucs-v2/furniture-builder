@@ -38,12 +38,16 @@ export interface FieldDef {
   /** Answer key. */
   id: string;
   label: string;
+  /** A shorter label for the Review step (ADR-202); absent = `label`. Wizard definition, not saved data. */
+  reviewLabel?: string;
   kind: FieldKind;
   unit?: 'mm';
   min?: number;
   max?: number;
   /** Used when the type's defaults do not give one. */
   default?: AnswerValue;
+  /** The value while the answer is missing, from the other resolved answers (ADR-191). */
+  fill?: (a: Answers) => AnswerValue;
   help?: string;
   options?: Option[];
   /** List fields: how many entries (compartments). */

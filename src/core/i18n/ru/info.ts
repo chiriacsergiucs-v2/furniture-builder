@@ -9,6 +9,12 @@ export const ru_info = {
   // The feature tree (ADR-158).
   Creating: 'Создание',
   'Start a new single piece': 'Начать новое отдельное изделие',
+  'Fill the room in L and U rooms': 'Заполнить комнату в Г- и П-образных комнатах',
+  'A wall too short for a corner cabinet at both ends keeps one and leaves the other corner empty, both ends tried; runs stay out of the corner cabinets and of a narrow arm already filled.':
+    'На стене, слишком короткой для угловых шкафов с обоих концов, остаётся один, а другой угол пуст (пробуются оба конца); ряды не заходят на угловые шкафы и в узкое крыло, уже заполненное.',
+  'Template descriptions in Start from': 'Описания шаблонов в «Начать с»',
+  'New… → Start from shows each built-in template’s description under its row.':
+    'Создать… → «Начать с» показывает описание каждого встроенного шаблона под его строкой.',
   'Pick a template from the catalog to start from.':
     'Выберите шаблон из каталога, с которого начать.',
   'New-piece wizard': 'Мастер нового изделия',
@@ -24,8 +30,8 @@ export const ru_info = {
   'Several pieces placed in one room.': 'Несколько изделий, расставленных в одной комнате.',
   'Create a project from a project template': 'Создать проект из шаблона проекта',
   'Fill a wall': 'Заполнить стену',
-  'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly.':
-    'Введите ширину стены и выберите предложенный набор пеналов, нижних и навесных шкафов, который заполняет её точно.',
+  'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.':
+    'Введите ширину стены и выберите предложенный набор пеналов, нижних и навесных шкафов, который заполняет её точно; в уточнении задаются высота пеналов и глубина навесных шкафов, у каждого вида нижних шкафов может быть своя ширина, а одинаковые фасады могут делить корпуса до 4 фасадов.',
   'Make a new piece inside a project': 'Создать новое изделие внутри проекта',
   Composition: 'Компоновка',
   'Dividing spaces': 'Деление пространства',
@@ -88,8 +94,8 @@ export const ru_info = {
   'A piece on another piece follows it.': 'Изделие на другом изделии следует за ним.',
   'Aligning and arranging': 'Выравнивание и расстановка',
   'Snap to neighbours and walls': 'Привязка к соседям и стенам',
-  'A preview while dragging; the Snap switch or Alt places freely.':
-    'Предпросмотр при перетаскивании; переключатель «Привязка» или Alt ставят свободно.',
+  'A preview while dragging; at equal distance a locked neighbour wins; the Snap box or Alt places freely.':
+    'Предпросмотр при перетаскивании; при равном расстоянии побеждает закреплённый сосед; флажок «Привязка» или Alt ставят свободно.',
   'Snap centre to centre': 'Привязка центр к центру',
   'Compatibility rules': 'Правила совместимости',
   'Checked when snapping and in the project checks.':
@@ -103,6 +109,8 @@ export const ru_info = {
   'Swaps left and right inside the piece: hinges, pedestals and handles.':
     'Меняет местами левое и правое внутри изделия: петли, тумбы и ручки.',
   'Mirror a run or a selection': 'Отразить ряд или выделенное',
+  'Positions reflect about the centre and each piece is mirrored; groups touching the run mirror with it, and a group that cannot mirror refuses with the reason.':
+    'Положения отражаются относительно центра, и каждое изделие отражается зеркально; группы, касающиеся ряда, отражаются вместе с ним, а группа, которая не может отразиться, отказывает с указанием причины.',
   'Linked copies': 'Связанные копии',
   'Change one copy and every linked copy changes.':
     'Измените одну копию — изменятся все связанные.',
@@ -112,7 +120,7 @@ export const ru_info = {
     'Щелчок с Shift или Ctrl, «Выбрать» на телефоне или Ctrl+A.',
   'Select several pieces in the front view, 3D and the piece list':
     'Выделение нескольких изделий на виде спереди, в 3D и в списке изделий',
-  'One Select switch shared by every view.': 'Один переключатель «Выбор» для всех видов.',
+  'One Select box shared by every view.': 'Один флажок «Выбор» для всех видов.',
   'Selection box on the plan': 'Рамка выделения на плане',
   'Cycle through overlapping pieces': 'Перебор перекрывающихся изделий',
   'Keep pieces as named groups': 'Сохранять изделия как именованные группы',
@@ -155,6 +163,7 @@ export const ru_info = {
   Drawers: 'Ящики',
   'Drawer boxes with runner choice and clearances':
     'Короба ящиков с выбором направляющих и зазорами',
+  'Drawer boxes without an inner front': 'Короба ящиков без внутренней передней стенки',
   'Kitchen runs': 'Кухонные ряды',
   'Run parts: worktop, plinth, fillers and covers':
     'Детали ряда: столешница, цоколь, доборы и накладки',
@@ -234,8 +243,8 @@ export const ru_info = {
   'Tapping a check selects the pieces and shows where it is.':
     'Касание проверки выделяет изделия и показывает место.',
   'Previewed repairs': 'Исправления с предпросмотром',
-  'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.':
-    'Исправление перемещает всю группу; исправление, за которым группа не может последовать, показано отклонённым, с причиной.',
+  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.':
+    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной. Разницу глубины или высоты соседей исправляют, выравнивая одно изделие по другому; изделия, чьи семейства не делят комнату, — сдвигая одно вдоль его стены.',
   Views: 'Виды',
   Drawings: 'Чертежи',
   'Compose and Build & Preview modes': 'Режимы «Компоновка» и «Сборка и просмотр»',
@@ -252,7 +261,8 @@ export const ru_info = {
   'Board finishes, room light and soft shadows.':
     'Поверхности материалов, освещение комнаты и мягкие тени.',
   'Render a photo-quality picture': 'Отрисовать фотореалистичное изображение',
-  'Saved as PNG, on a laptop.': 'Сохраняется в PNG, на ноутбуке.',
+  'Saved as PNG; best on a laptop, a phone may be slow.':
+    'Сохраняется в PNG; лучше на ноутбуке, на телефоне может быть медленно.',
   'Section view and Isolate': 'Разрез и изоляция',
   'Draws only when something changes': 'Отрисовка только при изменениях',
   'Imported 3D models': 'Импортированные 3D-модели',
@@ -311,11 +321,20 @@ export const ru_info = {
   'Browse by room or type, with search': 'Просмотр по комнате или типу, с поиском',
   '1–5 variants per family': '1–5 вариантов в семействе',
   'Catalog pictures': 'Картинки каталога',
+  'Group chips and headings count the items the search shows.':
+    'Кнопки групп и заголовки считают изделия, которые показывает поиск.',
   'Compact cards with More': 'Компактные карточки с кнопкой «Ещё»',
+  'Open under the picture, so the text has the card’s width.':
+    'Кнопка «Открыть» под картинкой, чтобы тексту хватало ширины карточки.',
   'Edit templates on this device': 'Редактировать шаблоны на этом устройстве',
-  'Shipped templates never change; reset or compare with the shipped one.':
-    'Встроенные шаблоны не меняются; можно сбросить или сравнить со встроенным.',
+  'Shipped templates never change; reset or compare with the shipped one. One save is one revision; Cancel keeps the draft; a failed save or read is shown.':
+    'Встроенные шаблоны не меняются; можно сбросить или сравнить со встроенным. Одно сохранение — одна ревизия; «Отмена» сохраняет черновик; неудачное сохранение или чтение показывается.',
   'Save a design as a template': 'Сохранить изделие как шаблон',
+  'Name, room and type, with a link to the new family.':
+    'Название, комната и тип, со ссылкой на новое семейство.',
+  'Safety-regulated items': 'Изделия с требованиями безопасности',
+  'A bunk bed or cradle card says you check it yourself, with "I check it myself".':
+    'Карточка двухъярусной кровати или колыбели говорит, что вы проверяете её сами, с кнопкой «Проверяю сам».',
   'Save a project piece to the catalog': 'Сохранить изделие проекта в каталог',
   'Catalog origin kept on copies': 'Происхождение из каталога сохраняется в копиях',
   'Reference entries for upholstered pieces': 'Справочные записи для мягкой мебели',
@@ -356,7 +375,12 @@ export const ru_info = {
   'Information and guides page': 'Страница «Информация и руководства»',
   'Feature Research': 'Исследование функций',
   'Gaps page': 'Страница пробелов',
+  'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.':
+    'Пробелы с примерной оценкой работы, влияния и необходимости, фильтрами и строками проблемы и решения.',
   'Info buttons': 'Информационные кнопки',
+  'Arrow keys in segmented controls': 'Клавиши-стрелки в сегментных переключателях',
+  'Tab reaches the chosen option; the arrow keys, Home and End move and choose, in every segmented control.':
+    'Tab переходит к выбранному варианту; стрелки, Home и End перемещают и выбирают — в каждом сегментном переключателе.',
   'Light and dark themes': 'Светлая и тёмная темы',
   // ADR-160
   'Side panel ordered by use': 'Боковая панель по частоте использования',
@@ -382,13 +406,14 @@ export const ru_info = {
   'Research features still left to build, and competitors.':
     'Исследованные функции, которые ещё предстоит сделать, и конкуренты.',
   'Results tabs under the views': 'Вкладки результатов под видами',
-  'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.':
-    'Детали, Листы, Фурнитура, Список покупок и Проверки со счётчиками; на телефоне они свёрнуты, пока не нажать вкладку.',
+  'Parts, Sheets, Hardware, Assembly, Shopping and Checks; Parts shows the number of parts and Checks the number of problems; on a phone they stay folded until you tap a tab.':
+    'Детали, Листы, Фурнитура, Сборка, Покупки и Проверки; на вкладке «Детали» видно число деталей, на «Проверках» — число проблем; на телефоне они свёрнуты, пока не нажать вкладку.',
   'Turn to any whole degree with a handle': 'Поворот на любой целый градус ручкой',
   'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.':
     'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
-  'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.':
-    'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными и привязками; изделия, вставленные в проект, принимают его настройки.',
+  'Copies of the pieces with their positions, run-part recipe, connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings.':
+    'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными, привязками, ручками ряда и мойками; изделия, вставленные в проект, принимают его настройки.',
+
   'Lock a piece in place, its turn, or each of its sizes':
     'Закрепить изделие на месте, его поворот или каждый размер',
   'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.':
@@ -400,12 +425,109 @@ export const ru_info = {
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
   'Fill the room': 'Заполнить комнату',
-  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.':
-    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу; каждый набор проверен как проект.',
+  'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.':
+    'Выберите форму комнаты с её дверями и окнами или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект. Уточнение добавляет предел бюджета, стиль и остров с вашей шириной прохода; у каждого набора видна его оценка.',
   'Assembly steps': 'Шаги сборки',
-  'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.':
-    'Упорядоченный список шагов по каждому изделию из положения деталей, с соединениями и фурнитурой каждого шага, как рекомендация; «Показать шаг» подсвечивает детали в 3D; печатается.',
+  'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.':
+    'Шаги по каждому изделию, как рекомендация: подготовка деталей, фурнитура на боковины, сборка, затем установка ящиков и дверей. У каждого шага есть указание, его детали, соединения, крепёж и фурнитура; одинаковые ящики перечислены один раз. «Показать шаг» подсвечивает детали в 3D; печатается с видом спереди каждого изделия на языке печати.',
   'Project assembly order': 'Порядок сборки проекта',
   'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.':
     'Вкладка «Сборка» проекта и печатный лист начинаются с порядка его изделий: угловые шкафы, нижние изделия по стенам от угла, навесные изделия, затем детали ряда; как рекомендация.',
+  'Reopen a project piece in the wizard': 'Открыть изделие проекта в мастере',
+  'Open in wizard in its Settings; Update piece replaces it in the project only.':
+    '«Открыть в мастере» в его настройках; «Обновить изделие» заменяет его только в проекте.',
+  'Esc selects one level up': 'Esc выбирает уровень выше',
+  'In the piece editor: a space, then the space around it, then the whole piece, then nothing.':
+    'В редакторе изделия: отсек, затем отсек вокруг него, затем всё изделие, затем ничего.',
+  'Outline turns with an angled piece': 'Контур поворачивается с изделием под углом',
+  'The 3D selection outline and the Move ghost are turned like its boards.':
+    'Контур выбора в 3D и призрак перемещения повёрнуты так же, как его детали.',
+  'A locked piece on a base keeps the base from being resized':
+    'Закреплённое изделие на основании не даёт изменить размер основания',
+  'Unlock it to resize the piece under it; unlocked pieces on it follow.':
+    'Снимите закрепление, чтобы изменить размер изделия под ним; незакреплённые изделия на нём следуют за ним.',
+  'Run handle shown in the piece editor': 'Ручка ряда видна в редакторе изделия',
+  'Its kind and hole centres, read-only, under Set by Handles for this run.':
+    'Её вид и межосевое расстояние, только для чтения, под «Задано в „Ручки для этого ряда“».',
+  'Move and turn a model in 3D': 'Перемещать и поворачивать модель в 3D',
+  'Drag it in Move mode, with Snap, and turn it 90° about its centre.':
+    'Перетаскивайте её в режиме перемещения, с привязкой, и поворачивайте на 90° вокруг центра.',
+  'Ask about kept versions when deleting a project':
+    'Вопрос о сохранённых версиях при удалении проекта',
+  'Keep them is the default; only readable versions are deleted.':
+    '«Оставить их» — по умолчанию; удаляются только читаемые версии.',
+  'Choose which edit to keep on template import':
+    'Выбор, какую правку оставить при импорте шаблона',
+  'An imported template for a family you edited asks; Keep mine is the default.':
+    'Импортированный шаблон для изменённого вами семейства спрашивает; «Оставить мой» — по умолчанию.',
+  // ADR-207 feature lines.
+  'Connection kinds': 'Виды соединений',
+  'A snap or Connected joins pieces side by side, in a corner or stacked (a wall unit over its base), each checked its own way; Connected to names each kind.':
+    'Привязка или «Соединено» соединяет изделия рядом, в углу или друг над другом (навесной модуль над нижним), каждый вид проверяется по-своему; «Соединено с» называет вид.',
+  'A piece connected against its wall slides along it; Alt moves it away. Connected and stacked pieces move, mirror and merge together.':
+    'Изделие, соединённое со стеной, скользит вдоль неё; Alt отодвигает его. Соединённые изделия и изделия друг над другом перемещаются, отражаются и объединяются вместе.',
+  'Pieces that are exactly the same are linked in one tap from the card.':
+    'Полностью одинаковые изделия связываются одним нажатием на карточке.',
+  'Mirror a lounger or a daybed': 'Отражение шезлонга или кушетки',
+  'The backrest and the side panel are built at the left or the right end.':
+    'Спинка и боковая панель строятся у левого или правого конца.',
+  'Shared sides with blind corners and desks': 'Общие боковины с глухими углами и столами',
+  'A blind corner unit shares its straight end with a cabinet; a desk beside a cabinet leaves its gable out.':
+    'Глухой угловой модуль делит прямой конец со шкафом; стол рядом со шкафом обходится без своей опорной стенки.',
+  'Show the hardware step in 3D': 'Показ шага с фурнитурой в 3D',
+  'Fit hardware to the sides lights the sides and dividers its hinges and runners go on.':
+    'Шаг «Фурнитура на боковины» подсвечивает боковины и перегородки, на которые ставятся петли и направляющие.',
+  'Your own assembly steps': 'Свои шаги сборки',
+  'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.':
+    'Перемещайте шаги вверх и вниз и переименовывайте их; вкладка и печать следуют за этим; «Сбросить шаги» возвращает созданные.',
+  // ADR-212
+  'Band list import': 'Импорт списка кромок',
+  'Import your band list (CSV); each board’s edge band offers matching bands first, then the others by colour.':
+    'Импортируйте свой список кромок (CSV); кромка каждой плиты предлагает сначала подходящие кромки, затем остальные по цвету.',
+  'Gap marks in a file': 'Отметки пробелов в файле',
+  'Export marks and Import marks move your gap marks between devices; the newer mark wins.':
+    '«Экспорт отметок» и «Импорт отметок» переносят ваши отметки пробелов между устройствами; побеждает более новая отметка.',
+  // ADR-211 feature lines.
+  'Keep a closed wizard as a draft': 'Черновик закрытого мастера',
+  'A closed New piece wizard keeps its answers until you close the app; Continue where you left off or Start over.':
+    'Закрытый мастер нового изделия хранит ответы, пока вы не закроете приложение; «Продолжить с того же места» или «Начать заново».',
+  'Selection box in the front view': 'Рамка выбора на виде спереди',
+  'A drag on empty space selects every piece it touches; Shift, Ctrl or Cmd adds.':
+    'Протягивание по пустому месту выбирает все изделия, которых касается рамка; Shift, Ctrl или Cmd добавляет.',
+  'An ⓘ beside each Select says what a tap, a click and a drag do.':
+    'Значок ⓘ рядом с каждым «Выбор» объясняет, что делают касание, щелчок и протягивание.',
+  'Up one level on a phone': 'На уровень выше на телефоне',
+  'A button beside the path selects the space around the selected one.':
+    'Кнопка рядом с путём выбирает пространство вокруг выбранного.',
+  'Mattress size where a bed is selected': 'Размер матраса там, где выбрана кровать',
+  'Mattress width and length beside the selected bed, as in its Settings.':
+    'Ширина и длина матраса рядом с выбранной кроватью, как в её настройках.',
+  'Lock boards and Lock construction': 'Блокировка плит и блокировка конструкции',
+  'Each keeps its part of the piece until unlocked; size and place still change.':
+    'Каждая сохраняет свою часть изделия до разблокировки; размер и место по-прежнему меняются.',
+  'Versions of deleted projects': 'Версии удалённых проектов',
+  'Under History: restore one as a new project, or delete it with a tap.':
+    'В «Истории»: восстановите версию как новый проект или удалите её одним нажатием.',
+  'Resize the phone sheet': 'Изменение высоты панели на телефоне',
+  'Drag the handle to collapsed, half or full screen; arrow keys step.':
+    'Потяните за ручку: свёрнута, наполовину или на весь экран; стрелки переключают шаги.',
+  'Own glyphs for Fill a wall and Fill the room':
+    'Свои значки для «Заполнить стену» и «Заполнить комнату»',
+  'Back to the editor only with a design open': '«Назад в редактор» только при открытом проекте',
+  'On the Gaps and Research pages, as in the Catalog.':
+    'На страницах пробелов и исследований, как в каталоге.',
+  'Room presets': 'Готовые комнаты',
+  'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.':
+    'Новое… → Готовая комната: спальня, домашний кабинет или кухня и стол, готовые в комнате 3600 × 3000.',
+  'Variables in a piece': 'Переменные в изделии',
+  'A piece’s own variables in its settings; its width, height, depth and underside height bind to them, also inside projects and catalog templates.':
+    'Собственные переменные изделия в его настройках; к ним привязываются ширина, высота, глубина и высота низа — также в проектах и шаблонах каталога.',
+  'Project seller items': 'Товары продавца в проекте',
+  'Add seller product in the project view puts a product on the project’s own shopping list; it travels in project templates.':
+    '«Добавить товар продавца» в виде проекта добавляет товар в собственный список покупок проекта; он переходит в шаблоны проектов.',
+  'A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards.':
+    'Метка для каждого производителя из вашего списка декоров, с количеством: его декоры и сохранённые изделия с его плитами.',
+  'Family rule for your own templates': 'Правило семейств для ваших шаблонов',
+  'A piece from your own template keeps its rooms, so pieces of rooms apart are warned about.':
+    'Изделие из вашего шаблона сохраняет его комнаты, поэтому об изделиях из разных комнат выводится предупреждение.',
 } satisfies Record<string, string>;

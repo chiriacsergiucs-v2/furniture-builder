@@ -4,8 +4,11 @@ import type { RenderJob } from '../viewer/pathtrace';
 import { Segmented } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { useUi } from './shell/uiStore';
 import {
+  detectEngine,
   hasWebGL2,
+  type RenderEngineName,
   RENDER_SAMPLES,
   RENDER_SIZES,
   renderFileName,
@@ -33,9 +36,21 @@ export function RenderDialog({
 }) {
   const [size, setSize] = useState<RenderSize>('1920x1080');
   const [state, setState] = useState<State>({ kind: 'idle' });
-  const [supported] = useState(hasWebGL2);
+  const [webgl2] = useState(hasWebGL2);
+  // The engine (ADR-208): WebGPU with an adapter, WebGL 2 otherwise; asked when the dialog opens.
+  const [engine, setEngine] = useState<RenderEngineName | null>(null);
+  useEffect(() => {
+    if (!open || engine) return;
+    let live = true;
+    void detectEngine().then((e) => live && setEngine(e));
+    return () => {
+      live = false;
+    };
+  }, [open, engine]);
+  const supported = webgl2 || engine === 'WebGPU';
   const job = useRef<RenderJob | null>(null);
   const holder = useRef<HTMLDivElement>(null);
+  const setLastRender = useUi((s) => s.setLastRender);
 
   const stop = () => {
     job.current?.dispose();
@@ -56,6 +71,7 @@ export function RenderDialog({
     try {
       const { startRender } = await import('../viewer/pathtrace');
       const j = await startRender({
+        engine: engine ?? 'WebGL 2',
         width: s.width,
         height: s.height,
         samples: RENDER_SAMPLES,
@@ -67,6 +83,8 @@ export function RenderDialog({
       holder.current?.replaceChildren(j.canvas);
       const png = await j.done;
       if (job.current !== j) return;
+      // The client sheet prints the last render of this session (ADR-206).
+      if (png) setLastRender(URL.createObjectURL(png));
       setState(png ? { kind: 'done', png } : { kind: 'idle' });
     } catch (e) {
       stop();
@@ -131,6 +149,11 @@ export function RenderDialog({
             options={RENDER_SIZES.map((s) => ({ value: s.value, label: s.label }))}
             onChange={(v) => !busy && setSize(v)}
           />
+          {engine && (
+            <p className="hint render-engine" role="status">
+              {t('Engine: {name}', { name: engine })}
+            </p>
+          )}
           <p className="hint">
             {t(
               'Renders what the 3D view shows, with realistic light. Best on a laptop; a phone may be slow. The picture stays on this device.',

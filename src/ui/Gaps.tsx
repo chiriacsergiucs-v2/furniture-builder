@@ -3,16 +3,27 @@ import ledger from '../../docs/adr/GAPS.md?raw';
 import {
   decisionsText,
   filterGaps,
+  gapMarksFile,
+  readGapMarksFile,
   gapCounts,
+  hasConflict,
   isMarked,
   parseGaps,
+  RATING_KEYS,
+  RATING_LABEL,
+  RATING_SCALE,
+  ratingCounts,
   STATUS_KINDS,
   STATUS_LABEL,
   type Gap,
   type GapMark,
+  type GapRating,
   type GapStatusKind,
+  type RatingFilter,
+  type RatingKey,
 } from '../core/gaps';
-import { listGapMarks, saveGapMark } from '../persist/db';
+import { listGapMarks, saveGapMark, saveGapMarks } from '../persist/db';
+import { download } from './shell/files';
 import { Icon } from './icons';
 
 /** The ledger as it was when this app was built (ADR-101); the file in the repo stays the source of truth. */
@@ -20,17 +31,28 @@ const GAPS = parseGaps(ledger);
 const actionable = (g: Gap) => g.kind === 'open' || g.kind === 'adr';
 /** How long a note waits after the last key before it is written to the device. */
 const NOTE_SAVE_MS = 400;
+const DEFAULT_KINDS: GapStatusKind[] = ['open'];
+const GAP_IDS = new Set(GAPS.map((g) => g.id));
 
 /**
  * The Gaps page (ADR-101): the gaps ledger (ADR-082) with counts, search, a status filter and every field of each
- * gap. The user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
+ * gap, with rough Work, Impact and Necessity filters and each gap's Issue, Fix and Conflicts lines (ADR-187). The
+ * user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
  * Claude, who applies them to `docs/adr/GAPS.md`. Nothing here changes the ledger itself (ADR-002).
  */
-export function GapsPage({ onDone }: { onDone: () => void }) {
+export function GapsPage({
+  onDone,
+  designOpen = true,
+}: {
+  onDone: () => void;
+  /** Back to the editor only with a design open, as the Catalog (ADR-120, ADR-211). */
+  designOpen?: boolean;
+}) {
   const [marks, setMarks] = useState<Record<string, GapMark>>({});
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [kinds, setKinds] = useState<GapStatusKind[]>(['open']);
+  const [kinds, setKinds] = useState<GapStatusKind[]>(DEFAULT_KINDS);
+  const [ratings, setRatings] = useState<RatingFilter>({});
   const [showDecisions, setShowDecisions] = useState(false);
   // Marks can be changed only once the stored ones were read, so a quick tap never writes over a stored note.
   const [ready, setReady] = useState(false);
@@ -67,7 +89,9 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   }, []);
 
   const counts = useMemo(() => gapCounts(GAPS), []);
-  const shown = useMemo(() => filterGaps(GAPS, query, kinds), [query, kinds]);
+  // Rating counts follow the status filter and the search, so each level says how many it would show.
+  const levels = useMemo(() => ratingCounts(filterGaps(GAPS, query, kinds)), [query, kinds]);
+  const shown = useMemo(() => filterGaps(GAPS, query, kinds, ratings), [query, kinds, ratings]);
   const decisions = decisionsText(GAPS, marks);
   const markedCount = GAPS.filter((g) => actionable(g) && isMarked(marks[g.id])).length;
 
@@ -90,6 +114,64 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   };
   const toggleKind = (k: GapStatusKind) =>
     setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : [...ks, k]));
+  const toggleRating = (k: RatingKey, l: GapRating) =>
+    setRatings((r) => {
+      const now = r[k] ?? [];
+      return { ...r, [k]: now.includes(l) ? now.filter((x) => x !== l) : [...now, l] };
+    });
+  const clearFilters = () => {
+    setQuery('');
+    setKinds(DEFAULT_KINDS);
+    setRatings({});
+  };
+  // Marks in a file (ADR-212, G-100): the page is not translated (user 2026-10-29).
+  const [fileMsg, setFileMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const exportMarks = () => {
+    const now = new Date().toISOString();
+    const file = gapMarksFile(Object.values(marks), now);
+    download(
+      `gap-marks-${now.slice(0, 10)}.json`,
+      JSON.stringify(file, null, 2),
+      'application/json',
+    );
+  };
+  const importMarks = async (f: File) => {
+    let text: string;
+    try {
+      text = await f.text();
+    } catch {
+      setFileMsg({ ok: false, text: `${f.name} could not be read.` });
+      return;
+    }
+    const r = readGapMarksFile(text, GAP_IDS, marks);
+    if (r.problem) {
+      setFileMsg({ ok: false, text: r.problem });
+      return;
+    }
+    try {
+      if (r.apply.length) await saveGapMarks(r.apply);
+    } catch {
+      setFileMsg({ ok: false, text: 'The marks could not be saved on this device.' });
+      return;
+    }
+    for (const m of r.apply) {
+      const queued = pending.current.get(m.gapId);
+      if (queued) {
+        window.clearTimeout(queued.timer);
+        pending.current.delete(m.gapId);
+      }
+    }
+    setMarks((cur) => {
+      const next = { ...cur };
+      for (const m of r.apply)
+        if (!next[m.gapId] || m.updatedAt > next[m.gapId].updatedAt) next[m.gapId] = m;
+      return next;
+    });
+    setFileMsg({
+      ok: r.skipped === 0,
+      text: `Imported ${r.imported} ${r.imported === 1 ? 'mark' : 'marks'}, skipped ${r.skipped}.`,
+    });
+  };
   const copy = () => {
     setShowDecisions(true);
     if (decisions) navigator.clipboard?.writeText(decisions).catch(() => undefined);
@@ -106,15 +188,23 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
             device; Copy decisions gives the text to paste to Claude, who updates the ledger.
           </p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-left" className="sm" />
-          Back to the editor
-        </button>
+        {designOpen && (
+          <button type="button" className="btn outline" onClick={onDone}>
+            <Icon name="chevron-left" className="sm" />
+            Back to the editor
+          </button>
+        )}
       </header>
       {error && (
         <p className="alert warning" role="status">
           <Icon name="alert-triangle" className="sm" />
           <span>{error}</span>
+        </p>
+      )}
+      {fileMsg && (
+        <p className={`alert ${fileMsg.ok ? 'info' : 'warning'}`} role="status">
+          <Icon name={fileMsg.ok ? 'info' : 'alert-triangle'} className="sm" />
+          <span>{fileMsg.text}</span>
         </p>
       )}
       <section className="tiles" aria-label="Totals">
@@ -158,8 +248,58 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
             <Icon name="copy" className="sm" />
             Copy decisions ({markedCount})
           </button>
+          <button
+            type="button"
+            className="btn outline"
+            onClick={exportMarks}
+            disabled={!ready}
+            title="Download your marks as a file, to import on another device"
+          >
+            <Icon name="download" className="sm" />
+            Export marks
+          </button>
+          <label className={`btn outline file-btn${ready ? '' : ' disabled'}`}>
+            <Icon name="upload" className="sm" />
+            Import marks
+            <input
+              type="file"
+              accept=".json,application/json"
+              aria-label="Import marks"
+              disabled={!ready}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importMarks(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
         </div>
       </div>
+      <section className="gaps-filters" aria-label="Rough ratings">
+        {RATING_KEYS.map((k) => (
+          <div key={k} className="gaps-filter">
+            <span className="gaps-filter-label" id={`gaps-filter-${k}`}>
+              {RATING_LABEL[k]}
+            </span>
+            <div className="chips" role="group" aria-labelledby={`gaps-filter-${k}`}>
+              {RATING_SCALE.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  className="chip filter"
+                  aria-pressed={!!ratings[k]?.includes(l)}
+                  onClick={() => toggleRating(k, l)}
+                >
+                  {l} ({levels[k][l]})
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <button type="button" className="btn sm ghost" onClick={clearFilters}>
+          Clear filters
+        </button>
+      </section>
       {showDecisions && (
         <section className="gaps-decisions" aria-label="Decisions to paste to Claude">
           <h2>Decisions to paste to Claude</h2>
@@ -209,12 +349,39 @@ function GapRow({
     <li className="family gap">
       <details>
         <summary>
-          <strong>{g.id}</strong> {g.title}{' '}
-          <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
-          {mark?.decision === 'acknowledge' && (
-            <span className="chip edited">You: acknowledge</span>
+          <span className="gap-title">
+            <strong>{g.id}</strong> {g.title}{' '}
+            <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
+            {mark?.decision === 'acknowledge' && (
+              <span className="chip edited">You: acknowledge</span>
+            )}
+            {mark?.decision === 'adr' && <span className="chip edited">You: make ADR</span>}
+          </span>
+          {g.issue && (
+            <span className="gap-line">
+              <span className="gap-line-key">Issue:</span> {g.issue}
+            </span>
           )}
-          {mark?.decision === 'adr' && <span className="chip edited">You: make ADR</span>}
+          {g.fix && (
+            <span className="gap-line">
+              <span className="gap-line-key">Fix:</span> {g.fix}
+            </span>
+          )}
+          {(RATING_KEYS.some((k) => g[k]) || hasConflict(g)) && (
+            <span className="chips gap-ratings">
+              {RATING_KEYS.map(
+                (k) =>
+                  g[k] && (
+                    <span key={k} className="chip subtle">
+                      {RATING_LABEL[k]}: {g[k]}
+                    </span>
+                  ),
+              )}
+              {hasConflict(g) && (
+                <span className="chip safety gap-conflict">Conflicts: {g.conflicts}</span>
+              )}
+            </span>
+          )}
         </summary>
         <dl className="pairs">
           <dt>Status</dt>
@@ -229,6 +396,12 @@ function GapRow({
           <dd>{g.questions}</dd>
           <dt>Suggested pick</dt>
           <dd>{g.pick}</dd>
+          {g.conflicts && (
+            <>
+              <dt>Conflicts</dt>
+              <dd>{g.conflicts}</dd>
+            </>
+          )}
           {g.notes.map((n, i) => (
             <FragmentNote key={i} note={n} />
           ))}

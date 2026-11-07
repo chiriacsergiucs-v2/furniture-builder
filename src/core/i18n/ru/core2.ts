@@ -61,10 +61,17 @@ export const ru_core2 = {
     'Высоты ящиков в сумме {asked} мм, а места {room} мм; нижний ящик подогнан. Сделайте один ящик «Доля», чтобы он забирал разницу.',
   'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.':
     'Ложному фасаду нужен собственный фасад ящика; у ящиков за дверцами его нет, поэтому настройка не учитывается.',
+  'Drawers behind doors have no front of their own, so they keep their inner front.':
+    'У ящиков за дверцами нет собственного фасада, поэтому внутренняя передняя стенка остаётся.',
   'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.':
     'Верхний ящик — ложный фасад, у него нет короба для выреза под сифон; U-вырез не учитывается.',
   'Drawer {i} box would be only {bh} mm high.':
     'Короб ящика {i} получился бы высотой всего {bh} мм.',
+  'Drawer {i} box would be only {bh} mm high (front {fh}, slot {slot}, clearance {vc} mm); give it a front of at least {min} mm.':
+    'Короб ящика {i} получился бы высотой всего {bh} мм (фасад {fh}, проём {slot}, зазор {vc} мм); дайте ему фасад не меньше {min} мм.',
+  'The {g} mm gap leaves no room for fronts on {w}×{h} mm.':
+    'Зазор {g} мм не оставляет места для фасадов на {w}×{h} мм.',
+  'There is no room for fronts on {w}×{h} mm.': 'На {w}×{h} мм нет места для фасадов.',
   'A {w} × {d} mm notch does not fit a {bw} × {runner} mm drawer box.':
     'Вырез {w} × {d} мм не помещается в короб ящика {bw} × {runner} мм.',
   'Drawer 1 is cut around the trap ({w} × {d} mm notch at the back): check the trap and pipes before cutting.':
@@ -73,11 +80,14 @@ export const ru_core2 = {
     'Ящики за дверцами: проверьте зазор петель и дверец относительно коробов ящиков.',
   'A split needs at least two parts with one size each.':
     'Для деления нужно минимум две части, у каждой свой размер.',
-  'Fixed sizes do not fit in {along} mm.': 'Фиксированные размеры не помещаются в {along} мм.',
+  'Parts need {asked} mm but {room} mm is left after {n|# divider|# dividers} of {t} mm ({along} mm inside).':
+    'Частям нужно {asked} мм, а после {n|# перегородки|# перегородок|# перегородок} по {t} мм остаётся {room} мм (внутри {along} мм).',
+  "Part {i}'s share is too small to give it any width.":
+    'Доля части {i} слишком мала, чтобы дать ей хоть какую-то ширину.',
   'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.':
     'Фиксированные размеры в сумме {asked} мм, а места {room} мм; последняя часть подогнана до {last} мм. Сделайте одну часть «Доля», чтобы она забирала разницу.',
-  'No side panel found for shelf pins on one side of an adjustable space.':
-    'С одной стороны отсека с переставными полками нет боковой панели для полкодержателей.',
+  'One side of this space has no panel, so its shelves cannot rest on pins; make them fixed.':
+    'С одной стороны этого отсека нет панели, поэтому полки не могут лежать на полкодержателях; сделайте их неподвижными.',
   'Shelves {d} mm deep are too shallow for two pin rows {s} mm from their edges.':
     'Полки глубиной {d} мм слишком мелкие для двух рядов полкодержателей в {s} мм от краёв.',
   'This space is {h} mm high: no room for shelf-pin holes {c} mm clear of its top and bottom on one side. Make the shelves fixed or the space taller.':
@@ -124,8 +134,10 @@ export const ru_core2 = {
     'Стена ({w} мм) уже мин. ширины изделия, {min} мм.',
   'These settings need more than {max} pieces; raise the min or max piece width, or lower the counts.':
     'Для этих настроек нужно больше {max} изделий; увеличьте мин. или макс. ширину изделия либо уменьшите количества.',
-  'With {n} equal fronts each front is about {each} mm; no carcass of 1 or 2 fronts is between {min} and {max} mm with these settings.':
-    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1 или 2 фасада шириной от {min} до {max} мм.',
+  'With {n} equal fronts each front is about {each} mm; no carcass of 1 to 4 fronts is between {min} and {max} mm with these settings.':
+    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1–4 фасада шириной от {min} до {max} мм.',
+  'More than {max} ways fill this wall; only the first {max} were tried. Narrow the width range or set the counts to see the rest.':
+    'Эту стену можно заполнить более чем {max} способами; проверены только первые {max}. Сузьте диапазон ширины или задайте количества, чтобы увидеть остальные.',
   'Every mix that fits has a problem in a piece (check the depth and heights).':
     'В каждом подходящем варианте у какого-то изделия есть проблема (проверьте глубину и высоты).',
   'No mix fills {w} mm with pieces {min}–{max} mm wide and these Refine settings.':
@@ -141,6 +153,8 @@ export const ru_core2 = {
     'Царги высотой {ah} мм не оставляют места под столешницей.',
   'A slatted top rests on rails: give the rails under the top a height.':
     'Реечная столешница лежит на царгах: задайте высоту царг под ней.',
+  '{n} back slats of {w} mm do not fit between the posts ({bw} mm); at most {max} fit.':
+    '{n|# рейка|# рейки|# реек} спинки по {w} мм не помещаются между стойками ({bw} мм); помещается не больше {max}.',
   'A back needs the seat ({seat} mm) well below the top of the back ({h} mm).':
     'Для спинки сиденье ({seat} мм) должно быть заметно ниже верха спинки ({h} мм).',
   'A {len} mm backrest leaves too little seat on a {w} mm frame.':
@@ -184,6 +198,10 @@ export const ru_core2 = {
     'Диагональный угловой шкаф {w} × {h} × {d} мм слишком мал для плит толщиной {t} мм.',
   'A diagonal corner takes one door or a pair.':
     'В диагональный угловой шкаф ставится одна дверца или пара.',
+  'A diagonal corner has no straight sides for shelf pins; make the shelves fixed.':
+    'У диагонального углового шкафа нет прямых боковин для полкодержателей; сделайте полки неподвижными.',
+  'The side-wall wing has no side at the corner, so its shelves cannot rest on pins; make them fixed.':
+    'У крыла у боковой стены нет боковины в углу, поэтому его полки не могут лежать на полкодержателях; сделайте их неподвижными.',
   'Blind section {blind} mm and usable section {usable} mm must each be at least {min} mm.':
     'Глухая часть {blind} мм и рабочая часть {usable} мм должны быть каждая не меньше {min} мм.',
   "Blind section is {blind} mm; about the neighbouring cabinet's depth + 50 mm ({d} mm) keeps its door and handle clear of this door.":
@@ -267,10 +285,6 @@ export const ru_core2 = {
   '{name} already sits on the floor or on a piece; the selected pieces move down together.':
     '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
-  'The lounger backrest is always at the left end; it cannot be mirrored yet':
-    'Спинка шезлонга всегда у левого края; отразить её пока нельзя',
-  'The daybed side panel is always on the left; it cannot be mirrored yet':
-    'Боковая панель кушетки всегда слева; отразить её пока нельзя',
   'Rotation must be whole degrees from 0 to 359.':
     'Поворот должен быть целым числом градусов от 0 до 359.',
   'Mirror the run refused: {why}': 'Отражение линии отклонено: {why}',
@@ -303,6 +317,12 @@ export const ru_core2 = {
   'Move {name} {mm} mm {side}': 'Сдвинуть «{name}» на {mm} мм {side}',
   'Hang {name} {mm} mm higher': 'Повесить «{name}» на {mm} мм выше',
   'Hang {name} {mm} mm lower': 'Повесить «{name}» на {mm} мм ниже',
+  // ADR-204: match-the-neighbour repairs.
+  'Make {name} {mm} mm deep like {other}': 'Сделать «{name}» глубиной {mm} мм, как «{other}»',
+  'Make {name} {mm} mm high like {other}': 'Сделать «{name}» высотой {mm} мм, как «{other}»',
+  'The size follows a project variable; change the variable instead.':
+    'Размер следует переменной проекта; измените переменную.',
+
   'Move {name} {mm} mm {side} and add a {mm} mm filler':
     'Сдвинуть «{name}» на {mm} мм {side} и добавить доборную планку {mm} мм',
   '{mm} mm {side}': 'на {mm} мм {side}',
@@ -339,8 +359,8 @@ export const ru_core2 = {
   ', {m} m of back edge': ', {m} м кромки задних стенок',
   ', {m} m of worktop': ', {m} м столешницы',
   '{line}: {count} — choose your fastener': '{line}: {count} — выберите свой крепёж',
-  '{guidance} ({how}{len}). Name yours under Materials › Fasteners.':
-    '{guidance} ({how}{len}). Укажите свой в разделе «Материалы › Крепёж».',
+  '{guidance} ({how}{len}). Name yours under Settings › Fasteners.':
+    '{guidance} ({how}{len}). Укажите свой в разделе «Настройки › Крепёж».',
   'Draco compression': 'сжатие Draco',
   'meshopt compression': 'сжатие meshopt',
   'Basis Universal textures': 'текстуры Basis Universal',
@@ -395,6 +415,10 @@ export const ru_core2 = {
   'Row {row}: {maker} {code} {mm} mm is listed twice; the first is kept.':
     'Строка {row}: {maker} {code} {mm} мм указан дважды; оставлен первый.',
   'The file has a header row but no decors.': 'В файле есть строка заголовков, но нет декоров.',
+  'thickness "{v}" is not mm from 0.1 to 10 with one decimal':
+    'толщина «{v}» — не мм от 0,1 до 10 с одним знаком после запятой',
+  'width "{v}" is not whole mm from 1 to {max}': 'ширина «{v}» — не целое число мм от 1 до {max}',
+  'The file has a header row but no bands.': 'В файле есть строка заголовков, но нет кромок.',
   '{name} stands on the floor; Top and Bottom move wall units and stacked pieces.':
     '«{name}» стоит на полу; «Верх» и «Низ» двигают навесные модули и изделия, стоящие на других.',
   '{name} would go below the floor.': '«{name}» ушло бы ниже пола.',
@@ -405,8 +429,6 @@ export const ru_core2 = {
     '«{names}» в одной группе с «{ref}»; разгруппируйте, чтобы выровнять его.',
   'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.':
     'Для распределения нужно три или больше изделий или групп; изделия группы двигаются вместе, поэтому разгруппируйте их, чтобы расставить.',
-  'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.':
-    'Распределение работает с изделиями в одном ряду вдоль стены; выберите нижние модули или навесные, но не те и другие.',
   'Not moved: {list}': 'Не сдвинуто: {list}',
   'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).':
     'Пролёт полки {span} мм велик для «{name}» {t} мм, полка может прогнуться (типичный предел {limit} мм — уточните для своей плиты и нагрузки).',
@@ -426,8 +448,8 @@ export const ru_core2 = {
     'Детские кроватки и колыбели подпадают под стандарты безопасности (EN 716 и другие). Mobila не проверяет шаг прутьев и высоту бортов; это не проверка соответствия.',
   'Rails span {span} mm between legs; long tables usually get a centre leg or rail (typical).':
     'Царги перекрывают {span} мм между ножками; длинным столам обычно добавляют среднюю ножку или царгу (типично).',
-  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.':
-    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Материалы › Крепёж»). Клей не считается.',
+  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Settings › Fasteners). Glue is not counted.':
+    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Настройки › Крепёж»). Клей не считается.',
   'for {boards}, with the trim allowance per edge': 'для {boards}, с припуском на торец',
   'for {boards}': 'для {boards}',
   'Edge band for {name}': 'Кромка для «{name}»',
@@ -669,4 +691,17 @@ export const ru_core2 = {
   'touching side by side': 'стоят вплотную рядом',
   'touching side by side under one run worktop': 'стоят вплотную рядом под одной столешницей линии',
   'both pieces come from catalog families': 'оба изделия из семейств каталога',
+  // ADR-207: document validation.
+  'Assembly steps need schemaVersion 9': 'Шаги сборки требуют schemaVersion 9',
+  'Invalid assembly steps': 'Недопустимые шаги сборки',
+  'Backrest and side panel ends need schemaVersion 9':
+    'Сторона спинки и боковой панели требует schemaVersion 9',
+  'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',
+  'Connection kinds need project schemaVersion {v}':
+    'Виды соединений требуют schemaVersion проекта {v}',
+  'Catalog origin rooms need schemaVersion 9':
+    'Комнаты происхождения из каталога требуют schemaVersion 9',
+  'Invalid catalog origin rooms': 'Неверные комнаты происхождения из каталога',
+  'Piece variables need schemaVersion 9': 'Переменные изделия требуют schemaVersion 9',
+  'Invalid piece bindings': 'Неверные привязки изделия',
 } satisfies Record<string, string>;

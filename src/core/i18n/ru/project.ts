@@ -1,5 +1,23 @@
 /** Russian text for project (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_project = {
+  Retry: 'Повторить',
+  'The project template could not be exported.': 'Не удалось экспортировать шаблон проекта.',
+  'The project template could not be deleted from this device.':
+    'Не удалось удалить шаблон проекта с этого устройства.',
+  'The project could not be created on this device.':
+    'Не удалось создать проект на этом устройстве.',
+  'The project template could not be renamed on this device.':
+    'Не удалось переименовать шаблон проекта на этом устройстве.',
+  'Versions could not be read from this device.': 'Не удалось прочитать версии на этом устройстве.',
+  'The version could not be saved on this device.':
+    'Не удалось сохранить версию на этом устройстве.',
+  'The version could not be restored.': 'Не удалось восстановить версию.',
+  'The version could not be deleted from this device.':
+    'Не удалось удалить версию с этого устройства.',
+  'The project changed while saving the version. Try restoring again.':
+    'Проект изменился во время сохранения версии. Повторите восстановление.',
+  'The prepared picture was not applied because its wall or background changed.':
+    'Подготовленное изображение не применено: стена или её фон изменились.',
   'front faces you': 'фасад к вам',
   'front faces right': 'фасад вправо',
   'front faces the back wall': 'фасад к задней стене',
@@ -264,6 +282,20 @@ export const ru_project = {
     'Сохранена переменная проекта {names}; вставленные изделия следуют ей.',
   // Turn and per-size locks (ADR-171).
   'Invalid item turn lock': 'Недопустимая блокировка поворота изделия',
+  'Invalid item boards lock': 'Недопустимая блокировка плит изделия',
+  'Invalid item construction lock': 'Недопустимая блокировка конструкции изделия',
+  'Board and construction locks need project schemaVersion {v}':
+    'Блокировкам плит и конструкции нужна версия проекта schemaVersion {v}',
+  'Boards locked — unlock to change': 'Плиты заблокированы — разблокируйте, чтобы изменить',
+  'Construction locked — unlock to change':
+    'Конструкция заблокирована — разблокируйте, чтобы изменить',
+  'Lock boards': 'Заблокировать плиты',
+  'Versions of deleted projects ({n})': 'Версии удалённых проектов ({n})',
+  'Restore as a new project': 'Восстановить как новый проект',
+  '{name} (restored)': '{name} (восстановлен)',
+  'Unlock boards': 'Разблокировать плиты',
+  'Lock construction': 'Заблокировать конструкцию',
+  'Unlock construction': 'Разблокировать конструкцию',
   'Invalid item size locks': 'Недопустимые блокировки размеров изделия',
   'Turn and size locks need project schemaVersion {v}':
     'Для блокировок поворота и размеров нужна версия схемы проекта {v}',
@@ -307,9 +339,59 @@ export const ru_project = {
     'Ничего не помещается: все стены слишком короткие или заняты.',
   'No mix fits the {w} mm stretch of wall {n} within the width range.':
     'Ни один набор не помещается на участок {w} мм стены {n} в заданном диапазоне ширин.',
-  'wall {n}: {s}': 'стена {n}: {s}',
+  'Wall {n}: {s}': 'Стена {n}: {s}',
+  'Corner cabinets only': 'Только угловые шкафы',
   'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.':
     'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
   'No mix could be built.': 'Не удалось построить ни одного набора.',
   'Room {w} × {d}': 'Комната {w} × {d}',
+  // ADR-207: connection kinds, against the wall, assembly step editing, linking identical pieces.
+  'side by side': 'рядом',
+  'in the corner': 'в углу',
+  stacked: 'друг над другом',
+  'against wall {n}': 'у стены {n}',
+  '{name} ({kind})': '{name} ({kind})',
+  '{a} and {b} do not meet in a corner.': '{a} и {b} не сходятся в углу.',
+  '{a} and {b} are not one over the other.': '{a} и {b} не стоят друг над другом.',
+  '{a} and {b} are not side by side, in a corner or one over the other.':
+    '{a} и {b} не стоят рядом, в углу или друг над другом.',
+  'A wall connection holds one piece.': 'Соединение со стеной относится к одному изделию.',
+  'The room has no wall {n}.': 'В комнате нет стены {n}.',
+  '{name} is turned at an angle.': '{name} повёрнуто под углом.',
+  'The back of {name} does not face wall {n}.': 'Задняя сторона {name} не обращена к стене {n}.',
+  'The back of {name} is not against wall {n}.': 'Задняя сторона {name} не прилегает к стене {n}.',
+  '{name} reaches past the end of wall {n}.': '{name} выходит за конец стены {n}.',
+  'Draw the room first: a piece goes against its walls.':
+    'Сначала нарисуйте комнату: изделие ставится к её стенам.',
+  'The back of {name} is not against a wall.': 'Задняя сторона {name} не прилегает к стене.',
+  '{a} is connected against wall {n} but no longer joined: {reason}':
+    '{a} соединено со стеной {n}, но больше не прилегает: {reason}',
+  'Against the wall': 'У стены',
+  'Off the wall': 'Не у стены',
+  'About against the wall': 'Об установке у стены',
+  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.':
+    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании отодвигает его и снимает со стены.',
+  '{n|# wall connection was|# wall connections were} left out: this room has no such wall.':
+    '{n|# соединение со стеной пропущено|# соединения со стеной пропущены|# соединений со стеной пропущено}: в этой комнате нет такой стены.',
+  'Link identical pieces': 'Связать одинаковые изделия',
+  'Link {n} identical pieces': 'Связать одинаковые изделия ({n})',
+  'These pieces are the same; linked, a change to one changes them all.':
+    'Эти изделия одинаковы; после связывания изменение одного меняет все.',
+  'Move step up': 'Переместить шаг выше',
+  'Move step down': 'Переместить шаг ниже',
+  'Rename step': 'Переименовать шаг',
+  'Reset the steps': 'Сбросить шаги',
+  'Edit this step': 'Изменить этот шаг',
+  'Reset the steps of {name} to the generated order and titles?':
+    'Вернуть шагам {name} созданный порядок и названия?',
+  'Name of the step (empty: the generated title “{title}”)':
+    'Название шага (пусто — созданное название «{title}»)',
+  'Backrest end': 'Сторона спинки',
+  'Side panel end': 'Сторона боковой панели',
+  // ADR-211
+  'About Select': 'О режиме «Выбор»',
+  'With Select on, each tap adds or removes a piece; with a mouse, Shift, Ctrl or Cmd-click does the same.':
+    'Когда «Выбор» включён, каждое касание добавляет или убирает изделие; мышью то же делает щелчок с Shift, Ctrl или Cmd.',
+  ' A drag on empty space selects every piece it touches.':
+    ' Протягивание по пустому месту выбирает все изделия, которых касается рамка.',
 } satisfies Record<string, string>;

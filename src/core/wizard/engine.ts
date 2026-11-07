@@ -18,6 +18,7 @@ import {
   boardDefault,
   boardOptions,
   boardsVersion,
+  ownBoardValue,
   stepById,
   str,
 } from './steps';
@@ -33,14 +34,23 @@ const FIELD_DEFAULTS: Answers = Object.fromEntries(
   ),
 );
 
-/** Every answer the wizard works with: field defaults, then the type's defaults, then what the user gave. */
-export const resolve = (a: Answers): Answers => ({
-  ...FIELD_DEFAULTS,
-  // The board defaults to the project's carcass board (ADR-164).
-  board: boardDefault(),
-  ...(typeOf(a)?.defaults ?? {}),
-  ...a,
-});
+const FILLS = STEPS.flatMap((s) => s.fields.filter((f) => f.fill));
+
+/**
+ * Every answer the wizard works with: field defaults, then the type's defaults, then what the user gave; a field's
+ * `fill` gives an answer that is still missing (ADR-191).
+ */
+export function resolve(a: Answers): Answers {
+  const r: Answers = {
+    ...FIELD_DEFAULTS,
+    // The board defaults to the project's carcass board (ADR-164).
+    board: boardDefault(),
+    ...(typeOf(a)?.defaults ?? {}),
+    ...a,
+  };
+  for (const f of FILLS) if (r[f.id] === undefined) r[f.id] = f.fill?.(r);
+  return r;
+}
 
 /** The steps of the chosen type (Type, then Size, first; Review last) that apply to these answers. */
 export function visibleSteps(a: Answers): StepDef[] {
@@ -73,6 +83,35 @@ export function fieldRange(f: FieldDef, a: Answers): { min: number; max: number 
   return { min: l?.min ?? f.min ?? 0, max: l?.max ?? f.max ?? 100_000 };
 }
 
+const whole = (v: unknown, min: number, max: number) =>
+  typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
+
+/**
+ * The answers after a type change (ADR-191): the new type, plus the Size answers that stay inside its range and keep
+ * their meaning (not in its `hide` or `labels`). Everything else belonged to the old type and goes.
+ */
+export function withType(a: Answers, type: string): Answers {
+  const b: Answers = { type };
+  const t = typeById.get(type);
+  const basics = stepById.get(BASICS);
+  if (!t || !basics) return b;
+  for (const f of basics.fields) {
+    const v = a[f.id];
+    if (v === undefined || t.hide?.includes(f.id) || t.labels?.[f.id]) continue;
+    const { min, max } = fieldRange(f, b);
+    if (f.kind === 'int' && !whole(v, min, max)) continue;
+    if (
+      f.kind === 'choice' &&
+      !fieldOptions(f, b)
+        .map((o) => o.value)
+        .includes(String(v))
+    )
+      continue;
+    b[f.id] = v;
+  }
+  return b;
+}
+
 export interface Problem {
   severity: Severity;
   code: string;
@@ -80,9 +119,6 @@ export interface Problem {
   step?: string;
   field?: string;
 }
-
-const whole = (v: unknown, min: number, max: number) =>
-  typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
 
 /** Range and choice problems of every visible field (errors: they block "Create piece"). */
 export function fieldProblems(a: Answers): Problem[] {
@@ -164,17 +200,21 @@ export interface Check {
 const memo = new Map<string, Check>();
 const MEMO_SIZE = 64;
 
-/** Field problems, design validation and every buildModel() diagnostic. Never throws. Memoised by answers. */
+/**
+ * Field problems, design validation and every buildModel() diagnostic. Never throws. Memoised by answers. A field
+ * error stops the build (ADR-191): a typo is one problem, not a 0 mm model with its own diagnostics.
+ */
 export function check(a: Answers): Check {
   // The offered boards are part of what the answers mean (ADR-164).
   const key = `${boardsVersion()}|${JSON.stringify(resolve(a))}`;
   const hit = memo.get(key);
   if (hit) return hit;
   const problems = fieldProblems(a);
+  const fieldErrors = problems.some((p) => p.severity === 'error');
   let design: Design | null = null,
     model: FurnitureModel | null = null;
   try {
-    design = toDesign(a);
+    design = fieldErrors ? null : toDesign(a);
     if (design) {
       for (const m of validateDesign(design))
         problems.push({ severity: 'error', code: 'invalid-design', message: m });
@@ -244,9 +284,26 @@ const shape = (d: Design) =>
 export const storedAnswers = (d: Design): Answers | null =>
   d.wizard ? (structuredClone(d.wizard.answers) as Answers) : null;
 
-/** True when the piece was changed in the editor after the wizard made it (reopening would replace those changes). */
-export function editedSinceWizard(d: Design): boolean {
+/**
+ * The answers a reopened piece starts from (ADR-194): the stored ones, with a `decor:` board answered by the piece's
+ * own board among the offered ones (call after `setWizardBoards` with the piece's boards). The answer stays a string;
+ * the stored shape is unchanged (ADR-046).
+ */
+export function reopenAnswers(d: Design): Answers | null {
   const a = storedAnswers(d);
+  if (!a) return null;
+  if (typeof a.board === 'string' && a.board.startsWith('decor:')) {
+    const own = ownBoardValue(d);
+    if (own) a.board = own;
+  }
+  return a;
+}
+
+/**
+ * True when the piece was changed in the editor after the wizard made it (reopening would replace those changes).
+ * `a`: the answers it is reopened with (default: the stored ones).
+ */
+export function editedSinceWizard(d: Design, a: Answers | null = storedAnswers(d)): boolean {
   if (!a) return false;
   const built = check(a).design;
   return !built || shape(built) !== shape(d);

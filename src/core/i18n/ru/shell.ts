@@ -225,6 +225,18 @@ export const ru_shell = {
     'Удалить список декоров с этого устройства? Плиты сохранят свои названия, цвета и метки.',
   'Remove list': 'Удалить список',
   'Remove decor list': 'Удалить список декоров',
+  'No bands imported. {problems}': 'Кромки не импортированы. {problems}',
+  'The band list could not be saved on this device.':
+    'Список кромок не удалось сохранить на этом устройстве.',
+  '{n|# band|# bands} imported from {file}.':
+    'Импортировано из {file}: {n|# кромка|# кромки|# кромок}.',
+  'Band list: {list}, {n|# band|# bands}.':
+    'Список кромок: {list}, {n|# кромка|# кромки|# кромок}.',
+  'Band list: none.': 'Список кромок: нет.',
+  'About the band list': 'О списке кромок',
+  'Import your own CSV with the columns {columns} (thickness in mm with one decimal, width whole mm, #rrggbb; decor optional) to pick bands in each board’s edge band.':
+    'Импортируйте свой CSV со столбцами {columns} (толщина в мм с одним знаком после запятой, ширина в целых мм, #rrggbb; декор необязателен), чтобы выбирать кромку для каждой плиты.',
+  'Import band list (CSV)': 'Импортировать список кромок (CSV)',
   '{name} colour': '{name}: цвет',
   Name: 'Название',
   Thickness: 'Толщина',
@@ -311,9 +323,11 @@ export const ru_shell = {
   'No problems found.': 'Проблем не найдено.',
   '…and {n} more on Review.': '…и ещё {n} на шаге «Проверка».',
   Default: 'По умолчанию',
-  'Warnings: see Review after using it': 'Предупреждения: смотрите «Проверку» после выбора',
   '{n|# warning|# warnings}': '{n|# предупреждение|# предупреждения|# предупреждений}',
   'Use this': 'Выбрать',
+  'Use this: {label}': 'Выбрать: {label}',
+  'Shelves in compartment {n}': 'Полки в секции {n}',
+  'Drawers in compartment {n}': 'Ящики в секции {n}',
   'Suggested combinations': 'Предлагаемые сочетания',
   'About suggested combinations': 'О предлагаемых сочетаниях',
   'Fit the sizes entered so far, checked by the model.':
@@ -321,7 +335,7 @@ export const ru_shell = {
   'No combination fits these sizes without errors; set the answers by hand.':
     'Ни одно сочетание не подходит к этим размерам без ошибок; задайте ответы вручную.',
   'Show more ({n})': 'Показать ещё ({n})',
-  'Start blank': 'Начать с нуля',
+  'Continue by hand': 'Продолжить вручную',
   'Wizard: {name}': 'Мастер: {name}',
   'New piece': 'Новое изделие',
   'The piece could not be saved in this browser’s storage.':
@@ -344,10 +358,14 @@ export const ru_shell = {
   'Choose a type to see the piece.': 'Выберите тип, чтобы увидеть изделие.',
   '{n} parts': '{n|# деталь|# детали|# деталей}',
   Back: 'Назад',
-  'Skip: use the first type': 'Пропустить: использовать первый тип',
-  'Skip: put this step back to its defaults':
-    'Пропустить: вернуть этот шаг к значениям по умолчанию',
-  Skip: 'Пропустить',
+  'Use {label}': 'Взять {label}',
+  'Use defaults': 'Взять значения по умолчанию',
+  'Discard the answers?': 'Отбросить ответы?',
+  Discard: 'Отбросить',
+  Answers: 'Ответы',
+  Edit: 'Изменить',
+  'Edit {step}': 'Изменить: {step}',
+  'Fix the marked fields.': 'Исправьте отмеченные поля.',
   Next: 'Далее',
   'Fix the problems listed under Checks first': 'Сначала исправьте проблемы из раздела «Проверки»',
   'Update piece': 'Обновить изделие',
@@ -360,4 +378,9 @@ export const ru_shell = {
   'Estimate: {amount} · {n} missing': 'Оценка: {amount} · не хватает {n}',
   'Estimate: {amount}': 'Оценка: {amount}',
   'Open the Shopping list': 'Открыть список покупок',
+  // Phone sheet stops (ADR-211)
+  'Resize the sheet': 'Изменить высоту панели',
+  Collapsed: 'Свёрнута',
+  Half: 'Наполовину',
+  'Full screen': 'На весь экран',
 } satisfies Record<string, string>;

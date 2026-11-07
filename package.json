@@ -11,16 +11,18 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "build:ci": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc -b --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --cache --cache-strategy content",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check --cache --cache-strategy content .",
     "test": "vitest run",
     "catalog:docs": "UPDATE_CATALOG_DOC=1 vitest run tests/catalog.test.ts",
     "catalog:snapshots": "WRITE_SNAPSHOTS=1 vitest run tests/snapshots.test.ts",
     "docs:check": "python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q",
-    "gaps": "python3 -I scripts/gaps.py"
+    "gaps": "python3 -I scripts/gaps.py",
+    "sync:pending": "node scripts/sync-pending.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "5.3.0",
@@ -40,7 +42,6 @@
     "zustand": "5.0.15"
   },
   "devDependencies": {
-    "@dimforge/rapier3d-compat": "0.21.0",
     "@eslint/js": "10.0.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

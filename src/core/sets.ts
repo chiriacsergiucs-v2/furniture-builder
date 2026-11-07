@@ -281,17 +281,19 @@ export function syncSets(project: Project): Project {
         ...sets.flatMap((set) =>
           project
             .connections!.map((c) => ({
+              ...c,
               id: `${c.id}:${set.id}`,
               itemIds: c.itemIds.map((x) => dupOf.get(`${set.id}:${x}`)) as [string, string],
             }))
             .filter(
               (c) =>
-                c.itemIds[0] &&
-                c.itemIds[1] &&
+                c.itemIds.every((x) => !!x) &&
                 !project.connections!.some(
                   (o) =>
                     o.id === c.id ||
-                    (o.itemIds.includes(c.itemIds[0]) && o.itemIds.includes(c.itemIds[1])),
+                    (o.kind === c.kind &&
+                      o.wall === c.wall &&
+                      c.itemIds.every((x) => o.itemIds.includes(x))),
                 ),
             ),
         ),
@@ -548,7 +550,7 @@ export function projectFromSet(project: Project, setId: string, now = new Date()
     ...(project.connections
       ? {
           connections: project.connections
-            .map((c) => ({ id: newId(), itemIds: keep(c.itemIds) as [string, string] }))
+            .map((c) => ({ ...c, id: newId(), itemIds: keep(c.itemIds) as [string, string] }))
             .filter((c) => c.itemIds.length === 2),
         }
       : {}),

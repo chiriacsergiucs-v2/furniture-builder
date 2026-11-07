@@ -1,4 +1,12 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
 
@@ -42,8 +50,12 @@ export function MmField({
   const parsed = Number(text);
   const valid = text.trim() !== '' && Number.isInteger(parsed) && parsed >= min && parsed <= max;
   const commit = () => {
-    if (valid && parsed !== value) onChange(parsed);
-    else if (!valid) setText(String(value));
+    if (valid && parsed !== value) {
+      onChange(parsed);
+      // If the parent refuses the edit, display its authoritative value (ADR-199).
+      // An accepted update supplies a new value on the next render, as for an external edit.
+      setText(String(value));
+    } else if (!valid) setText(String(value));
   };
   const bump = (d: number) => onChange(Math.min(max, Math.max(min, value + d)));
   return (
@@ -96,20 +108,61 @@ export function MmField({
   );
 }
 
+/**
+ * Roving tab stop of a single-choice group (ADR-202, G-361): only the selected option is a Tab stop, the first when
+ * none is selected. `i` is the option's place, `anyOn` whether any option of the group is selected.
+ */
+export const rovingTab = (on: boolean, i: number, anyOn: boolean): 0 | -1 =>
+  on || (!anyOn && i === 0) ? 0 : -1;
+
+/**
+ * Arrow keys of a single-choice group (ADR-202): on the group's `onKeyDown`, ←/↑ and →/↓ move to the previous or next
+ * enabled option and select it, wrapping; Home and End go to the first and last. Selecting is the option's own click.
+ */
+export function rovingKeys(e: ReactKeyboardEvent<HTMLElement>): void {
+  const step =
+    e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+      ? -1
+      : e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? 1
+        : e.key === 'Home' || e.key === 'End'
+          ? 0
+          : null;
+  if (step === null || e.altKey || e.ctrlKey || e.metaKey) return;
+  const options = [
+    ...e.currentTarget.querySelectorAll<HTMLButtonElement>(
+      ':scope > button[role="radio"], :scope > button[role="tab"]',
+    ),
+  ].filter((b) => !b.disabled);
+  if (!options.length) return;
+  const at = options.indexOf(document.activeElement as HTMLButtonElement);
+  if (at < 0) return;
+  const n = options.length;
+  const next = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (at + step + n) % n;
+  e.preventDefault();
+  e.stopPropagation();
+  options[next].focus();
+  if (next !== at) options[next].click();
+}
+
 export function Segmented<T extends string | number>({
   label,
   value,
   options,
   onChange,
   info,
+  wrap = false,
 }: {
   label: string;
   value: T;
   options: { value: T; label: ReactNode; title?: string }[];
   onChange: (v: T) => void;
   info?: ReactNode;
+  /** Labels stay whole on one line and the control wraps to a second row when it runs out of room (ADR-202). */
+  wrap?: boolean;
 }) {
   const id = useId();
+  const anyOn = options.some((o) => o.value === value);
   return (
     <div className="field">
       {withInfo(
@@ -118,13 +171,19 @@ export function Segmented<T extends string | number>({
         </span>,
         info,
       )}
-      <div className="segmented" role="radiogroup" aria-labelledby={id}>
-        {options.map((o) => (
+      <div
+        className={wrap ? 'segmented wrap' : 'segmented'}
+        role="radiogroup"
+        aria-labelledby={id}
+        onKeyDown={rovingKeys}
+      >
+        {options.map((o, i) => (
           <button
             key={String(o.value)}
             type="button"
             role="radio"
             aria-checked={o.value === value}
+            tabIndex={rovingTab(o.value === value, i, anyOn)}
             title={o.title}
             className={o.value === value ? 'on' : ''}
             onClick={() => onChange(o.value)}
@@ -203,6 +262,7 @@ export function Counter({
   max,
   onChange,
   info,
+  name,
 }: {
   label: string;
   value: number;
@@ -210,14 +270,17 @@ export function Counter({
   max: number;
   onChange: (v: number) => void;
   info?: ReactNode;
+  /** What the − and + buttons name when the visible label is shared, e.g. one counter per compartment (ADR-194). */
+  name?: string;
 }) {
+  const what = (name ?? label).toLowerCase();
   return (
     <div className="field">
       {withInfo(<span className="field-label">{label}</span>, info)}
       <div className="counter">
         <button
           type="button"
-          aria-label={t('Fewer {label}', { label: label.toLowerCase() })}
+          aria-label={t('Fewer {label}', { label: what })}
           disabled={value <= min}
           onClick={() => onChange(value - 1)}
         >
@@ -226,7 +289,7 @@ export function Counter({
         <output aria-live="polite">{value}</output>
         <button
           type="button"
-          aria-label={t('More {label}', { label: label.toLowerCase() })}
+          aria-label={t('More {label}', { label: what })}
           disabled={value >= max}
           onClick={() => onChange(value + 1)}
         >
@@ -248,6 +311,7 @@ export function Group({
   id,
   info,
   openOn,
+  locked,
 }: {
   title: string;
   children: ReactNode;
@@ -256,6 +320,8 @@ export function Group({
   /** An `InfoTip` on the title row (ADR-113); it sits beside the summary, never inside it. */
   info?: ReactNode;
   openOn?: string;
+  /** Why the group's controls are off (a board or construction lock, ADR-211); shown as its hint. */
+  locked?: string | null;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -267,7 +333,20 @@ export function Group({
         {title}
         <Icon name="chevron-down" className="chev" />
       </summary>
-      <div className="group-body">{children}</div>
+      <div className="group-body">
+        {locked ? (
+          <>
+            <p className="hint group-lock-hint" role="note">
+              {locked}
+            </p>
+            <fieldset className="group-locked" disabled>
+              {children}
+            </fieldset>
+          </>
+        ) : (
+          children
+        )}
+      </div>
     </details>
   );
   if (!info) return group;

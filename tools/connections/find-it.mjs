@@ -6,7 +6,8 @@
 // the third; dragging one moves the connected ones along (Alt moves it alone, desktop); a resized member →
 // Checks warns "connected but no longer joined"; the toggle disconnects. ADR-179: the room front view shows the
 // tick too, and Build & Preview › 3D draws a seam line (counted in `document.body.dataset.seams`) that is gone while
-// exploded and after Disconnect. Not part of `pnpm test`.
+// exploded and after Disconnect. ADR-201 (G-346): in Build & Preview › 3D with Move on, dragging a connected piece moves
+// the connected set along, and on a desktop an Alt drag moves that piece alone (then one Undo). Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -40,7 +41,13 @@ for (const width of [1440, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (loc) => {
     await loc.scrollIntoViewIfNeeded();
-    await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
+    // ADR-201 (G-181): a click Playwright delivered ("click action done") but whose page was too busy to answer in
+    // 3 s (software-rendered 3D) was taken; clicking again here undid it, the "lost first tap". Fall back only when
+    // the click never happened (covered or off screen).
+    await loc.click({ timeout: 3000 }).catch((e) => {
+      if (!/performing click action|click action done/.test(e.message))
+        return loc.dispatchEvent('click');
+    });
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
   const sheet = async (open) => {
@@ -272,14 +279,14 @@ for (const width of [1440, 390]) {
   );
   const why =
     (await apartCard
-      .getByText(/do not stand side by side/)
+      .getByText(/are not side by side, in a corner or one over the other/)
       .first()
       .textContent()
       .catch(() => '')) ?? '';
   check(
     width,
-    'the card says why: "… do not stand side by side."',
-    /do not stand side by side/.test(why),
+    'the card says why: "… are not side by side, in a corner or one over the other."',
+    /are not side by side, in a corner or one over the other/.test(why),
     why,
   );
   await shot('apart-reason');
@@ -313,6 +320,108 @@ for (const width of [1440, 390]) {
     JSON.stringify(d),
   );
   check(width, 'two ticks after moving together', (await ticks.count()) === 2);
+
+  // 4b. ADR-201 (G-346): the same in Build & Preview › 3D with Move on, as tools/move-3d/find-it.mjs drags (mouse on a
+  // desktop, CDP touch on a phone): pressing the middle of the view takes the piece framed there; the connected set
+  // moves along. On a desktop an Alt drag moves that piece alone; one Undo joins them again.
+  await show3d();
+  const canvas = page.locator('.view.three canvas');
+  await canvas.waitFor({ state: 'visible', timeout: 20000 });
+  {
+    // The Simple look draws fast enough in a software-rendered browser.
+    const menu = page
+      .locator('details.view-options')
+      .filter({ has: page.getByRole('radio', { name: 'Simple', includeHidden: true }) });
+    const inMenu = (await menu.count()) > 0;
+    if (inMenu && !(await menu.evaluate((d) => d.open)))
+      await menu.locator(':scope > summary').click();
+    await page.getByRole('radio', { name: 'Simple' }).click();
+    if (inMenu) await page.keyboard.press('Escape');
+    await page.waitForTimeout(1200);
+  }
+  const tools3d = page.getByRole('toolbar', { name: 'Place pieces in 3D' });
+  const move3d = tools3d.getByRole('button', { name: 'Move', exact: true });
+  if ((await move3d.getAttribute('aria-pressed')) !== 'true') await move3d.click();
+  check(
+    width,
+    '3D: Move turns on (pressed)',
+    (await move3d.getAttribute('aria-pressed')) === 'true',
+  );
+  /** Press the 3D view's centre, drag dx px to the right in steps, release; `alt` holds Alt (desktop). */
+  const drag3d = async (dx, name, alt = false) => {
+    const r = await canvas.boundingBox();
+    const a = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    const steps = 10;
+    const at = (i) => ({ x: a.x + (dx * i) / steps, y: a.y });
+    if (phone) {
+      const touch = (type, p) =>
+        cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [{ x: p.x, y: p.y }] : [] });
+      await touch('touchStart', a);
+      for (let i = 1; i <= steps; i++) await touch('touchMove', at(i));
+    } else {
+      if (alt) await page.keyboard.down('Alt');
+      await page.mouse.move(a.x, a.y);
+      await page.mouse.down();
+      for (let i = 1; i <= steps; i++) await page.mouse.move(at(i).x, at(i).y);
+    }
+    await page.waitForTimeout(250);
+    await shot(name);
+    if (phone) await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    else {
+      await page.mouse.up();
+      if (alt) await page.keyboard.up('Alt');
+    }
+    await page.waitForTimeout(500);
+  };
+  /** Back to the 3D view, settled (as tools/move-3d/find-it.mjs's `to3d`). */
+  const settled3d = async () => {
+    await show3d();
+    await page.waitForTimeout(1200);
+  };
+  await showPlan();
+  const z0 = await lefts();
+  await settled3d();
+  await drag3d(phone ? 90 : 160, '3d-together');
+  await showPlan();
+  const z1 = await lefts();
+  const dz = z1.map((v, i) => v - z0[i]);
+  check(
+    width,
+    '3D Move: dragging a connected piece moves all three by the same whole mm',
+    dz[0] !== 0 && dz.every((v) => v === dz[0]) && Number.isInteger(dz[0]),
+    JSON.stringify(dz),
+  );
+  check(width, '3D Move: still two ticks after moving together', (await ticks.count()) === 2);
+  if (!phone) {
+    await settled3d();
+    await drag3d(160, '3d-alone', true);
+    await showPlan();
+    const z2 = await lefts();
+    const moved = z2.map((v, i) => v !== z1[i]);
+    check(
+      width,
+      '3D Move: an Alt drag moves only the piece pressed',
+      moved.filter(Boolean).length === 1,
+      JSON.stringify(z2.map((v, i) => v - z1[i])),
+    );
+    check(
+      width,
+      '3D Move: the Alt drag parts it from its neighbours (fewer ticks)',
+      (await ticks.count()) < 2,
+      `${await ticks.count()}`,
+    );
+    // One Undo puts it back, joined again, for the steps below.
+    await click(btn('Undo'));
+    await page.waitForTimeout(300);
+    await showPlan();
+    check(
+      width,
+      'one Undo puts the Alt-dragged piece back, joined (two ticks)',
+      JSON.stringify(await lefts()) === JSON.stringify(z1) && (await ticks.count()) === 2,
+    );
+  }
+  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await showPlan();
 
   if (!phone) {
     // 5. Alt-drag the third alone: the others stay and the pair is disconnected (one tick).
@@ -359,7 +468,7 @@ for (const width of [1440, 390]) {
       .catch(() => '')) ?? '';
   check(
     width,
-    'Checks shows "… are connected but no longer joined: … do not stand side by side."',
+    'Checks shows "… are connected but no longer joined: …"',
     /Base cabinet.*Base cabinet.*connected but no longer joined/.test(warnText),
     warnText,
   );

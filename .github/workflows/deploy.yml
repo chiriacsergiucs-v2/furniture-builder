@@ -1,6 +1,10 @@
 name: Deploy GitHub Pages
+# ADR-197: deploy only after CI passed on a push to main, so the checks and tests run once per merge (in CI), not
+# again here. A manual run still deploys the current main.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 permissions:
@@ -11,21 +15,42 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
+  # CI runs on main finish in any order, so only the run for main's newest commit deploys; an older one would put
+  # an older tree back on the site. If the newest commit's CI fails, nothing deploys until main is fixed. A manual
+  # run deploys main only.
+  latest:
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.tip.outputs.deploy }}
+    steps:
+      - id: tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          tip=$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)
+          deploy=false
+          [ "$tip" = "$SHA" ] && deploy=true
+          echo "main is $tip, this run is for $SHA: deploy=$deploy" | tee /dev/stderr
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
   build:
+    needs: latest
+    if: needs.latest.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # The commit CI verified, not whatever main points at when this run starts.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: pnpm/setup@v3
         with:
           runtime: node@24
           cache: true
           require-lockfile: true
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
       # Accounts (ADR-126, ADR-127): the Supabase project URL and its publishable (anon) key, public by design. The
       # repository's Actions variables win when set. Never a secret or service key here (ADR-131).
-      - run: pnpm build
+      - run: pnpm build:ci
         env:
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://nllwhcxvcbtjfkdhsyse.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || 'sb_publishable_jnuJfAkWljedvgaXtG-lVg_8FbXCFRC' }}

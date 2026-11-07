@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { touchingRun } from '../core/arrange';
-import { linkCount } from '../core/linked';
+import { identicalPieces, linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
 import {
   DRAG_STEP,
@@ -36,9 +36,17 @@ import {
   SIZE_AXES,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
-import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
-import { keptVariables } from '../core/insertTemplate';
-import { connectedTo, connectionSeams } from '../core/connections';
+import { dragHeight, heightDraggable, heightLabel, snapWallHeight } from '../core/height';
+import { groupOf, itemsAt, itemsInBox, itemsInFrontBox, nextUnder } from '../core/selection';
+import { isBoardsLocked, isConstructionLocked } from '../core/pieceLocks';
+import { droppedWallConnections, keptVariables } from '../core/insertTemplate';
+import {
+  connectionSeams,
+  connectionsOf,
+  kindName,
+  wallAgainst,
+  wallsOf,
+} from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
 import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
@@ -46,12 +54,14 @@ import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { WallBackground } from './WallBackground';
+import { RoomFeatures } from './RoomFeatures';
 import { pictureRect } from '../core/wallPicture';
 import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
   arrowMove,
   bracketTurn,
   cancelPress,
+  DRAG_THRESHOLD_PX,
   cancelTurn,
   moveTurn,
   pressTurn,
@@ -78,8 +88,6 @@ import {
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
-  DEFAULT_OUTLET_ZONE,
-  DEFAULT_PIPE_ZONE,
   featureBox,
   keepWallFinishes,
   outlineIssues,
@@ -91,11 +99,9 @@ import {
   type WallFinish,
   wallLength,
   type Room,
-  type RoomFeature,
   type RoomShape,
   type ShapeSizes,
 } from '../core/room';
-import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
@@ -106,8 +112,17 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
-import { AskRunParts, RunHandlesAndSinks, WorktopOverhang } from './RunRequests';
-import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import {
+  AskRunParts,
+  PlanKitchenMarks,
+  RunHandlesAndSinks,
+  TrimEdit,
+  WorktopCorners,
+  WorktopEdgeEdit,
+  WorktopOverhang,
+} from './RunRequests';
+import { FastenersPanel } from './Fasteners';
+import { ClearanceFields, useClearances, ZoneOverlay, ZoneToolbar } from './Clearances';
 import { useMediaQuery } from './useMediaQuery';
 import { ViewOptions } from './ViewOptions';
 import { inOptions } from './viewChoice';
@@ -126,6 +141,16 @@ import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
 import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
 import { setRooms } from '../core/setRoom';
 import { ProjectHistory } from './History';
+import {
+  FloorBackground,
+  FloorFill,
+  PlanPictureLayer,
+  PlanPictureSection,
+  useBoardFills,
+  usePlanPictureRect,
+  WallBands,
+} from './RoomSurfaces';
+import { roomToPicture } from '../core/planPicture';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: t('front faces you'),
@@ -228,6 +253,8 @@ export function ProjectPanel({
         <RunParts />
         <ProjectSettingsPanel />
         <VariablesPanel />
+        {/* The project's fastener counts and the user's fasteners (ADR-209, ADR-074). */}
+        <FastenersPanel />
         <MmField
           label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
@@ -265,7 +292,10 @@ export function ProjectPanel({
         </h3>
         {/* The views' Select (ADR-097), shared: a tap on a row adds or removes the piece (ADR-159). */}
         {project.items.length > 0 && (
-          <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+          <>
+            <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+            <SelectTip />
+          </>
         )}
         {/* The most used action of a room's day sits at the top of the panel (ADR-160). */}
         <button type="button" className="btn sm primary add-piece" onClick={onAdd}>
@@ -431,6 +461,7 @@ export function ProjectPanel({
           <Group title={t('Position')} openOn={openKey(item.id, positionErrors)}>
             <GroupErrors messages={positionErrors} />
             <ConnectedTo project={project} id={item.id} />
+            <AgainstWall project={project} id={item.id} />
             {blocked && (
               <p className="hint" role="note">
                 {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
@@ -675,14 +706,56 @@ function LockChip({ item }: { item: ProjectItem }) {
   );
 }
 
-/** The pieces this one is connected to (ADR-168), under Position. */
+/** What this piece is connected to (ADR-168), each with its kind (ADR-207), under Position. */
 function ConnectedTo({ project, id }: { project: Project; id: string }) {
-  const names = connectedTo(project, id).map((x) => tr(pieceName(project, x)));
+  const names = connectionsOf(project, id).map((c) =>
+    c.other
+      ? t('{name} ({kind})', { name: tr(pieceName(project, c.other)), kind: kindName(c.kind) })
+      : kindName(c.kind, c.wall),
+  );
   if (!names.length) return null;
   return (
     <p className="hint connected-to" role="note">
       {t('Connected to {names}', { names: names.join(', ') })}
     </p>
+  );
+}
+
+/**
+ * Against the wall (ADR-207): on when the piece is connected against a wall of the room; it then slides along that
+ * wall. Disabled with the reason when its back lies on no wall.
+ */
+function AgainstWall({ project, id }: { project: Project; id: string }) {
+  const setAgainstWall = useDesign((s) => s.setAgainstWall);
+  const pieces = useDesign((s) => s.projectModel?.pieces);
+  const on = wallsOf(project, id).length > 0;
+  const why = useMemo(
+    () => (on ? null : wallAgainst(project, id, pieces).reason),
+    [project, id, pieces, on],
+  );
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <div className="connect-toggle">
+      <Toggle
+        label={t('Against the wall')}
+        checked={on}
+        disabled={!!why}
+        onChange={(v) => setMsg(setAgainstWall(id, v) || null)}
+        info={
+          <InfoTip label={t('About against the wall')} align="start">
+            {t(
+              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.',
+            )}
+          </InfoTip>
+        }
+      />
+      {why && <p className="hint">{why}</p>}
+      {msg && (
+        <p className="hint" role="status">
+          {msg}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -777,6 +850,8 @@ function PieceMenu({
   const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const setTurnLocked = useDesign((s) => s.setTurnLocked);
   const setAxisLocked = useDesign((s) => s.setAxisLocked);
+  const setBoardsLocked = useDesign((s) => s.setBoardsLocked);
+  const setConstructionLocked = useDesign((s) => s.setConstructionLocked);
   const mirrorRun = useDesign((s) => s.mirrorRun);
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
@@ -869,6 +944,23 @@ function PieceMenu({
           >
             <Icon name="lock" className="sm" />
             {isTurnLocked(item) ? t('Unlock turn') : t('Lock turn')}
+          </button>
+          {/* Boards and construction, each on its own (ADR-211, G-337); size and place stay free. */}
+          <button
+            type="button"
+            aria-pressed={isBoardsLocked(item)}
+            onClick={pick(() => setBoardsLocked(item.id, !isBoardsLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isBoardsLocked(item) ? t('Unlock boards') : t('Lock boards')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={isConstructionLocked(item)}
+            onClick={pick(() => setConstructionLocked(item.id, !isConstructionLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isConstructionLocked(item) ? t('Unlock construction') : t('Lock construction')}
           </button>
           {!isSizeLocked(item) &&
             SIZE_AXES.map((axis) => {
@@ -1010,17 +1102,35 @@ function LinkedCopies({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const linkAll = useDesign((s) => s.linkAll);
   const setLinkAll = useDesign((s) => s.setLinkAll);
+  const linkIdentical = useDesign((s) => s.linkIdentical);
   const n = useMemo(() => linkCount(project, item.id), [project, item.id]);
-  if (n < 2) return null;
+  // Other pieces identical to this one and not in its link group (ADR-207): one tap links them all.
+  const same = useMemo(() => identicalPieces(project, item.id).length, [project, item.id]);
+  if (n < 2 && !same) return null;
   return (
     <div className="linked-copies" role="group" aria-label={t('Linked copies')}>
-      <p className="hint">
-        <strong>{t('Linked: {n} copies', { n })}</strong>.{' '}
-        {linkAll
-          ? t('A change to this piece changes every copy, inside too.')
-          : t('A change to this piece changes it alone and unlinks it.')}
-      </p>
-      <Toggle label={t('Change all copies')} checked={linkAll} onChange={setLinkAll} />
+      {n >= 2 && (
+        <>
+          <p className="hint">
+            <strong>{t('Linked: {n} copies', { n })}</strong>.{' '}
+            {linkAll
+              ? t('A change to this piece changes every copy, inside too.')
+              : t('A change to this piece changes it alone and unlinks it.')}
+          </p>
+          <Toggle label={t('Change all copies')} checked={linkAll} onChange={setLinkAll} />
+        </>
+      )}
+      {same > 0 && (
+        <button
+          type="button"
+          className="btn outline block"
+          title={t('These pieces are the same; linked, a change to one changes them all.')}
+          onClick={() => linkIdentical(item.id)}
+        >
+          <Icon name="link" className="sm" />
+          {t('Link {n} identical pieces', { n: same })}
+        </button>
+      )}
     </div>
   );
 }
@@ -1341,6 +1451,10 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const hasRoom = useDesign((s) => !!s.project?.room);
   const finishDraw = useDesign((s) => s.finishDrawRoom);
   const cancelDraw = useDesign((s) => s.cancelDrawRoom);
+  // Setting the plan picture's scale (ADR-208): two taps on the plan.
+  const scaling = useDesign((s) => s.scalingPlan);
+  const cancelScale = useDesign((s) => s.cancelScalePlan);
+  const hasPicture = useDesign((s) => !!s.project?.planPicture);
   useEffect(() => {
     if (placingId || drawing) ref.current?.scrollIntoView({ block: 'nearest' });
   }, [placingId, drawing]);
@@ -1355,14 +1469,28 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   }, [tapped]);
   // With the piece list open the plan is shown even when empty: items are dropped onto it (ADR-094).
   const listOpen = usePieceList((s) => s.open);
-  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
+  if (
+    !pm ||
+    (!pm.pieces.length && !pm.models.length && !hasRoom && !hasPicture && !drawing && !listOpen)
+  )
     return (
       <div className="no-3d">
         <p>{t('Add pieces to see them on the plan.')}</p>
       </div>
     );
   return (
-    <div className={`plan-views ${placing || drawing ? 'placing' : ''}`} ref={ref}>
+    <div className={`plan-views ${placing || drawing || scaling ? 'placing' : ''}`} ref={ref}>
+      {scaling && (
+        <div className="place-banner" role="status">
+          <span>
+            {t('Tap a corner of the plan, then the other end of a wall you know.')}{' '}
+            {t('{n} of 2', { n: scaling.length })}
+          </span>
+          <button type="button" className="btn sm ghost" onClick={cancelScale}>
+            {t('Cancel')}
+          </button>
+        </div>
+      )}
       {drawing && (
         <div className="place-banner" role="status">
           <span>
@@ -1496,9 +1624,15 @@ function RoomPlan({
   const room = useDesign((s) => s.project?.room);
   const drawing = useDesign((s) => s.drawingRoom);
   const addCorner = useDesign((s) => s.addRoomCorner);
-  const tapping = !!placing || !!drawing;
+  const scaling = useDesign((s) => s.scalingPlan);
+  const addScalePoint = useDesign((s) => s.addScalePoint);
+  const planPicture = useDesign((s) => s.project?.planPicture);
+  const pictureRect = usePlanPictureRect(planPicture);
+  const board = useBoardFills(pm.pieces);
+  const tapping = !!placing || !!drawing || !!scaling;
   const moveItemBy = useDesign((s) => s.moveItemBy);
-  const [showZones, setShowZones] = useState(false);
+  // Shared with the 3D view (ADR-205): one Clearances switch shows the zones in both.
+  const [showZones, setShowZones] = useClearances();
   const turnItem = useDesign((s) => s.turnItem);
   const setRotation = useDesign((s) => s.setRotation);
   /** Why the last move did nothing (a locked piece, ADR-095). */
@@ -1625,10 +1759,19 @@ function RoomPlan({
     ...(room?.outline ?? []),
     ...(drawing ?? []),
     ...(project ? setRooms(project).flatMap((sr) => sr.room.outline) : []),
+    // The plan picture is framed too while it is shown (ADR-208).
+    ...(pictureRect && !planPicture?.hidden
+      ? ([
+          [pictureRect.x, pictureRect.z],
+          [pictureRect.x + pictureRect.w, pictureRect.z + pictureRect.d],
+        ] as [number, number][])
+      : []),
   ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
-    ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
+    ...(showZones
+      ? pm.zones.flatMap((z) => (z.tipUp ? [z.box, z.tipUp.strip] : [z.box]))
+      : pm.pieces.map((p) => p.bounds)),
     ...pm.models.map((m) => m.box),
   ];
   const xs = [...framed.flatMap((b) => [b.x, b.x + b.w]), ...pts.map((p) => p[0])],
@@ -1675,6 +1818,7 @@ function RoomPlan({
         )}
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
         <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+        <SelectTip box />
         {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). On a phone Snap and the
             clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
         <ViewOptions menu={inOptions('snap', phone)}>
@@ -1765,6 +1909,10 @@ function RoomPlan({
                 const p = toRoom(e);
                 if (!p) return;
                 e.stopPropagation();
+                if (scaling) {
+                  if (planPicture) addScalePoint(roomToPicture(planPicture, p.x, p.z));
+                  return;
+                }
                 if (drawing) {
                   addCorner(p.x, p.z);
                   return;
@@ -1775,10 +1923,14 @@ function RoomPlan({
             : undefined
         }
       >
+        {board.defs}
+        {planPicture && (
+          <PlanPictureLayer pp={planPicture} rect={pictureRect} taps={scaling} fs={fs} />
+        )}
         {project && <SetTags project={project} pm={pm} fs={fs} />}
         {room ? (
           <>
-            <RoomOutline room={room} fs={fs} />
+            <RoomOutline room={room} fs={fs} traced={!!pictureRect && !planPicture?.hidden} />
             {/* A value set's room copy at its origin (ADR-167). */}
             {project &&
               setRooms(project).map((sr) => (
@@ -1976,7 +2128,12 @@ function RoomPlan({
               {pc.item.angle ? (
                 // A piece at an angle (ADR-121): its turned outline and front edge, from the core.
                 <>
-                  <polygon points={pc.footprint.map((p) => p.join(',')).join(' ')} />
+                  <polygon
+                    points={pc.footprint.map((p) => p.join(',')).join(' ')}
+                    style={
+                      board.fillOf(pc.item.id) ? { fill: board.fillOf(pc.item.id) } : undefined
+                    }
+                  />
                   <line
                     className="front"
                     x1={pc.front[0]}
@@ -1987,7 +2144,16 @@ function RoomPlan({
                 </>
               ) : (
                 <>
-                  <rect x={b.x} y={b.z} width={b.w} height={b.d} />
+                  {/* The board of its highest panel, as a picture (ADR-208). */}
+                  <rect
+                    x={b.x}
+                    y={b.z}
+                    width={b.w}
+                    height={b.d}
+                    style={
+                      board.fillOf(pc.item.id) ? { fill: board.fillOf(pc.item.id) } : undefined
+                    }
+                  />
                   <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
                 </>
               )}
@@ -2019,6 +2185,8 @@ function RoomPlan({
           />
         )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
+        {/* Sink and hob cut-outs and worktop corner joints (ADR-205), from the core. */}
+        {project && <PlanKitchenMarks project={project} pieces={pm.pieces} fs={fs} />}
         {project && <ConnectionTicks project={project} pieces={pm.pieces} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
@@ -2190,11 +2358,17 @@ function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: 
 }
 
 /** The room on the plan (ADR-058/0056): walls with their numbers, door swings, windows and obstacles. */
-function RoomOutline({ room, fs }: { room: Room; fs: number }) {
+function RoomOutline({ room, fs, traced }: { room: Room; fs: number; traced?: boolean }) {
   const n = room.outline.length;
   return (
     <g className="room-outline">
-      <polygon className="room-floor" points={room.outline.map((p) => p.join(',')).join(' ')} />
+      {/* Over a plan picture the floor lets it show through (ADR-208); a floor background fills it. */}
+      <polygon
+        className={`room-floor${traced ? ' traced' : ''}`}
+        points={room.outline.map((p) => p.join(',')).join(' ')}
+      />
+      <FloorFill room={room} />
+      <WallBands room={room} />
       {room.outline.map((_, i) => {
         const [a, b] = wallEnds(room, i);
         return (
@@ -2280,9 +2454,43 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const multi = useDesign((s) => s.multiSelect);
   const setMulti = useDesign((s) => s.setMultiSelect);
   const toggleItem = useDesign((s) => s.toggleItem);
+  const selectItems = useDesign((s) => s.selectItems);
+  /** The selection box being drawn on empty front view (room mm, y up from the floor), or null (ADR-211, G-308). */
+  const [box, setBoxState] = useState<{
+    pointerId: number;
+    a: { x: number; y: number };
+    b: { x: number; y: number };
+    add: boolean;
+  } | null>(null);
+  const boxRef = useRef<typeof box>(null);
+  const setBox = (v: typeof box) => {
+    boxRef.current = v;
+    setBoxState(v);
+  };
+  const svgRef = useRef<SVGSVGElement>(null);
+  const toFront = (e: { clientX: number; clientY: number }) => {
+    const m = svgRef.current?.getScreenCTM();
+    if (!m) return null;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    return { x: Math.round(pt.x), y: Math.round(-pt.y) };
+  };
+  /** The placed front-view boxes the project model holds (pieces and 3D models), for the box without a rebuild. */
+  const placedBoxes = useMemo(
+    () =>
+      new Map<string, Box>([
+        ...pm.pieces.map((pc) => [pc.item.id, pc.bounds] as [string, Box]),
+        ...pm.models.map((m) => [m.item.id, m.box] as [string, Box]),
+      ]),
+    [pm.pieces, pm.models],
+  );
   // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
   // piece turned a quarter shows its side, so it opens with the whole piece selected.
   const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
+    // The click that ends a height drag does nothing more (ADR-205).
+    if (lifted.current) {
+      lifted.current = false;
+      return;
+    }
     if (multi || e.shiftKey || e.ctrlKey || e.metaKey) return toggleItem(item.id);
     const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
     if (!m || item.rotationY % 180 !== 0) return tapItem(item.id);
@@ -2293,6 +2501,67 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const project = useDesign((s) => s.project);
   const room = project?.room;
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
+  // Dragging a selected wall unit up or down (ADR-205): through `setWallHeight` (ADR-122), one undo step on release;
+  // with Snap on (Alt not held) its underside or top snaps to the worktop and wall-unit lines within 60 mm.
+  const setItemHeight = useDesign((s) => s.setItemHeight);
+  const [snapOn] = useSnap();
+  const [lift, setLift] = useState<{ id: string; height: number; hint: string | null } | null>(
+    null,
+  );
+  const liftRef = useRef<{
+    id: string;
+    pointerId: number;
+    sy: number;
+    y0: number;
+    start: number;
+    dragging: boolean;
+  } | null>(null);
+  const lifted = useRef(false);
+  const svgY = (e: { clientX: number; clientY: number }, el: SVGGraphicsElement) => {
+    const m = el.ownerSVGElement?.getScreenCTM();
+    return m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()).y : null;
+  };
+  const pressLift = (e: React.PointerEvent<SVGRectElement>, pc: PlacedPiece) => {
+    if (!project || e.button !== 0 || multi || e.shiftKey || e.ctrlKey || e.metaKey) return;
+    if (!selectedIds.includes(pc.item.id) || pc.item.placement?.kind !== 'wall') return;
+    if (!heightDraggable(project, pc.item.id)) return;
+    const y0 = svgY(e, e.currentTarget);
+    if (y0 === null) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    liftRef.current = {
+      id: pc.item.id,
+      pointerId: e.pointerId,
+      sy: e.clientY,
+      y0,
+      start: pc.item.placement.height,
+      dragging: false,
+    };
+  };
+  const moveLift = (e: React.PointerEvent<SVGRectElement>) => {
+    const g = liftRef.current;
+    if (!g || e.pointerId !== g.pointerId || !project || !pm) return;
+    g.dragging ||= Math.abs(e.clientY - g.sy) > DRAG_THRESHOLD_PX;
+    if (!g.dragging) return;
+    const y = svgY(e, e.currentTarget);
+    if (y === null) return;
+    // The view's y runs down; up is a higher hanging height.
+    const free = dragHeight(g.start, g.y0 - y);
+    const snapped =
+      snapOn && !e.altKey
+        ? snapWallHeight(project, pm.pieces, g.id, free)
+        : { height: free, hint: null };
+    setLift({ id: g.id, ...snapped });
+  };
+  const endLift = (e: React.PointerEvent<SVGRectElement>, commit: boolean) => {
+    const g = liftRef.current;
+    if (!g || e.pointerId !== g.pointerId) return;
+    liftRef.current = null;
+    const at = lift;
+    setLift(null);
+    if (!g.dragging) return;
+    lifted.current = true;
+    if (commit && at?.id === g.id && at.height !== g.start) setItemHeight(g.id, at.height);
+  };
   // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
   // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
   const wallUrls = useWallPictureUrls(room?.walls ?? NO_WALLS);
@@ -2381,14 +2650,53 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
       <div className="plan-tools">
         {/* The plan's Select (ADR-097), shared: taps add and remove pieces (ADR-159). */}
         <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+        <SelectTip box />
       </div>
+      {lift && (
+        <span className="plan-drag-note" role="status">
+          {lift.hint ?? heightLabel(lift.height)}
+        </span>
+      )}
       <InfoTip label={t('About the front view')}>
-        {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}
+        {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}{' '}
+        {t('Drag up or down to change the height')}
         {rv &&
           ` ${t('The room height and the doors, windows and obstacles on the back wall are outlined.')}`}
       </InfoTip>
       <svg
+        ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
+        className={multi ? 'selecting' : undefined}
+        // The plan's box rules (ADR-097) in the front view (ADR-211): a press on empty space with a mouse or pen, or
+        // with Select on, draws a box; Shift/Ctrl/Cmd adds to the selection.
+        onPointerMove={(e) => {
+          const bx = boxRef.current;
+          if (bx && e.pointerId === bx.pointerId) {
+            const p = toFront(e);
+            if (p) setBox({ ...bx, b: p });
+          }
+        }}
+        onPointerDown={(e) => {
+          if (boxRef.current && e.pointerId !== boxRef.current.pointerId) setBox(null);
+          const onPiece = (e.target as Element).closest?.('.front-hit, .front-model');
+          if (onPiece || boxRef.current) return;
+          if (e.pointerType === 'touch' && !multi) return;
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          const p = toFront(e);
+          if (!p) return;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+          setBox({ pointerId: e.pointerId, a: p, b: p, add: e.shiftKey || e.ctrlKey || e.metaKey });
+        }}
+        onPointerUp={(e) => {
+          const bx = boxRef.current;
+          if (!bx || e.pointerId !== bx.pointerId || !project) return;
+          setBox(null);
+          // A press without a drag is not a box.
+          if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.y - bx.b.y) < 1) return;
+          const hit = itemsInFrontBox(project, bx.a, bx.b, placedBoxes);
+          selectItems(bx.add ? [...selectedIds, ...hit] : hit);
+        }}
+        onPointerCancel={() => setBox(null)}
       >
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
         {backs.length > 0 && (
@@ -2473,8 +2781,28 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
             })}
             onClick={(e) => tapFront(e, pc.item)}
             onKeyDown={onKey(() => select(pc.item.id))}
+            onPointerDown={(e) => pressLift(e, pc)}
+            onPointerMove={moveLift}
+            onPointerUp={(e) => endLift(e, true)}
+            onPointerCancel={(e) => endLift(e, false)}
           />
         ))}
+        {lift &&
+          (() => {
+            const pc = pm.pieces.find((x) => x.item.id === lift.id);
+            if (!pc) return null;
+            const b = pc.bounds;
+            return (
+              <rect
+                className="lift-ghost"
+                x={b.x}
+                y={Y(lift.height, b.h)}
+                width={b.w}
+                height={b.h}
+                aria-hidden="true"
+              />
+            );
+          })()}
         {pm.pieces
           .filter(
             (pc) => isLocked(pc.item) || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0,
@@ -2487,6 +2815,16 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               size={Math.min(span / 40, pc.bounds.w / 7)}
             />
           ))}
+        {box && (
+          <rect
+            className="select-box"
+            x={Math.min(box.a.x, box.b.x)}
+            y={-Math.max(box.a.y, box.b.y)}
+            width={Math.abs(box.b.x - box.a.x)}
+            height={Math.abs(box.b.y - box.a.y)}
+            aria-hidden="true"
+          />
+        )}
         {project && <FrontConnectionTicks project={project} pieces={pm.pieces} fs={span / 40} />}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
@@ -2664,14 +3002,28 @@ export function AddPieceList({
                   onClick={() => {
                     // A variable the project already has keeps its value; the inserted pieces follow it (ADR-170).
                     const kept = project ? keptVariables(project, tpl) : [];
+                    // A wall connection to a wall this room lacks is dropped (ADR-207); the notice says so.
+                    const dropped = project ? droppedWallConnections(project, tpl) : 0;
                     if (!insertTemplate(tpl).length) return;
-                    if (kept.length)
-                      useUi.getState().setNotice({
-                        ok: true,
-                        text: t('Kept the project’s {names}; the inserted pieces follow it.', {
-                          names: kept.map((n) => `“${n}”`).join(', '),
-                        }),
-                      });
+                    const notes = [
+                      ...(kept.length
+                        ? [
+                            t('Kept the project’s {names}; the inserted pieces follow it.', {
+                              names: kept.map((n) => `“${n}”`).join(', '),
+                            }),
+                          ]
+                        : []),
+                      ...(dropped
+                        ? [
+                            t(
+                              '{n|# wall connection was|# wall connections were} left out: this room has no such wall.',
+                              { n: dropped },
+                            ),
+                          ]
+                        : []),
+                    ];
+                    if (notes.length)
+                      useUi.getState().setNotice({ ok: true, text: notes.join(' ') });
                     onDone();
                   }}
                 >
@@ -2764,6 +3116,8 @@ function RunParts() {
                 <Icon name="trash" />
               </button>
               {rp.kind === 'worktop' && <WorktopOverhang part={rp} />}
+              {rp.kind === 'worktop' && <WorktopEdgeEdit part={rp} />}
+              {(rp.kind === 'crown' || rp.kind === 'pelmet') && <TrimEdit part={rp} />}
             </li>
           ))}
         </ul>
@@ -2773,6 +3127,7 @@ function RunParts() {
           {n}
         </p>
       ))}
+      <WorktopCorners />
       <AskRunParts />
       <RunHandlesAndSinks />
       {removed.length > 0 && (
@@ -2815,22 +3170,6 @@ const SHAPES: { value: RoomShape; label: string }[] = [
   { value: 'u-shape', label: t('U-shape') },
   { value: 'alcove', label: t('Alcove') },
 ];
-/** Default labels of new room features: stored in the project, so kept in English. */
-const FEATURE_KIND: Record<RoomFeature['kind'], string> = {
-  door: 'Door',
-  window: 'Window',
-  obstacle: 'Obstacle',
-  pipe: 'Pipe',
-  outlet: 'Outlet',
-};
-const REMOVE_FEATURE: Record<RoomFeature['kind'], string> = {
-  door: t('Remove door'),
-  window: t('Remove window'),
-  obstacle: t('Remove obstacle'),
-  pipe: t('Remove pipe'),
-  outlet: t('Remove outlet'),
-};
-
 /** The room (ADR-058/0056): shape and walls, height, doors, windows and obstacles, checked against the pieces. */
 function RoomSection() {
   const project = useDesign((s) => s.project)!;
@@ -2869,66 +3208,6 @@ function RoomSection() {
   };
   const issues = room ? outlineIssues(room.outline) : [];
   const walls = room ? room.outline.map((_, i) => i) : [];
-  const addFeature = (kind: RoomFeature['kind']) => {
-    if (!room) return;
-    const n = room.features.filter((f) => f.kind === kind).length + 1;
-    const f: RoomFeature =
-      kind === 'door'
-        ? {
-            id: newId(),
-            kind,
-            wall: room.outline.length - 1,
-            from: 100,
-            width: 800,
-            sill: 0,
-            height: 2000,
-            depth: 0,
-            label: `Door ${n}`,
-          }
-        : kind === 'window'
-          ? {
-              id: newId(),
-              kind,
-              wall: 0,
-              from: 500,
-              width: 1000,
-              sill: 900,
-              height: 1200,
-              depth: 0,
-              label: `Window ${n}`,
-            }
-          : kind === 'pipe' || kind === 'outlet'
-            ? {
-                // A zone on the wall (ADR-072); default sizes are the ADR's open question, edited here.
-                id: newId(),
-                kind,
-                wall: 0,
-                from: kind === 'pipe' ? 200 : 400,
-                width: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
-                sill: 300,
-                height: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
-                depth: 0,
-                label: `${FEATURE_KIND[kind]} ${n}`,
-              }
-            : {
-                id: newId(),
-                kind,
-                wall: 0,
-                from: 0,
-                width: 600,
-                sill: 100,
-                height: 600,
-                depth: 100,
-                label: `Obstacle ${n}`,
-              };
-    setRoom({ ...room, features: [...room.features, f] });
-  };
-  const setFeature = (id: string, patch: Partial<RoomFeature>) =>
-    room &&
-    setRoom({
-      ...room,
-      features: room.features.map((f) => (f.id === id ? { ...f, ...patch } : f)),
-    });
   return (
     <section className="section room" aria-label={t('Room')}>
       {!room ? (
@@ -3081,136 +3360,16 @@ function RoomSection() {
                       max={30000}
                       onChange={(v) => setRoom(setWallLength(room, i, v))}
                     />
-                    <WallBackground room={room} wall={i} setRoom={setRoom} />
+                    <WallBackground room={room} wall={i} projectId={project.id} />
                   </li>
                 ))}
               </ul>
+              <FloorBackground room={room} />
               <button type="button" className="btn ghost" onClick={startDraw}>
                 <Icon name="pencil" className="sm" />
                 {t('Draw the room again')}
               </button>
-              <h4 className="list-head">{t('Doors, windows, obstacles, pipes and outlets')}</h4>
-              {room.features.length === 0 && <p className="hint">{t('None yet.')}</p>}
-              {room.features.map((f) => (
-                <fieldset key={f.id} className="room-feature" aria-label={tr(f.label)}>
-                  <legend>{tr(f.label)}</legend>
-                  <Select
-                    label={t('On')}
-                    value={f.wall === null ? 'floor' : String(f.wall)}
-                    options={[
-                      ...walls.map((i) => ({
-                        value: String(i),
-                        label: t('Wall {n}', { n: i + 1 }),
-                      })),
-                      ...(f.kind === 'obstacle'
-                        ? [{ value: 'floor', label: t('Free-standing') }]
-                        : []),
-                    ]}
-                    onChange={(v) =>
-                      setFeature(
-                        f.id,
-                        v === 'floor' ? { wall: null, x: 0, z: 0 } : { wall: Number(v) },
-                      )
-                    }
-                  />
-                  {f.wall === null ? (
-                    <>
-                      <MmField
-                        label={t('From left')}
-                        value={f.x ?? 0}
-                        min={-30000}
-                        max={30000}
-                        onChange={(v) => setFeature(f.id, { x: v })}
-                      />
-                      <MmField
-                        label={t('From back')}
-                        value={f.z ?? 0}
-                        min={-30000}
-                        max={30000}
-                        onChange={(v) => setFeature(f.id, { z: v })}
-                      />
-                    </>
-                  ) : (
-                    <MmField
-                      label={t("From the wall's start")}
-                      value={f.from}
-                      min={0}
-                      max={30000}
-                      onChange={(v) => setFeature(f.id, { from: v })}
-                    />
-                  )}
-                  <MmField
-                    label={t('Width')}
-                    value={f.width}
-                    min={10}
-                    max={30000}
-                    onChange={(v) => setFeature(f.id, { width: v })}
-                  />
-                  {f.kind !== 'door' && (
-                    <MmField
-                      label={f.kind === 'window' ? t('Sill height') : t('Bottom above floor')}
-                      value={f.sill}
-                      min={0}
-                      max={10000}
-                      onChange={(v) => setFeature(f.id, { sill: v })}
-                    />
-                  )}
-                  <MmField
-                    label={t('Height')}
-                    value={f.height}
-                    min={10}
-                    max={10000}
-                    onChange={(v) => setFeature(f.id, { height: v })}
-                  />
-                  {f.kind === 'obstacle' && (
-                    <MmField
-                      label={t('Comes out')}
-                      value={f.depth}
-                      min={1}
-                      max={30000}
-                      onChange={(v) => setFeature(f.id, { depth: v })}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    className="danger-link"
-                    onClick={() =>
-                      setRoom({ ...room, features: room.features.filter((x) => x.id !== f.id) })
-                    }
-                  >
-                    {REMOVE_FEATURE[f.kind]}
-                  </button>
-                </fieldset>
-              ))}
-              <div className="split-actions">
-                <button type="button" className="btn outline sm" onClick={() => addFeature('door')}>
-                  {t('Add door')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('window')}
-                >
-                  {t('Add window')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('obstacle')}
-                >
-                  {t('Add obstacle')}
-                </button>
-                <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
-                  {t('Add pipe')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('outlet')}
-                >
-                  {t('Add outlet')}
-                </button>
-              </div>
+              <RoomFeatures room={room} onChange={setRoom} />
               <button
                 type="button"
                 className="danger-link"
@@ -3235,6 +3394,19 @@ function RoomSection() {
           ))}
         </>
       )}
+      <PlanPictureSection />
     </section>
+  );
+}
+
+/** What Select does (ADR-211, G-148), beside each of the three Select toggles; the views add the drag box. */
+function SelectTip({ box = false }: { box?: boolean }) {
+  return (
+    <InfoTip label={t('About Select')}>
+      {t(
+        'With Select on, each tap adds or removes a piece; with a mouse, Shift, Ctrl or Cmd-click does the same.',
+      )}
+      {box && t(' A drag on empty space selects every piece it touches.')}
+    </InfoTip>
   );
 }

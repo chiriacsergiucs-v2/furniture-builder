@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { t, tr } from '../core/i18n';
-import { sizeFields, type SizeField } from '../core/pieceSize';
+import { bedSizeFields, sizeFields, type SizeField } from '../core/pieceSize';
 import type { Product } from '../core/types';
 import { axesText, SIZE_LOCKED_HINT } from '../core/sizeLock';
 import { MmField } from './controls';
@@ -30,7 +30,9 @@ export function PieceSize({
   /** In a project (ADR-166): the ƒ button for a field and, when bound, what it follows (the field is then off). */
   bind?: (key: SizeField['key']) => { button: ReactNode; hint?: string };
 }) {
-  const fields = useMemo(() => sizeFields(product), [product]);
+  // A bed shows its mattress size instead (ADR-211, G-126); it has no ƒ binding (variables follow the outside size).
+  const bed = useMemo(() => bedSizeFields(product), [product]);
+  const fields = useMemo(() => (bed.length ? bed : sizeFields(product)), [bed, product]);
   if (!fields.length) return null;
   return (
     <div
@@ -39,7 +41,7 @@ export function PieceSize({
       aria-label={t('Size of the whole piece')}
     >
       {fields.map((f) => {
-        const b = bind?.(f.key);
+        const b = bed.length ? undefined : bind?.(f.key);
         return (
           <MmField
             key={f.key}

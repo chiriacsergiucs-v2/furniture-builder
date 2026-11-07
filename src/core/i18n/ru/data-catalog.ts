@@ -12,8 +12,8 @@ export const data_catalog: Record<string, string> = {
   '1000 wide, 720 carcass on the plinth': 'Ширина 1000, корпус 720 на цоколе',
   '1000 wide, deeper towards the floor': 'Ширина 1000, к полу глубже',
   '1000 wide, shelf 150 above the floor': 'Ширина 1000, полка на 150 над полом',
-  '1000 × 720 × 560, 400 mm blind section on the left, one door':
-    '1000 × 720 × 560, глухая секция 400 мм слева, одна дверца',
+  '1000 × 720 × 560, 610 mm blind section on the left, one door':
+    '1000 × 720 × 560, глухая секция 610 мм слева, одна дверца',
   '1100 × 1950 × 600': '1100 × 1950 × 600',
   '1100 × 420 × 600': '1100 × 420 × 600',
   '1200 × 2100 × 600': '1200 × 2100 × 600',
@@ -912,4 +912,7 @@ export const data_catalog: Record<string, string> = {
   'Wardrobe — 4 doors, 2 sections': 'Шкаф для одежды — 4 дверцы, 2 секции',
   'Wardrobe — Double hanging': 'Шкаф для одежды — Две штанги',
   'Wardrobe — Sliding 2 doors': 'Шкаф для одежды — 2 раздвижные дверцы',
+  // A template saved from one of the user's designs (`templateFromDesign`, ADR-195).
+  'Saved from one of your designs.': 'Сохранено из одного из ваших проектов.',
+  'Edit it like any design': 'Изменяйте его как любой проект',
 };
