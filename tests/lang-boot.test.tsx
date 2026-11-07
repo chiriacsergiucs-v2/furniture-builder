@@ -41,6 +41,11 @@ describe('language boot (ADR-229)', () => {
     // The constant the app imported is the same Russian text.
     const { NO_3D_REASON } = await import('../src/ui/viewChoice');
     expect(NO_3D_REASON).toBe('3D-просмотр недоступен в этом браузере');
+    // The Projects page reads the saved lists on arrival and sets state when they come back. Let those reads finish
+    // before the test ends, or their state update lands after jsdom is torn down ("window is not defined").
+    const { listDesigns, listProjects } = await import('../src/persist/db');
+    await Promise.allSettled([listProjects(), listDesigns()]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   it('main.tsx imports the app only after the dictionary is loaded', () => {
