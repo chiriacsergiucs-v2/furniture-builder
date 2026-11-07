@@ -340,6 +340,7 @@ export const ru_project = {
   'No mix fits the {w} mm stretch of wall {n} within the width range.':
     'Ни один набор не помещается на участок {w} мм стены {n} в заданном диапазоне ширин.',
   'Wall {n}: {s}': 'Стена {n}: {s}',
+  'Corner cabinets only': 'Только угловые шкафы',
   'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.':
     'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
   'No mix could be built.': 'Не удалось построить ни одного набора.',

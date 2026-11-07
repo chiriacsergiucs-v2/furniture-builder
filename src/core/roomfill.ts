@@ -732,8 +732,10 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   const depth = runDepth(input, perWall);
   const memo = roomMemo();
   const ctx: PlanContext = { input, walls, corner, corners, take, depth, perWall, island, memo };
+  // The combinations are shared out: each plan gets its part of MAX_BUILDS, so a call tries no more than before.
+  const budget = Math.ceil(MAX_BUILDS / plans.length);
   const results = plans.map((kept) =>
-    fillPlan(ctx, kept, plans.length > 1 ? `c${kept.join(',')}#` : '', limit),
+    fillPlan(ctx, kept, plans.length > 1 ? `c${kept.join(',')}#` : '', limit, budget),
   );
   const mixes = results
     .flatMap((r) => r.mixes)
@@ -745,22 +747,27 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   const overBudget = results.reduce((a, r) => a + r.overBudget, 0);
   const prices = results.flatMap((r) => (r.cheapest === undefined ? [] : [r.cheapest]));
   const cheapest = prices.length ? Math.min(...prices) : undefined;
-  // The problems of the plan that gave the best mix, else of the first plan.
+  // The problems of the plan that gave the best mix; with no mix, the first plan's and every plan's errors.
   const from = results.find((r) => mixes[0] && r.mixes.includes(mixes[0])) ?? results[0];
   const problems = [...from.problems];
-  if (!mixes.length && !overBudget && !problems.some((p) => p.severity === 'error')) {
+  if (!mixes.length && !overBudget) {
+    for (const r of results)
+      for (const p of r.problems)
+        if (p.severity === 'error' && !problems.some((q) => q.message === p.message))
+          problems.push(p);
     const failed = results.reduce((a, r) => a + r.failed, 0);
-    problems.push(
-      err(
-        'room-no-mix',
-        failed
-          ? t(
-              'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.',
-              { n: failed },
-            )
-          : t('No mix could be built.'),
-      ),
-    );
+    if (failed || !problems.some((p) => p.severity === 'error'))
+      problems.push(
+        err(
+          'room-no-mix',
+          failed
+            ? t(
+                'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.',
+                { n: failed },
+              )
+            : t('No mix could be built.'),
+        ),
+      );
   }
   return { mixes, problems, ...(overBudget ? { overBudget, cheapest } : {}) };
 }
@@ -779,12 +786,16 @@ interface PlanContext {
   memo: RoomMemo;
 }
 
-/** One corner plan filled: its mixes (at most `limit`), its problems, and how many builds had an error. */
+/**
+ * One corner plan filled: its mixes (at most `limit`, from at most `budget` combinations), its problems, and how many
+ * builds had an error.
+ */
 function fillPlan(
   ctx: PlanContext,
   kept: number[],
   prefix: string,
   limit: number,
+  budget: number,
 ): {
   mixes: RoomMix[];
   problems: Diagnostic[];
@@ -903,9 +914,9 @@ function fillPlan(
   // Combinations by the sum of ranks, best first, bounded.
   const combos: number[][] = [];
   const maxRank = lists.reduce((a, l) => a + l.length - 1, 0);
-  for (let total = 0; total <= maxRank && combos.length < MAX_BUILDS; total++) {
+  for (let total = 0; total <= maxRank && combos.length < budget; total++) {
     const walk = (k: number, left: number, acc: number[]) => {
-      if (combos.length >= MAX_BUILDS) return;
+      if (combos.length >= budget) return;
       if (k === lists.length) {
         if (left === 0) combos.push(acc);
         return;
@@ -953,7 +964,9 @@ function fillPlan(
     mixes.push({
       key,
       walls: byWall,
-      summary: byWall.map((w) => t('Wall {n}: {s}', { n: w.wall + 1, s: w.summary })).join('; '),
+      summary: byWall.length
+        ? byWall.map((w) => t('Wall {n}: {s}', { n: w.wall + 1, s: w.summary })).join('; ')
+        : t('Corner cabinets only'),
       corners: kept.length,
       project: built.project,
       model: built.model,

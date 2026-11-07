@@ -222,7 +222,9 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
 }
 
 /** Each built-in template's description by its id, shown under the Start from row of that id (ADR-216). */
-const TEMPLATE_TEXT = new Map(templates.map((x) => [x.id, x.description]));
+const TEMPLATE_TEXT = new Map(
+  templates.filter((x) => x.description).map((x) => [x.id, x.description]),
+);
 
 /**
  * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
@@ -303,8 +305,8 @@ export function StartFrom({
                       </strong>
                       <span className="sub">{tr(v.summary)}</span>
                       {/* The built-in template's description, under the row of the same id (ADR-216). */}
-                      {TEMPLATE_TEXT.get(v.id) && (
-                        <span className="sub">{tr(TEMPLATE_TEXT.get(v.id)!)}</span>
+                      {TEMPLATE_TEXT.has(v.id) && (
+                        <span className="sub">{tr(TEMPLATE_TEXT.get(v.id) ?? '')}</span>
                       )}
                       {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (

@@ -27,15 +27,18 @@ question tool:
    unchanged) only when its own footprint fits both walls: its length (`cornerTake().along`, measured from the placed
    template) on the wall holding it and its depth (`across`) on the next wall. Two corner cabinets whose footprints share
    floor never stand together. The plans are the largest conflict-free sets, the one keeping earlier corners first, at
-   most 4 (a bound on work, not a size). No magic length: "too short" is the footprints' own overlap.
+   most 4 (a bound on work, not a size). No magic length: "too short" is the footprints' own overlap. The 60
+   combinations a call tries are shared out between the plans, so an L or U call tries no more than a rectangle.
 2. **Each plan is filled** as before (stretches, candidates, tall side, combinations); an empty corner is reserved as
    corner kind `none` reserves it (the first wall's run reaches it). The mixes of all plans are ranked together by the
    existing order (fewest warnings, then fewest pieces). A rectangle has one plan, so its mixes, keys and problems are
    unchanged.
 3. **Runs stay off taken floor** (`trimStretches`): a stretch loses the part whose run (a run's depth, fronts included)
    would stand on a kept corner cabinet's footprint or on an earlier wall's run, so tall cabinets, top boxes and base
-   units stay out of the corner zones and out of a narrow U arm already filled from its other side.
-4. A wall left empty is named by its existing "Wall n has no stretch" note and left off the card (no "Wall n: " line).
+   units stay out of the corner zones and out of a narrow U arm already filled from its other side. An L or diagonal
+   corner's whole bounding square counts as taken (its doors open into the inner part).
+4. A wall left empty is named by its existing "Wall n has no stretch" note and left off the card (no "Wall n: " line);
+   a mix of corner cabinets only reads "Corner cabinets only". With no mix, every plan's errors are named.
 5. **Start from** (`StartFrom`, `src/ui/Catalog.tsx`): a row whose variant id is a built-in template's id shows that
    template's description under its summary, through `tr()` (Russian entries already in `ru/data-catalog.ts`); other rows
    show nothing new. `TemplateButton` is deleted.
@@ -51,14 +54,15 @@ Problems stay diagnostics (ADR-008); every offered mix is still built and checke
 ## Scope
 
 - In scope: corner plans, stretch trimming, card text for empty walls, Start from descriptions, feature lines.
-- Out of scope: the three template texts that give 720 mm under catalog rows that build 820 mm (G-484, found while
-  building; asks the user which height to state).
+- Out of scope: template texts whose sizes differ from the row they sit under: 720 mm under three rows that build
+  820 mm, and the two desk texts in W × D × H under W × H × D summaries (G-484, found while building; asks the user).
 
 ## Consequences
 
 - Positive: the default L and U rooms give error-free mixes; Start from says what each built-in template is.
-- Negative / risks: an L or U call fills up to 4 plans, so it does more work than a rectangle (the rectangle's timing
-  test is unchanged).
+- Negative / risks: an L or U call fills up to 4 plans (their tall-side probes add a few builds). Where two runs
+  face each other across a narrow arm, the wall earlier in the outline keeps the floor; only corners are tried both
+  ways.
 
 ## Done when
 
