@@ -33,11 +33,16 @@ app loads or sends over the network**. This review is engineering guidance, not 
      `+`, `-` or `@` (spreadsheet formula injection) for names that come from the user; the
      Fusion 360 Python script must quote every user string so a piece name cannot end the
      string and run code inside Fusion; exported JSON is `JSON.stringify`, never hand-built.
-   - **Network boundary (ADR-002, ADR-126):** outside `src/online` (imported only dynamically, after opt-in, and
+   - **Network boundary (ADR-002, ADR-126, ADR-239):** outside `src/online` (imported only dynamically, after opt-in, and
      contacting only `onlineOrigins()`), no `fetch`, XHR, WebSocket, beacon, remote font, CDN,
      analytics or error reporter; `dist/` has no third-party origin
      (`grep -rEo "https?://[^\"' )]+" dist | sort -u` lists only the app's own origin and
      standard namespaces); links to manufacturers' sites open only on the user's click.
+   - **Assistant (ADR-239, ADR-240):** nothing is sent while it is off, before its consent or signed out; the request
+     holds only the message, the open document, the selection and the action list (no geometry, pictures or other
+     saved data); the model's plan runs only catalog actions (`src/store/assistantActions.ts`, nothing that opens,
+     replaces or deletes saved data), is checked whole before it runs and is applied only on Apply; the provider key
+     lives only in the Edge Function's secrets, and the function checks the session and the daily cap.
    - **Service worker and updates:** precache list limited to the app's own files; the update
      prompt never runs code from outside the bundle; scope stays `/furniture-builder/`.
    - **Storage and privacy:** nothing leaves the device unless the user downloads it; never
