@@ -649,7 +649,11 @@ export function App() {
             )}
           </nav>
           {page === 'editor' && (
-            <div className={templateEdit ? 'path template' : 'path'}>
+            <div
+              className={
+                templateEdit ? 'path template' : editingItemId && project ? 'path piece' : 'path'
+              }
+            >
               {templateEdit ? (
                 <>
                   <span className="crumb family" title={t('Template')}>
