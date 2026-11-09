@@ -14,7 +14,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - Dexie 4 (IndexedDB), vite-plugin-pwa (ADR-012)
 - Node 24, pnpm 12, Vitest, ESLint + Prettier (ADR-053, the same tooling as reserv)
 - Static site on GitHub Pages; offline core with no request until the user opts in to an online feature; no
-  telemetry, analytics, remote AI or CDN (ADR-002, network rule replaced by ADR-126)
+  telemetry, analytics, remote AI or CDN (ADR-002, network rule replaced by ADR-126; the opt-in assistant reaches an AI model
+  only through the backend, ADR-239)
 - GitHub for source control and CI/CD
 
 ## Language
@@ -110,7 +111,9 @@ and `pnpm build`, and pushed straight to `main` after the user approves the list
 - Do not read, write or migrate the previous app or its data (`mobila-cutlist-build-kit`) (ADR-001).
 - Offline core (ADR-002, ADR-126): every feature works signed out and offline with no request. Online features
   (accounts, account storage, share links) are opt-in, live only in `src/online`, are imported only dynamically,
-  and contact only the origins in `src/online/origins.ts`. Never telemetry, analytics, remote AI, CDN or remote fonts.
+  and contact only the origins in `src/online/origins.ts`. Never telemetry, analytics, remote AI, CDN or remote fonts;
+  the one exception is the opt-in, signed-in assistant, which reaches an AI model only through the backend's
+  `assistant` function (ADR-239).
 - Integer millimetres; x width, y height from floor, z depth from back; exact integer splits (ADR-003).
 - Every view and list is a projection of `buildModel()`; never compute geometry in UI code (ADR-004).
 - New product families reuse `buildCabinet` where a carcass exists (ADR-007).

@@ -593,3 +593,20 @@ export async function deleteMyAccount(
   }
   return r;
 }
+
+// ---- The assistant (ADR-239) ---------------------------------------------------------------------------------------
+
+/** Send one assistant request through the backend; a failure comes back as its message, never thrown. */
+export async function askAssistant(
+  body: unknown,
+): Promise<{ ok: true; reply: unknown } | { ok: false; error: string }> {
+  try {
+    const b = await getBackend();
+    return await b.askAssistant(body);
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : t('Something went wrong. Try again.'),
+    };
+  }
+}

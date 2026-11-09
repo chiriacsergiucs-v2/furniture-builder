@@ -1,7 +1,8 @@
 # ADR-239: Allow an opt-in AI assistant through the backend
 
-- Status: Deferred (waiting for the user to approve lifting "no remote AI" and a paid API)
+- Status: Implemented
 - Date: 2026-11-09
+- Implemented: 2026-11-09
 - Depends on: ADR-126, ADR-127
 - Design: docs/ui-design.md (§4, a new _Assistant_ entry when built)
 - Backlog: N244
@@ -22,7 +23,7 @@ This changes two implemented decisions:
 
 A language model API is remote AI and is billed per use. This ADR replaces only those two sentences, and only for the
 assistant described here. Everything else in ADR-002 and ADR-126 stays: the offline core, `src/online` only, dynamic
-import, and no telemetry, analytics, CDN or remote fonts. The ADR is Deferred until the user approves both points.
+import, and no telemetry, analytics, CDN or remote fonts. The user approved both points on 2026-11-09 ("Approve + build + merge", "Yes, approve both").
 
 ## Decision
 
@@ -36,12 +37,17 @@ import, and no telemetry, analytics, CDN or remote fonts. The ADR is Deferred un
   `import()` only when the user opens the assistant. `tests/network-boundary.test.ts` keeps passing unchanged.
 - **What is sent.** Per request: the user's message, the earlier messages in this chat, the current design document
   (piece or project, the same JSON as a design file, ADR-011), the selection path, and the action list from
-  [ADR-240](ADR-240-let-the-assistant-run-every-editor-action-as-a-previewed-cha.md). Generated geometry, pictures,
+  [ADR-240](../adr-done/ADR-240-let-the-assistant-run-every-editor-action-as-a-previewed-cha.md). Generated geometry, pictures,
   other projects, the catalog and saved data are never sent.
 - **Consent.** The first switch-on shows what is sent, to whom (the backend, then the model provider) and that it
   costs money per request. The user must accept before the first request.
-- **Server rules.** The Edge Function checks the Supabase session, caps the size of each request and the number of
-  requests per user per day, and stores no chat or design. The limits are set by the user before building.
+- **Server rules.** The Edge Function checks the Supabase session, caps the size of each request (600 000 characters)
+  and the number of requests per user per day (`assistant_usage` table and `assistant_take` function,
+  `supabase/migrations/20261109000000_assistant.sql`, service role only), and stores no chat or design.
+- **Provider and limits** (the user left them open, "No preference"; decided by Claude 2026-11-09): Anthropic,
+  model `claude-opus-5-5` at effort `medium` with server-side refusal fallbacks, 50 requests per account per day.
+  All three are Edge Function secrets (`ASSISTANT_MODEL`, `ASSISTANT_DAILY_CAP`) the owner can change without a
+  new build; the key is `ANTHROPIC_API_KEY`.
 - **Failure.** No network, a rejected session, the daily cap reached or a provider error each give a plain message
   in the chat. The design is never changed by a failed request.
 
@@ -69,19 +75,19 @@ import, and no telemetry, analytics, CDN or remote fonts. The ADR is Deferred un
 
 ## Done when
 
-- [ ] `tests/network-boundary.test.ts` passes; no module outside `src/online` sends a request.
-- [ ] With the assistant off, or signed out, a production build makes no request to the `assistant` function (test
+- [x] `tests/network-boundary.test.ts` passes; no module outside `src/online` sends a request.
+- [x] With the assistant off, or signed out, a production build makes no request to the `assistant` function (test
       with a fake client).
-- [ ] The consent text is shown before the first request and the request is not sent until it is accepted (test).
-- [ ] The request body holds the message, the design document, the selection and the action list, and no geometry
+- [x] The consent text is shown before the first request and the request is not sent until it is accepted (test).
+- [x] The request body holds the message, the design document, the selection and the action list, and no geometry
       or pictures (test).
-- [ ] Each failure (offline, no session, cap reached, provider error) shows its message and leaves the design
+- [x] Each failure (offline, no session, cap reached, provider error) shows its message and leaves the design
       unchanged (tests with a fake client).
-- [ ] Find-it (jsdom, 390 and 1280 px): More › **Assistant** switch, the consent text, the chat input.
-- [ ] CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-239 next to ADR-126.
+- [x] Find-it (jsdom, 390 and 1280 px): More › **Assistant** switch, the consent text, the chat input.
+- [x] CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-239 next to ADR-126.
 
-## Open questions
+## Answers (user, 2026-11-09)
 
-- Approve lifting "no remote AI" (ADR-002, ADR-126) for this opt-in assistant? Blocks building.
-- Approve a paid model API, which replaces "free tier only" (ADR-126, G-213) for the assistant? Blocks building.
-- Which provider and model, and the daily request cap per user? Suggested: Anthropic Claude; cap set by the user.
+- Lift "no remote AI" (ADR-002, ADR-126) for this opt-in assistant: **yes**.
+- A paid model API, replacing "free tier only" (ADR-126, G-213) for the assistant: **yes**.
+- Provider, model and daily cap: no preference; decided as above.

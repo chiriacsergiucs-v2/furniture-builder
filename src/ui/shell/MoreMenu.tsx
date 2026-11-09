@@ -14,7 +14,8 @@ import { Icon } from '../icons';
 import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
-import { useAccount } from '../../store/accountStore';
+import { backendConfigured, useAccount } from '../../store/accountStore';
+import { useAssistant } from '../../store/assistantStore';
 import { useUi } from '../../store/uiStore';
 import { LanguageMenu } from './LanguageMenu';
 import { t } from '../../core/i18n';
@@ -239,6 +240,15 @@ export function MoreMenu({
               {t('Saved data and backup')} <small>{t('keep, back up and restore')}</small>
             </button>
           </div>
+          {backendConfigured() && (
+            <>
+              <span className="menu-sep" aria-hidden="true" />
+              <button type="button" onClick={run(() => useAssistant.getState().setOpen(true))}>
+                <Icon name="pencil" />
+                {t('Assistant')} <small>{t('ask for a change in your own words')}</small>
+              </button>
+            </>
+          )}
           <span className="menu-sep" aria-hidden="true" />
           <LanguageMenu />
           <span className="menu-sep" aria-hidden="true" />

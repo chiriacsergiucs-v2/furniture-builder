@@ -7289,6 +7289,10 @@ ul.plain {
 .mm.with-trailing {
   grid-template-columns: 32px 1fr auto 32px 28px;
 }
+/* Three sizes in a row hide the steppers, so the number takes the first column (not the stepper's 32 px). */
+.dims3 .mm.with-trailing {
+  grid-template-columns: minmax(0, 1fr) auto 28px;
+}
 .mm .btn.bind {
   font-style: italic;
   font-weight: 600;
@@ -7638,4 +7642,41 @@ fieldset.group-locked {
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* The assistant (ADR-239, ADR-240) */
+.assistant-chat {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.assistant-line.error {
+  color: var(--error);
+}
+.assistant-changes {
+  margin: 0;
+  padding-left: var(--s-4);
+  display: grid;
+  gap: var(--s-1);
+  font-size: var(--fs-sm, 0.9rem);
+  overflow-wrap: anywhere;
+}
+.assistant-path {
+  color: var(--ink-2);
+}
+.assistant-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-1) var(--s-2);
+  align-items: end;
+}
+.assistant-input label {
+  grid-column: 1 / -1;
+}
+.assistant-input textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
 }

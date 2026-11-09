@@ -12,6 +12,12 @@ export interface FakeServer {
   sentResets: string[];
   /** While true every call fails like a lost connection. */
   offline: boolean;
+  /** The assistant function (ADR-239): the reply for a request body; absent = not set up on this server. */
+  assistant?: (body: unknown) => unknown;
+  /** Every body the assistant function received. */
+  assistantCalls?: unknown[];
+  /** Requests left today; 0 = the daily limit is reached. Absent = no limit. */
+  assistantLeft?: number;
 }
 
 export const fakeServer = (): FakeServer => ({
@@ -187,6 +193,22 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
       for (const [k, s] of server.shares) if (s.owner === o) server.shares.delete(k);
       me = null;
       return { ok: true };
+    },
+    async askAssistant(body) {
+      net();
+      if (!me) return { ok: false, error: t('Sign in to use the assistant.') };
+      if (!server.assistant)
+        return { ok: false, error: t('The assistant is not set up on this server yet.') };
+      if (server.assistantLeft !== undefined) {
+        if (server.assistantLeft <= 0)
+          return {
+            ok: false,
+            error: t('You reached today’s limit of assistant requests. Try again tomorrow.'),
+          };
+        server.assistantLeft--;
+      }
+      (server.assistantCalls ??= []).push(body);
+      return { ok: true, reply: server.assistant(body) };
     },
   };
 }

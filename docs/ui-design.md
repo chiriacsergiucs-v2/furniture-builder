@@ -257,6 +257,17 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
 - _Shared sides (ADR-190)._ The same group has a third toggle **Shared sides** (info tip; disabled with its reason).
   On, the Parts list counts one side less per joint; fronts meet over the middle of the shared side.
 
+- _Assistant (ADR-239, ADR-240)._ With a backend in the build, ⋯ More › **Assistant** (_ask for a change in your own
+  words_) opens the **Assistant** dialog: the switch **Use the assistant on this device** (off: _The assistant is off.
+  Nothing is sent anywhere._), then once the consent (_Before you start_, **Accept and start** / **No, turn it off**),
+  then the chat: lines _You:_ / _Assistant:_, _Thinking…_ while waiting, **Your request** with **Send**, and the
+  **Proposed change** card: the summary, one line per change (`path before → after`), new problems as error or warning
+  alerts, **Apply** and **Discard**. Signed out it says _Sign in to use the assistant._
+- _Phone sheet and size fields (user 2026-11-09)._ Choosing a piece or a space no longer opens the Compose sheet past
+  its peek row, so the drawing stays in view and a further tap drills one level deeper; in a project the peek row names
+  the level reached, _Selected: Wardrobe › Hanging_. Three size fields with a binding button (ƒ) give the number the
+  whole first column (1200 was cut to "120").
+
 ## 5. Rollout
 
 Shipped as one slice on `ccr-38ebfeec-gnv63w` because the tokens, components and screens share one stylesheet; each

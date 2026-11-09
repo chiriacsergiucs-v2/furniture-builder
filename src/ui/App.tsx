@@ -52,6 +52,7 @@ import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
 import { AccountButton, AccountDialog, SyncStatus } from './Account';
+import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
 import { initAccount } from '../store/accountActions';
 import { useViewStore } from '../store/viewStore';
@@ -230,6 +231,7 @@ export function App() {
   const editingItemId = useDesign((s) => s.editingItemId);
   const projectDirtyAt = useDesign((s) => s.projectDirtyAt);
   const selectedId = useDesign((s) => s.selectedId);
+  const drillItemId = useDesign((s) => s.drillItemId);
   const selectedItemId = useDesign((s) => s.selectedItemId);
   const vd = useView();
   const inProject = !!project && !editingItemId;
@@ -301,8 +303,8 @@ export function App() {
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  // Choosing a piece in a project opens the sheet on it on a phone. A space of a single piece does not: the drawing
-  // keeps its height with the quick counts right above the selection, and the peek row opens the editor.
+  // Choosing a piece or a space never opens the sheet past its peek row on a phone (user 2026-11-09): the drawing
+  // stays in view so a further tap drills one level deeper (ADR-088); the peek row opens the editor.
   const selKey = inProject ? selectedItemId : selectedId;
   const [lastTap, setLastTap] = useState(tapMode);
   const [lastSel, setLastSel] = useState(selKey);
@@ -316,10 +318,8 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    const keepClosed = takeKeepSheetClosed();
-    // A chosen piece opens the half sheet; a full sheet stays full (ADR-211).
-    if (selKey && !tapMode && inProject && !keepClosed)
-      setSheetStop((st) => (st === 'peek' ? 'half' : st));
+    // Read so a one-time "keep closed" request does not linger; the sheet stays where it is either way.
+    takeKeepSheetClosed();
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -534,11 +534,20 @@ export function App() {
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
   const selectedCount = useDesign((s) => s.selectedItemIds.length);
   const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
+  // Inside a project piece (ADR-088) the peek row names the level reached too: "Wardrobe › Hanging".
+  const drillLevel =
+    inProject && selectedItem && drillItemId === selectedItem.id && typeof selectedId === 'string'
+      ? selectionLabel(design.product, selectedId)
+      : null;
   const peek = inProject
     ? selectedCount > 1
       ? t('{n} pieces selected', { n: selectedCount })
       : selectedItem || selectedModel
-        ? t('Selected: {name}', { name: String(selectedItem?.design.name ?? selectedModel?.name) })
+        ? t('Selected: {name}', {
+            name: drillLevel
+              ? `${selectedItem!.design.name} › ${drillLevel}`
+              : String(selectedItem?.design.name ?? selectedModel?.name),
+          })
         : t('{name}: {n|# piece|# pieces}', { name: project!.name, n: project!.items.length })
     : (() => {
         const l = selectionLabel(design.product, selectedId);
@@ -1029,6 +1038,7 @@ export function App() {
         <MaterialDialog />
         <SavedDataDialog />
         <AccountDialog />
+        <AssistantDialog />
         <ShareLinkDialog />
         <SharedItemDialog onOpened={() => setPage('editor')} />
         <BackupReminder />

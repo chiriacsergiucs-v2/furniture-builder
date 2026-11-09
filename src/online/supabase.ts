@@ -186,5 +186,26 @@ export function supabaseBackend(url: string, anonKey: string, appUrl: string): B
       await sb.auth.signOut({ scope: 'local' });
       return { ok: true };
     },
+    async askAssistant(body) {
+      const { data: session } = await sb.auth.getSession();
+      if (!session.session) return { ok: false, error: t('Sign in to use the assistant.') };
+      const { data, error } = await sb.functions.invoke('assistant', {
+        body: body as Record<string, unknown>,
+      });
+      if (!error) return { ok: true, reply: data };
+      // The function's own status: 429 = the daily limit, 413 = too large, 401 = no session (ADR-239).
+      const status = (error as { context?: { status?: number } }).context?.status;
+      if (status === 429)
+        return {
+          ok: false,
+          error: t('You reached today’s limit of assistant requests. Try again tomorrow.'),
+        };
+      if (status === 413)
+        return { ok: false, error: t('This design is too large to send to the assistant.') };
+      if (status === 401) return { ok: false, error: t('Sign in to use the assistant.') };
+      if (status === 404)
+        return { ok: false, error: t('The assistant is not set up on this server yet.') };
+      return { ok: false, error: said(error) };
+    },
   };
 }

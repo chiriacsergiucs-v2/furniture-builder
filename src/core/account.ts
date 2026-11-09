@@ -79,6 +79,11 @@ export interface Backend {
   stopShare(shareId: string): Promise<void>;
   openShare(shareId: string): Promise<SharedItem | null>;
   deleteAccount(): Promise<{ ok: true } | { ok: false; error: string }>;
+  /**
+   * Ask the assistant (ADR-239): the request goes to the backend's `assistant` function, never to the model provider
+   * directly. The reply is the function's JSON, read by `parseReply`; a refusal comes back as `{ ok: false }`.
+   */
+  askAssistant(body: unknown): Promise<{ ok: true; reply: unknown } | { ok: false; error: string }>;
 }
 
 /** An account remembered on this device (ADR-134, ADR-142): shown signed in at once, offline too, with no request. */

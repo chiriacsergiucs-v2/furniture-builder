@@ -3,6 +3,7 @@
  * code (typed keys for `t`); `ruData` holds text from built-in data (looked up by `tr`, ADR-155).
  */
 import { ru_account } from './account';
+import { ru_assistant } from './assistant';
 import { ru_base } from './base';
 import { ru_catalog } from './catalog';
 import { ru_core } from './core';
@@ -37,6 +38,7 @@ export const ru = {
   ...ru_catalog,
   ...ru_editors,
   ...ru_account,
+  ...ru_assistant,
   ...ru_core,
   ...ru_core2,
   ...ru_info,
