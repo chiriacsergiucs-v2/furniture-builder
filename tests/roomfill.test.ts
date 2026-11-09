@@ -416,7 +416,8 @@ describe('ADR-193: tall side and room sizes', () => {
     for (const m of r.mixes) expect(m.key).not.toMatch(/\|right/);
   });
   // The fastest of 5 warm runs is its own cost; a busy test machine slows single runs (retried, never loosened).
-  it('the 4-wall default stays under 100 ms', { retry: 2 }, () => {
+  // Skipped (user decision 2026-11-09): CI on main missed it on machine speed alone; ADR-242 (Deferred) restores it.
+  it.skip('the 4-wall default stays under 100 ms', { retry: 2 }, () => {
     suggestRoomMixes(wizard());
     const runs = [0, 1, 2, 3, 4].map(() => {
       const t0 = performance.now();
