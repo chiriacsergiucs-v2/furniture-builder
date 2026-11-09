@@ -268,6 +268,12 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   the level reached, _Selected: Wardrobe › Hanging_. Three size fields with a binding button (ƒ) give the number the
   whole first column (1200 was cut to "120").
 
+- _Phone editor (ADR-241)._ With a piece or project open, a phone's bottom nav reads **Projects · Catalog · Editor ·
+  Cut list**; Cut list shows the results (Checks first when there are errors, else Parts) with a red or amber count,
+  headed by the running estimate; the Compose · Build & Preview row is not shown on phones. In a project, **Edit this
+  piece** (card button, peek pencil) keeps the project open, opens the sheet full and shows **Inside this piece**; the
+  piece editor screen is **More actions › Open in the piece editor**.
+
 ## 5. Rollout
 
 Shipped as one slice on `ccr-38ebfeec-gnv63w` because the tokens, components and screens share one stylesheet; each

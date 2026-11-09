@@ -41,6 +41,7 @@ export const ru_project = {
   Locked: 'Закреплено',
   'Size locked': 'Размер закреплён',
   'Edit this piece': 'Изменить изделие',
+  'Open in the piece editor': 'Открыть в редакторе изделия',
   'Update from saved piece': 'Обновить из сохранённого',
   'Let the piece be moved and turned again': 'Снова разрешить перемещать и поворачивать изделие',
   'Keep the piece where it is: nothing moves or turns it':
