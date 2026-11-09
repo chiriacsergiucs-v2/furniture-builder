@@ -5384,7 +5384,9 @@ button.tile:hover {
     bottom: 0;
     z-index: 6;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Three places, or four with an open piece or project: Cut list (ADR-241). */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: var(--s-1);
     max-width: none;
     border: 0;
@@ -5409,6 +5411,35 @@ button.tile:hover {
     height: 20px;
   }
   .pages.places .count {
+    display: none;
+  }
+  .pages.places a {
+    position: relative;
+  }
+  .pages.places a .badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 26px);
+    min-width: 18px;
+    padding: 0 var(--s-1);
+    border-radius: 9px;
+    font-size: var(--fs-xs);
+    line-height: 18px;
+    text-align: center;
+    color: #fff;
+    background: var(--warn-fill);
+  }
+  .pages.places a .badge.error {
+    background: var(--error);
+  }
+  /* ADR-241: on a phone the Editor and Cut list places replace the Compose · Build & Preview row. */
+  .modes {
+    display: none;
+  }
+  .cut-estimate {
+    padding: var(--s-2) var(--s-3) 0;
+  }
+  .work.mode-compose .cut-estimate {
     display: none;
   }
   .modes {

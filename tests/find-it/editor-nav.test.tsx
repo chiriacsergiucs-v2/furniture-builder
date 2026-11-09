@@ -182,7 +182,9 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
     await user.keyboard('{Escape}');
 
     // The piece's Settings: Boards, sheets and saw cut is off with the reason.
-    await user.click(within(card).getByRole('button', { name: 'Edit this piece' }));
+    // The piece editor screen is under More actions (ADR-241; Edit this piece now edits in the project).
+    await user.click(within(card).getByRole('button', { name: 'More actions' }));
+    await user.click(await screen.findByRole('button', { name: 'Open in the piece editor' }));
     await user.click(await screen.findByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog', { name: /^Settings/ });
     const boards = within(settings)

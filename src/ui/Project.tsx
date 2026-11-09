@@ -184,7 +184,6 @@ export function ProjectPanel({
   const setMulti = useDesign((s) => s.setMultiSelect);
   const update = useDesign((s) => s.updateItem);
   const setRotation = useDesign((s) => s.setRotation);
-  const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
@@ -431,7 +430,7 @@ export function ProjectPanel({
             />
           )}
           {!item.set && (
-            <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
+            <button type="button" className="btn solid block" onClick={() => editInPlace(item.id)}>
               <Icon name="pencil" className="sm" />
               {t('Edit this piece')}
             </button>
@@ -444,7 +443,7 @@ export function ProjectPanel({
           )}
           {savedId === item.id && <SavedToCatalog />}
           {drillId === item.id && (
-            <section className="inside-piece" aria-label={t('Inside this piece')}>
+            <section id="inside-piece" className="inside-piece" aria-label={t('Inside this piece')}>
               <div className="card-title">
                 <span>{t('Inside this piece')}</span>
               </div>
@@ -552,11 +551,25 @@ export function ProjectPanel({
  * The phone sheet's peek row actions (ADR-160): with one piece selected, edit, duplicate and turn it with the sheet
  * closed; with none, add a piece.
  */
+/**
+ * Edit this piece without leaving the project (ADR-241, replaces ADR-088's "the only way into the piece editor"): the
+ * piece is selected and loaded for edits in place, the phone sheet opens full and its "Inside this piece" section
+ * comes into view. The piece editor screen stays one step away under More actions › Open in the piece editor.
+ */
+export function editInPlace(id: string) {
+  const st = useDesign.getState();
+  if (st.selectedItemId !== id || st.drillItemId !== id || st.selectedItemIds.length !== 1)
+    st.selectItem(id);
+  useUi.getState().askSheet('full');
+  const show = () => document.getElementById('inside-piece')?.scrollIntoView({ block: 'start' });
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(show);
+  else show();
+}
+
 export function PeekActions({ onAdd }: { onAdd: () => void }) {
   const project = useDesign((s) => s.project);
   const selectedId = useDesign((s) => s.selectedItemId);
   const count = useDesign((s) => s.selectedItemIds.length);
-  const edit = useDesign((s) => s.editItem);
   const duplicate = useDesign((s) => s.duplicateItem);
   const turn = useDesign((s) => s.turnItem);
   const item = project?.items.find((i) => i.id === selectedId);
@@ -582,7 +595,7 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
         type="button"
         className="btn icon outline sm"
         aria-label={t('Edit {name}', { name })}
-        onClick={() => edit(item.id)}
+        onClick={() => editInPlace(item.id)}
       >
         <Icon name="pencil" className="sm" />
       </button>
@@ -856,6 +869,7 @@ function PieceMenu({
   const project = useDesign((s) => s.project)!;
   const pm = useDesign((s) => s.projectModel);
   const remove = useDesign((s) => s.removeItem);
+  const editItem = useDesign((s) => s.editItem);
   const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const setTurnLocked = useDesign((s) => s.setTurnLocked);
   const setAxisLocked = useDesign((s) => s.setAxisLocked);
@@ -912,6 +926,12 @@ function PieceMenu({
       </button>
       {open && (
         <div className="piece-menu" role="group" aria-label={t('More actions')}>
+          {!item.set && (
+            <button type="button" onClick={pick(() => editItem(item.id))}>
+              <Icon name="pencil" className="sm" />
+              {t('Open in the piece editor')}
+            </button>
+          )}
           <button type="button" onClick={pick(() => setDialog('replace'))}>
             <Icon name="catalog" className="sm" />
             {t('Replace…')}
