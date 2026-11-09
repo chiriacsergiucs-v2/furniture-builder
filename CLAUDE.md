@@ -101,6 +101,7 @@ schema (ADR-012) or the network boundary (ADR-002), or when the user asks for on
   implemented in the same pull request (no separate ship pull request).
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one. Check `docs/adr/` and
   `docs/adr-done/` before proposing an alternative to a settled choice.
+- Exception (user decision 2026-11-10): implemented ADRs were edited once to remove the name of a retired third-party agent tool; `pnpm docs:check` blocks that name from returning.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
 
 Fast forward, `ff` (`ff` skill): on "ff" the request is built without a branch or pull request, only `pnpm typecheck`

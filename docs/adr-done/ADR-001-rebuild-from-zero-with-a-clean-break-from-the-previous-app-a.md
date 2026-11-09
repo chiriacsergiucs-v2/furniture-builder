@@ -36,7 +36,7 @@ honest claims, pre-MVP process rules) are re-adopted as fresh ADRs; product _cod
 ## Evidence (repository files)
 
 - `src/persist/db.ts` — database name `furniture-builder` and comment on the clean break.
-- Git history: commit removing `src/`, `docs/`, old `claude-flow/` on branch `rebuild/v1`.
+- Git history: commit removing `src/`, `docs/`, the retired agent-config folder on branch `rebuild/v1`.
 
 ## Compliance check
 
