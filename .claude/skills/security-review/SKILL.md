@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Review a change or an area of the codebase for security and privacy problems in this static offline PWA — untrusted files (designs, projects, pictures, CSV), injection into the page or into exported files, network requests, the service worker, dependencies, secrets and the user's data on the device — and report findings by severity. Read-only unless asked to fix. Use when the user says "security review", "is this secure", "review for vulnerabilities", or before shipping anything that imports files, renders user text, adds a dependency or touches the network boundary.
+description: Review a change or an area of the codebase for security and privacy problems in this static offline PWA — untrusted files (designs, projects, pictures, CSV), injection into the page or into exported files, network requests, the service worker, dependencies, secrets and the user's data on the device — and report findings by severity. Read-only unless asked to fix. Use when the user says "security review", "is this secure", "review for vulnerabilities", or before shipping anything that imports files, renders user text, adds a dependency or touches the network boundary. Do not use when checking a change against its ADR or the hard rules (use review) or a screen against its design (use design-review).
 ---
 
 # Security review

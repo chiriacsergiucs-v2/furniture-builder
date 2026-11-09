@@ -1,6 +1,6 @@
 ---
 name: ff
-description: Fast-forward workflow — implement exactly what the user asked, with light acceptance and no tests, then push straight to main once the user approves a list of what changed. No ADR, no branch, no pull request. Use only when the user says "ff", "fast forward" or "/ff" for a request.
+description: Fast-forward workflow — implement exactly what the user asked, with light acceptance and no tests, then push straight to main once the user approves a list of what changed. No ADR, no branch, no pull request. Use when the user says "ff", "fast forward" or "/ff" for a request, and only then. Do not use when the user did not say "ff" (use build) or when the work is a pending ADR (use next-adr).
 ---
 
 # ff — fast forward

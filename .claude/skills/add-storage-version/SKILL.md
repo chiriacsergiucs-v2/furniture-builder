@@ -1,6 +1,6 @@
 ---
 name: add-storage-version
-description: Change what the app saves on the device — a new Dexie version, table or index, or a new design-document shape — without losing or rewriting anyone's saved designs. Use when the user or an ADR needs new saved data, a new IndexedDB table or index, a schemaVersion bump, or a change to import/export files.
+description: Change what the app saves on the device — a new Dexie version, table or index, or a new design-document shape — without losing or rewriting anyone's saved designs. Use when the user or an ADR needs new saved data, a new IndexedDB table or index, a schemaVersion bump, or a change to import/export files. Do not use when nothing saved on the device or in import/export files changes.
 ---
 
 # Add a storage version
