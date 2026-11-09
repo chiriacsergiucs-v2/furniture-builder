@@ -1,6 +1,6 @@
 ---
 name: build
-description: Default implementation flow — ask only low-confidence questions in one batch, build the smallest slice on a branch, run typecheck, format and related tests, add one backlog row, push. No ADR unless the change touches the model, design document, Dexie schema or network boundary. Use for any feature, fix or change request that is not "ff" and needs no ADR.
+description: Default implementation flow — ask only low-confidence questions in one batch, build the smallest slice on a branch, run typecheck, format and related tests, add one backlog row, push. No ADR unless the change touches the model, design document, Dexie schema or network boundary. Use when a feature, fix or change request is not "ff" and needs no ADR. Do not use when the user says "ff" (use ff) or when the work is the next pending ADR (use next-adr).
 ---
 
 # Build (user rule 2026-11-07)

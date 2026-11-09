@@ -1,6 +1,6 @@
 ---
 name: implement-design
-description: Build a screen or component from the UI design reference (docs/ui-design.md) or a screenshot the user gives — design tokens, shared components, all states, phone and desktop, accessible — then prove it with a find-it test. Use when the user says "implement this design", "build this screen", "match the mockup", or when an ADR names a Design reference.
+description: Build a screen or component from the UI design reference (docs/ui-design.md) or a screenshot the user gives — design tokens, shared components, all states, phone and desktop, accessible — then prove it with a find-it test. Use when the user says "implement this design", "build this screen", "match the mockup", or when an ADR names a Design reference. Do not use when only comparing a built screen with its design (use design-review).
 ---
 
 # Implement a design

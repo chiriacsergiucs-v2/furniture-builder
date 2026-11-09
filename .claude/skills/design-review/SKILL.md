@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: Compare an implemented screen or component with its design reference and report every visual, copy, state and accessibility difference, at phone and desktop widths. Read-only unless asked to fix. Use when the user says "review the design", "does this match the mockup", "compare with the design", "design QA", or after implementing a screen.
+description: Compare an implemented screen or component with its design reference and report every visual, copy, state and accessibility difference, at phone and desktop widths. Read-only unless asked to fix. Use when the user says "review the design", "does this match the mockup", "compare with the design", "design QA", or after implementing a screen. Do not use when checking a change against its ADR or the hard rules (use review) or for security and privacy (use security-review).
 ---
 
 # Design review

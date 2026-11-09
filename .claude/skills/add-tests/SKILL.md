@@ -1,6 +1,6 @@
 ---
 name: add-tests
-description: Write unit, fuzz and storage tests that prove an ADR's "Done when" items, following the test setup already in the repo. Use when the user says "add tests", "cover this", "write tests for X", "fix this bug" (start with a failing test), or when an implementation is missing the tests an ADR requires.
+description: Write unit, fuzz and storage tests that prove an ADR's "Done when" items, following the test setup already in the repo. Use when the user says "add tests", "cover this", "write tests for X", "fix this bug" (start with a failing test), or when an implementation is missing the tests an ADR requires. Do not use when the cause of a failure is still unknown (use debug first).
 ---
 
 # Add tests

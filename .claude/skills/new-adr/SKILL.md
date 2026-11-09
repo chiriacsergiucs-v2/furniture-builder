@@ -1,6 +1,6 @@
 ---
 name: new-adr
-description: Only for changes to the model, design document, Dexie schema or network boundary, or when the user asks for an ADR (user rule 2026-11-07). Create a new ADR in docs/adr/ from the template — allocate the next free number, create the file, register it in the README index, then fill it in. Use when the user says "new ADR", "create an ADR", "add an ADR for X", "write an ADR about X", asks to turn a decision or request into an ADR, or gives an instruction that conflicts with an implemented ADR.
+description: Only for changes to the model, design document, Dexie schema or network boundary, or when the user asks for an ADR (user rule 2026-11-07). Create a new ADR in docs/adr/ from the template — allocate the next free number, create the file, register it in the README index, then fill it in. Use when the user says "new ADR", "create an ADR", "add an ADR for X", "write an ADR about X", asks to turn a decision or request into an ADR, or gives an instruction that conflicts with an implemented ADR. Do not use when the change needs no ADR under CLAUDE.md, or to build an ADR that already exists (use next-adr).
 ---
 
 # Create a new ADR

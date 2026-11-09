@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run the project's full verification (lint, type-check, tests, build, docs check) exactly as defined in the Commands table of CLAUDE.md, and report a short pass/fail result. Use when the user says "verify", "run the checks", "does it pass", "check before the PR", or whenever work is about to be declared done or shipped.
+description: Run the project's full verification (lint, type-check, tests, build, docs check) exactly as defined in the Commands table of CLAUDE.md, and report a short pass/fail result. Use when the user says "verify", "run the checks", "does it pass", "check before the PR", or whenever work is about to be declared done or shipped. Do not use when the user asks for a code review (use review) or only one named check.
 ---
 
 # Verify

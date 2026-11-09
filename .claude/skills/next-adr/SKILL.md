@@ -1,6 +1,6 @@
 ---
 name: next-adr
-description: Find the next ADR ready for implementation in docs/adr/ and implement it. Picks the lowest-numbered pending ADR whose dependencies are all done, then reads it, its Depends-on ADRs, and the design reference it names before building. Use when the user says "next ADR", "implement the next ADR", "what's next", or asks which ADR to do next.
+description: Find the next ADR ready for implementation in docs/adr/ and implement it. Picks the lowest-numbered pending ADR whose dependencies are all done, then reads it, its Depends-on ADRs, and the design reference it names before building. Use when the user says "next ADR", "implement the next ADR", "what's next", or asks which ADR to do next. Do not use when the request is a feature or fix that needs no ADR (use build) or the user said "ff" (use ff).
 ---
 
 # Implement the next ADR

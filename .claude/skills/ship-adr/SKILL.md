@@ -1,6 +1,6 @@
 ---
 name: ship-adr
-description: Mark an ADR as implemented — set its status to Implemented, move it from docs/adr/ to docs/adr-done/, fix all README and cross-reference links, then commit and push. Use when the user says "ship ADR-NNN", "mark ADR-NNN done/implemented", "the ADR is ready", or asks to finalize/close out an implemented ADR.
+description: Mark an ADR as implemented — set its status to Implemented, move it from docs/adr/ to docs/adr-done/, fix all README and cross-reference links, then commit and push. Use when the user says "ship ADR-NNN", "mark ADR-NNN done/implemented", "the ADR is ready", or asks to finalize/close out an implemented ADR. Do not use when the ADR is not built and verified yet (use next-adr).
 ---
 
 # Ship an ADR

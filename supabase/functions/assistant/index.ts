@@ -6,6 +6,7 @@
 // ASSISTANT_MODEL (default claude-opus-5-5), ASSISTANT_DAILY_CAP (default 50) and ASSISTANT_ALLOWED_ORIGIN.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
+import { type ActionSpec, openingTurns, SYSTEM, TOOLS } from './prompt.ts';
 
 declare const Deno: {
   env: { get(name: string): string | undefined };
@@ -30,19 +31,6 @@ const json = (status: number, body: unknown) =>
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
 
-interface ArgSpec {
-  name: string;
-  type: string;
-  enum?: string[];
-  nullable?: boolean;
-  optional?: boolean;
-  description?: string;
-}
-interface ActionSpec {
-  name: string;
-  description: string;
-  args: ArgSpec[];
-}
 interface AssistantRequest {
   message: string;
   history: { role: 'user' | 'assistant'; text: string }[];
@@ -50,74 +38,6 @@ interface AssistantRequest {
   selection: { itemIds: string[]; spaceId: string | null | undefined };
   actions: ActionSpec[];
 }
-
-const SYSTEM = `You are the assistant inside Furniture Builder, an app for designing cabinets and other casework and
-getting a cut list. The user writes what they want changed in the open piece or project. You answer by calling
-exactly one tool:
-
-- propose_plan: when the request is clear. List the action calls that make the change, in order, using only the
-  actions listed below and only their arguments. Sizes are whole millimetres; x is width, y height from the floor,
-  z depth from the back. Use ids exactly as they appear in the document. In a project, select a piece with
-  selectItem before calling an action on "the open piece". The app checks the plan, shows the user every change and
-  applies it only when they choose Apply.
-- ask_question: when the request is ambiguous, could mean several things, or needs a fact you do not have. Ask one
-  short question. Never guess a hardware specification, a load, a drilling depth, a screw size or a supplier value:
-  ask instead.
-
-Reply in the language the user writes in. Keep summaries and questions short and plain.`;
-
-function actionList(actions: ActionSpec[]): string {
-  return actions
-    .map((a) => {
-      const args = a.args
-        .map((g) => {
-          const kind = g.enum ? g.enum.map((v) => JSON.stringify(v)).join(' | ') : g.type;
-          const mods = [g.optional ? 'optional' : '', g.nullable ? 'or null' : '']
-            .filter(Boolean)
-            .join(', ');
-          return `${g.name}: ${kind}${mods ? ` (${mods})` : ''}${g.description ? ` — ${g.description}` : ''}`;
-        })
-        .join('; ');
-      return `- ${a.name}(${args}): ${a.description}`;
-    })
-    .join('\n');
-}
-
-const TOOLS = [
-  {
-    name: 'propose_plan',
-    description:
-      'Propose the change as a list of action calls, with a one-sentence summary for the user.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        summary: { type: 'string', description: 'What the plan does, in one sentence.' },
-        calls: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              action: { type: 'string' },
-              args: { type: 'object', description: 'Arguments by name.' },
-            },
-            required: ['action', 'args'],
-          },
-        },
-      },
-      required: ['summary', 'calls'],
-    },
-  },
-  {
-    name: 'ask_question',
-    description:
-      'Ask the user one short question when the request is unclear or a needed fact is missing.',
-    input_schema: {
-      type: 'object',
-      properties: { question: { type: 'string' } },
-      required: ['question'],
-    },
-  },
-];
 
 function valid(body: unknown): body is AssistantRequest {
   const b = body as AssistantRequest;
@@ -164,16 +84,8 @@ Deno.serve(async (req) => {
   if (typeof left === 'number' && left < 0) return json(429, { error: 'Daily limit reached.' });
 
   const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
-  const context = [
-    `The open ${body.document.kind}:`,
-    JSON.stringify(body.document.value),
-    `Selected project pieces: ${JSON.stringify(body.selection?.itemIds ?? [])}; selected space: ${JSON.stringify(body.selection?.spaceId ?? null)}.`,
-    'The actions you may call:',
-    actionList(body.actions),
-  ].join('\n');
   const messages = [
-    { role: 'user' as const, content: context },
-    { role: 'assistant' as const, content: 'Understood. I will answer with one tool call.' },
+    ...openingTurns(body.document, body.selection, body.actions),
     ...body.history.slice(-20).map((h) => ({ role: h.role, content: h.text })),
     { role: 'user' as const, content: body.message },
   ];
@@ -183,7 +95,7 @@ Deno.serve(async (req) => {
     model: MODEL,
     max_tokens: 16000,
     output_config: { effort: 'medium' },
-    system: SYSTEM,
+    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     tools: TOOLS,
     tool_choice: { type: 'auto' },
     messages,
