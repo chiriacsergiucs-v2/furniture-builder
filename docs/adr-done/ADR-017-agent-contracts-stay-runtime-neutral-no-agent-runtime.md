@@ -1,4 +1,4 @@
-# ADR-017: Agent contracts stay runtime-neutral; no Claude Flow / Ruflo runtime is adopted
+# ADR-017: Agent contracts stay runtime-neutral; no third-party agent runtime is adopted
 
 - Status: Implemented
 - Date: 2026-10-21
@@ -13,7 +13,7 @@ No orchestration runtime is declared in the repository.
 
 ## Decision
 
-`claude-flow/agents`, `workflows` and `tasks/tasks.json` are plain contracts that Claude Code (or any agent) reads.
+The agent-config folder's `agents`, `workflows` and `tasks/tasks.json` are plain contracts that Claude Code (or any agent) reads.
 No orchestration runtime is installed or targeted. Adopting one later is a new ADR that supersedes this one.
 
 ## Alternatives considered
@@ -26,8 +26,8 @@ No orchestration runtime is installed or targeted. Adopting one later is a new A
 
 ## Evidence (repository files)
 
-- `package.json` — no `claude-flow`/`ruflo` dependency.
+- `package.json` — no third-party agent-runtime dependency.
 
 ## Compliance check
 
-`grep -i "ruflo\|claude-flow" package.json` is empty.
+`pnpm docs:check` passes (it blocks the retired tool's name in every tracked file).

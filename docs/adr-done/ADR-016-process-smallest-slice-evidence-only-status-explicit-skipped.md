@@ -25,7 +25,7 @@ and a **Skipped this iteration** section.
 
 ## Consequences
 
-- `claude-flow/scripts/validate.py` checks that ledger IDs referenced across docs exist.
+- The agent-config folder's ledger validator (`validate.py`) checks that ledger IDs referenced across docs exist.
 
 ## Evidence (repository files)
 

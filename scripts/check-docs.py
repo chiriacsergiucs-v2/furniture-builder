@@ -9,7 +9,9 @@
   rows until they are Done (ADR-066);
 - docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 to ADR-218 cites a gap for each
   out-of-scope line and open question (ADR-082);
-- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212).
+- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212);
+- no tracked file name or text names the retired third-party agent tool (scripts/retired_names.py, user
+  decision 2026-11-10).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
 import pathlib, re, subprocess, sys
@@ -134,6 +136,18 @@ for rel in files:
 # Gaps ledger (ADR-082).
 sys.path.insert(0, str(REPO / "scripts"))
 import gaps  # noqa: E402
+import retired_names  # noqa: E402
+
+# Retired agent tool (user decision 2026-11-10): no tracked path or text file may name it.
+for rel in files:
+    p = REPO / rel
+    if not p.is_file():
+        continue
+    try:
+        text = p.read_bytes().decode("utf-8")
+    except UnicodeDecodeError:
+        text = None
+    errors += retired_names.problems(rel, text)
 
 ledger = (REPO / "docs/adr/GAPS.md").read_text()
 errors += [f"docs/adr/GAPS.md: {e}" for e in gaps.problems(ledger, {n: s for n, (_, s) in adrs.items()})]

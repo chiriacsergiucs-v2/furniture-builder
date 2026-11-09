@@ -15,12 +15,12 @@ configuration on flows" between them. reserv plans work as ADRs in `docs/adr/` �
 `docs/adr-done/` (`ADR-NNN`, Pending / Deferred / Implemented), runs each lifecycle step as
 a Claude skill in `.claude/skills/` (`new-adr`, `next-adr`, `ship-adr`, `verify`, …), keeps
 its rules and a Commands table in `CLAUDE.md`, and runs CI on pull requests and on pushes
-to `main`. This repository used `claude-flow/`: runtime-neutral contracts (ADR-017), six
+to `main`. This repository used a separate agent-config folder: runtime-neutral contracts (ADR-017), six
 agent roles, `tasks/tasks.json`, `ADR-NNNN` files in one folder with Accepted / Approved /
 Proposed / Superseded, `AGENTS.md`, and CI on every push. Asked which repository is the
 model, the user chose reserv for all three: ADR format, skills and CI.
 
-This ADR replaces ADR-017 (contracts in `claude-flow/`) and changes where ADR-016's process
+This ADR replaces ADR-017 (contracts in the agent-config folder) and changes where ADR-016's process
 rules live; the rules themselves are unchanged.
 
 ## Decision
@@ -40,7 +40,7 @@ rules live; the rules themselves are unchanged.
   `add-migration` (Dexie and the design document). Change control lives in `new-adr`, the
   implementation iteration in `next-adr`, the verifier and release gates in `review`,
   `verify` and `ship-adr`.
-- **Retired:** `claude-flow/` (roles, workflows, `tasks.json`, guardrails, `validate.py`).
+- **Retired:** the agent-config folder (roles, workflows, `tasks.json`, guardrails, `validate.py`).
   `docs/backlog.md` stays the single ledger. Project memory moves to
   `docs/product/product-context.md`, the overview to `docs/architecture.md`.
 - **Docs check:** `scripts/check-docs.py` (`npm run docs:check`) replaces `validate.py`.
@@ -49,7 +49,7 @@ rules live; the rules themselves are unchanged.
 
 ## Alternatives considered
 
-- **Make reserv follow `claude-flow/`** — rejected by the user; reserv has two developers
+- **Make reserv follow the agent-config folder** — rejected by the user; reserv has two developers
   and a working skill set.
 - **Keep the old ADR files and use the new layout only for new ADRs** — rejected by the
   user: two numbering schemes side by side.
@@ -66,7 +66,7 @@ rules live; the rules themselves are unchanged.
 - Positive: one way of working in both repositories; the same skill names do the same step.
 - Negative: branches without a pull request get no CI run; ADR-001 to ADR-049 keep their
   old sections and have no `Done when` list (`next-adr` writes one before building).
-- Implemented ADRs still mention `claude-flow/` and `AGENTS.md` paths as history.
+- Implemented ADRs still mention the agent-config folder and `AGENTS.md` paths as history.
 
 ## Done when
 
