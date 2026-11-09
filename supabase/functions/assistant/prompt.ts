@@ -45,7 +45,11 @@ export function actionList(actions: ActionSpec[]): string {
     .join('\n');
 }
 
-/** The first two turns of every request: the open document, the selection and the actions the model may call. */
+/**
+ * The first two turns of every request. The action list comes first with a cache breakpoint: it is the same in every
+ * request (the catalog in src/store/assistantActions.ts), so tools + system + action list are read from the prompt
+ * cache; the open document and the selection follow it and change after every Apply, so they are not cached.
+ */
 export function openingTurns(
   document: { kind: 'design' | 'project'; value: unknown },
   selection: { itemIds?: string[]; spaceId?: string | null } | undefined,
@@ -55,11 +59,19 @@ export function openingTurns(
     `The open ${document.kind}:`,
     JSON.stringify(document.value),
     `Selected project pieces: ${JSON.stringify(selection?.itemIds ?? [])}; selected space: ${JSON.stringify(selection?.spaceId ?? null)}.`,
-    'The actions you may call:',
-    actionList(actions),
   ].join('\n');
   return [
-    { role: 'user' as const, content: context },
+    {
+      role: 'user' as const,
+      content: [
+        {
+          type: 'text' as const,
+          text: `The actions you may call:\n${actionList(actions)}`,
+          cache_control: { type: 'ephemeral' as const },
+        },
+        { type: 'text' as const, text: context },
+      ],
+    },
     { role: 'assistant' as const, content: 'Understood. I will answer with one tool call.' },
   ];
 }
