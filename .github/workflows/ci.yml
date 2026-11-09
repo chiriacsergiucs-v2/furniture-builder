@@ -103,6 +103,16 @@ jobs:
           echo "docs_only=$docs_only" | tee -a "$GITHUB_OUTPUT"
           echo "core_only=$core_only" | tee -a "$GITHUB_OUTPUT"
 
+  # User decision 2026-11-10: a ship pull request skips `checks`, so it still runs the docs check here; that check
+  # also blocks the retired third-party agent tool's name from returning.
+  ship-docs-check:
+    needs: ship-check
+    if: needs.ship-check.outputs.skip == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 -I scripts/check-docs.py
+
   checks:
     needs: ship-check
     if: needs.ship-check.outputs.skip != 'true'
