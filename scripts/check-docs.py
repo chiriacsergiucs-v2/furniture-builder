@@ -9,7 +9,8 @@
   rows until they are Done (ADR-066);
 - docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 to ADR-218 cites a gap for each
   out-of-scope line and open question (ADR-082);
-- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212).
+- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212);
+- no tracked file names a retired third-party agent tool, in its path or content (user decision 2026-11-10).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
 import pathlib, re, subprocess, sys
@@ -157,6 +158,32 @@ for rel in files:
         continue
     for ref in sorted(set(re.findall(r"\bG-(\d{3})\b", p.read_text())) - {i[2:] for i in gap_ids}):
         errors.append(f"{rel}: unknown gap G-{ref}")
+
+# Retired third-party agent tool (user decision 2026-11-10): its name must not come back.
+# The pattern is built from parts so this file never matches itself.
+RETIRED = re.compile("claude" + r"[\s_-]?" + "flow" + "|" + "ru" + "flo", re.I)
+
+
+def retired_tool_problems(rel, text):
+    """file:line errors for the retired tool's name in a path or its content."""
+    out = []
+    if RETIRED.search(rel):
+        out.append(f"{rel}: file name names the retired agent tool")
+    for i, line in enumerate(text.splitlines(), 1):
+        if RETIRED.search(line):
+            out.append(f"{rel}:{i}: names the retired agent tool")
+    return out
+
+
+for rel in files:
+    p = REPO / rel
+    if not p.is_file():
+        continue
+    try:
+        text = p.read_text()
+    except (UnicodeDecodeError, OSError):
+        text = ""
+    errors += retired_tool_problems(rel, text)
 
 print(f"{len(adrs)} ADRs ({sum(s == 'Implemented' for _, s in adrs.values())} implemented), {len(backlog)} backlog ids, {len(gap_ids)} gaps")
 for e in errors:

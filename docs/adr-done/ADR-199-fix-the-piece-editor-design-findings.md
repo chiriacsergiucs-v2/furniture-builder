@@ -10,7 +10,7 @@
 
 ## Context
 
-The user asked to implement ADRs 198, 199 and 200 using the Claude Flow audit. On main at `f1f7b70`,
+The user asked to implement ADRs 198, 199 and 200 using the design audit. On main at `f1f7b70`,
 all three were empty placeholders: no findings, Decision or agreed fixes. Original request: "run a /batch
 for 1 through 7 with a critique of design … 1 adr with high and medium issues and fixes per flow".
 This records a code critique and diagnostic evidence; it does not interpret that request as an answer to
