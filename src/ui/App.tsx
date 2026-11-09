@@ -273,6 +273,13 @@ export function App() {
   // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
   const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
   const sheetOpen = sheetStop !== 'peek';
+  // Edit this piece asks for the full sheet in the project (ADR-241).
+  const sheetAsk = useUi((s) => s.sheetAsk);
+  const [lastAsk, setLastAsk] = useState(sheetAsk);
+  if (sheetAsk !== lastAsk) {
+    setLastAsk(sheetAsk);
+    if (sheetAsk) setSheetStop(sheetAsk.stop);
+  }
   const setSheetOpen = (open: boolean) => setSheetStop(open ? 'half' : 'peek');
   if (wide !== lastWide) {
     setLastWide(wide);
@@ -600,10 +607,16 @@ export function App() {
               <a
                 key={p.page}
                 href={p.page === 'projects' ? '#' : `#${p.page}`}
-                aria-current={page === p.page ? 'page' : undefined}
+                aria-current={
+                  page === p.page && !(phone && p.page === 'editor' && mode === 'build')
+                    ? 'page'
+                    : undefined
+                }
                 onClick={(e) => {
                   e.preventDefault();
                   setPage(p.page);
+                  // A phone's Editor place is the drawing; the results are their own place (ADR-241).
+                  if (phone && p.page === 'editor') setMode('compose');
                 }}
               >
                 <Icon name={p.icon} className="sm" />
@@ -611,6 +624,29 @@ export function App() {
                 {p.page === 'catalog' && <span className="count">{CATALOG_ITEMS}</span>}
               </a>
             ))}
+            {/* Phones (ADR-241): the parts list, sheets, hardware, assembly, shopping and checks are one place, in
+                place of the Compose · Build & Preview row. It needs an open piece or project. */}
+            {phone && designOpen && (
+              <a
+                href="#editor"
+                aria-current={page === 'editor' && mode === 'build' ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPage('editor');
+                  setMode('build');
+                  const st = useDesign.getState();
+                  if (!st.resultsOpen) st.setTab(errors ? 'checks' : 'parts');
+                }}
+              >
+                <Icon name="layers" className="sm" />
+                <span>{t('Cut list')}</span>
+                {(errors || warnings) > 0 && (
+                  <span className={`badge ${errors ? 'error' : 'warning'}`} aria-label={buildMeta}>
+                    {errors || warnings}
+                  </span>
+                )}
+              </a>
+            )}
           </nav>
           {page === 'editor' && (
             <div className={templateEdit ? 'path template' : 'path'}>
@@ -770,7 +806,6 @@ export function App() {
         </header>
         {page === 'editor' && (
           <div className="modes" ref={modesRef}>
-            {phone && <EstimateChip compact />}
             <div
               className="segmented"
               role="radiogroup"
@@ -1001,6 +1036,12 @@ export function App() {
           </section>
           {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
           {phone && <div id="count-dock" ref={setCountDock} className="count-dock-slot" />}
+          {/* Phones: the running estimate heads the Cut list place (ADR-241; was in the mode row). */}
+          {phone && (
+            <div className="cut-estimate">
+              <EstimateChip compact />
+            </div>
+          )}
           <Output />
         </main>
 

@@ -173,12 +173,16 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     expect(cube.placement).toMatchObject({ kind: 'above', baseId: project.items[0].id, gap: 0 });
     expect(cube.position.y).toBeGreaterThan(0);
 
-    // The wall behind a single piece: select the sideboard, Edit this piece; its front view shows Wall 1 behind it.
+    // The wall behind a single piece: select the sideboard, open it in the piece editor (More actions, ADR-241); its
+    // front view shows Wall 1 behind it.
     await openSheet(user, panel);
     const list = await piecesList(user, panel);
     await user.click(within(list).getAllByRole('button', { name: /Sideboard/ })[0]);
     await openSheet(user, panel);
-    await user.click(await within(panel).findByRole('button', { name: 'Edit this piece' }));
+    await user.click(await within(panel).findByRole('button', { name: 'More actions' }));
+    await user.click(
+      await within(panel).findByRole('button', { name: 'Open in the piece editor' }),
+    );
     expect(await screen.findByRole('img', { name: 'Wall 1 behind the piece' })).toBeTruthy();
   });
 });

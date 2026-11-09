@@ -72,6 +72,12 @@ interface Ui {
   /** The new-piece wizard's draft (ADR-211): kept until the app closes, a piece is created or Start over. */
   wizardDraft: WizardDraft | null;
   setWizardDraft: (d: WizardDraft | null) => void;
+  /**
+   * A request for the phone Compose sheet's stop (ADR-241): Edit this piece opens it full on the piece's inside, in
+   * the project. `n` changes on every request so the same stop can be asked again.
+   */
+  sheetAsk: { stop: 'peek' | 'half' | 'full'; n: number } | null;
+  askSheet: (stop: 'peek' | 'half' | 'full') => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -119,6 +125,8 @@ export const useUi = create<Ui>((set) => ({
   setSavedDataOpen: (savedDataOpen) => set({ savedDataOpen }),
   wizardDraft: null,
   setWizardDraft: (wizardDraft) => set({ wizardDraft }),
+  sheetAsk: null,
+  askSheet: (stop) => set((s) => ({ sheetAsk: { stop, n: (s.sheetAsk?.n ?? 0) + 1 } })),
 }));
 
 /**
