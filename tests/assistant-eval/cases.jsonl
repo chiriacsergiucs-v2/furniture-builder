@@ -1,0 +1,22 @@
+{"id": "c01", "document": "design:chest", "message": "Make it 900 mm wide.", "expect_tool": "propose_plan", "expect_action": "resizePiece"}
+{"id": "c02", "document": "design:chest", "message": "Change the height to 2100 mm.", "expect_tool": "propose_plan", "expect_action": "resizePiece"}
+{"id": "c03", "document": "design:chest", "message": "Fă-l de 450 mm adâncime.", "expect_tool": "propose_plan", "expect_action": "resizePiece"}
+{"id": "c04", "document": "design:chest", "message": "Сделай ширину 800 мм.", "expect_tool": "propose_plan", "expect_action": "resizePiece"}
+{"id": "c05", "document": "design:chest", "message": "Rename it to Hallway chest.", "expect_tool": "propose_plan", "expect_action": "rename"}
+{"id": "c06", "document": "design:chest", "message": "Set the saw kerf to 4 mm.", "expect_tool": "propose_plan", "expect_action": "setKerf"}
+{"id": "c07", "document": "design:chest", "message": "Add one more drawer.", "expect_tool": "propose_plan", "expect_action": "stepCount"}
+{"id": "c08", "document": "design:chest", "message": "Remove a shelf.", "expect_tool": "propose_plan", "expect_action": "stepCount"}
+{"id": "c09", "document": "design:chest", "message": "Add a variable called plinth equal to 100.", "expect_tool": "propose_plan", "expect_action": "addDesignVariable"}
+{"id": "c10", "document": "design:chest", "message": "Make the width follow the formula 2 * 450.", "expect_tool": "propose_plan", "expect_action": "bindDesignTarget"}
+{"id": "c11", "document": "design:chest", "message": "Make it better.", "expect_tool": "ask_question", "expect_action": null}
+{"id": "c12", "document": "design:chest", "message": "What screws hold a 40 kg wall cabinet safely?", "expect_tool": "ask_question", "expect_action": null}
+{"id": "c13", "document": "design:chest", "message": "How deep should I drill the hinge cups?", "expect_tool": "ask_question", "expect_action": null}
+{"id": "c14", "document": "design:chest", "message": "Change the size.", "expect_tool": "ask_question", "expect_action": null}
+{"id": "c15", "document": "project:chest+bookcase", "message": "Add a wardrobe at x 2000, z 0.", "expect_tool": "propose_plan", "expect_action": "addTemplatePiece"}
+{"id": "c16", "document": "project:chest+bookcase", "message": "Move the chest 300 mm to the right.", "expect_tool": "propose_plan", "expect_action": "moveItemBy"}
+{"id": "c17", "document": "project:chest+bookcase", "message": "Turn the bookcase clockwise.", "expect_tool": "propose_plan", "expect_action": "turnItem"}
+{"id": "c18", "document": "project:chest+bookcase", "message": "Lock the chest's size.", "expect_tool": "propose_plan", "expect_action": "setSizeLocked"}
+{"id": "c19", "document": "project:chest+bookcase", "message": "Duplicate the bookcase.", "expect_tool": "propose_plan", "expect_action": "duplicateItem"}
+{"id": "c20", "document": "project:chest+bookcase", "message": "Delete the chest.", "expect_tool": "propose_plan", "expect_action": "removeItem"}
+{"id": "c21", "document": "project:chest+bookcase", "message": "Hang the bookcase 400 mm above the floor.", "expect_tool": "propose_plan", "expect_action": "setItemHeight"}
+{"id": "c22", "document": "project:chest+bookcase", "message": "Make the chest 1200 mm wide.", "expect_tool": "propose_plan", "expect_action": "resizeItem|resizePiece"}

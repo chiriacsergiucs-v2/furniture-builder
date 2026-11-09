@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review a change (current branch, uncommitted work or a pull request) against its ADR's "Done when" list, the user's requirements and the repo's hard rules, and report findings by severity. Read-only unless asked to fix. Use when the user says "review this", "review my changes", "is this ready for PR", "check this against the ADR", or before opening or approving a pull request.
+description: Review a change (current branch, uncommitted work or a pull request) against its ADR's "Done when" list, the user's requirements and the repo's hard rules, and report findings by severity. Read-only unless asked to fix. Use when the user says "review this", "review my changes", "is this ready for PR", "check this against the ADR", or before opening or approving a pull request. Do not use when comparing a screen with its design (use design-review) or auditing security and privacy (use security-review).
 ---
 
 # Review a change

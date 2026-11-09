@@ -5,7 +5,7 @@
 - Implemented: 2026-11-09
 - Depends on: ADR-079, ADR-080, ADR-088, ADR-091
 - Design: docs/ui-design.md (§4, _Phone editor (ADR-241)_)
-- Backlog: N249
+- Backlog: N250
 - Acceptance: browser
 
 ## Context

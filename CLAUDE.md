@@ -57,23 +57,42 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 
 ## Commands
 
-CI is the source of truth (`.github/workflows/ci.yml`; scripts in `package.json`). Locally, run only typecheck,
-format and the related tests (_How we build_, step 3); the full table runs on request (`verify` skill) and in CI.
+CI is the source of truth (`.github/workflows/ci.yml`; scripts in `package.json`). The _Runs in_ column says where
+each check runs (_Verify before done_); the full table runs on request (`verify` skill) and in CI.
 `pnpm format` fixes formatting.
 
-| Check      | Command                          |
-| ---------- | -------------------------------- |
-| Install    | `pnpm install --frozen-lockfile` |
-| Lint       | `pnpm lint`                      |
-| Format     | `pnpm format:check`              |
-| Type-check | `pnpm typecheck`                 |
-| Test       | `pnpm test`                      |
-| Build      | `pnpm build`                     |
-| Docs check | `pnpm docs:check`                |
+| Check         | Command                                          | Runs in |
+| ------------- | ------------------------------------------------ | ------- |
+| Install       | `pnpm install --frozen-lockfile`                 | Sandbox |
+| Lint          | `pnpm lint`                                      | CI      |
+| Format        | `pnpm format:check`                              | Sandbox |
+| Type-check    | `pnpm typecheck`                                 | Sandbox |
+| Related tests | `pnpm exec vitest related --run <changed files>` | Sandbox |
+| Test          | `pnpm test` (the full suite)                     | CI      |
+| Build         | `pnpm build`                                     | Sandbox |
+| Docs check    | `pnpm docs:check`                                | Sandbox |
 
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
 `tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+
+## Verify before done
+
+Run these before saying work is done: `pnpm typecheck`, `pnpm format:check`,
+`pnpm exec vitest related --run <changed files>`, `pnpm build`, `pnpm docs:check` in the sandbox; the full suite and
+lint run in CI. Healthy output: every command exits 0. For anything visible, after merge open
+https://chiriacsergiucs-v2.github.io/furniture-builder/ and find each change by its visible text (R3), then report
+where to click and whether it is live (R4).
+
+## Grounding
+
+For status reviews, research, ADR context and extraction, cite file:line before each claim. If the repo doesn't show
+something, write "not found in the repo" instead of inferring it. An empty or missing value is a correct answer.
+
+## Model and effort
+
+In the Claude app, use Opus for work spanning several packages or an ADR and Sonnet for single-file fixes and
+reviews. Keep the default effort; raise it one level only for a hard task, then lower it again.
 
 ## How we build (user rule 2026-11-07, replaces the 2026-10-27/29 flow)
 
@@ -83,12 +102,13 @@ Default flow for every request (`build` skill):
    only on choices that change what gets built. Short options, no +N % estimates. Decide the obvious ones yourself
    and list them under **Decided** in the reply so the user can override. Never invent physical facts (ADR-010).
 2. **Build** on the session branch (or `<short-title>`), smallest slice that does what was asked.
-3. **Check locally:** `pnpm typecheck`, `pnpm format`, and the tests related to the touched files
-   (`pnpm exec vitest related --run <files>`); fuzz after geometry changes. CI runs the full suite.
-4. **Bookkeeping:** one row in `docs/backlog.md`. Nothing else is mandatory: no ADR, no gap entry, no feature-tree
-   line, no research-record update, no requirement ledger.
-5. **Push** the branch and open the pull request automatically (toggle `auto-open-pr`). Merge only when the user asks.
-6. **Reply:** where to click and whether it is live (R4), **Decided**, **Skipped this iteration**.
+3. **Check locally:** the sandbox checks in _Verify before done_ (`pnpm format` fixes formatting); fuzz after
+   geometry changes. CI runs the full suite.
+4. **Bookkeeping:** one row in `docs/backlog.md`, in the same change. Nothing else is mandatory: no ADR, no gap
+   entry, no feature-tree line, no research-record update, no requirement ledger.
+5. **Push** the branch; opening the pull request and merging follow _Git_.
+6. **Reply:** where to click and whether it is live (R4); every implementation reply ends with **Decided** and
+   **Skipped this iteration** (no backlog status table, user 2026-11-07).
 
 ### ADRs — only for model, data and network changes
 
@@ -176,12 +196,10 @@ on restores it unchanged.
   questions if there are any (user rule 2026-10-29).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
-- Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
-  run id). Label evidence from documents differently from evidence you ran.
+- Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
+  documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
   only if someone opened the published URL and checked it.
-- Every implementation reply ends with **Decided** and **Skipped this iteration** (no backlog status table, user
-  2026-11-07).
 - Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
   sets `checked` (the date) on the feature lines it verifies (`src/ui/info/features.ts`); Done gaps live in
   `docs/adr/GAPS-archive.md` and are never re-checked.
@@ -201,3 +219,9 @@ on restores it unchanged.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.
+
+## Rules that matter most
+
+- R2 No avoidance (_Delivery_).
+- The translation rule (_Language_).
+- The offline core and network boundary (_Engineering conventions_; ADR-002, ADR-126, ADR-239).

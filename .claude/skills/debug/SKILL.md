@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Find and fix the root cause of a bug or failing check — reproduce it, isolate it, prove the cause, fix it with a regression test, and verify. Use when the user says "debug this", "this is broken", "why does X fail", "tests are failing", "fix this bug", or pastes an error or stack trace.
+description: Find and fix the root cause of a bug or failing check — reproduce it, isolate it, prove the cause, fix it with a regression test, and verify. Use when the user says "debug this", "this is broken", "why does X fail", "tests are failing", "fix this bug", or pastes an error or stack trace. Do not use when the task is a new feature with no failure to explain.
 ---
 
 # Debug

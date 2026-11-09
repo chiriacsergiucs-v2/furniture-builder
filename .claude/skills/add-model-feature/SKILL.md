@@ -1,6 +1,6 @@
 ---
 name: add-model-feature
-description: Add or change a capability of the furniture model in src/core — a new product kind or option, a generator change, a check, a cut-list or hardware rule — with its types, document validation, independent checks, store action, tests and fuzz, following the patterns already in the repo. This repo's counterpart of reserv's add-endpoint (there is no backend here). Use when the user says "add a new kind of piece", "support X in the model", "new option for drawers/doors/shelves", "add a check", or when an ADR requires a model capability.
+description: Add or change a capability of the furniture model in src/core — a new product kind or option, a generator change, a check, a cut-list or hardware rule — with its types, document validation, independent checks, store action, tests and fuzz, following the patterns already in the repo. This repo's counterpart of reserv's add-endpoint (there is no backend here). Use when the user says "add a new kind of piece", "support X in the model", "new option for drawers/doors/shelves", "add a check", or when an ADR requires a model capability. Do not use when the change is UI-only, or only changes what is saved on the device (use add-storage-version).
 ---
 
 # Add a model feature
