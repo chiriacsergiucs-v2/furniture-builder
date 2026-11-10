@@ -1,14 +1,15 @@
 # ADR-244: Report every refused edit truthfully
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: ADR-243
 - Design: n/a
 - Backlog: N253
 
 ## Context
 
-Same request as [ADR-243](ADR-243-keep-locks-in-force-in-every-editing-flow.md) ("combine, 1 PR to cover it all").
+Same request as [ADR-243](../adr-done/ADR-243-keep-locks-in-force-in-every-editing-flow.md) ("combine, 1 PR to cover it all").
 The flow map found edits that were refused while the app said they had worked, or said nothing:
 
 - Apply material, finish and style returned the names they meant to change even when a lock refused the commit,

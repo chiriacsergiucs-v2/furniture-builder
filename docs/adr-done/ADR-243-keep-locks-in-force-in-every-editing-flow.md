@@ -1,7 +1,8 @@
 # ADR-243: Keep locks in force in every editing flow
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: n/a
 - Backlog: N253

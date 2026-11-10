@@ -1,14 +1,15 @@
 # ADR-246: Ask before an edit drops contents and hold the assistant to the field limits
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: n/a
 - Backlog: N253
 
 ## Context
 
-Same request as [ADR-243](ADR-243-keep-locks-in-force-in-every-editing-flow.md). The flow map found:
+Same request as [ADR-243](../adr-done/ADR-243-keep-locks-in-force-in-every-editing-flow.md). The flow map found:
 
 - Changing "What goes here", lowering "Parts" and "Remove dividers" dropped contents with no question; "Remove
   dividers" made two shelves while removing the last divider with the quick count (ADR-086) kept the first bay.

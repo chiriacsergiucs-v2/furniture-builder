@@ -1,14 +1,15 @@
 # ADR-245: Keep editing state across template edits, reloads and piece renames
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: n/a
 - Backlog: N253
 
 ## Context
 
-Same request as [ADR-243](ADR-243-keep-locks-in-force-in-every-editing-flow.md). The flow map found state lost or
+Same request as [ADR-243](../adr-done/ADR-243-keep-locks-in-force-in-every-editing-flow.md). The flow map found state lost or
 out of step while editing:
 
 - Editing a template variant closed the open project; finishing the edit did not reopen it.
