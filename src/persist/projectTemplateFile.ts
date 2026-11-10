@@ -20,7 +20,7 @@ export const projectTemplateFile = async (t: ProjectTemplate) =>
     t.items.map((i) => i.design),
   );
 
-export type ProjectTemplateImport =
+type ProjectTemplateImport =
   { ok: true; template: ProjectTemplate; problems: string[] } | { ok: false; error: string };
 
 /** A parsed file as a new template (new id) ready to save, or why it cannot be one. */

@@ -9,7 +9,7 @@ import { snapIsOn } from '../store/useSnap';
 import { S } from './pieceDrag';
 
 /** A wall unit whose height is being dragged in 3D (ADR-122): the height it would hang at on release. */
-export interface HeightPreview {
+interface HeightPreview {
   id: string;
   /** Its underside above the floor, mm (may be below 0 while dragging: release then refuses and says why). */
   height: number;

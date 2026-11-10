@@ -556,7 +556,7 @@ export function ProjectPanel({
  * piece is selected and loaded for edits in place, the phone sheet opens full and its "Inside this piece" section
  * comes into view. The piece editor screen stays one step away under More actions › Open in the piece editor.
  */
-export function editInPlace(id: string) {
+function editInPlace(id: string) {
   const st = useDesign.getState();
   if (st.selectedItemId !== id || st.drillItemId !== id || st.selectedItemIds.length !== 1)
     st.selectItem(id);

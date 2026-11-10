@@ -6,7 +6,7 @@
 const CONTROL = 'button, [role="tab"], .btn';
 
 /** True when the element or one of its label spans is cut by its own box. */
-export function isCut(el: HTMLElement): boolean {
+function isCut(el: HTMLElement): boolean {
   return [el, ...el.querySelectorAll<HTMLElement>('span')].some(
     (x) => x.scrollWidth > x.clientWidth + 1,
   );

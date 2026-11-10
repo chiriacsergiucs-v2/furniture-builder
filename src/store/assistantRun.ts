@@ -28,7 +28,7 @@ export interface Preview {
   notes: string[];
 }
 
-export type RunResult = { ok: true; preview: Preview } | { ok: false; problems: string[] };
+type RunResult = { ok: true; preview: Preview } | { ok: false; problems: string[] };
 
 const doc = (s: Store) => (s.project ? s.project : s.design);
 const diagnosticsOf = (s: Store): Diagnostic[] =>

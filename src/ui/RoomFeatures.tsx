@@ -25,7 +25,7 @@ const REMOVE_FEATURE: Record<RoomFeature['kind'], string> = {
 };
 
 /** A new feature of `kind` on `room`, with the starting sizes the room editor has always used. */
-export function newFeature(room: Room, kind: RoomFeature['kind']): RoomFeature {
+function newFeature(room: Room, kind: RoomFeature['kind']): RoomFeature {
   const n = room.features.filter((f) => f.kind === kind).length + 1;
   if (kind === 'door')
     return {

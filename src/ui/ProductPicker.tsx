@@ -76,7 +76,7 @@ export function useSellerCatalogs(enabled = true): SellerCatalog[] | null | 'err
 }
 
 /** "2800 × 2070 × 18 mm", "43 × 2 mm" — only the sizes the seller states. */
-export function sizesText(p: SellerProduct): string {
+function sizesText(p: SellerProduct): string {
   if (p.k === 'edge-band')
     return p.w && p.t ? t('{w} × {t} mm', { w: p.w, t: (p.t / 10).toString() }) : '';
   const s = [p.l, p.w, p.t].filter((v): v is number => v !== undefined);

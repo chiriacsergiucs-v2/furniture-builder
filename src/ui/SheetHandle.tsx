@@ -3,7 +3,7 @@ import { t } from '../core/i18n';
 
 /** The phone Compose sheet's three stops (ADR-211, G-027): the 56 px peek row, today's half sheet, the full screen. */
 export type SheetStop = 'peek' | 'half' | 'full';
-export const SHEET_STOPS: SheetStop[] = ['peek', 'half', 'full'];
+const SHEET_STOPS: SheetStop[] = ['peek', 'half', 'full'];
 
 const PEEK_PX = 56;
 /** A move under this many pixels is a tap, not a drag (ADR-211). */

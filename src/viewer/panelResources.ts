@@ -64,7 +64,7 @@ export interface BoardLook {
 }
 
 /** The translucency of everything outside a selected space or lit step (ADR-087, ADR-174). */
-export const FADED = 0.28;
+const FADED = 0.28;
 
 /** The key one shared material is kept under: equal keys draw the same. */
 export function lookKey(l: BoardLook): string {
@@ -157,11 +157,11 @@ export interface EdgeItem {
   faded: boolean;
 }
 
-export const EDGE = '#3b403c';
+const EDGE = '#3b403c';
 export const SELECT = '#2d5b4c';
 
 /** Every item's edges, moved to where its mesh sits, in one array of segment end points. */
-export function mergeEdges(items: readonly EdgeItem[]): Float32Array {
+function mergeEdges(items: readonly EdgeItem[]): Float32Array {
   const out = new Float32Array(items.reduce((n, i) => n + i.positions.length, 0));
   const v = new Vector3();
   let o = 0;

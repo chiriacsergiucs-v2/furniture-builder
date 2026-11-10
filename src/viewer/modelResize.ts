@@ -9,7 +9,7 @@ import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 import { S } from './pieceDrag';
 
 /** A 3D model being resized with a handle (ADR-102): the size it would get on release. */
-export interface ResizePreview {
+interface ResizePreview {
   id: string;
   size: ModelSize;
 }

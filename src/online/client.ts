@@ -116,7 +116,7 @@ const imageIdsIn = (v: unknown, out: Set<string>): Set<string> => {
 const imageBody = (img: StoredImage): unknown => JSON.parse(encodeRow(img));
 
 /** Library pieces, local templates and the pictures they use (G-221); unreadable rows are left alone. */
-export async function localItems(): Promise<LocalItem[]> {
+async function localItems(): Promise<LocalItem[]> {
   const items: LocalItem[] = [];
   const pics = new Set<string>();
   for (const r of await designRows()) {
@@ -394,10 +394,6 @@ export async function setDeviceOnly(
   } else if (cur) await dropLink(cur);
   void sync();
 }
-
-/** Remove from account: the record goes to the account Trash; the item stays here, only on this device. */
-export const removeFromAccount = (accountId: string, table: LocalTable, localId: string) =>
-  setDeviceOnly(accountId, table, localId, true);
 
 const KIND_WORD: Record<RemoteRecord['kind'], string> = {
   design: t('design'),

@@ -394,7 +394,7 @@ function useTextures(urls: Map<string, string>, repeat = true): Map<string, Text
  * What the app draws inside the 3D view (ADR-230): the viewer imports nothing from `src/ui`, so the ui pieces it shows
  * come in as render props. Without them (a shared item's preview) nothing is drawn there.
  */
-export interface Viewer3DProps {
+interface Viewer3DProps {
   /** The quick-count card (ADR-085) with this class. */
   countCard?: (className: string) => ReactNode;
   /** The one-tap Move to buttons (ADR-147) for a piece or a block of pieces, with this class. */

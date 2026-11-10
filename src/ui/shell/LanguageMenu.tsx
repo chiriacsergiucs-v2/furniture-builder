@@ -13,7 +13,7 @@ import { LANG_KEY, PRINT_LANG_KEY } from '../../langInit';
 export const page = { reload: () => location.reload() };
 
 /** Save the UI language and reload in it (ADR-153: the user chose a reload; designs are autosaved). */
-export function switchLang(l: Lang): void {
+function switchLang(l: Lang): void {
   if (l === getLang()) return;
   try {
     localStorage.setItem(LANG_KEY, l);

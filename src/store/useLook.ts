@@ -26,7 +26,7 @@ function stored(): Look | null {
 }
 let chosen: Look | null = stored();
 
-export function currentLook(): Look {
+function currentLook(): Look {
   return chosen ?? defaultLook(typeof window === 'undefined' ? 0 : window.innerWidth);
 }
 

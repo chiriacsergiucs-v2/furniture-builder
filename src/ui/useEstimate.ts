@@ -23,7 +23,7 @@ import { useSellerCatalogs } from './ProductPicker';
 import { useNesting } from './useNesting';
 import { useView } from '../store/useView';
 
-export interface EstimateView {
+interface EstimateView {
   lines: ShopLine[];
   prices: PriceEntry[];
   priceState: 'idle' | 'loading' | 'ready' | 'failed';

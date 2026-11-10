@@ -15,7 +15,7 @@ import { snapIsOn } from '../store/useSnap';
  */
 
 /** How long a touch must rest on an item before it lifts into a drag (ADR-094). */
-export const LONG_PRESS_MS = 300;
+const LONG_PRESS_MS = 300;
 
 /** Screen point → plan room point; registered by the plan while it is on screen. */
 type PlanHit = (clientX: number, clientY: number) => { x: number; z: number } | null;

@@ -31,7 +31,7 @@ export interface PlanCall {
 }
 
 /** The model's reply: a question (nothing changes) or a plan of calls. */
-export type AssistantReply =
+type AssistantReply =
   { kind: 'question'; text: string } | { kind: 'plan'; summary: string; calls: PlanCall[] };
 
 /** A chat line as sent to the backend. */
@@ -54,7 +54,7 @@ export interface AssistantRequest {
 const isInt = (v: unknown) => typeof v === 'number' && Number.isInteger(v);
 
 /** Why one argument value does not fit its spec, or null. */
-export function argProblem(spec: ArgSpec, v: unknown): string | null {
+function argProblem(spec: ArgSpec, v: unknown): string | null {
   if (v === undefined) return spec.optional ? null : `${spec.name} is missing`;
   if (v === null) return spec.nullable || spec.optional ? null : `${spec.name} must not be null`;
   switch (spec.type) {

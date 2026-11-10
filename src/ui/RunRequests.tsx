@@ -178,7 +178,7 @@ export function WorktopEdgeEdit({ part }: { part: RunPart }) {
  * a live drawing. Across first, then up, from the back-bottom corner. Malformed text is not saved; a profile that
  * crosses itself is saved and shown as the error `trim-profile-invalid`.
  */
-export function ProfileEditor({
+function ProfileEditor({
   value,
   onChange,
 }: {

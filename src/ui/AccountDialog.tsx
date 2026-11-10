@@ -495,7 +495,7 @@ function SharedLinks() {
  * The privacy notice (ADR-130), in English (G-231) or Russian (ADR-153). Engineering guidance, not legal advice; not reviewed by a lawyer
  * (G-233, the user's decision).
  */
-export function PrivacyNotice() {
+function PrivacyNotice() {
   const setDialog = useAccount((s) => s.setDialog);
   const user = useAccount((s) => s.user);
   return (

@@ -1,4 +1,4 @@
-# Cleanup and dedupe audit, 2026-11-09 (proposal, nothing changed)
+# Cleanup and dedupe audit, 2026-11-09
 
 User request (2026-11-09): "the codebase grows on a daily basis, i need a analysis and fixes proposed for 'no
 regression' code cleanup and dedupe, all related tests or other resources including".
@@ -121,3 +121,32 @@ proven by the tests that already cover it; Tiers 3 and 4 touch test tooling and 
 - CSS: every class selector in `src/styles.css` searched as a whole word in `src` code; dynamic class names checked
   by hand.
 - i18n: every key of `src/core/i18n/ru/*.ts` except `data-*`, searched literally in `src`.
+
+## Built 2026-11-10 (user: "Build most logical and valuable, self decide an go")
+
+- **Item 1:** the seven unused exports deleted, with the variable and import they alone used.
+- **Item 2:** `export` dropped from the 64 symbols used only in their own file.
+- **Item 3:** 15 dead CSS selectors removed. The new guard found five more than the first scan: `.visually-hidden`,
+  `.view-tools`, `.start-row`, `.variant-picks`, `.support-reference`. The research matrix's `v${band}` and
+  `c${complexity}` are on its allow-list.
+- **Item 4:** two orphan Russian entries removed. The `ru/variables.ts` one was orphaned too: its English text had
+  changed.
+- **Item 14:** `tests/dead-code.test.ts`, three guards with allow-lists: unused exports, CSS no code produces,
+  Russian entries with no English text.
+- **Item 11, done differently:** the backlog was big because Prettier padded every table row to the longest one
+  (2 743 characters each), not because of old rows.
+  - The tables in `docs/backlog.md` and `docs/adr/README.md` are now unpadded: 710 KB → 257 KB and 110 KB → 52 KB,
+    same text.
+  - Both files are in `.prettierignore`, and `pnpm docs:check` refuses a padded cell.
+  - Item 12 is covered by the same change.
+- **Proof:** lint, typecheck, `pnpm docs:check`, build and `pnpm test` all pass (220 files, 1 877 tests).
+
+Not built, and why:
+
+- **Item 5 (RoomFill / WallFill):** most of the repeated code is a declarative list of fields with small real
+  differences. Wall fill has Number of pieces and Equal fronts, and its last two fields show no problem text. One
+  shared component would need flags for each difference, which is harder to read than the two lists.
+- **Item 6 (heightDrag / modelResize):** the browser scripts that drive these drags (`model-size`,
+  `research-batch-2`) already fail on `main` before they reach the drag, and no jsdom test can run a WebGL drag. The
+  change cannot be proven safe today, so it waits for item 10a.
+- **Items 7–10, 13, 15:** not started. 10b and 13 need your yes.
