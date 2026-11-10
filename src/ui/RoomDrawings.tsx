@@ -1167,6 +1167,8 @@ export function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
       a = anchorRef.current,
       st = cardRef.current;
     if (!fig || !a || !st) return setPos(null);
+    // Hidden (display: none under the open phone sheet): keep the last place, as a width of 0 would put it past the edge.
+    if (getComputedStyle(st).display === 'none') return;
     const f = fig.getBoundingClientRect();
     const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
       ...boxIn(f, a, 4),

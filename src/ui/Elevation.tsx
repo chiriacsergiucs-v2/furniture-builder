@@ -109,12 +109,24 @@ export function Elevation() {
     ro.observe(fig);
     return () => ro.disconnect();
   }, []);
+  // The card is hidden while the phone sheet is open (it measures 0 then); placed again once it shows, so it never
+  // lands past the drawing's right edge and scrolls the page sideways at 390 px.
+  const hasCard = selectedSpace !== undefined;
+  useLayoutEffect(() => {
+    const st = stepRef.current;
+    if (!st || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((n) => n + 1));
+    ro.observe(st);
+    return () => ro.disconnect();
+  }, [hasCard]);
   const sb = selectedSpace?.box;
   useLayoutEffect(() => {
     const fig = figRef.current,
       sel = selRef.current,
       st = stepRef.current;
     if (!fig || !sel || !st) return setPos(null);
+    // Hidden (display: none under the open phone sheet): keep the last place, as a width of 0 would put it past the edge.
+    if (getComputedStyle(st).display === 'none') return;
     const f = fig.getBoundingClientRect();
     const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
       ...boxIn(f, sel, 4),
