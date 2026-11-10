@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Checks and problems (`src/ui/info/features.ts:860-894`, 6 feature lines)
-- ADR: [ADR-258](../adr/ADR-258-ui-audit-checks-piece-guidance-listed-repairs-told.md)
+- ADR: [ADR-258](../adr-done/ADR-258-ui-audit-checks-piece-guidance-listed-repairs-told.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with a
   scratch config: core in node, the app in jsdom over `tests/find-it/setup.tsx` at 1280 px). No repo source was
   changed.

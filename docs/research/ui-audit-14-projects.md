@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Projects (`src/ui/info/features.ts:1153-1268`, 25 feature lines)
-- ADR: [ADR-261](../adr/ADR-261-ui-audit-projects-failures-said-no-false-updated.md)
+- ADR: [ADR-261](../adr-done/ADR-261-ui-audit-projects-failures-said-no-false-updated.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px; `src/persist/db` mocked for storage
   failures as `tests/find-it/start-new.test.tsx:11-20` does). No repo source was changed. The quoted output keeps the scratch

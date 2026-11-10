@@ -13,8 +13,10 @@ describe.each(WIDTHS)('selection and groups at %ipx (find-it, ADR-252)', (width)
     await selectRows(user, [0, 1]);
     const { useDesign } = await import('../../src/store/designStore');
     const card = within(composePanel()).getByRole('region', { name: /^2 pieces selected/ });
+    const steps = useDesign.getState().projectPast.length;
     await user.dblClick(within(card).getByRole('button', { name: 'Group' }));
     expect(useDesign.getState().project!.groups ?? []).toHaveLength(1);
+    expect(useDesign.getState().projectPast.length).toBe(steps + 1);
     const name = await within(composePanel()).findByRole('textbox', { name: 'Group name' });
     await user.clear(name);
     expect(name.getAttribute('aria-invalid')).toBe('true');

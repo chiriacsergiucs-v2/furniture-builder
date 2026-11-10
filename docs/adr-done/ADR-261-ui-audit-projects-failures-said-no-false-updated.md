@@ -1,7 +1,8 @@
 # ADR-261: UI audit — Projects: a failed write is said, a refused update is never called done
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N270
@@ -88,15 +89,15 @@ tapped, and an action the store refused is never reported as done.**
 
 ## Done when
 
-- [ ] Projects page Delete with a failing storage shows the delete sentence, keeps the row, and leaves no unhandled rejection, for a project and a piece (test).
+- [x] Projects page Delete with a failing storage shows the delete sentence, keeps the row, and leaves no unhandled rejection, for a project and a piece (test).
 - [x] A double tap on Save as separate project saves one project; a failed save shows the ADR-193 sentence, asks nothing, and a retry saves the same project (test).
 - [x] Update from saved piece on a size-locked piece whose saved width differs shows the lock reason and not "Updated from the saved piece."; unlocked, it updates and says so (test).
 - [x] After 101 project changes Edit history's first row reads "Earliest kept step"; after fewer it reads "As opened" (test).
-- [ ] With the storage read failing, Add a piece and Versions of deleted projects say "Saved work could not be read from this browser." (test).
+- [x] With the storage read failing, Add a piece and Versions of deleted projects say "Saved work could not be read from this browser." (test).
 - [x] A variable value, a Bind formula and a set value with a problem are `aria-invalid` and described by their problem (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-projects.test.tsx, tests/find-it/audit-projects.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-projects.test.tsx, tests/find-it/audit-projects.test.tsx; tests/audit-rest.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

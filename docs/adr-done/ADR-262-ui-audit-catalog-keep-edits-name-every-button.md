@@ -1,7 +1,8 @@
 # ADR-262: UI audit — Catalog and templates: an import never loses an edit, every failure and button is named
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N271
@@ -76,12 +77,12 @@ which item it acts on.**
 
 - [x] Use the imported one with a refused write keeps the device's edit, imports nothing, and says the storage alert (test).
 - [x] A JSON file without `templates` says "That file could not be read as a templates file." (test).
-- [ ] Brands with a failed saved-pieces read shows "Designs saved on this device could not be read." and not the empty sentence (find-it).
+- [x] Brands with a failed saved-pieces read shows "Designs saved on this device could not be read." and not the empty sentence (find-it).
 - [x] Every card's Open / Add and every family's Edit template has a description naming its item (find-it).
-- [ ] In the template editor each variant's inputs have distinct names; an empty Name is `aria-invalid`; a fourth problem is listed (test, English and Russian).
+- [x] In the template editor each variant's inputs have distinct names; an empty Name is `aria-invalid`; a fourth problem is listed (test, English and Russian).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/find-it/audit-catalog.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/find-it/audit-catalog.test.tsx; tests/find-it/audit-rest.test.tsx, tests/audit-rest-components.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

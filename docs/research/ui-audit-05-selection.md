@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Selection and groups (`src/ui/info/features.ts:398-440`, 8 feature lines)
-- ADR: [ADR-252](../adr/ADR-252-ui-audit-selection-groups-named-one-tap-one-group.md)
+- ADR: [ADR-252](../adr-done/ADR-252-ui-audit-selection-groups-named-one-tap-one-group.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom and core tests outside the
   repo (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px). No repo source was changed.
 

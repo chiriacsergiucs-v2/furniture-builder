@@ -1,7 +1,8 @@
 # ADR-255: UI audit — Boards and edges: every board change is told truly and every field names its board
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N264
@@ -87,12 +88,12 @@ every field and problem names its board.**
 - [x] An emptied board name goes back to the stored name with the message, in English and Russian (test).
 - [x] The lost-part warning shows no panel id (test).
 - [x] A wrong own-band thickness is `aria-invalid` with its field error (test).
-- [ ] A disabled Group scope shows its reason as visible text tied to the radio (test).
+- [x] A disabled Group scope shows its reason as visible text tied to the radio (test).
 - [x] Each board row is a group named after its board; Name is found within it (find-it).
 - [x] Remove band list clears the list after a confirm, and the band editor no longer offers it (storage test + find-it).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/find-it/audit-boards.test.tsx, tests/find-it/part-boards.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/find-it/audit-boards.test.tsx, tests/find-it/part-boards.test.tsx; tests/audit-rest.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

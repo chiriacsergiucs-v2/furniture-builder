@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Boards and edges (`src/ui/info/features.ts:639-750`, 21 feature lines)
-- ADR: [ADR-255](../adr/ADR-255-ui-audit-boards-every-board-change-told-truly.md)
+- ADR: [ADR-255](../adr-done/ADR-255-ui-audit-boards-every-board-change-told-truly.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px and 390 px). No repo source was changed.
 

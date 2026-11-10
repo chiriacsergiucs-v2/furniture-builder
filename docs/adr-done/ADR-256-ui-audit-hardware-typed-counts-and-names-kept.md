@@ -1,7 +1,8 @@
 # ADR-256: UI audit — Hardware: typed counts and names are kept as typed, in every language
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N265
@@ -78,14 +79,14 @@ what is shown is what is saved; a name the user gives is shown inside a translat
 
 ## Done when
 
-- [ ] Typing "1.5" in Per and "37.5" in From each end saves nothing and shows each field's error with `aria-invalid` (test).
+- [x] Typing "1.5" in Per and "37.5" in From each end saves nothing and shows each field's error with `aria-invalid` (test).
 - [x] In Russian, a flap with a named fitting and a panel set with a screwed joint show "Механизм клапана: {name}" and "Шурупы: {a} к {b}" in the Hardware tab (test).
-- [ ] After a failed fastener save the row shows what is saved and the alert is shown (test).
+- [x] After a failed fastener save the row shows what is saved and the alert is shown (test).
 - [x] A design handle with 150 mm centres shows "150 mm" in Hole centres (test).
-- [ ] Fitting you chose takes at most 200 characters (test).
+- [x] Fitting you chose takes at most 200 characters (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-typed-sizes.test.tsx, tests/find-it/audit-typed-sizes.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-typed-sizes.test.tsx, tests/find-it/audit-typed-sizes.test.tsx; tests/audit-rest.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

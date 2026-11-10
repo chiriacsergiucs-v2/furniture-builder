@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Aligning and arranging (`src/ui/info/features.ts:302-397`, 20 feature lines)
-- ADR: [ADR-251](../adr/ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md)
+- ADR: [ADR-251](../adr-done/ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with
   a scratch config, core and store in node). No repo source was changed.
 

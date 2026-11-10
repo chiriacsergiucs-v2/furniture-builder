@@ -62,15 +62,7 @@ export function FastenersPanel() {
         {ready &&
           JOINTS.map((j) => {
             const c = choices.find((x) => x.joint === j.id);
-            return (
-              <FastenerRow
-                // Keyed by the saved choice: after a failed save the row shows what is really saved (ADR-256).
-                key={`${j.id}|${c?.name ?? ''}|${c?.per ?? ''}|${c?.edge ?? ''}`}
-                joint={j}
-                count={byJoint.get(j.id) ?? 0}
-                choice={c}
-              />
-            );
+            return <FastenerRow key={j.id} joint={j} count={byJoint.get(j.id) ?? 0} choice={c} />;
           })}
       </ul>
     </Group>
@@ -93,6 +85,26 @@ function FastenerRow({
   const [per, setPer] = useState(String(choice?.per ?? 1));
   // Carcass joints (ADR-209): mm from each end of a joint to the first and last fixing; empty = no drilling positions.
   const [edge, setEdge] = useState(choice?.edge !== undefined ? String(choice.edge) : '');
+  // The saved choice changed from outside (a failed save re-read from storage, ADR-256): the row shows what is saved.
+  // A save the user just made changes it to what the fields already hold, so nothing moves and focus stays.
+  const savedKey = `${choice?.name ?? ''}|${choice?.per ?? ''}|${choice?.edge ?? ''}`;
+  const [seen, setSeen] = useState(savedKey);
+  const reset = () => {
+    setName(choice?.name ?? '');
+    setPer(String(choice?.per ?? 1));
+    setEdge(choice?.edge !== undefined ? String(choice.edge) : '');
+  };
+  if (seen !== savedKey) {
+    setSeen(savedKey);
+    reset();
+  }
+  // A failed write also resets the row, when the save and the re-read land in one render.
+  const storeError = useFastenerList((s) => s.error);
+  const [seenError, setSeenError] = useState(storeError);
+  if (seenError !== storeError) {
+    setSeenError(storeError);
+    if (storeError) reset();
+  }
   const perN = Number(per);
   const perOk = per.trim() !== '' && Number.isSafeInteger(perN) && perN >= 1;
   const edgeN = Number(edge);

@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Room and walls (`src/ui/info/features.ts:785-859`, 14 feature lines)
-- ADR: [ADR-257](../adr/ADR-257-ui-audit-room-name-the-field-one-tap-one-corner.md)
+- ADR: [ADR-257](../adr-done/ADR-257-ui-audit-room-name-the-field-one-tap-one-corner.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (core and
   store in node with `fake-indexeddb`, the Room section in jsdom over `tests/find-it/setup.tsx` at 1280 and 390 px).
   No repo source was changed.

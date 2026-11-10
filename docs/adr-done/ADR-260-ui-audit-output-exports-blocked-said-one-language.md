@@ -1,7 +1,8 @@
 # ADR-260: UI audit — Output: every export blocked on errors, every failure said, one print language
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N269
@@ -88,16 +89,16 @@ user tapped, and a print speaks only the print language.**
 
 - [x] With an error, Print assembly steps, Front view drawing and Fusion 360 script are disabled with the reason (test).
 - [x] The printed Shopping list has no app-language word in ro and en print languages, and the CSV file name is cleaned (test).
-- [ ] A refused price import and an unreadable price list are said on the Shopping list and on the chip, no unhandled rejection (test).
+- [x] A refused price import and an unreadable price list are said on the Shopping list and on the chip, no unhandled rejection (test).
 - [x] Hand to a professional with a failing model read says why and leaves no unhandled rejection (test).
 - [x] A project's cutting sheet parts list, Client sheet and CSV use the same printed piece name (test).
-- [ ] Wrong Price, Seller units and seller Quantity are `aria-invalid` with a hint, in English and Russian (test).
+- [x] Wrong Price, Seller units and seller Quantity are `aria-invalid` with a hint, in English and Russian (test).
 - [x] The Client sheet says "1 linie fără preț" for one line and "2 linii fără preț" for two (test).
 - [x] On the Results tabs, ArrowRight on Parts selects Sheets and Tab reaches only the selected tab (D19-F3, find-it).
-- [ ] After a render of piece A, the Client sheet of piece B shows B's own picture, and A's sheet still shows the render (test).
+- [x] After a render of piece A, the Client sheet of piece B shows B's own picture, and A's sheet still shows the render (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-output.test.tsx, tests/audit-print-text.test.ts, tests/find-it/audit-checks-output.test.tsx, tests/prints-exports-ui.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-output.test.tsx, tests/audit-print-text.test.ts, tests/find-it/audit-checks-output.test.tsx, tests/prints-exports-ui.test.tsx; tests/audit-rest.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

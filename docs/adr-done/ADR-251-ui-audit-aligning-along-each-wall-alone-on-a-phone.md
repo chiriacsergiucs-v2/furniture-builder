@@ -1,7 +1,8 @@
 # ADR-251: UI audit — Aligning and arranging: along each piece's own wall, and alone on a phone
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N260
@@ -83,12 +84,12 @@ touch path.**
 ## Done when
 
 - [x] Three base units on the left wall: Align Back puts their backs on the wall's line, Left/Right/Centre move them along z, Distribute spaces them along z and says the real gaps; a piece on another wall is named (core + store tests).
-- [ ] With Move alone on, a plan drag of one of two connected pieces moves it alone and disconnects it at drop; the three hints name Move alone in English and Russian (test).
+- [x] With Move alone on, a plan drag of one of two connected pieces moves it alone and disconnects it at drop; the three hints name Move alone in English and Russian (test).
 - [x] An align that moves nothing says "Already in line." and adds no undo step (store test).
 - [x] On a side wall, Duplicate puts the copy beside the piece on that wall with no overlap, and Mirror the run is offered for a run along it (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths: **Move alone** behind Options on a phone, **Already in line.** after a second Align.
 
-Evidence: tests/audit-aligning.test.ts, tests/audit-extra.test.ts, tests/find-it/audit-aligning.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-aligning.test.ts, tests/audit-extra.test.ts, tests/find-it/audit-aligning.test.tsx; tests/find-it/audit-rest.test.tsx, tests/audit-rest-components.test.tsx, tools/ui-audit-3d/find-it.mjs (plan drag with Move alone, 1280 and 390 px) (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

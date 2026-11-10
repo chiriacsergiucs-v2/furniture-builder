@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Sizing (`src/ui/info/features.ts:441-485`, 7 feature lines)
-- ADR: [ADR-253](../adr/ADR-253-ui-audit-sizing-typed-size-kept-locks-named.md)
+- ADR: [ADR-253](../adr-done/ADR-253-ui-audit-sizing-typed-size-kept-locks-named.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with a
   scratch config; jsdom for `PieceSize` and `MmField`, the store and core for group sizing). No repo source was
   changed.

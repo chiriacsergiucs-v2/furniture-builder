@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Output (`src/ui/info/features.ts:1017-1152`, 22 feature lines)
-- ADR: [ADR-260](../adr/ADR-260-ui-audit-output-exports-blocked-said-one-language.md)
+- ADR: [ADR-260](../adr-done/ADR-260-ui-audit-output-exports-blocked-said-one-language.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px; `fetch` stubbed, no request). No repo
   source was changed.

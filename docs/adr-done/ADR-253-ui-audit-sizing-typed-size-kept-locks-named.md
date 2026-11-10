@@ -1,7 +1,8 @@
 # ADR-253: UI audit — Sizing: a typed size stays until it is valid, locks name what they lock
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N262
@@ -69,12 +70,12 @@ sizes the piece has.**
 ## Done when
 
 - [x] Out-of-range Width, then Enter or blur: the typed value and the field error stay, nothing changes; Escape restores the stored value (test).
-- [ ] A group of a 720 and a 900 mm piece set to the shown 900 makes both 900 in one undo step (test).
-- [ ] A bed's and a panel's ⋯ menus offer no Lock for a size they lack; a bed's width lock says "Mattress width locked" (test).
+- [x] A group of a 720 and a 900 mm piece set to the shown 900 makes both 900 in one undo step (test).
+- [x] A bed's and a panel's ⋯ menus offer no Lock for a size they lack; a bed's width lock says "Mattress width locked" (test).
 - [x] In Russian, resizing a group with a size-locked piece says "Сохранено: …" (test).
 - [x] Find-it passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-typed-sizes.test.tsx, tests/find-it/audit-typed-sizes.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-typed-sizes.test.tsx, tests/find-it/audit-typed-sizes.test.tsx, tests/audit-extra.test.ts; tests/find-it/audit-rest.test.tsx, tests/audit-rest-components.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

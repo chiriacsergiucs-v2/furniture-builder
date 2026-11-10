@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Account (`src/ui/info/features.ts:1370-1392`, 8 feature lines)
-- ADR: [ADR-264](../adr/ADR-264-ui-audit-account-failures-said-sync-kept-running.md)
+- ADR: [ADR-264](../adr-done/ADR-264-ui-audit-account-failures-said-sync-kept-running.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config, the in-memory backend `src/online/fake.ts` and `fetch` stubbed to throw, so no
   request left the test). No repo source was changed.

@@ -1,7 +1,8 @@
 # ADR-254: UI audit — Construction: a typed size is kept as typed or refused out loud
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N263
@@ -74,14 +75,14 @@ invalid with the reason, until the user fixes it or presses Escape (ADR-199, ADR
 
 ## Done when
 
-- [ ] Typing "2.5" or "10,5" in a Construction size, Trim height, Cut-out width, From left or a clearance saves nothing and shows the field's error with `aria-invalid` (test).
+- [x] Typing "2.5" or "10,5" in a Construction size, Trim height, Cut-out width, From left or a clearance saves nothing and shows the field's error with `aria-invalid` (test).
 - [x] Out-of-range text stays with its error after Tab and Enter; Escape restores the saved value (test).
-- [ ] Runner lengths with a wrong entry, and an empty loose-panel Name, save nothing and say why, in English and Russian (test).
+- [x] Runner lengths with a wrong entry, and an empty loose-panel Name, save nothing and say why, in English and Russian (test).
 - [x] Choosing Diagonal over drawers asks first; Cancel keeps Blind and the drawers (test).
 - [x] Doubled, then Two rails: Top layers becomes Single, no `top-layers-rails` warning, and one undo restores both (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/find-it/audit-typed-sizes.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/find-it/audit-typed-sizes.test.tsx; tests/audit-rest.test.tsx, tests/audit-rest-components.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

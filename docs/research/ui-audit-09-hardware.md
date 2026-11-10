@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Hardware (`src/ui/info/features.ts:751-784`, 5 feature lines)
-- ADR: [ADR-256](../adr/ADR-256-ui-audit-hardware-typed-counts-and-names-kept.md)
+- ADR: [ADR-256](../adr-done/ADR-256-ui-audit-hardware-typed-counts-and-names-kept.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with a
   scratch config: jsdom over `tests/find-it/setup.tsx` at 1280 and 390 px, and a node test of `tr()` in Russian). No
   repo source was changed.

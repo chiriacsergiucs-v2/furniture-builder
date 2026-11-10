@@ -1,7 +1,8 @@
 # ADR-258: UI audit — Checks and problems: every piece's guidance listed, repairs told truly
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N267
@@ -79,11 +80,11 @@ problem banner claims only what the app did.**
 ## Done when
 
 - [x] A project with a bookcase whose shelf span gives `shelf-span` lists that warning, named by the piece, in Checks and on the printed project sheet; it does not block export (core test + find-it).
-- [ ] Tapping a `connection-broken` (or `common-gap`) check shows "This problem has no automatic repair…"; an overlap with all repairs refused keeps the old sentence (test).
-- [ ] The Checks tab's accessible name is "Checks: 1 problem" with one error, and a tapped check moves focus to the banner (test).
+- [x] Tapping a `connection-broken` (or `common-gap`) check shows "This problem has no automatic repair…"; an overlap with all repairs refused keeps the old sentence (test).
+- [x] The Checks tab's accessible name is "Checks: 1 problem" with one error, and a tapped check moves focus to the banner (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-checks.test.ts, tests/find-it/audit-checks-output.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-checks.test.ts, tests/find-it/audit-checks-output.test.tsx, tests/audit-extra.test.ts; tests/audit-rest-components.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Construction (`src/ui/info/features.ts:486-638`, 43 feature lines in five groups)
-- ADR: [ADR-254](../adr/ADR-254-ui-audit-construction-typed-sizes-kept-as-typed.md)
+- ADR: [ADR-254](../adr-done/ADR-254-ui-audit-construction-typed-sizes-kept-as-typed.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 and 390 px). No repo source was changed.
 

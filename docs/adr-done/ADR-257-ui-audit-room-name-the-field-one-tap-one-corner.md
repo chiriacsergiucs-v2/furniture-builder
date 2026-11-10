@@ -1,7 +1,8 @@
 # ADR-257: UI audit — Room and walls: name the field, one tap one corner, names in the user's language
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N266
@@ -81,11 +82,11 @@ name in a message is in the user's language.**
 - [x] With Russian chosen, a door past its wall's end gives a message that starts "Дверь 1" (core test).
 - [x] Add door, Add door, remove Door 1, Add door gives Door 2 and Door 1, no repeat (unit test).
 - [x] Two taps on one spot while drawing add one corner; closing the room gives no "has no length" problem (store test).
-- [ ] Two scale taps on one pixel keep Set the scale on and show "Tap a different point." (store test + find-it).
-- [ ] The floor's file input is named "Replace picture for the floor" with a picture set; a dropped floor picture is said, in English and Russian (test).
+- [x] Two scale taps on one pixel keep Set the scale on and show "Tap a different point." (store test + find-it).
+- [x] The floor's file input is named "Replace picture for the floor" with a picture set; a dropped floor picture is said, in English and Russian (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-room.test.ts, tests/find-it/audit-room.test.tsx, tests/room-surfaces.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-room.test.ts, tests/find-it/audit-room.test.tsx, tests/room-surfaces.test.ts; tests/find-it/audit-rest.test.tsx, tests/audit-rest.test.tsx, tests/audit-rest-components.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

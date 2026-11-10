@@ -1,7 +1,8 @@
 # ADR-252: UI audit — Selection and groups: groups named in the user's language, one tap makes one group
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N261
@@ -81,12 +82,12 @@ the app writes is in the user's language.**
 
 - [x] In Russian, Group names the new group "Группа 1"; saved names are unchanged (test).
 - [x] With one piece and a 3D model selected, Group is not offered; with two pieces and a model it groups the pieces and says so (test).
-- [ ] A double tap on Group leaves one group and one undo step; Enter on Group still groups (test).
+- [x] A double tap on Group leaves one group and one undo step; Enter on Group still groups (test).
 - [x] A plan box and a front-view box over a 3D model select it (core test).
 - [x] Renaming a group on its selection card shows the new name in the piece list, undoes in one step, and an empty name is refused with a field error (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/find-it/audit-selection.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/find-it/audit-selection.test.tsx, tests/audit-extra.test.ts; tests/find-it/audit-rest.test.tsx, tests/find-it/audit-selection.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

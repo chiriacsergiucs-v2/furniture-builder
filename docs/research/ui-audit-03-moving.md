@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Moving (`src/ui/info/features.ts:239-301`, 10 feature lines)
-- ADR: [ADR-250](../adr/ADR-250-ui-audit-moving-groups-turn-together-refusals-said.md)
+- ADR: [ADR-250](../adr-done/ADR-250-ui-audit-moving-groups-turn-together-refusals-said.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom and node tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px). The 3D view is a stub in jsdom
   (`tests/find-it/setup.tsx:27`), so 3D findings are code-evident only. No repo source was changed.

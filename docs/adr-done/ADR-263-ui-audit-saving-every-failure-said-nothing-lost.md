@@ -1,7 +1,8 @@
 # ADR-263: UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N272
@@ -94,10 +95,10 @@ is deleted that a saved thing still names, and one tap makes one copy.**
 - [x] A refused clipboard is said in Copy code for the code and the link (test).
 - [x] Restoring a file that is not a backup says so as a warning (test).
 - [x] Project file with a failing model or picture read says why; no unhandled rejection (test).
-- [ ] The reminder shows a failed backup; Share link and Account › Shared links errors are said and leave the buttons usable; English plurals read right (test).
+- [x] The reminder shows a failed backup; Share link and Account › Shared links errors are said and leave the buttons usable; English plurals read right (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
-Evidence: tests/audit-saving.test.tsx, tests/find-it/audit-saving.test.tsx, tests/persist.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
+Evidence: tests/audit-saving.test.tsx, tests/find-it/audit-saving.test.tsx, tests/persist.test.ts; tests/audit-reminder.test.tsx, tests/audit-rest.test.tsx, tests/audit-account.test.tsx, tests/audit-saving.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

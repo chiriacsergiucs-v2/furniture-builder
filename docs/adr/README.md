@@ -311,20 +311,20 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-247](../adr-done/ADR-247-open-settings-and-material-inside-the-phone-sheet.md) | Open Settings and Material inside the phone sheet | ADR-080, ADR-163, ADR-241 | ✅ Implemented |
 | [ADR-248](../adr-done/ADR-248-ui-audit-creating-one-tap-one-saved-checked-thing.md) | UI audit — Creating: one tap makes one saved thing, checked against what is there | — | ✅ Implemented |
 | [ADR-249](../adr-done/ADR-249-ui-audit-composition-ask-before-dropping-contents.md) | UI audit — Composition: ask before any edit drops contents, and fill in no appliance size | — | ✅ Implemented |
-| [ADR-250](ADR-250-ui-audit-moving-groups-turn-together-refusals-said.md) | UI audit — Moving: a group turns as one, fields fit every place, refusals are said where asked | — | Pending |
-| [ADR-251](ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md) | UI audit — Aligning and arranging: along each piece's own wall, and alone on a phone | — | Pending |
-| [ADR-252](ADR-252-ui-audit-selection-groups-named-one-tap-one-group.md) | UI audit — Selection and groups: groups named in the user's language, one tap makes one group | — | Pending |
-| [ADR-253](ADR-253-ui-audit-sizing-typed-size-kept-locks-named.md) | UI audit — Sizing: a typed size stays until it is valid, locks name what they lock | — | Pending |
-| [ADR-254](ADR-254-ui-audit-construction-typed-sizes-kept-as-typed.md) | UI audit — Construction: a typed size is kept as typed or refused out loud | — | Pending |
-| [ADR-255](ADR-255-ui-audit-boards-every-board-change-told-truly.md) | UI audit — Boards and edges: every board change is told truly and every field names its board | — | Pending |
-| [ADR-256](ADR-256-ui-audit-hardware-typed-counts-and-names-kept.md) | UI audit — Hardware: typed counts and names are kept as typed, in every language | — | Pending |
-| [ADR-257](ADR-257-ui-audit-room-name-the-field-one-tap-one-corner.md) | UI audit — Room and walls: name the field, one tap one corner, names in the user's language | — | Pending |
-| [ADR-258](ADR-258-ui-audit-checks-piece-guidance-listed-repairs-told.md) | UI audit — Checks and problems: every piece's guidance listed, repairs told truly | — | Pending |
-| [ADR-259](ADR-259-ui-audit-views-render-stops-models-keep-range.md) | UI audit — Views: a render stops when closed, one 3D menu, model sizes stay in range | — | Pending |
-| [ADR-260](ADR-260-ui-audit-output-exports-blocked-said-one-language.md) | UI audit — Output: every export blocked on errors, every failure said, one print language | — | Pending |
-| [ADR-261](ADR-261-ui-audit-projects-failures-said-no-false-updated.md) | UI audit — Projects: a failed write is said, a refused update is never called done | — | Pending |
-| [ADR-262](ADR-262-ui-audit-catalog-keep-edits-name-every-button.md) | UI audit — Catalog and templates: an import never loses an edit, every failure and button is named | — | Pending |
-| [ADR-263](ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md) | UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy | — | Pending |
-| [ADR-264](ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | Pending |
+| [ADR-250](../adr-done/ADR-250-ui-audit-moving-groups-turn-together-refusals-said.md) | UI audit — Moving: a group turns as one, fields fit every place, refusals are said where asked | — | ✅ Implemented |
+| [ADR-251](../adr-done/ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md) | UI audit — Aligning and arranging: along each piece's own wall, and alone on a phone | — | ✅ Implemented |
+| [ADR-252](../adr-done/ADR-252-ui-audit-selection-groups-named-one-tap-one-group.md) | UI audit — Selection and groups: groups named in the user's language, one tap makes one group | — | ✅ Implemented |
+| [ADR-253](../adr-done/ADR-253-ui-audit-sizing-typed-size-kept-locks-named.md) | UI audit — Sizing: a typed size stays until it is valid, locks name what they lock | — | ✅ Implemented |
+| [ADR-254](../adr-done/ADR-254-ui-audit-construction-typed-sizes-kept-as-typed.md) | UI audit — Construction: a typed size is kept as typed or refused out loud | — | ✅ Implemented |
+| [ADR-255](../adr-done/ADR-255-ui-audit-boards-every-board-change-told-truly.md) | UI audit — Boards and edges: every board change is told truly and every field names its board | — | ✅ Implemented |
+| [ADR-256](../adr-done/ADR-256-ui-audit-hardware-typed-counts-and-names-kept.md) | UI audit — Hardware: typed counts and names are kept as typed, in every language | — | ✅ Implemented |
+| [ADR-257](../adr-done/ADR-257-ui-audit-room-name-the-field-one-tap-one-corner.md) | UI audit — Room and walls: name the field, one tap one corner, names in the user's language | — | ✅ Implemented |
+| [ADR-258](../adr-done/ADR-258-ui-audit-checks-piece-guidance-listed-repairs-told.md) | UI audit — Checks and problems: every piece's guidance listed, repairs told truly | — | ✅ Implemented |
+| [ADR-259](../adr-done/ADR-259-ui-audit-views-render-stops-models-keep-range.md) | UI audit — Views: a render stops when closed, one 3D menu, model sizes stay in range | — | ✅ Implemented |
+| [ADR-260](../adr-done/ADR-260-ui-audit-output-exports-blocked-said-one-language.md) | UI audit — Output: every export blocked on errors, every failure said, one print language | — | ✅ Implemented |
+| [ADR-261](../adr-done/ADR-261-ui-audit-projects-failures-said-no-false-updated.md) | UI audit — Projects: a failed write is said, a refused update is never called done | — | ✅ Implemented |
+| [ADR-262](../adr-done/ADR-262-ui-audit-catalog-keep-edits-name-every-button.md) | UI audit — Catalog and templates: an import never loses an edit, every failure and button is named | — | ✅ Implemented |
+| [ADR-263](../adr-done/ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md) | UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy | — | ✅ Implemented |
+| [ADR-264](../adr-done/ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | ✅ Implemented |
 | [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
 | [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |
