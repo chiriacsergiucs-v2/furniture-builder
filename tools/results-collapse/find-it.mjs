@@ -3,7 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/results-collapse/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
-import { goCompose } from '../lib/steps.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -15,7 +15,8 @@ const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });
   console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
 };
-const TABS = ['Parts', 'Sheets', 'Hardware', 'Shopping list', 'Checks'];
+// Assembly was added as a sixth tab (N82).
+const TABS = ['Parts', 'Sheets', 'Hardware', 'Assembly', 'Shopping list', 'Checks'];
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -29,7 +30,7 @@ for (const width of [1280, 390]) {
   const csv = page.getByRole('button', { name: 'Download CSV' });
   const sheetsPanel = page.locator('.tabpanel .sheets');
 
-  // 1. Bare app → New single piece → Sideboard → Build & Preview.
+  // 1. Bare app → New single piece → Sideboard → Build & Preview (the Cut list place on a phone, ADR-241).
   await page.goto(url);
   await page.getByRole('button', { name: 'New single piece' }).click();
   await page
@@ -38,15 +39,33 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: /^Build & Preview/ }).click();
+  await goBuild(page);
   await page.waitForTimeout(400);
 
   for (const t of TABS) check(width, `tab "${t}" visible`, await tab(t).isVisible());
   await shot('start');
 
   if (phone) {
-    // 2. Collapsed: no tab content, the 3D view takes the room.
-    check(width, '"Download CSV" hidden while collapsed', !(await csv.isVisible()));
+    // 2. ADR-241 replaced "collapsed on arrival" (ADR-091): entering the Cut list place opens Parts.
+    check(width, 'Cut list opens on Parts: "Download CSV" visible', await csv.isVisible());
+    check(
+      width,
+      '"Parts" aria-expanded',
+      (await tab('Parts').getAttribute('aria-expanded')) === 'true',
+    );
+    await shot('parts');
+    // 3. Tap Sheets → switch; tap Sheets again → collapsed, and the 3D view takes the room (ADR-091).
+    await tab('Sheets').click();
+    await sheetsPanel.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    check(width, 'tap "Sheets" → sheet layout visible', await sheetsPanel.isVisible());
+    check(width, '"Download CSV" gone on Sheets', !(await csv.isVisible()));
+    await tab('Sheets').click();
+    await page.waitForTimeout(300);
+    check(
+      width,
+      'tap "Sheets" again → collapsed',
+      !(await sheetsPanel.isVisible()) && !(await csv.isVisible()),
+    );
     check(
       width,
       'no tab selected while collapsed',
@@ -55,33 +74,19 @@ for (const width of [1280, 390]) {
     const stage = await page.locator('.stage').boundingBox();
     check(
       width,
-      '3D view takes most of the screen',
+      'collapsed: the 3D view takes most of the screen',
       (stage?.height ?? 0) > 844 * 0.55,
       `${stage?.height}px`,
     );
-    // 3. Tap Parts → open; tap Sheets → switch; tap Sheets again → collapsed.
-    await tab('Parts').click();
-    check(width, 'tap "Parts" → "Download CSV" visible', await csv.isVisible());
-    check(
-      width,
-      '"Parts" aria-expanded',
-      (await tab('Parts').getAttribute('aria-expanded')) === 'true',
-    );
-    await shot('parts');
-    await tab('Sheets').click();
-    await sheetsPanel.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    check(width, 'tap "Sheets" → sheet layout visible', await sheetsPanel.isVisible());
-    check(width, '"Download CSV" gone on Sheets', !(await csv.isVisible()));
-    await tab('Sheets').click();
-    check(
-      width,
-      'tap "Sheets" again → collapsed',
-      !(await sheetsPanel.isVisible()) && !(await csv.isVisible()),
-    );
-    // 4. A design with a problem stays collapsed; the Checks badge shows it.
+    // 4. Leaving and coming back to Cut list opens Parts again (ADR-241); a design with an error opens Checks,
+    // whose badge counts it.
     await goCompose(page);
-    await page.getByRole('radio', { name: /^Build & Preview/ }).click();
-    check(width, 'still collapsed after switching modes', !(await csv.isVisible()));
+    await goBuild(page);
+    await page.waitForTimeout(300);
+    check(width, 'back in Cut list → Parts open again', await csv.isVisible());
+    // Cut list picks Checks or Parts only when the results are closed (App.tsx): close them first.
+    await tab('Parts').click();
+    await goCompose(page);
     const dlg = page.locator('dialog[open]');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
@@ -90,7 +95,7 @@ for (const width of [1280, 390]) {
     await w.press('Tab');
     await dlg.getByRole('button', { name: 'Done', exact: true }).click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
-    await page.getByRole('radio', { name: /^Build & Preview/ }).click();
+    await goBuild(page);
     await page.waitForTimeout(400);
     const badge =
       (await tab('Checks')
@@ -99,9 +104,8 @@ for (const width of [1280, 390]) {
         .catch(() => '')) ?? '';
     check(
       width,
-      'an error keeps the panel collapsed',
-      (await page.locator('.tabpanel').count()) === 0 &&
-        (await tab('Checks').getAttribute('aria-expanded')) === 'false',
+      'an error opens Cut list on Checks (ADR-241)',
+      (await tab('Checks').getAttribute('aria-expanded')) === 'true' && !(await csv.isVisible()),
     );
     check(
       width,

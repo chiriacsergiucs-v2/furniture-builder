@@ -491,9 +491,11 @@ output,
 :is(.btn-row:not(.end), .split-actions, .arrange-actions, .out-actions, .run-ask-actions) > .btn {
   padding-inline: var(--s-3);
 }
-/* "Add worktop over…" does not fit half a Settings card on a phone: each of the two fills its row there. */
+/* "Add worktop over…" and the backup folder buttons do not fit half a Settings card on a phone: each fills its row
+   there. */
 @media (max-width: 480px) {
-  .run-ask-actions {
+  .run-ask-actions,
+  .btn-row.backup-actions {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -5458,6 +5460,12 @@ button.tile:hover {
     text-align: left;
     cursor: pointer;
   }
+  .work.mode-compose .sheet-peek > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .work.mode-compose .sheet-peek:focus-visible {
     outline: 2px solid var(--link);
     outline-offset: -2px;
@@ -7643,6 +7651,12 @@ fieldset.group-locked {
 @media (pointer: coarse) {
   .estimate-chip,
   .bar button.crumb.back {
+    min-height: 44px;
+  }
+  /* The two "More 3D actions" menus (ADR-206, ADR-208) were 42 and 32 px wide. */
+  .scene-menu > summary,
+  .three-more > summary {
+    min-width: 44px;
     min-height: 44px;
   }
   .bar button.crumb.back {

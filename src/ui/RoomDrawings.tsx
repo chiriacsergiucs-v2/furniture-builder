@@ -1152,16 +1152,30 @@ export function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const at = counts
     ? (space ?? (pm.pieces.some((p) => p.item.id === selectedId) ? sel : null))
     : null;
+  // The card is hidden while the phone sheet is open (it measures 0 then); placed again once it shows, so it never
+  // lands past the drawing's right edge and scrolls the page sideways at 390 px.
+  const hasCard = !!at;
+  useLayoutEffect(() => {
+    const st = cardRef.current;
+    if (!st || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    ro.observe(st);
+    return () => ro.disconnect();
+  }, [hasCard]);
   useLayoutEffect(() => {
     const fig = figRef.current,
       a = anchorRef.current,
       st = cardRef.current;
     if (!fig || !a || !st) return setPos(null);
+    // Hidden (display: none under the open phone sheet): keep the last place, as a width of 0 would put it past the edge.
+    if (getComputedStyle(st).display === 'none') return;
     const f = fig.getBoundingClientRect();
     const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
       ...boxIn(f, a, 4),
       ...boxIn(f, selDimsRef.current, 2),
       ...boxIn(f, fig.querySelector(':scope > .info-tip'), 2),
+      // The view's own toolbar (its Select, ADR-159) stays reachable.
+      ...boxIn(f, fig.querySelector(':scope > .plan-tools'), 2),
     ]);
     setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
   }, [at?.x, at?.y, at?.w, at?.h, tick, pm]);

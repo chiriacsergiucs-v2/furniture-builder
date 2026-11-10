@@ -9,7 +9,7 @@
 //   pnpm exec vite preview --port 4173 &  node tools/catch-up/find-it.mjs http://localhost:4173/furniture-builder/ <out>
 // From the bare app, by role and visible text, at 390, 1280 and 1600 px. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
-import { goCompose } from '../lib/steps.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -154,7 +154,8 @@ for (const width of [1280, 390, 1600]) {
     def,
   );
   for (const mode of ['Compose', 'Build & Preview']) {
-    await page.getByRole('radio', { name: mode }).click();
+    // ADR-241: a phone has no Compose / Build & Preview row; the bottom nav's Editor and Cut list places stand in.
+    await (mode === 'Compose' ? goCompose(page) : goBuild(page));
     await page.waitForTimeout(300);
     const labels = await page
       .getByRole('radiogroup', { name: 'View' })

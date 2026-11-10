@@ -6,7 +6,7 @@
 // modes (ADR-079/080: Parts CSV and Print on the Parts list in Build & Preview, Materials in the Settings dialog)
 // and the phone layout (N82: the project panel is a bottom sheet; Compose shows the drawing only).
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
-import { openPieceEditor } from '../lib/steps.mjs';
+import { goBuild, goCompose, openPieceEditor, openTab, showPieces } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -60,13 +60,17 @@ for (const width of [1440, 375]) {
   };
   const selectPiece = async (i) => {
     await openSheet();
+    await showPieces(page);
     await pieces.nth(i).getByRole('button').first().click();
   };
-  const setMode = (name) => page.getByRole('radio', { name: new RegExp(`^${name}`) }).click();
   const moreMenu = page.locator('summary[aria-label="More"]');
   const addPiece = async (search) => {
     await openSheet();
-    await page.getByRole('button', { name: 'Add a piece' }).click();
+    await page
+      .getByRole('button', { name: 'Add a piece' })
+      .filter({ visible: true })
+      .first()
+      .click();
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.locator('.start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
@@ -85,6 +89,8 @@ for (const width of [1440, 375]) {
   await addPiece('Base cabinet');
   await addPiece('Wardrobe');
   await addPiece('Bed');
+  await openSheet();
+  await showPieces(page);
   const rows = await pieces.allInnerTexts();
   check(
     width,
@@ -134,8 +140,7 @@ for (const width of [1440, 375]) {
   );
   check(width, 'dimensions: plan shows mm measurements', dims.length >= 2, dims.join(', '));
   await shot('plan');
-  // On a phone the 3D view is in Build & Preview (ADR-080, N82).
-  if (phone) await setMode('Build & Preview');
+  // The phone's Editor place has the 2D / 3D switch too (ADR-241; ADR-080 had put 3D in Build & Preview).
   await page.getByRole('radio', { name: '3D' }).click();
   await page.waitForTimeout(1500);
   check(
@@ -144,8 +149,7 @@ for (const width of [1440, 375]) {
     await page.locator('.view.three canvas').isVisible(),
   );
   await shot('3d');
-  if (phone) await setMode('Compose');
-  else await page.getByRole('radio', { name: '2D' }).click();
+  await page.getByRole('radio', { name: '2D' }).click();
 
   // In-context editing: "Edit this piece" opens the piece inside the project; changes stay in the project.
   // Rewritten (ADR-078): the "Editing … in project" banner became the top-bar path "‹ <project> › <piece>".
@@ -162,18 +166,23 @@ for (const width of [1440, 375]) {
   await page.waitForTimeout(200);
 
   // Keep identity: pieces stay separate rows; merging is an explicit, separate action.
+  await openSheet();
+  await showPieces(page);
   check(width, 'identity: still three separate pieces after editing', (await pieces.count()) === 3);
   await selectPiece(0);
+  // ADR-160 folded Merge into "More: clearance, merge".
   check(
     width,
-    'identity: "Merge" is a separate explicit action (a folded group since ADR-117)',
-    await page.locator('details.group > summary', { hasText: /^Merge$/ }).isVisible(),
+    'identity: "Merge" is a separate explicit action (a folded group since ADR-117, ADR-160)',
+    await page
+      .locator('details.group > summary', { hasText: /^More: clearance, merge$/ })
+      .isVisible(),
   );
 
   // Automatic BOM: one Parts CSV for the whole project, rows from all three pieces. Since ADR-079 the CSV and Print
   // are on the Parts list in Build & Preview ("Download CSV").
-  await setMode('Build & Preview');
-  await page.getByRole('tab', { name: /^Parts/ }).click();
+  await goBuild(page);
+  await openTab(page, /^Parts/);
   const partsPanel = page.locator('#panel-parts');
   const csv = await download(() =>
     partsPanel.getByRole('button', { name: 'Download CSV' }).click(),
@@ -185,7 +194,7 @@ for (const width of [1440, 375]) {
     'BOM: Print (cutting sheet) available',
     await partsPanel.getByRole('button', { name: 'Print' }).isEnabled(),
   );
-  await setMode('Compose');
+  await goCompose(page);
 
   // Saved designs: the project is kept on this device and offered again after a reload; project file export.
   // ADR-078: exports moved to ⋯ More → Files.

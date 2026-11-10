@@ -123,13 +123,18 @@ function SheetDialog({
   children: ReactNode;
 }) {
   const ask = useUi((s) => s.askSheet);
+  const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     ask('full');
     return () => ask('half');
   }, [ask]);
+  // A non-modal dialog does not take the focus as `showModal` does: without it, Esc goes to the page, not here.
+  useEffect(() => ref.current?.focus({ preventScroll: true }), []);
   return createPortal(
     <dialog
+      ref={ref}
       open
+      tabIndex={-1}
       className="dialog sheet-dialog"
       aria-label={title}
       onKeyDown={(e) => {

@@ -78,6 +78,14 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
       expect(composePanel().contains(dlg)).toBe(width === PHONE_WIDTH);
       await user.click(within(dlg).getByRole('button', { name: 'Close' }));
       await waitFor(() => expect(screen.queryByRole('dialog', { name: title })).toBeNull());
+      // Esc right after opening closes the sheet form too: it takes the focus like a modal does (the modal's Esc is
+      // the browser's own, which jsdom lacks).
+      if (width === PHONE_WIDTH) {
+        await user.click(screen.getByRole('button', { name: button }));
+        await screen.findByRole('dialog', { name: title });
+        await user.keyboard('{Escape}');
+        await waitFor(() => expect(screen.queryByRole('dialog', { name: title })).toBeNull());
+      }
     }
   });
 

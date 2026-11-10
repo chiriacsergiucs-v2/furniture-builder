@@ -108,8 +108,9 @@ for (const width of [1280, 390]) {
 
   // 3. 3D (phone: Build & Preview; desktop: Compose › 3D, beside the inspector): clear the selection with a tap on
   //    empty space, then three taps at one spot.
+  // ADR-241: the phone's Cut list place opens on the 2D drawing too, so 3D is picked at both widths.
   if (phone) await goBuild(page);
-  else await page.getByRole('radio', { name: '3D', exact: true }).click();
+  await page.getByRole('radio', { name: '3D', exact: true }).click();
   const canvas = three.locator('canvas');
   await canvas.waitFor({ state: 'visible', timeout: 20000 });
   // A view option: on a phone in Build & Preview the view controls sit behind "Options" (N82); the menu closes after.
@@ -117,9 +118,12 @@ for (const width of [1280, 390]) {
     const radio = page.getByRole('radio', { name });
     const menu = page.locator('details.view-options');
     const inMenu = (await menu.count()) > 0;
-    if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
+    if (inMenu && !(await menu.evaluate((d) => d.open)))
+      await menu.locator(':scope > summary').click();
     await radio.click();
-    if (inMenu) await page.keyboard.press('Escape');
+    // Closed with its own summary: Escape now also clears the selection, which this check keeps.
+    if (inMenu && (await menu.evaluate((d) => d.open)))
+      await menu.locator(':scope > summary').click();
     await page.waitForTimeout(200);
   };
   await viewOption('Simple');

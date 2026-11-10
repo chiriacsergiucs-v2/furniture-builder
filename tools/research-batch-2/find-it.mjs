@@ -87,8 +87,13 @@ for (const width of [1280, 390]) {
   };
   const three = page.locator('.view.three');
   const canvas = three.locator('canvas');
+  // The phone Editor place has the 3D/2D switch too (ADR-241) and a taller view than the Cut list place, where the
+  // wrapped 3D toolbar covers the height handle; the sheet goes back to peek so it does not cover the view.
   const to3d = async () => {
-    if (phone) await goBuild(page);
+    if (phone) {
+      await goCompose(page);
+      await sheet(false);
+    }
     await page.getByRole('radio', { name: '3D', exact: true }).click();
     await canvas.waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1200);
@@ -149,9 +154,11 @@ for (const width of [1280, 390]) {
     JSON.stringify(pressed),
   );
   // On a phone the cards are under Compose.
+  // A phone's selection leaves the sheet at peek (ADR-241, PR #203): open it to reach the cards.
   const compose = async () => {
     if (phone) await goCompose(page);
     await page.waitForTimeout(300);
+    await sheet(true);
   };
   await compose();
   const top = btn('Align top');

@@ -37,7 +37,7 @@ for (const width of [1280, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (l) => {
     await l.scrollIntoViewIfNeeded();
-    await l.click({ timeout: 5000 });
+    await l.click({ timeout: 10000 });
   };
   const noSideScroll = () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
@@ -259,7 +259,8 @@ for (const width of [1280, 390]) {
   const after3d = page.locator('.view.three .repair-preview-3d', { hasText: 'After repair' });
   await after3d
     .first()
-    .waitFor({ state: 'visible', timeout: 5000 })
+    // A loaded machine can take longer than 5 s to place the 3D label (seen 2026-11-10: present, not yet shown).
+    .waitFor({ state: 'visible', timeout: 15000 })
     .catch(() => {});
   check(
     width,

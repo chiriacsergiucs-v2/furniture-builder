@@ -13,7 +13,9 @@ export function ViewOptions({ menu, children }: { menu: boolean; children: React
     if (!menu) return;
     const close = () => ref.current?.removeAttribute('open');
     const onKey = (e: KeyboardEvent) => {
+      // Esc closes the menu only: the editor's Esc (clearing the selection) skips a handled key (ADR-160).
       if (e.key === 'Escape' && ref.current?.open) {
+        e.preventDefault();
         close();
         ref.current?.querySelector('summary')?.focus();
       }
@@ -21,10 +23,11 @@ export function ViewOptions({ menu, children }: { menu: boolean; children: React
     const onDown = (e: PointerEvent) => {
       if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
     };
-    window.addEventListener('keydown', onKey);
+    // Capture: this runs before the editor's own window listener, whatever order they were added in.
+    window.addEventListener('keydown', onKey, true);
     document.addEventListener('pointerdown', onDown);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
       document.removeEventListener('pointerdown', onDown);
     };
   }, [menu]);

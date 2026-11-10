@@ -172,11 +172,13 @@ for (const width of [390, 1280]) {
   );
   await tapPlan();
   await sheet(true);
-  t = await page.getByRole('region', { name: 'Inside this piece' }).innerText();
+  // textContent: the phone sheet may skip rendering the region off screen, so innerText holds only its title. The
+  // phone has no "Project" heading (ADR-241); the project's Add a piece button shows the project is still open.
+  t = await page.getByRole('region', { name: 'Inside this piece' }).textContent();
   ck(
     'project: a tap on the selected piece selects the whole piece, project still open',
     t.includes('Selected: Whole cabinet') &&
-      (await page.getByRole('heading', { name: 'Project', exact: true }).isVisible()),
+      (await page.getByRole('button', { name: 'Add a piece', exact: true }).count()) > 0,
     t.slice(0, 80),
   );
   await page.screenshot({ path: `${out}/drill-project-${width}.png` });

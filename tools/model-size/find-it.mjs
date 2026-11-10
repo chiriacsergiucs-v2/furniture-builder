@@ -238,9 +238,17 @@ for (const width of widths) {
   // 7. 3D, Move mode: the height handle is found; dragging it up with Keep off changes only the height.
   await keep.uncheck();
   await goBuild(page);
-  if (!phone) {
+  // The 2D/3D choice starts at 2D below 1500 px, phones included (ADR-144, N145): pick 3D at every width.
+  {
     const r = page.getByRole('radio', { name: '3D', exact: true });
     if (await r.isVisible().catch(() => false)) await r.click();
+  }
+  // A phone's Cut list place opens the results on the Parts tab, which leaves the 3D view so short that the tool row
+  // covers the height handle: a click on the open tab closes the results (toggleTab) and gives the 3D view the room.
+  if (phone) {
+    const parts = page.getByRole('tab', { name: 'Parts' }).first();
+    if ((await parts.getAttribute('aria-selected').catch(() => null)) === 'true')
+      await parts.click();
   }
   const three = page.locator('.view.three');
   await three.locator('canvas').first().waitFor({ timeout: 30000 });

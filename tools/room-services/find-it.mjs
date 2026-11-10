@@ -67,6 +67,13 @@ for (const width of [1440, 1280, 390, 375]) {
   // 2. The Room panel: add the room, then "Add pipe" and "Add outlet".
   const room = page.getByRole('region', { name: 'Room' });
   await click(room.getByRole('button', { name: 'Add the room' }));
+  /** ADR-160: a set room is a closed fold (its summary names the room); pipes and outlets are inside it. */
+  const openRoom = async () => {
+    const fold = page.getByRole('region', { name: 'Room' }).locator('details.room-fold');
+    if ((await fold.count()) && (await fold.getAttribute('open')) === null)
+      await click(fold.locator(':scope > summary'));
+  };
+  await openRoom();
   const addPipe = room.getByRole('button', { name: 'Add pipe' });
   const addOutlet = room.getByRole('button', { name: 'Add outlet' });
   await addPipe.scrollIntoViewIfNeeded();
@@ -149,6 +156,7 @@ for (const width of [1440, 1280, 390, 375]) {
   // 5. Move the pipe along the wall, clear of the cabinet: its warning goes, the outlet's stays.
   if (phone) await goCompose(page);
   await openSheet();
+  await openRoom();
   const from = page
     .getByRole('region', { name: 'Room' })
     .getByRole('group', { name: 'Pipe 1' })

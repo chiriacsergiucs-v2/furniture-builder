@@ -176,10 +176,13 @@ export function cancelPress(g: DragGesture | TurnGesture | null): boolean {
   return !!g;
 }
 
-/** The [ and ] keys turn the focused piece by 1°, with Shift by 15° (ADR-169). Null for any other key. */
+/**
+ * The [ and ] keys turn the focused piece by 1°, with Shift by 15° (ADR-169). Null for any other key. With Shift a
+ * US keyboard sends } and {, so those are the same keys.
+ */
 export function bracketTurn(key: string, shift: boolean): number | null {
   const d = shift ? TURN_SHIFT_STEP : 1;
-  return key === ']' ? d : key === '[' ? -d : null;
+  return key === ']' || key === '}' ? d : key === '[' || key === '{' ? -d : null;
 }
 
 /** The footprint corners turned by `deg` (counter-clockwise, as the piece turns) about the centre, whole mm. */

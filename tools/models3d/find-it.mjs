@@ -176,10 +176,9 @@ for (const width of widths) {
   };
   const show3d = async () => {
     await goBuild(page);
-    if (!phone) {
-      const r = page.getByRole('radio', { name: '3D', exact: true });
-      if (await r.isVisible().catch(() => false)) await r.click();
-    }
+    // The phone's Cut list place has the 3D/2D switch too and keeps the last view (ADR-241): pick 3D at every width.
+    const r = page.getByRole('radio', { name: '3D', exact: true });
+    if (await r.isVisible().catch(() => false)) await r.click();
     await page.locator('.view.three canvas').first().waitFor({ timeout: 30000 });
     // The simple look draws the same model with less work (no occlusion pass).
     const simple = page.getByRole('radio', { name: 'Simple' });
