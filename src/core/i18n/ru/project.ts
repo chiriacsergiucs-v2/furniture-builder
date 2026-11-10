@@ -264,6 +264,11 @@ export const ru_project = {
   'More actions': 'Другие действия',
   Linked: 'Связанная',
   'Move alone': 'Двигать отдельно',
+  '{name}: {message}': '{name}: {message}',
+  'This problem has no automatic repair. Move or change the pieces yourself.':
+    'У этой проблемы нет автоматического исправления. Передвиньте или измените изделия сами.',
+  'Checks: {n|# problem|# problems}': 'Проверки: {n|# проблема|# проблемы|# проблем}',
+  'Checks: {n} to check': 'Проверки: проверить {n}',
   'Tap a different point.': 'Коснитесь другой точки.',
   'Replace picture for the floor': 'Заменить картинку пола',
   'The prepared picture was not applied because the floor background changed.':

@@ -95,7 +95,7 @@ import type {
   Space,
   Yaw,
 } from './types';
-import { t, type Key } from './i18n';
+import { t, tr, type Key } from './i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
@@ -1539,6 +1539,17 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `${pc.item.id}:${h.nodeId}`,
         quantity: h.quantity * pc.item.quantity,
       });
+    // A piece's own warnings reach the project's checks and prints (ADR-258), named by the piece; its errors are
+    // summarised below. Panel ids follow the project's `item:panel` form.
+    for (const d of pc.model.diagnostics)
+      if (d.severity === 'warning')
+        diagnostics.push({
+          ...d,
+          message: t('{name}: {message}', { name: tr(pc.item.design.name), message: d.message }),
+          nodeId: pc.item.id,
+          itemIds: [pc.item.id],
+          ...(d.panelIds ? { panelIds: d.panelIds.map((id) => `${pc.item.id}:${id}`) } : {}),
+        });
     const errs = pc.model.diagnostics.filter((d) => d.severity === 'error').length;
     if (errs)
       diagnostics.push({

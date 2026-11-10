@@ -47,6 +47,12 @@ export function Output() {
     {
       id: 'checks',
       label: t('Checks'),
+      // The badge's number is said with what it counts (ADR-258).
+      name: errors
+        ? t('Checks: {n|# problem|# problems}', { n: errors })
+        : warnings
+          ? t('Checks: {n} to check', { n: warnings })
+          : undefined,
       badge: errors || warnings || undefined,
       kind: errors ? 'error' : 'warning',
     },
