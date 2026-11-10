@@ -14,12 +14,12 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 | 07  | Construction               |         |              |              |                     |
 | 08  | Boards and edges           |         |              |              |                     |
 | 09  | Hardware                   |         |              |              |                     |
-| 10  | Room and walls             |         |              |              |                     |
+| 10  | Room and walls             | ADR-256 | 2026-11-10 | 2026-11-10 |                     |
 | 11  | Checks and problems        |         |              |              |                     |
 | 12  | Views                      |         |              |              |                     |
 | 13  | Output                     |         |              |              |                     |
 | 14  | Projects                   |         |              |              |                     |
-| 15  | Catalog and templates      |         |              |              |                     |
+| 15  | Catalog and templates      | ADR-261 | 2026-11-10 | 2026-11-10 |                     |
 | 16  | Saving, backup and sharing |         |              |              |                     |
 | 17  | Account                    |         |              |              |                     |
 | 18  | Language                   |         |              |              |                     |
