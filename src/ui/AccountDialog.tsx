@@ -32,6 +32,7 @@ function Field({
   autoComplete,
   hint,
   error,
+  errorId = 'acct-error',
 }: {
   label: Key;
   type: string;
@@ -40,6 +41,8 @@ function Field({
   autoComplete: string;
   hint?: string;
   error?: string | null;
+  /** The id of the element that holds this field's error (ADR-264); `acct-error` by default. */
+  errorId?: string;
 }) {
   const id = `acct-${label.toLowerCase().replace(/\W+/g, '-')}`;
   return (
@@ -51,7 +54,7 @@ function Field({
         type={type}
         value={value}
         autoComplete={autoComplete}
-        aria-describedby={error ? 'acct-error' : hint ? `${id}-hint` : undefined}
+        aria-describedby={error ? errorId : hint ? `${id}-hint` : undefined}
         aria-invalid={error ? true : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -235,7 +238,11 @@ export default function AccountDialogState({ dialog }: { dialog: NonNullable<Dia
           label="New password"
           type="password"
           value={password}
-          onChange={setPassword}
+          // Typing again clears the mismatch, so a stale alert never stays (ADR-264).
+          onChange={(v) => {
+            setPassword(v);
+            setMismatch(false);
+          }}
           autoComplete="new-password"
           hint={PASSWORD_HINT}
           error={error}
@@ -244,12 +251,16 @@ export default function AccountDialogState({ dialog }: { dialog: NonNullable<Dia
           label="Confirm"
           type="password"
           value={confirm}
-          onChange={setConfirm}
+          onChange={(v) => {
+            setConfirm(v);
+            setMismatch(false);
+          }}
           autoComplete="new-password"
           error={mismatch ? 'x' : null}
+          errorId="acct-mismatch"
         />
         {mismatch && (
-          <p className="alert error" role="alert">
+          <p id="acct-mismatch" className="alert error" role="alert">
             {t('The two passwords are not the same.')}
           </p>
         )}

@@ -258,6 +258,9 @@ export const ru_account = {
   // Online errors
   'Accounts are not set up in this build.': 'В этой сборке аккаунты не настроены.',
   'Check your connection and try again.': 'Проверьте подключение и попробуйте снова.',
+  '{name} (from your account)': '{name} (из вашего аккаунта)',
+  'It could not be taken out of your account. Check your connection and try again.':
+    'Не удалось убрать из вашего аккаунта. Проверьте подключение и попробуйте снова.',
   design: 'изделием',
   template: 'шаблоном',
   image: 'изображением',

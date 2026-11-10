@@ -275,7 +275,9 @@ async function syncOnce(): Promise<void> {
                 a.item.table,
                 copyId,
                 a.remote.body,
-                a.item.table === 'designs' ? `${a.remote.name} (from your account)` : undefined,
+                a.item.table === 'designs'
+                  ? t('{name} (from your account)', { name: a.remote.name })
+                  : undefined,
               );
         await dropLink(a.link);
         if (stored && a.item.table !== 'images')
@@ -581,9 +583,11 @@ export async function exportMyData(): Promise<{ blob: Blob; name: string }> {
 export async function deleteMyAccount(
   accountId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  stopAutoSync();
+  // The automatic upload stops only once the server confirms the deletion (ADR-264): a failed or thrown request
+  // leaves the signed-in user's uploads running.
   const r = await (await getBackend()).deleteAccount();
   if (r.ok) {
+    stopAutoSync();
     for (const l of await links(accountId)) await dropLink(l);
     setStatus({ state: 'idle', waiting: 0, conflicts: [], items: {}, elsewhere: [] });
   }

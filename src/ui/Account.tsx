@@ -116,6 +116,16 @@ export function AccountRowActions({
   const user = useAccount((s) => s.user);
   const state = useAccount((s) => s.sync?.items[`${table}:${id}`]);
   const set = useAccount((s) => s.set);
+  // A failure is said in the row menu; the badge stays as it is (ADR-264).
+  const [failed, setFailed] = useState(false);
+  const deviceOnly = async (on: boolean) => {
+    setFailed(false);
+    try {
+      await setDeviceOnly(table, id, on);
+    } catch {
+      setFailed(true);
+    }
+  };
   if (!user) return null;
   return (
     <details className="menu row-menu account-row">
@@ -132,15 +142,20 @@ export function AccountRowActions({
           {t('Share link')}
         </button>
         {state === 'device-only' ? (
-          <button type="button" onClick={() => void setDeviceOnly(table, id, false)}>
+          <button type="button" onClick={() => void deviceOnly(false)}>
             <Icon name="cloud" />
             {t('Save to account')}
           </button>
         ) : (
-          <button type="button" onClick={() => void setDeviceOnly(table, id, true)}>
+          <button type="button" onClick={() => void deviceOnly(true)}>
             <Icon name="hdd" />
             {t('Keep on this device only')} <small>{t('removes it from your account')}</small>
           </button>
+        )}
+        {failed && (
+          <p className="alert error" role="alert">
+            {t('It could not be taken out of your account. Check your connection and try again.')}
+          </p>
         )}
       </div>
     </details>
