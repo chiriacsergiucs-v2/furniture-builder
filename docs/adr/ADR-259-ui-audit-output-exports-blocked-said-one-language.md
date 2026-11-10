@@ -26,18 +26,19 @@ list keep them; three exports, the Shopping list print and two prints do not, an
 
 ## Findings
 
-| Id      | Class        | Severity | Finding                                                                                                                                                  |
-| ------- | ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D13-F1  | Proven       | major    | Print assembly steps, Fusion 360 script and Front view drawing work while the design has errors (`Assembly.tsx:256-264`, `MoreMenu.tsx:170-194`).        |
-| D13-F2  | Proven       | minor    | The printed Shopping list writes units and the estimate line in the app language and decimals with a dot (`Shopping.tsx:152,161-172`); the CSV does not. |
-| D13-F3  | Proven       | minor    | The Shopping list CSV file name is the raw title (`Shopping.tsx:244`); reproduced: `Kids/room: "chest"-shopping.csv`.                                    |
-| D13-F4  | Proven/Code  | major    | A refused price import says nothing (`Shopping.tsx:115-141`; unhandled rejection); the chip says "No prices yet" when prices could not be read.          |
-| D13-F5  | Proven       | major    | Hand to a professional with a failed model or picture read: empty list, Download .zip disabled, no message (`ReviewPack.tsx:34-61`).                     |
-| D13-F6  | Proven       | minor    | A project's cutting sheet parts list and Client sheet print the stored piece name; its pieces table and the CSV print the print name.                    |
-| D13-F7  | Code-evident | minor    | The Client sheet can show the render of another piece (`lastRender` never cleared, `Output.tsx:164`, `uiStore.ts:103-108`).                              |
-| D13-F8  | Code-evident | minor    | Wrong Price and Seller units are only coloured; a wrong seller-item Quantity is dropped in silence, its label untranslated (`Shopping.tsx:407-570`).     |
-| D13-F9  | Code-evident | polish   | Client sheet prints "1 linii fără preț" / "1 lines without a price" (`PrintClient.tsx:86-90`).                                                           |
-| D13-F10 | Rejected     | —        | A failed sheet layout shows the validator's English details (`Sheets.tsx:124-125`); see Cross-examination.                                               |
+| Id      | Class        | Severity | Finding                                                                                                                                                                                                                                                      |
+| ------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D13-F1  | Proven       | major    | Print assembly steps, Fusion 360 script and Front view drawing work while the design has errors (`Assembly.tsx:256-264`, `MoreMenu.tsx:170-194`).                                                                                                            |
+| D13-F2  | Proven       | minor    | The printed Shopping list writes units and the estimate line in the app language and decimals with a dot (`Shopping.tsx:152,161-172`); the CSV does not.                                                                                                     |
+| D13-F3  | Proven       | minor    | The Shopping list CSV file name is the raw title (`Shopping.tsx:244`); reproduced: `Kids/room: "chest"-shopping.csv`.                                                                                                                                        |
+| D13-F4  | Proven/Code  | major    | A refused price import says nothing (`Shopping.tsx:115-141`; unhandled rejection); the chip says "No prices yet" when prices could not be read.                                                                                                              |
+| D13-F5  | Proven       | major    | Hand to a professional with a failed model or picture read: empty list, Download .zip disabled, no message (`ReviewPack.tsx:34-61`).                                                                                                                         |
+| D13-F6  | Proven       | minor    | A project's cutting sheet parts list and Client sheet print the stored piece name; its pieces table and the CSV print the print name.                                                                                                                        |
+| D13-F7  | Code-evident | minor    | The Client sheet can show the render of another piece (`lastRender` never cleared, `Output.tsx:164`, `uiStore.ts:103-108`).                                                                                                                                  |
+| D13-F8  | Code-evident | minor    | Wrong Price and Seller units are only coloured; a wrong seller-item Quantity is dropped in silence, its label untranslated (`Shopping.tsx:407-570`).                                                                                                         |
+| D13-F9  | Code-evident | polish   | Client sheet prints "1 linii fără preț" / "1 lines without a price" (`PrintClient.tsx:86-90`).                                                                                                                                                               |
+| D13-F10 | Rejected     | —        | A failed sheet layout shows the validator's English details (`Sheets.tsx:124-125`); see Cross-examination.                                                                                                                                                   |
+| D19-F3  | Proven       | minor    | Moved here from [ADR-265](ADR-265-ui-audit-information-honest-pages-and-banners.md): the Results tab bar (`src/ui/Output.tsx:56-75`) has no arrow keys, a Tab stop per tab and no accessible name; the Research and Catalog tablists use the ADR-202 helper. |
 
 ## Decision
 
@@ -60,7 +61,8 @@ user tapped, and a print speaks only the print language.**
 7. **F8:** Price and Seller units per item get `aria-invalid` and a hint naming the expected value; Quantity of a
    seller item does the same instead of dropping the value, and its label goes through `tr()`.
 8. **F9:** `pt('{n|# linie fără preț|# linii fără preț}')` with its Russian and English plural forms.
-9. **F7:** not decided here (Open questions). **F10:** no change (rejected).
+9. **D19-F3:** the Results tablist gets `onKeyDown={rovingKeys}`, `tabIndex={rovingTab(...)}` and `aria-label={t('Results')}` (Russian entry exists), as ADR-202.
+10. **F7:** not decided here (Open questions). **F10:** no change (rejected).
 
 ## Alternatives considered
 
@@ -90,6 +92,7 @@ user tapped, and a print speaks only the print language.**
 - [ ] A project's cutting sheet parts list, Client sheet and CSV use the same printed piece name (test).
 - [ ] Wrong Price, Seller units and seller Quantity are `aria-invalid` with a hint, in English and Russian (test).
 - [ ] The Client sheet says "1 linie fără preț" for one line and "2 linii fără preț" for two (test).
+- [ ] On the Results tabs, ArrowRight on Parts selects Sheets and Tab reaches only the selected tab (D19-F3, find-it).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
 
 ## Cross-examination
@@ -109,6 +112,7 @@ conflicts with the hard rules, for over-engineering and for missing tests.
 | D13-F8  | Polish.                                                                                                    | A value dropped with no word breaks ADR-008 ("never clamped silently"); the rest of the editor marks wrong fields `aria-invalid` (ADR-199 test `piece-editor-inputs.test.tsx:27-31`). | Accepted            |
 | D13-F9  | Over-engineering for one word.                                                                             | One `pt()` key with plural forms that `format` already supports (`src/core/i18n/print.ts:43`); a printed sheet for a client should read right.                                        | Accepted            |
 | D13-F10 | A translated lead sentence is already there; the details come from an internal check that should not fail. | Agreed: the details are for a bug report, the user-facing sentence is translated (`Sheets.tsx:124`).                                                                                  | Rejected            |
+| D19-F3  | Belongs to Information, where it was found.                                                                | The tab bar is Output's own control (`Output.tsx:56-75`); ADR-265's round moved it here. Reproduced there: every tab has `tabIndex` 0 and ArrowRight changes nothing.                 | Accepted (moved in) |
 
 ## Open questions
 
