@@ -1,10 +1,11 @@
 # ADR-248: UI audit — Creating: one tap makes one saved thing, checked against what is there
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N257
 - Acceptance: full
 
 ## Context
@@ -83,14 +84,16 @@ the user tapped, and a mix said to be checked is checked against what it is adde
 
 ## Done when
 
-- [ ] A double tap on a room preset makes one project; a failed save says the ADR-193 sentence and opens nothing (test).
-- [ ] Projects page Create project with a failing save opens nothing, says the sentence, and leaves no unhandled rejection (test).
-- [ ] In a filled room, Add this mix offers no mix that overlaps the project's pieces, and says so when none fits (core test + find-it).
-- [ ] A double tap on Create piece and on Add to project saves one piece and adds one (test).
-- [ ] Wrong tall height, wall depth, walkway and budget ceiling mark their fields `aria-invalid` and point to the problem (test).
-- [ ] Fill the room… is not inside the Files group of the More menu (find-it).
-- [ ] The preset error is gone on the next opening and the draft offer has its sentence, in English and Russian (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] A double tap on a room preset makes one project; a failed save says the ADR-193 sentence and opens nothing (test).
+- [x] Projects page Create project with a failing save opens nothing, says the sentence, and leaves no unhandled rejection (test).
+- [x] In a filled room, Add this mix offers no mix that overlaps the project's pieces, and says so when none fits (core test + find-it).
+- [x] A double tap on Create piece and on Add to project saves one piece and adds one (test).
+- [x] Wrong tall height, wall depth, walkway and budget ceiling mark their fields `aria-invalid` and point to the problem (test).
+- [x] Fill the room… is not inside the Files group of the More menu (find-it).
+- [x] The preset error is gone on the next opening and the draft offer has its sentence, in English and Russian (test).
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/find-it/audit-creating.test.tsx, tests/find-it/roomfill.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

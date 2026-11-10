@@ -43,6 +43,18 @@ describe.each(WIDTHS)('moving at %ipx (find-it, ADR-250)', (width) => {
     expect(gap.getAttribute('aria-invalid')).toBe('false');
   });
 
+  it('a wall unit lifted to 3200 mm shows no field error', async () => {
+    const { st } = await twoPieces(width);
+    const b = st().project!.items[1];
+    st().updateItem(b.id, { placement: { kind: 'wall', height: 1450 } });
+    expect(st().setItemHeight(b.id, 3200)).toBeNull();
+    st().selectItem(b.id);
+    const card = await screen.findByRole('region', { name: /^Selected piece: / });
+    expect(
+      within(card).getByLabelText('Underside above the floor').getAttribute('aria-invalid'),
+    ).toBe('false');
+  });
+
   it('Move to keeps the keyboard focus inside its group', async () => {
     const { user, st } = await twoPieces(width);
     const [a, b] = st().project!.items;

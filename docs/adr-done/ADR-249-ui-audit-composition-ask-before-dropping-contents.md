@@ -1,10 +1,11 @@
 # ADR-249: UI audit — Composition: ask before any edit drops contents, and fill in no appliance size
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N258
 - Acceptance: full
 
 ## Context
@@ -77,11 +78,13 @@ that the user did not type or the model did not measure.**
 
 ## Done when
 
-- [ ] Quick count "Fewer vertical dividers" on a filled last part asks, Cancel keeps it, Remove removes it; on an empty last part it does not ask (test).
-- [ ] The niche toggle starts at the opening's width, height and depth and kind Other; no 590 or 550 appears (test).
-- [ ] Applying a catalog layout to a space with contents asks first and Cancel changes nothing, in English and Russian (test).
-- [ ] Esc with a space selected inside a drilled project piece selects the space around it and keeps the piece (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Quick count "Fewer vertical dividers" on a filled last part asks, Cancel keeps it, Remove removes it; on an empty last part it does not ask (test).
+- [x] The niche toggle starts at the opening's width, height and depth and kind Other; no 590 or 550 appears (test).
+- [x] Applying a catalog layout to a space with contents asks first and Cancel changes nothing, in English and Russian (test).
+- [x] Esc with a space selected inside a drilled project piece selects the space around it and keeps the piece (test).
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/find-it/audit-composition.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

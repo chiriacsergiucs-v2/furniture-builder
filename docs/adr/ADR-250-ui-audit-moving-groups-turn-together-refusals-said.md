@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N259
 - Acceptance: full
 
 ## Context
@@ -70,12 +70,14 @@ a refusal is said where the user asked.**
 
 ## Done when
 
-- [ ] [ / ], the handle and `setRotation` on a grouped piece change nothing and say the group sentence; the handle is gone for it (core test + find-it).
-- [ ] A gap of 5400 mm and a wall unit at 3200 mm show no field error in the card (test).
-- [ ] After a Move to tap the focus is inside the Move to group (test).
-- [ ] A refused From left on a grouped piece with a locked member shows the reason in the card (test).
+- [x] [ / ], the handle and `setRotation` on a grouped piece change nothing and say the group sentence; the handle is gone for it (core test + find-it).
+- [x] A gap of 5400 mm and a wall unit at 3200 mm show no field error in the card (test).
+- [x] After a Move to tap the focus is inside the Move to group (test).
+- [x] A refused From left on a grouped piece with a locked member shows the reason in the card (test).
 - [ ] In 3D Move mode, dragging one piece of a two-piece selection moves both by the same amount in one undo step (store test + browser script).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/find-it/audit-moving.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

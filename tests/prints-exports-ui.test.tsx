@@ -77,21 +77,21 @@ const TEXT: Record<
     title: 'Fișă pentru client',
     size: 'Dimensiuni L × Î × A, mm',
     price: 'Preț estimat',
-    unpriced: 'linii fără preț',
+    unpriced: 'fără preț',
     sellers: 'Prețuri de vânzător: Regency Company, 2026-10-29',
   },
   ru: {
     title: 'Лист для клиента',
     size: 'Размеры Ш × В × Г, мм',
     price: 'Ориентировочная цена',
-    unpriced: 'строк без цены',
+    unpriced: 'без цены',
     sellers: 'Цены продавца: Regency Company, 2026-10-29',
   },
   en: {
     title: 'Client sheet',
     size: 'Size W × H × D, mm',
     price: 'Estimated price',
-    unpriced: 'lines without a price',
+    unpriced: 'without a price',
     sellers: 'Seller prices: Regency Company, 2026-10-29',
   },
 };
@@ -128,7 +128,8 @@ describe.each(['ro', 'ru', 'en'] as const)('client sheet in %s (ADR-206, G-020)'
     const missing = [...root.querySelectorAll('.pr-client-total p')]
       .map((p) => p.textContent!)
       .find((x) => x.includes(L.unpriced));
-    expect(missing).toMatch(new RegExp(`^[1-9]\\d* ${L.unpriced}$`));
+    // The count with its own plural form (ADR-260): "1 linie fără preț", "2 linii fără preț".
+    expect(missing).toMatch(new RegExp(`^[1-9]\\d* \\S+ ${L.unpriced}$`));
   });
 });
 

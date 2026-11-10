@@ -36,6 +36,8 @@ describe('MmField (ADR-253)', () => {
     expect(onChange).not.toHaveBeenCalled();
     expect(f.value).toBe('5000');
     expect(screen.getByText('Whole number from 1 to 1000.')).toBeTruthy();
+    await user.type(f, '{Escape}');
+    expect(f.value).toBe('600');
   });
 });
 

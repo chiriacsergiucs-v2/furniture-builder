@@ -309,8 +309,8 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-245](../adr-done/ADR-245-keep-editing-state-across-template-edits-reloads-and-piece-r.md) | Keep editing state across template edits, reloads and piece renames | — | ✅ Implemented |
 | [ADR-246](../adr-done/ADR-246-ask-before-an-edit-drops-contents-and-hold-the-assistant-to.md) | Ask before an edit drops contents and hold the assistant to the field limits | — | ✅ Implemented |
 | [ADR-247](../adr-done/ADR-247-open-settings-and-material-inside-the-phone-sheet.md) | Open Settings and Material inside the phone sheet | ADR-080, ADR-163, ADR-241 | ✅ Implemented |
-| [ADR-248](ADR-248-ui-audit-creating-one-tap-one-saved-checked-thing.md) | UI audit — Creating: one tap makes one saved thing, checked against what is there | — | Pending |
-| [ADR-249](ADR-249-ui-audit-composition-ask-before-dropping-contents.md) | UI audit — Composition: ask before any edit drops contents, and fill in no appliance size | — | Pending |
+| [ADR-248](../adr-done/ADR-248-ui-audit-creating-one-tap-one-saved-checked-thing.md) | UI audit — Creating: one tap makes one saved thing, checked against what is there | — | ✅ Implemented |
+| [ADR-249](../adr-done/ADR-249-ui-audit-composition-ask-before-dropping-contents.md) | UI audit — Composition: ask before any edit drops contents, and fill in no appliance size | — | ✅ Implemented |
 | [ADR-250](ADR-250-ui-audit-moving-groups-turn-together-refusals-said.md) | UI audit — Moving: a group turns as one, fields fit every place, refusals are said where asked | — | Pending |
 | [ADR-251](ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md) | UI audit — Aligning and arranging: along each piece's own wall, and alone on a phone | — | Pending |
 | [ADR-252](ADR-252-ui-audit-selection-groups-named-one-tap-one-group.md) | UI audit — Selection and groups: groups named in the user's language, one tap makes one group | — | Pending |
@@ -327,4 +327,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-263](ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md) | UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy | — | Pending |
 | [ADR-264](ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | Pending |
 | [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
-| [ADR-266](ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | Pending |
+| [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |

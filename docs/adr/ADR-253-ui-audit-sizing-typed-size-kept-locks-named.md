@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N262
 - Acceptance: full
 
 ## Context
@@ -68,11 +68,13 @@ sizes the piece has.**
 
 ## Done when
 
-- [ ] Out-of-range Width, then Enter or blur: the typed value and the field error stay, nothing changes; Escape restores the stored value (test).
+- [x] Out-of-range Width, then Enter or blur: the typed value and the field error stay, nothing changes; Escape restores the stored value (test).
 - [ ] A group of a 720 and a 900 mm piece set to the shown 900 makes both 900 in one undo step (test).
 - [ ] A bed's and a panel's ⋯ menus offer no Lock for a size they lack; a bed's width lock says "Mattress width locked" (test).
-- [ ] In Russian, resizing a group with a size-locked piece says "Сохранено: …" (test).
-- [ ] Find-it passes from the bare app at phone and desktop widths.
+- [x] In Russian, resizing a group with a size-locked piece says "Сохранено: …" (test).
+- [x] Find-it passes from the bare app at phone and desktop widths.
+
+Evidence: tests/audit-typed-sizes.test.tsx, tests/find-it/audit-typed-sizes.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

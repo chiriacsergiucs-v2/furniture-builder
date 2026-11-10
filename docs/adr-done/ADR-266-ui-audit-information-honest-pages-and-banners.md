@@ -1,10 +1,11 @@
 # ADR-266: UI audit — Information: the pages say only what is true and offer only what works
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N275
 - Acceptance: full
 
 ## Context
@@ -70,11 +71,13 @@ what really happened.**
 
 ## Done when
 
-- [ ] Bare app → Information and guides shows no "Back to the editor"; with a project open it shows it (find-it).
-- [ ] Importing marks older than the device's says "Imported 0 marks, kept 1 (yours are newer), skipped 0." (core test + find-it).
-- [ ] Research section tabs control a `tabpanel` named by the selected tab (find-it).
-- [ ] A failed decision save shows the banner; saving that decision again clears it; a later save of another decision does not (store test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Bare app → Information and guides shows no "Back to the editor"; with a project open it shows it (find-it).
+- [x] Importing marks older than the device's says "Imported 0 marks, kept 1 (yours are newer), skipped 0." (core test + find-it).
+- [x] Research section tabs control a `tabpanel` named by the selected tab (find-it).
+- [x] A failed decision save shows the banner; saving that decision again clears it; a later save of another decision does not (store test).
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/find-it/audit-information.test.tsx, tests/audit-information.test.ts, tests/find-it/band-list-gap-marks.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

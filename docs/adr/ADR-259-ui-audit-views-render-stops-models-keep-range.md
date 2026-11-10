@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N268
 - Acceptance: browser
 
 ## Context
@@ -77,12 +77,14 @@ stays inside the range it states.**
 
 ## Done when
 
-- [ ] Close and Cancel while the tracer starts dispose the job, keep the last render and leave the dialog at Start (test with the tracer mocked).
-- [ ] Without WebGL the no-3D sentence is visible beside the View switch and named by the 3D and Both buttons, at 390 and 1280 px (jsdom find-it).
+- [x] Close and Cancel while the tracer starts dispose the job, keep the last render and leave the dialog at Start (test with the tracer mocked).
+- [x] Without WebGL the no-3D sentence is visible beside the View switch and named by the 3D and Both buttons, at 390 and 1280 px (jsdom find-it).
 - [ ] One "More 3D actions" menu holds Export scene (.glb), Export for AR (.usdz) and View in AR; a .usdz export says "Saved …" (browser find-it).
-- [ ] With Keep proportions on, no side goes past 1–10 000 mm by typing or dragging, and an out-of-range value is named by the field (core test + test).
-- [ ] An arrow key on a model placed on a piece moves it by 10 mm in one undo step (store test).
+- [x] With Keep proportions on, no side goes past 1–10 000 mm by typing or dragging, and an out-of-range value is named by the field (core test + test).
+- [x] An arrow key on a model placed on a piece moves it by 10 mm in one undo step (store test).
 - [ ] Find-it passes from the bare app at phone and desktop widths (jsdom for F2, browser script for F3).
+
+Evidence: tests/audit-views.test.tsx, tests/find-it/audit-views.test.tsx, tests/audit-extra.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

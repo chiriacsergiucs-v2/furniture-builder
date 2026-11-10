@@ -81,8 +81,8 @@ describe.each(WIDTHS)('composition at %ipx (find-it, ADR-249)', (width) => {
     await projectWithTwoPieces(user);
     const { useDesign } = await import('../../src/store/designStore');
     const id = useDesign.getState().project!.items[0].id;
-    const { editInPlace } = await import('../../src/ui/Project');
-    editInPlace(id);
+    // Edit this piece selects the piece, which loads it for edits in place (ADR-241).
+    useDesign.getState().selectItem(id);
     await waitFor(() => expect(useDesign.getState().drillItemId).toBe(id));
     const root = (useDesign.getState().design.product as { params: { interior: Space } }).params
       .interior;

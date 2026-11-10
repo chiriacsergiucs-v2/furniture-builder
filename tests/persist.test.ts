@@ -277,6 +277,8 @@ describe('every write reports its change (ADR-235)', () => {
     ],
     // Bands are not part of the folder backup or the account (BACKUP_TABLES): no change reported, as before.
     ['replaceBands', () => dbm.replaceBands([{ id: 'b1' }] as never), () => []],
+    // The band list is not backed up (ADR-212): clearing it reports nothing (ADR-255).
+    ['clearBands', () => dbm.clearBands(), () => []],
     [
       'saveProjectTemplate',
       () => dbm.saveProjectTemplate({ id: 'pt1', name: 'n', updatedAt: '2026' } as never),
@@ -435,6 +437,7 @@ describe('library writes report their changes like the direct calls (ADR-223)', 
       (m) => m.clearDecors(),
     ],
     ['replaceBands', async () => {}, (m) => m.replaceBands([{ id: 'b1' }] as never)],
+    ['clearBands', async () => {}, (m) => m.clearBands()],
     [
       'saveGapMark',
       async () => {},
@@ -514,7 +517,7 @@ describe('library writes report their changes like the direct calls (ADR-223)', 
         const direct = await once(name, seed, () => run(dbm as unknown as Writes));
         const viaLibrary = await once(name, seed, () => run(lib));
         expect([name, viaLibrary]).toEqual([name, direct]);
-        if (!['replaceBands', 'setSetting'].includes(name))
+        if (!['replaceBands', 'clearBands', 'setSetting'].includes(name))
           expect(direct.length, name).toBeGreaterThan(0);
       }
     } finally {

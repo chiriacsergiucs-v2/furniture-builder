@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N266
 - Acceptance: full
 
 ## Context
@@ -77,13 +77,15 @@ name in a message is in the user's language.**
 
 ## Done when
 
-- [ ] Room → L-shape → Cut-out width 3000 marks that field `aria-invalid` with "Cut width 3000 mm must be less than the width, 3000 mm." (find-it, 390 and 1280).
-- [ ] With Russian chosen, a door past its wall's end gives a message that starts "Дверь 1" (core test).
-- [ ] Add door, Add door, remove Door 1, Add door gives Door 2 and Door 1, no repeat (unit test).
-- [ ] Two taps on one spot while drawing add one corner; closing the room gives no "has no length" problem (store test).
+- [x] Room → L-shape → Cut-out width 3000 marks that field `aria-invalid` with "Cut width 3000 mm must be less than the width, 3000 mm." (find-it, 390 and 1280).
+- [x] With Russian chosen, a door past its wall's end gives a message that starts "Дверь 1" (core test).
+- [x] Add door, Add door, remove Door 1, Add door gives Door 2 and Door 1, no repeat (unit test).
+- [x] Two taps on one spot while drawing add one corner; closing the room gives no "has no length" problem (store test).
 - [ ] Two scale taps on one pixel keep Set the scale on and show "Tap a different point." (store test + find-it).
 - [ ] The floor's file input is named "Replace picture for the floor" with a picture set; a dropped floor picture is said, in English and Russian (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/audit-room.test.ts, tests/find-it/audit-room.test.tsx, tests/room-surfaces.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

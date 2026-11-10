@@ -47,7 +47,8 @@ describe.each(WIDTHS)('creating at %ipx (find-it, ADR-248)', (width) => {
     await user.click(within(start).getByRole('button', { name: 'Close' }));
     const again = await startNew(user);
     expect(within(again).queryByRole('alert')).toBeNull();
-    await user.click(within(again).getByRole('button', { name: /^Room preset/ }));
+    const row = within(again).getByRole('button', { name: /^Room preset/ });
+    if (row.getAttribute('aria-expanded') !== 'true') await user.click(row);
     const n = await projectCount();
     await user.dblClick(
       within(within(again).getByRole('list', { name: 'Room presets' })).getByRole('button', {
@@ -109,6 +110,22 @@ describe.each(WIDTHS)('creating at %ipx (find-it, ADR-248)', (width) => {
       expect(within(dlg).getByLabelText(label).getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('Fill the room marks an empty walkway and a budget ceiling that is not an amount', async () => {
+    const { user } = await renderApp(width);
+    await user.click(within(await startNew(user)).getByRole('button', { name: /^Fill the room/ }));
+    const dlg = await screen.findByRole('dialog', { name: 'Fill the room' });
+    await user.click(within(dlg).getByRole('button', { name: 'Next' }));
+    await user.click(within(dlg).getByRole('button', { name: 'Show suggestions' }));
+    await user.click(within(dlg).getAllByRole('button', { name: 'Refine' }).at(-1)!);
+    const ceiling = within(dlg).getByLabelText('Budget ceiling');
+    await user.type(ceiling, 'abc');
+    expect(ceiling.getAttribute('aria-invalid')).toBe('true');
+    await user.clear(ceiling);
+    await user.click(within(dlg).getByRole('checkbox', { name: 'Add an island' }));
+    await user.click(within(dlg).getByRole('button', { name: 'Suggest again' }));
+    expect(within(dlg).getByLabelText('Walkway width').getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('Fill the room… is outside the Files group; Add this mix offers nothing over a filled room', async () => {
     const { user } = await renderApp(width);
     await user.click(within(await startNew(user)).getByRole('button', { name: /^Fill the room/ }));
@@ -136,7 +153,8 @@ describe.each(WIDTHS)('creating at %ipx (find-it, ADR-248)', (width) => {
     const wiz = await screen.findByRole('dialog', { name: 'New piece' });
     await user.click(within(wiz).getByRole('radio', { name: /Cabinet \(closed box\)/ }));
     await user.click(within(wiz).getByRole('button', { name: 'Close' }));
-    await user.click(await screen.findByRole('button', { name: 'Close' }));
+    const ask = await screen.findByRole('dialog', { name: 'Confirm' });
+    await user.click(within(ask).getByRole('button', { name: 'Close' }));
     await user.click(await screen.findByRole('button', { name: 'New piece' }));
     const back = await screen.findByRole('dialog', { name: 'New piece' });
     expect(

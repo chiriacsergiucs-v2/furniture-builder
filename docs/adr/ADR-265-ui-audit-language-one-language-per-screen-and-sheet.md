@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N274
 - Acceptance: full
 
 ## Context
@@ -86,13 +86,15 @@ built-in names stay English and are translated where they are shown.**
 ## Done when
 
 - [ ] In Russian, a project from New… and a catalog piece show Russian names on the Projects page, in the title and in the name field, and English after switching back; both create paths store the English name (test).
-- [ ] With the print language Romanian, Russian and English, the cut sheet's front view labels are in that language (test).
-- [ ] In Russian, a named flap fitting's hardware line reads "Механизм клапана: …", and every free-text hardware label is translated (core test).
-- [ ] In Russian, the shelf-span warning names the board «ЛДСП 18 белая» (core test).
-- [ ] With storage blocked, Русский does not reload and shows the alert, in English and Russian (test).
-- [ ] In Russian, an align or lock message and an Apply-material message name a built-in piece in Russian, e.g. «Нижний шкаф» (D04-F5, D08-F8; core test).
+- [x] With the print language Romanian, Russian and English, the cut sheet's front view labels are in that language (test).
+- [x] In Russian, a named flap fitting's hardware line reads "Механизм клапана: …", and every free-text hardware label is translated (core test).
+- [x] In Russian, the shelf-span warning names the board «ЛДСП 18 белая» (core test).
+- [x] With storage blocked, Русский does not reload and shows the alert, in English and Russian (test).
+- [x] In Russian, an align or lock message and an Apply-material message name a built-in piece in Russian, e.g. «Нижний шкаф» (D04-F5, D08-F8; core test).
 - [ ] With print language Romanian, Russian and English, every warning on the cut sheet is in that language; a warning without an entry fails a test (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/find-it/audit-language.test.tsx, tests/audit-language.test.ts, tests/audit-print-text.test.ts, tests/audit-typed-sizes.test.tsx, tests/audit-extra.test.ts, tests/diagnostic-golden.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

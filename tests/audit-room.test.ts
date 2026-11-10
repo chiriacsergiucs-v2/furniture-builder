@@ -8,7 +8,7 @@ import { outlineIssues, shapeOutline } from '../src/core/room';
 import { newPlanPicture } from '../src/core/planPicture';
 import { newFeature } from '../src/ui/RoomFeatures';
 import { useDesign } from '../src/store/designStore';
-import type { Room } from '../src/core/types';
+import type { Room } from '../src/core/room';
 
 afterEach(() => setLang('en'));
 const rect = (): Room =>

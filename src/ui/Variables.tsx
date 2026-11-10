@@ -498,20 +498,25 @@ function ValueSets({ project }: { project: Project }) {
     try {
       await saveProject(p);
     } catch {
-      setFailed(set.id);
-      return;
-    } finally {
       saving.current = false;
       setBusy(false);
+      setFailed(set.id);
+      return;
     }
     made.current = null;
     setFailed(null);
     setSaved({ name: p.name, project: p });
-    const keep = await askConfirm(
-      t('Saved as “{name}”. Keep {set} in this project?', { name: p.name, set: set.name }),
-      { confirmLabel: t('Keep'), cancelLabel: t('Remove') },
-    );
-    if (!keep) removeSet(set.id);
+    // Still one tap until the question is answered: a second tap of a double tap saves nothing more.
+    try {
+      const keep = await askConfirm(
+        t('Saved as “{name}”. Keep {set} in this project?', { name: p.name, set: set.name }),
+        { confirmLabel: t('Keep'), cancelLabel: t('Remove') },
+      );
+      if (!keep) removeSet(set.id);
+    } finally {
+      saving.current = false;
+      setBusy(false);
+    }
   };
   return (
     <div className="value-sets" role="group" aria-label={t('Value sets')}>

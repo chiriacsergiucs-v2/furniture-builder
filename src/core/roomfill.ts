@@ -20,6 +20,7 @@ import { cornerDefaults, newId, templates } from './design';
 import { t } from './i18n';
 import {
   buildProjectModel,
+  isPieceWarning,
   makeItem,
   newProject,
   type Project,
@@ -1057,7 +1058,11 @@ function warningsOf(model: ProjectModel, height: Mm): Diagnostic[] {
         itemIds: [pc.item.id],
       });
   }
-  return [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')];
+  // A piece's own guidance, carried into the project's checks (ADR-258), is the same in every mix: not counted here.
+  return [
+    ...tallWarn,
+    ...model.diagnostics.filter((d) => d.severity === 'warning' && !isPieceWarning(d)),
+  ];
 }
 
 const summaryOf = (slots: Slot[]): string => {

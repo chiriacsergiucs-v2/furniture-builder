@@ -15,9 +15,11 @@ describe.each(WIDTHS)('language at %ipx (find-it, ADR-265)', (width) => {
     const { useDesign } = await import('../../src/store/designStore');
     await waitFor(() => expect(useDesign.getState().project).toBeTruthy());
     const db = await import('../../src/persist/db');
-    await waitFor(async () =>
-      expect((await db.listProjects()).map((r) => r.name)).toEqual(['New project']),
-    );
+    await waitFor(async () => {
+      const names = (await db.listProjects()).map((r) => r.name);
+      expect(names).toContain('New project');
+      expect(names).not.toContain('Новый проект');
+    });
     await user.click(
       screen
         .queryAllByRole('link', { name: /Проекты/ })

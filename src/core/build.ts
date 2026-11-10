@@ -141,7 +141,7 @@ export function buildModel(design: Design): FurnitureModel {
         message: tx('{part} thickness {t} mm does not match {board}.', {
           part: tr(p.label),
           t: c.thickness,
-          board: m.name,
+          board: tr(m.name),
         }),
         nodeId: p.nodeId,
         panelIds: [p.id],
@@ -225,7 +225,7 @@ export function buildModel(design: Design): FurnitureModel {
       panelIds: list.map((x) => x.id),
       message: tx('Edge band {band} on {board} is narrower than the {t} mm board.', {
         band: bandText(band),
-        board: m.name,
+        board: tr(m.name),
         t,
       }),
     });
@@ -243,12 +243,12 @@ export function buildModel(design: Design): FurnitureModel {
         message:
           others.length === 1
             ? tx('{board} is labelled kitchen worktop but is used for {part} (guidance).', {
-                board: m.name,
+                board: tr(m.name),
                 part: tr(others[0].label),
               })
             : tx(
                 '{board} is labelled kitchen worktop but is used for {n} parts that are not worktops (guidance).',
-                { board: m.name, n: others.length },
+                { board: tr(m.name), n: others.length },
               ),
       });
     }

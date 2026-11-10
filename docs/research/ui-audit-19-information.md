@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Information (`src/ui/info/features.ts:1407-1443`, 7 feature lines)
-- ADR: [ADR-266](../adr/ADR-266-ui-audit-information-honest-pages-and-banners.md)
+- ADR: [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom and node tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 390 and 1280 px). No repo source was changed.
 

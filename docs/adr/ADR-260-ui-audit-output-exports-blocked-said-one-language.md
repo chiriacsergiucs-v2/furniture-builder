@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N269
 - Acceptance: full
 
 ## Context
@@ -26,19 +26,19 @@ list keep them; three exports, the Shopping list print and two prints do not, an
 
 ## Findings
 
-| Id      | Class        | Severity | Finding                                                                                                                                                                                                                                                      |
-| ------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| D13-F1  | Proven       | major    | Print assembly steps, Fusion 360 script and Front view drawing work while the design has errors (`Assembly.tsx:256-264`, `MoreMenu.tsx:170-194`).                                                                                                            |
-| D13-F2  | Proven       | minor    | The printed Shopping list writes units and the estimate line in the app language and decimals with a dot (`Shopping.tsx:152,161-172`); the CSV does not.                                                                                                     |
-| D13-F3  | Proven       | minor    | The Shopping list CSV file name is the raw title (`Shopping.tsx:244`); reproduced: `Kids/room: "chest"-shopping.csv`.                                                                                                                                        |
-| D13-F4  | Proven/Code  | major    | A refused price import says nothing (`Shopping.tsx:115-141`; unhandled rejection); the chip says "No prices yet" when prices could not be read.                                                                                                              |
-| D13-F5  | Proven       | major    | Hand to a professional with a failed model or picture read: empty list, Download .zip disabled, no message (`ReviewPack.tsx:34-61`).                                                                                                                         |
-| D13-F6  | Proven       | minor    | A project's cutting sheet parts list and Client sheet print the stored piece name; its pieces table and the CSV print the print name.                                                                                                                        |
-| D13-F7  | Code-evident | minor    | The Client sheet can show the render of another piece (`lastRender` never cleared, `Output.tsx:164`, `uiStore.ts:103-108`).                                                                                                                                  |
-| D13-F8  | Code-evident | minor    | Wrong Price and Seller units are only coloured; a wrong seller-item Quantity is dropped in silence, its label untranslated (`Shopping.tsx:407-570`).                                                                                                         |
-| D13-F9  | Code-evident | polish   | Client sheet prints "1 linii fără preț" / "1 lines without a price" (`PrintClient.tsx:86-90`).                                                                                                                                                               |
-| D13-F10 | Rejected     | —        | A failed sheet layout shows the validator's English details (`Sheets.tsx:124-125`); see Cross-examination.                                                                                                                                                   |
-| D19-F3  | Proven       | minor    | Moved here from [ADR-266](ADR-266-ui-audit-information-honest-pages-and-banners.md): the Results tab bar (`src/ui/Output.tsx:56-75`) has no arrow keys, a Tab stop per tab and no accessible name; the Research and Catalog tablists use the ADR-202 helper. |
+| Id      | Class        | Severity | Finding                                                                                                                                                                                                                                                                  |
+| ------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D13-F1  | Proven       | major    | Print assembly steps, Fusion 360 script and Front view drawing work while the design has errors (`Assembly.tsx:256-264`, `MoreMenu.tsx:170-194`).                                                                                                                        |
+| D13-F2  | Proven       | minor    | The printed Shopping list writes units and the estimate line in the app language and decimals with a dot (`Shopping.tsx:152,161-172`); the CSV does not.                                                                                                                 |
+| D13-F3  | Proven       | minor    | The Shopping list CSV file name is the raw title (`Shopping.tsx:244`); reproduced: `Kids/room: "chest"-shopping.csv`.                                                                                                                                                    |
+| D13-F4  | Proven/Code  | major    | A refused price import says nothing (`Shopping.tsx:115-141`; unhandled rejection); the chip says "No prices yet" when prices could not be read.                                                                                                                          |
+| D13-F5  | Proven       | major    | Hand to a professional with a failed model or picture read: empty list, Download .zip disabled, no message (`ReviewPack.tsx:34-61`).                                                                                                                                     |
+| D13-F6  | Proven       | minor    | A project's cutting sheet parts list and Client sheet print the stored piece name; its pieces table and the CSV print the print name.                                                                                                                                    |
+| D13-F7  | Code-evident | minor    | The Client sheet can show the render of another piece (`lastRender` never cleared, `Output.tsx:164`, `uiStore.ts:103-108`).                                                                                                                                              |
+| D13-F8  | Code-evident | minor    | Wrong Price and Seller units are only coloured; a wrong seller-item Quantity is dropped in silence, its label untranslated (`Shopping.tsx:407-570`).                                                                                                                     |
+| D13-F9  | Code-evident | polish   | Client sheet prints "1 linii fără preț" / "1 lines without a price" (`PrintClient.tsx:86-90`).                                                                                                                                                                           |
+| D13-F10 | Rejected     | —        | A failed sheet layout shows the validator's English details (`Sheets.tsx:124-125`); see Cross-examination.                                                                                                                                                               |
+| D19-F3  | Proven       | minor    | Moved here from [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md): the Results tab bar (`src/ui/Output.tsx:56-75`) has no arrow keys, a Tab stop per tab and no accessible name; the Research and Catalog tablists use the ADR-202 helper. |
 
 ## Decision
 
@@ -86,16 +86,18 @@ user tapped, and a print speaks only the print language.**
 
 ## Done when
 
-- [ ] With an error, Print assembly steps, Front view drawing and Fusion 360 script are disabled with the reason (test).
-- [ ] The printed Shopping list has no app-language word in ro and en print languages, and the CSV file name is cleaned (test).
+- [x] With an error, Print assembly steps, Front view drawing and Fusion 360 script are disabled with the reason (test).
+- [x] The printed Shopping list has no app-language word in ro and en print languages, and the CSV file name is cleaned (test).
 - [ ] A refused price import and an unreadable price list are said on the Shopping list and on the chip, no unhandled rejection (test).
-- [ ] Hand to a professional with a failing model read says why and leaves no unhandled rejection (test).
-- [ ] A project's cutting sheet parts list, Client sheet and CSV use the same printed piece name (test).
+- [x] Hand to a professional with a failing model read says why and leaves no unhandled rejection (test).
+- [x] A project's cutting sheet parts list, Client sheet and CSV use the same printed piece name (test).
 - [ ] Wrong Price, Seller units and seller Quantity are `aria-invalid` with a hint, in English and Russian (test).
-- [ ] The Client sheet says "1 linie fără preț" for one line and "2 linii fără preț" for two (test).
-- [ ] On the Results tabs, ArrowRight on Parts selects Sheets and Tab reaches only the selected tab (D19-F3, find-it).
+- [x] The Client sheet says "1 linie fără preț" for one line and "2 linii fără preț" for two (test).
+- [x] On the Results tabs, ArrowRight on Parts selects Sheets and Tab reaches only the selected tab (D19-F3, find-it).
 - [ ] After a render of piece A, the Client sheet of piece B shows B's own picture, and A's sheet still shows the render (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/audit-output.test.tsx, tests/audit-print-text.test.ts, tests/find-it/audit-checks-output.test.tsx, tests/prints-exports-ui.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

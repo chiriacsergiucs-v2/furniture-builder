@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N272
 - Acceptance: full
 
 ## Context
@@ -88,14 +88,16 @@ is deleted that a saved thing still names, and one tap makes one copy.**
 
 ## Done when
 
-- [ ] A refused restore and a refused backup .zip say so and how many items were restored; no unhandled rejection (test).
-- [ ] A picture named only by a kept project version is not offered by Clean up unused pictures (storage test).
-- [ ] Open a copy saves one copy on two fast clicks, and a refused save is said with the dialog kept open (test).
-- [ ] A refused clipboard is said in Copy code for the code and the link (test).
-- [ ] Restoring a file that is not a backup says so as a warning (test).
-- [ ] Project file with a failing model or picture read says why; no unhandled rejection (test).
+- [x] A refused restore and a refused backup .zip say so and how many items were restored; no unhandled rejection (test).
+- [x] A picture named only by a kept project version is not offered by Clean up unused pictures (storage test).
+- [x] Open a copy saves one copy on two fast clicks, and a refused save is said with the dialog kept open (test).
+- [x] A refused clipboard is said in Copy code for the code and the link (test).
+- [x] Restoring a file that is not a backup says so as a warning (test).
+- [x] Project file with a failing model or picture read says why; no unhandled rejection (test).
 - [ ] The reminder shows a failed backup; Share link and Account › Shared links errors are said and leave the buttons usable; English plurals read right (test).
-- [ ] Find-it test passes from the bare app at phone and desktop widths.
+- [x] Find-it test passes from the bare app at phone and desktop widths.
+
+Evidence: tests/audit-saving.test.tsx, tests/find-it/audit-saving.test.tsx, tests/persist.test.ts (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

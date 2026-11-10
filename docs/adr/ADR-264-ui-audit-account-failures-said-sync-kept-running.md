@@ -4,7 +4,7 @@
 - Date: 2026-11-10
 - Depends on: none
 - Design: docs/ui-design.md
-- Backlog: none
+- Backlog: N273
 - Acceptance: full
 
 ## Context
@@ -78,11 +78,13 @@ automatic upload stopped while the user is still signed in.**
 
 ## Done when
 
-- [ ] A Delete my account that fails leaves the user signed in with the error, and a piece saved afterwards uploads (test with the in-memory backend offline, then back).
-- [ ] Keep on this device only with the server unreachable shows the alert in the row menu, leaves the badge "In your account" and raises no unhandled rejection (test).
-- [ ] Reset password: after a mismatch, typing the matching password removes the alert; Confirm is described by the mismatch text (test).
-- [ ] A conflict copy is named "{name} (from your account)" in English and with its Russian entry in Russian (test).
+- [x] A Delete my account that fails leaves the user signed in with the error, and a piece saved afterwards uploads (test with the in-memory backend offline, then back).
+- [x] Keep on this device only with the server unreachable shows the alert in the row menu, leaves the badge "In your account" and raises no unhandled rejection (test).
+- [x] Reset password: after a mismatch, typing the matching password removes the alert; Confirm is described by the mismatch text (test).
+- [x] A conflict copy is named "{name} (from your account)" in English and with its Russian entry in Russian (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths: the row menu's alert text after Keep on this device only fails.
+
+Evidence: tests/audit-account.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
 
 ## Cross-examination
 

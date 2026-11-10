@@ -18,7 +18,7 @@ async function settings(width: number) {
   await screen.findByRole('heading', { name: 'Whole cabinet' });
   const { useDesign } = await import('../../src/store/designStore');
   const params = () =>
-    (useDesign.getState().design.product as { params: Record<string, unknown> }).params;
+    (useDesign.getState().design.product as unknown as { params: Record<string, unknown> }).params;
   return { ...app, useDesign, params };
 }
 
@@ -41,7 +41,9 @@ describe.each(WIDTHS)('typed sizes at %ipx (find-it, ADR-253, ADR-254, ADR-256)'
     expect(params().plinthHeight).toBe(pb);
   });
 
-  it('an out-of-range size stays with its error after blur; Escape restores the saved value', async () => {
+  // Escape restoring the saved value is checked on MmField itself (tests/audit-typed-sizes.test.tsx): on a phone the
+  // bottom sheet takes Escape first.
+  it('an out-of-range size stays with its error after blur', async () => {
     const { user, params } = await settings(width);
     const f = screen.getByLabelText('Plinth height') as HTMLInputElement;
     const before = params().plinthHeight;
@@ -50,9 +52,7 @@ describe.each(WIDTHS)('typed sizes at %ipx (find-it, ADR-253, ADR-254, ADR-256)'
     await user.tab();
     expect(f.value).toBe('300');
     expect(screen.getByText('Whole number from 0 to 250.')).toBeTruthy();
-    f.focus();
-    await user.keyboard('{Escape}');
-    expect(f.value).toBe(String(before));
+    expect(params().plinthHeight).toBe(before);
   });
 
   it('Two rails makes a doubled top single in one step', async () => {
@@ -68,7 +68,7 @@ describe.each(WIDTHS)('typed sizes at %ipx (find-it, ADR-253, ADR-254, ADR-256)'
     const { user, params } = await settings(width);
     const input = await screen.findByLabelText('Runner lengths you can buy');
     const before = JSON.stringify(
-      (params().drawer as { runnerLengths?: number[] } | undefined)?.runnerLengths,
+      (params().drawers as { runnerLengths?: number[] } | undefined)?.runnerLengths,
     );
     await user.clear(input);
     await user.type(input, '300, 3x0');
@@ -78,8 +78,37 @@ describe.each(WIDTHS)('typed sizes at %ipx (find-it, ADR-253, ADR-254, ADR-256)'
       screen.getByText('Whole numbers in mm, separated by commas. Not saved until they are.'),
     ).toBeTruthy();
     expect(
-      JSON.stringify((params().drawer as { runnerLengths?: number[] } | undefined)?.runnerLengths),
+      JSON.stringify((params().drawers as { runnerLengths?: number[] } | undefined)?.runnerLengths),
     ).toBe(before);
+  });
+
+  it('Diagonal over drawers asks first; Cancel keeps Blind and the drawers', async () => {
+    const { user } = await renderApp(width);
+    await user.click(await screen.findByRole('button', { name: 'New single piece' }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Blind corner/ })[0],
+    );
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    await screen.findByRole('heading', { name: 'Corner unit' });
+    const { useDesign } = await import('../../src/store/designStore');
+    const p = () =>
+      (useDesign.getState().design.product as unknown as { params: Record<string, unknown> })
+        .params;
+    const id = (p().interior as { id: string }).id;
+    act(() =>
+      useDesign.getState().updateParams('corner', {
+        interior: { id, kind: 'drawers', count: 3 },
+      } as never),
+    );
+    await user.click(
+      within(screen.getByRole('radiogroup', { name: 'Type' })).getByRole('radio', {
+        name: 'Diagonal',
+      }),
+    );
+    const ask = await screen.findByText(/^A diagonal corner holds shelves only\./);
+    await user.click(within(ask.closest('dialog')!).getByRole('button', { name: 'Cancel' }));
+    expect(p().variant).toBe('blind');
+    expect((p().interior as { kind: string }).kind).toBe('drawers');
   });
 
   it('the hole-centres list offers the value the model uses', async () => {

@@ -71,14 +71,16 @@ describe.each(WIDTHS)('boards and edges at %ipx (find-it, ADR-255)', (width) => 
     const { replaceBands } = await import('../../src/store/libraryStore');
     await replaceBands([
       {
-        id: 'b1',
-        list: 'Mine',
+        id: 'Egger:A1:8:22',
+        makerText: 'Egger',
         kind: 'abs',
+        code: 'A1',
+        name: 'White',
         thickness: 8,
         width: 22,
         color: '#ffffff',
-        code: 'A1',
-      } as never,
+        list: 'Mine',
+      },
     ]);
     await user.click(await screen.findByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog');

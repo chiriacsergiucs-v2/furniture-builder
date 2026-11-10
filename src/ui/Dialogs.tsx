@@ -414,6 +414,7 @@ export function NewDialog({
  */
 function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }) {
   const openProject = useDesign((s) => s.openProject);
+  const saving = useRef(false);
   const [shown, setShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A failed save is said only while the dialog stays open: each opening starts without it (ADR-248).
@@ -422,10 +423,13 @@ function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }
     setWasOpen(open);
     if (open) setError(null);
   }
+  // The guard below is lifted each time the dialog opens, as the New dialog's own (ADR-193).
+  useEffect(() => {
+    if (open) saving.current = false;
+  }, [open]);
   const presets = useMemo(() => (shown ? roomPresets() : []), [shown]);
   // One tap makes one project (ADR-193, ADR-248): a second tap while it saves does nothing, and a retry after a failed
   // save saves the same project again.
-  const saving = useRef(false);
   const made = useRef<{
     template: ProjectTemplate;
     project: ReturnType<typeof projectFromTemplate>;
@@ -442,10 +446,10 @@ function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }
       setError(null);
       openProject(p);
       onOpened();
+      // Stays set until the dialog opens again: a late second tap makes nothing more.
     } catch {
-      setError(t('The project could not be saved in this browser’s storage.'));
-    } finally {
       saving.current = false;
+      setError(t('The project could not be saved in this browser’s storage.'));
     }
   };
   return (

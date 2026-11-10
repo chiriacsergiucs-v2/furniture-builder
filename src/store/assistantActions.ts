@@ -339,6 +339,7 @@ export const CATALOG: Record<string, Entry> = {
   distributeSelection: { description: 'Space the selected pieces evenly.', args: [] },
   groupSelection: { description: 'Group the selected pieces.', args: [] },
   ungroup: { description: 'Ungroup a group.', args: [str('groupId')] },
+  renameGroup: { description: 'Rename a group (ADR-252).', args: [str('groupId'), str('name')] },
   setCommon: {
     description: 'Common top or bottom across the selected pieces.',
     args: [one('kind', ['top', 'bottom']), bool('on')],

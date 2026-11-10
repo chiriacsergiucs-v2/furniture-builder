@@ -2,7 +2,7 @@
 // Find-it for ADR-262 (UI audit, Catalog and templates) at 1280 and 390 px: Use the imported one never loses the
 // device's edit when the save fails, a file that is not a templates file says so, and the card buttons say which
 // item they open.
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
 

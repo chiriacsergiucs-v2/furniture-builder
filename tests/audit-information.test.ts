@@ -24,6 +24,12 @@ describe('research save banner (ADR-266)', () => {
     await useResearch.getState().setMarks(['x2'], { notes: 'b' } as never);
     // x1 is written again with x2's save, so the banner goes.
     expect(useResearch.getState().error).toBeNull();
+    // A failure for another decision keeps it, even after an unrelated save works.
+    fail.ids = new Set(['x3']);
+    await useResearch.getState().setMarks(['x3'], { notes: 'c' } as never);
+    fail.ids = new Set(['x3']);
+    await useResearch.getState().setMarks(['x4'], { notes: 'd' } as never);
+    expect(useResearch.getState().error).toBeTruthy();
   });
 });
 
@@ -33,13 +39,18 @@ describe('gap-mark import counts (ADR-266)', () => {
       kind: GAP_MARKS_KIND,
       version: 1,
       marks: [
-        { gapId: 'G-001', decision: 'later', note: '', updatedAt: '2026-01-01T00:00:00.000Z' },
+        {
+          gapId: 'G-001',
+          decision: 'acknowledge',
+          note: '',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
       ],
     });
     const current = {
       'G-001': {
         gapId: 'G-001',
-        decision: 'now',
+        decision: 'adr',
         note: '',
         updatedAt: '2026-06-01T00:00:00.000Z',
       },
