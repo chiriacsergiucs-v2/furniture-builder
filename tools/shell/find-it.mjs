@@ -279,6 +279,11 @@ for (const width of [1280, 390, 360]) {
   // 9. Feature Research from ⋯; old links still open their pages.
   await more.click();
   await menu.getByRole('button', { name: /Feature Research/ }).click();
+  // The page is a lazy chunk: wait for its heading before checking it.
+  await page
+    .getByRole('heading', { name: /Feature Research/ })
+    .waitFor({ timeout: 10000 })
+    .catch(() => {});
   check(
     width,
     'Feature Research opens from ⋯',
