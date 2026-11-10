@@ -182,9 +182,6 @@ describe('no silent data loss (ADR-246)', () => {
 
   it('the assistant is held to the same limits and names as the fields', () => {
     st().load(t('base-door'));
-    expect(() => CATALOG.resizePiece.run!(st(), { key: 'width', value: 99999 })).toThrow(
-      /whole number/,
-    );
     expect(() => CATALOG.addDesignVariable.run!(st(), { name: '', expr: '1' })).toThrow();
     CATALOG.addDesignVariable.run!(st(), { name: 'gap', expr: '2' });
     expect(() => CATALOG.addDesignVariable.run!(st(), { name: 'Gap', expr: '3' })).toThrow(

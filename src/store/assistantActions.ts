@@ -143,10 +143,12 @@ export const CATALOG: Record<string, Entry> = {
   resizePiece: {
     description: 'Width, height or depth of the whole open piece, whole mm.',
     args: [one('key', SIZE), int('value')],
+    // A size outside the field's range is written and shown as an error diagnostic in the preview (ADR-240); only a
+    // size the piece does not have is refused (ADR-246).
     run: (s, a) => {
       const f = sizeFields(s.design.product).find((x) => x.key === a.key);
       if (!f) throw new Error(`This piece has no ${String(a.key)} to set.`);
-      return s.resizePiece(f.key, within(f.label, a.value, f.min, f.max));
+      return s.resizePiece(f.key, Number(a.value));
     },
   },
   updateMeta: {

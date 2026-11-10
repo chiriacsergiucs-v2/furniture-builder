@@ -24,9 +24,11 @@ Same request as [ADR-243](ADR-243-keep-locks-in-force-in-every-editing-flow.md).
 - Confirm before a contents change, a lower part count or Remove dividers, only when something would be lost
   (`holdsSomething`, `src/core/design.ts`). Danger confirms focus Cancel (`cancelFirst`).
 - `unsplit` keeps the first part's contents, the same as the quick count.
-- Assistant calls `resizePiece`, `setKerf`, `addDesignVariable`, `updateDesignVariable`, `addVariable` and
-  `updateVariable` check the fields' limits and `nameProblem`; a refusal fails the plan's preview with the reason.
-  In the project view `setKerf` sets the project's saw cut.
+- Assistant calls `setKerf` (0–20 mm), `addDesignVariable`, `updateDesignVariable`, `addVariable` and
+  `updateVariable` check the field's limit and `nameProblem`; a refusal fails the plan's preview with the reason.
+  `resizePiece` refuses a size the piece does not have; a size outside the field's range is still written and shown
+  as an error diagnostic in the preview, as ADR-240 decided. In the project view `setKerf` sets the project's saw
+  cut.
 - Delete asks to delete a multi-selection; Ctrl+D duplicates it as a block; Ctrl+A takes 3D models; Select mode
   or a modifier adds a clicked model.
 - The Material dialog's Part scope gets "Use its group's board again" for a part with its own board.
@@ -51,6 +53,6 @@ Same request as [ADR-243](ADR-243-keep-locks-in-force-in-every-editing-flow.md).
 ## Done when
 
 - [x] Remove dividers keeps the first part (`tests/editing-flows.test.ts`)
-- [x] The assistant is refused out-of-range sizes and saw cuts and bad variable names; in the project view it sets
+- [x] The assistant is refused out-of-range saw cuts and bad variable names; in the project view it sets
       the project's saw cut (`tests/editing-flows.test.ts`)
 - [x] Select all takes the placed 3D models (`tests/editing-flows.test.ts`)
