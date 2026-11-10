@@ -1097,7 +1097,10 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
             { value: 'panel', label: t('A full panel') },
             { value: 'rails', label: t('Two rails') },
           ]}
-          onChange={(v) => set({ topKind: v })}
+          // Two rails take a single top (user 2026-11-10, ADR-254): a doubled one becomes single in the same step.
+          onChange={(v) =>
+            set(v === 'rails' && (p.topLayers ?? 1) > 1 ? { topKind: v, topLayers: 1 } : { topKind: v })
+          }
         />
         {p.topKind !== 'rails' && (
           <Segmented<1 | 2>
@@ -1274,27 +1277,108 @@ function DrawerSettingsGroup({
           </InfoTip>
         }
       />
-      <div className="field">
-        <div className="label-row">
-          <label htmlFor="runner-lengths">{t('Runner lengths you can buy')}</label>
-          <InfoTip label={t('About runner lengths')} align="start">
-            {t('The longest one that fits the depth is chosen.')}
-          </InfoTip>
-        </div>
-        <input
-          id="runner-lengths"
-          defaultValue={d.runnerLengths.join(', ')}
-          key={d.runnerLengths.join(',')}
-          onBlur={(e) => {
-            const v = e.target.value
-              .split(/[,\s]+/)
-              .map(Number)
-              .filter((n) => Number.isInteger(n) && n > 0);
-            if (v.length) onChange({ ...d, runnerLengths: [...new Set(v)].sort((a, b) => a - b) });
-          }}
-        />
-      </div>
+      <RunnerLengths
+        lengths={d.runnerLengths}
+        onChange={(runnerLengths) => onChange({ ...d, runnerLengths })}
+      />
     </Group>
+  );
+}
+
+/**
+ * Runner lengths you can buy: saved only when every entry is a positive whole number; otherwise the text stays, marked,
+ * with the reason (ADR-254, ADR-008: nothing is dropped without a word).
+ */
+function RunnerLengths({
+  lengths,
+  onChange,
+}: {
+  lengths: readonly number[];
+  onChange: (v: number[]) => void;
+}) {
+  const [text, setText] = useState(lengths.join(', '));
+  const [seen, setSeen] = useState(lengths.join(','));
+  if (seen !== lengths.join(',')) {
+    setSeen(lengths.join(','));
+    setText(lengths.join(', '));
+  }
+  const parts = text.split(/[,\s]+/).filter(Boolean);
+  const valid =
+    parts.length > 0 && parts.every((x) => /^\d+$/.test(x) && Number(x) > 0);
+  return (
+    <div className="field">
+      <div className="label-row">
+        <label htmlFor="runner-lengths">{t('Runner lengths you can buy')}</label>
+        <InfoTip label={t('About runner lengths')} align="start">
+          {t('The longest one that fits the depth is chosen.')}
+        </InfoTip>
+      </div>
+      <input
+        id="runner-lengths"
+        value={text}
+        aria-invalid={!valid || undefined}
+        aria-describedby={!valid ? 'runner-lengths-err' : undefined}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setText(lengths.join(', '));
+        }}
+        onBlur={() => {
+          if (!valid) return;
+          const v = [...new Set(parts.map(Number))].sort((a, b) => a - b);
+          if (v.join(',') !== lengths.join(',')) onChange(v);
+        }}
+      />
+      {!valid && (
+        <p className="field-error" id="runner-lengths-err">
+          {t('Whole numbers in mm, separated by commas. Not saved until they are.')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** A loose panel's name: an empty name is said and not saved (ADR-254); Escape restores the saved one. */
+function LoosePanelName({
+  id,
+  name,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  onChange: (v: string) => void;
+}) {
+  const [text, setText] = useState(name);
+  const [seen, setSeen] = useState(name);
+  if (seen !== name) {
+    setSeen(name);
+    setText(name);
+  }
+  const empty = !text.trim();
+  return (
+    <div className="field">
+      <label htmlFor={id}>{t('Name')}</label>
+      <input
+        id={id}
+        className="mat-name"
+        value={text}
+        maxLength={200}
+        aria-invalid={empty || undefined}
+        aria-describedby={empty ? `${id}-err` : undefined}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setText(name);
+        }}
+        onBlur={() => {
+          const v = text.trim();
+          if (v && v !== name) onChange(v);
+        }}
+      />
+      {empty && (
+        <p className="field-error" id={`${id}-err`}>
+          {t('Enter a name. Not saved until there is one.')}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -1350,7 +1434,19 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           { value: 'l-shape', label: t('L-shaped') },
           { value: 'diagonal', label: t('Diagonal') },
         ]}
-        onChange={(v) =>
+        onChange={async (v) => {
+          // A diagonal holds shelves only: replacing other contents asks first (ADR-254, as ADR-246).
+          if (
+            v === 'diagonal' &&
+            p.interior.kind !== 'shelves' &&
+            !(await askConfirm(
+              t(
+                'A diagonal corner holds shelves only. Replace what is inside with one shelf and a door?',
+              ),
+              { confirmLabel: t('Replace'), danger: true, cancelFirst: true },
+            ))
+          )
+            return;
           set(
             v === 'diagonal' && p.interior.kind !== 'shelves'
               ? {
@@ -1363,8 +1459,8 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
                   },
                 }
               : { variant: v },
-          )
-        }
+          );
+        }}
       />
       <Segmented<'left' | 'right'>
         label={t('Corner on the')}
@@ -1583,20 +1679,11 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
           title={`${lp.name || t('Panel')} — ${lp.length} × ${lp.width}${lp.quantity > 1 ? ` ×${lp.quantity}` : ''}`}
           defaultOpen={false}
         >
-          <div className="field">
-            <label htmlFor={`name-${lp.id}`}>{t('Name')}</label>
-            <input
-              id={`name-${lp.id}`}
-              className="mat-name"
-              defaultValue={lp.name}
-              key={lp.name}
-              maxLength={200}
-              onBlur={(e) => {
-                const v = e.target.value.trim();
-                if (v && v !== lp.name) change(lp.id, { name: v });
-              }}
-            />
-          </div>
+          <LoosePanelName
+            id={`name-${lp.id}`}
+            name={lp.name}
+            onChange={(name) => change(lp.id, { name })}
+          />
           <div className="dims3">
             <MmField
               label={t('Length')}

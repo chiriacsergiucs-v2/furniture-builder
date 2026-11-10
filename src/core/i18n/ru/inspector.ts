@@ -252,6 +252,11 @@ export const ru_inspector = {
   'The inside has its own layout. Replace it with equal bays?':
     'У внутреннего пространства своя компоновка. Заменить её равными секциями?',
   Replace: 'Заменить',
+  'Whole numbers in mm, separated by commas. Not saved until they are.':
+    'Целые числа в мм через запятую. Не сохраняется, пока так не будет.',
+  'Enter a name. Not saved until there is one.': 'Введите название. Не сохраняется, пока его нет.',
+  'A diagonal corner holds shelves only. Replace what is inside with one shelf and a door?':
+    'Диагональный угол вмещает только полки. Заменить содержимое одной полкой и дверью?',
   'Bays and shelves': 'Секции и полки',
   'The inside is laid out space by space. Changing these replaces it with equal bays.':
     'Внутреннее пространство скомпоновано по секциям. Изменение этих значений заменит его равными секциями.',
