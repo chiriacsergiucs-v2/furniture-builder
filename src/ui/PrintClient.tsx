@@ -1,3 +1,4 @@
+import { printPieceName } from '../core/catalog/printName';
 import { useMemo } from 'react';
 import { t } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
@@ -29,7 +30,8 @@ export function PrintClient() {
     }
     return pieces.map((pc) => ({
       key: pc.item.id,
-      name: pc.item.design.name,
+      // The printed piece name, as on the cutting sheet and the CSV (ADR-260).
+      name: printPieceName(pc.item.design),
       w: pc.model.bounds.w,
       h: pc.model.bounds.h,
       d: pc.model.bounds.d,
@@ -85,7 +87,7 @@ export function PrintClient() {
         </h2>
         {est.missing.length > 0 && (
           <p>
-            {est.missing.length} {pt('linii fără preț')}
+            {pt('{n|# linie fără preț|# linii fără preț}', { n: est.missing.length })}
           </p>
         )}
         {est.sellers.length > 0 && (

@@ -265,6 +265,12 @@ export const ru_project = {
   Linked: 'Связанная',
   'Move alone': 'Двигать отдельно',
   '{name}: {message}': '{name}: {message}',
+  'Prices could not be read': 'Не удалось прочитать цены',
+  'An amount, for example 12.50': 'Сумма, например 12.50',
+  'A number above 0, for example 1 or 0.5.': 'Число больше 0, например 1 или 0.5.',
+  'The prices could not be saved on this device.': 'Не удалось сохранить цены на этом устройстве.',
+  'The pack could not be made: pictures or 3D models could not be read from this browser.':
+    'Не удалось собрать пакет: картинки или 3D-модели не читаются в этом браузере.',
   'This problem has no automatic repair. Move or change the pieces yourself.':
     'У этой проблемы нет автоматического исправления. Передвиньте или измените изделия сами.',
   'Checks: {n|# problem|# problems}': 'Проверки: {n|# проблема|# проблемы|# проблем}',

@@ -14,7 +14,7 @@ import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { Assembly } from './Assembly';
 import { useView } from '../store/useView';
-import { GuidanceTip, InfoTip } from './controls';
+import { GuidanceTip, InfoTip, rovingKeys, rovingTab } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { printPieceNames } from '../core/catalog/printName';
@@ -59,12 +59,14 @@ export function Output() {
   ];
   return (
     <section className={`output ${open ? '' : 'collapsed'}`} aria-label={t('Results')}>
-      <div className="tabs" role="tablist">
-        {tabs.map((b) => (
+      {/* Arrow keys and one Tab stop, as every tablist (ADR-202, ADR-260). */}
+      <div className="tabs" role="tablist" aria-label={t('Results')} onKeyDown={rovingKeys}>
+        {tabs.map((b, i) => (
           <button
             key={b.id}
             role="tab"
             type="button"
+            tabIndex={rovingTab(open && tab === b.id, i, open && tabs.some((x) => x.id === tab))}
             id={`tab-${b.id}`}
             aria-label={b.name}
             aria-selected={open && tab === b.id}
@@ -119,7 +121,11 @@ function Parts() {
 
   const setPrinting = useUi((s) => s.setPrinting);
   const printWith = useUi((s) => s.printWith);
+  // The last render only when it was made of what is open now; else the 3D still or the front view (ADR-260).
   const lastRender = useUi((s) => s.lastRender);
+  const lastRenderOf = useUi((s) => s.lastRenderOf);
+  const shownId = useDesign((s) => (s.project && !s.editingItemId ? s.project.id : s.design.id));
+  const render = lastRenderOf === shownId ? lastRender : null;
   const why = blocked ? t('Fix the problems listed under Checks first') : undefined;
 
   return (
@@ -167,7 +173,7 @@ function Parts() {
           }
           onClick={() =>
             // The last render of this session, else a still of the open 3D view, else the front view (ADR-206).
-            printWith('client', { client: lastRender ?? captureStill() })
+            printWith('client', { client: render ?? captureStill() })
           }
         >
           <Icon name="printer" />

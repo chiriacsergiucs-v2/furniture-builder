@@ -7,8 +7,6 @@ export const ru_sellers = {
   'Invalid seller item': 'Неверный товар продавца',
   'invalid seller product': 'неверный товар продавца',
   'added from a seller': 'добавлено от продавца',
-  ' (your prices; {n|# line|# lines} at seller prices: {sellers})':
-    ' (ваши цены; {n|# строка|# строки|# строк} по ценам продавца: {sellers})',
   'Add seller product': 'Добавить товар продавца',
   'Any product of a seller, added to this piece’s shopping list.':
     'Любой товар продавца, добавляется в список покупок этого изделия.',

@@ -383,13 +383,19 @@ const csvHeaders = (): string[] => CSV_HEADERS_RO.map((h) => pt(h));
  * Words in the print language (ADR-157). `pieceNames` maps a stored piece name to its printed name
  * (`printPieceNames`, ADR-212): the `Piece:` prefix of each label is swapped for it.
  */
+/**
+ * A part label in the print language, with the `Piece:` prefix swapped for the piece's printed name (ADR-212); shared by
+ * the parts CSV and the cutting sheet, so both name a piece the same way (ADR-260).
+ */
+export function printedPartLabel(l: string, pieceNames?: ReadonlyMap<string, string>): string {
+  if (pieceNames)
+    for (const [stored, printed] of pieceNames)
+      if (l.startsWith(`${stored}: `)) return `${printed}: ${partRo(l.slice(stored.length + 2))}`;
+  return partRo(l);
+}
+
 export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, string>): string {
-  const label = (l: string) => {
-    if (pieceNames)
-      for (const [stored, printed] of pieceNames)
-        if (l.startsWith(`${stored}: `)) return `${printed}: ${partRo(l.slice(stored.length + 2))}`;
-    return partRo(l);
-  };
+  const label = (l: string) => printedPartLabel(l, pieceNames);
   const esc = (v: string | number) => {
     const s = String(v);
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;

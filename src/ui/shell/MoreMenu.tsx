@@ -43,6 +43,8 @@ export function MoreMenu({
   const project = useDesign((s) => s.project);
   const editingItemId = useDesign((s) => s.editingItemId);
   const inProject = !!project && !editingItemId;
+  const blocked = model.diagnostics.some((d) => d.severity === 'error');
+  const blockedWhy = blocked ? t('Fix the problems listed under Checks first') : undefined;
   const setNotice = useUi((s) => s.setNotice);
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
@@ -169,18 +171,23 @@ export function MoreMenu({
                   <Icon name="download" />
                   {t('Design file')} <small>{t('to open on another device')}</small>
                 </button>
+                {/* Exports are blocked while the piece has an error, with the reason (ADR-008, ADR-260). */}
                 <button
                   type="button"
+                  disabled={blocked}
+                  title={blockedWhy}
                   onClick={run(async () => {
                     if (!(await downloadFrontSvg(design)))
                       setNotice({ ok: false, text: t('Open the piece in the editor first.') });
                   })}
                 >
                   <Icon name="front" />
-                  {t('Front view drawing')} <small>SVG</small>
+                  {t('Front view drawing')} <small>{blockedWhy ?? 'SVG'}</small>
                 </button>
                 <button
                   type="button"
+                  disabled={blocked}
+                  title={blockedWhy}
                   onClick={run(() =>
                     download(
                       `${fileName(design.name)}-fusion.py`,
@@ -190,7 +197,8 @@ export function MoreMenu({
                   )}
                 >
                   <Icon name="cube" />
-                  {t('Fusion 360 script')} <small>{t('not yet tested in Fusion')}</small>
+                  {t('Fusion 360 script')}{' '}
+                  <small>{blockedWhy ?? t('not yet tested in Fusion')}</small>
                 </button>
               </>
             )}

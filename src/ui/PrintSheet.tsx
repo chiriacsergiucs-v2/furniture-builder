@@ -1,11 +1,11 @@
-import { printPieceName } from '../core/catalog/printName';
+import { printPieceName, printPieceNames } from '../core/catalog/printName';
 import { useMemo } from 'react';
 import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
 import { t } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
-import { boardBandRo, drillingRo, hardwareRo, partRo } from '../core/ro';
+import { boardBandRo, drillingRo, hardwareRo, partRo, printedPartLabel } from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
@@ -19,6 +19,11 @@ import { OVERLAP, PAGE, profileTemplates } from '../core/template';
 export function PrintSheet() {
   const view = useView();
   const project = useDesign((s) => s.project);
+  // A project's parts name each piece as the pieces table and the CSV do (ADR-212, ADR-260).
+  const pieceNames = useMemo(
+    () => (project ? printPieceNames(project.items.map((i) => i.design)) : undefined),
+    [project],
+  );
   const rows = view.rows;
   const bands = useMemo(() => bandMetersFromRows(rows), [rows]);
   const hw = view.hardware;
@@ -115,7 +120,9 @@ export function PrintSheet() {
               <tbody>
                 {list.map((r) => (
                   <tr key={r.panelIds[0]}>
-                    <td>{[...new Set(r.labels.map(partRo))].join(', ')}</td>
+                    <td>
+                      {[...new Set(r.labels.map((l) => printedPartLabel(l, pieceNames)))].join(', ')}
+                    </td>
                     <td className="n">{r.thickness}</td>
                     <td className="n">{r.length}</td>
                     <td className="n">{r.width}</td>

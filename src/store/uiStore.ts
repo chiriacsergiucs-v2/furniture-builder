@@ -47,7 +47,9 @@ interface Ui {
   setPrintMode: (printMode: 'sheet' | 'assembly' | 'client') => void;
   /** The last PNG the Render dialog made this session (ADR-068), as an object URL: the client sheet's picture. */
   lastRender: string | null;
-  setLastRender: (url: string | null) => void;
+  /** The piece or project the last render was made of (ADR-260, user 2026-11-10). */
+  lastRenderOf: string | null;
+  setLastRender: (url: string | null, of?: string | null) => void;
   /** The picture the client sheet prints (ADR-206), chosen when it is asked for; null = the front view. */
   clientPicture: string | null;
   /** One 3D picture per assembly step for the print (ADR-206), by `<piece>:<step>`; null without the 3D view. */
@@ -101,10 +103,11 @@ export const useUi = create<Ui>((set) => ({
   printMode: 'sheet',
   setPrintMode: (printMode) => set({ printMode }),
   lastRender: null,
-  setLastRender: (lastRender) =>
+  lastRenderOf: null,
+  setLastRender: (lastRender, of = null) =>
     set((s) => {
       if (s.lastRender && s.lastRender !== lastRender) URL.revokeObjectURL(s.lastRender);
-      return { lastRender };
+      return { lastRender, lastRenderOf: lastRender ? of : null };
     }),
   clientPicture: null,
   stepPictures: null,

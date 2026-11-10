@@ -124,7 +124,11 @@ function EstimateChip({ compact = false }: { compact?: boolean }) {
     (!est.priced && !est.missing.length) ||
     (!est.priced && est.total === 0);
   const amount = t('{amount} {currency}', { amount: formatMoney(est.total), currency });
-  const full = none
+  // A price list the device could not read is said as such, not as "No prices yet" (ADR-260).
+  const full =
+    priceState === 'failed'
+      ? t('Prices could not be read')
+      : none
     ? t('No prices yet')
     : est.missing.length
       ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })

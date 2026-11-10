@@ -418,9 +418,6 @@ export const ru_editors = {
   'Download CSV': 'Скачать CSV',
   'Print the cutting sheet (in the print language, A4) or save it as PDF':
     'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
-  'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
-  ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
-  ' (your prices)': ' (ваши цены)',
   Print: 'Печать',
   'This project has problems (see Checks). Fix them before cutting.':
     'В этом проекте есть проблемы (см. «Проверки»). Исправьте их перед раскроем.',

@@ -5,6 +5,7 @@ import { Segmented } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
+import { useDesign } from '../store/designStore';
 import {
   detectEngine,
   hasWebGL2,
@@ -51,6 +52,8 @@ export function RenderDialog({
   const job = useRef<RenderJob | null>(null);
   const holder = useRef<HTMLDivElement>(null);
   const setLastRender = useUi((s) => s.setLastRender);
+  // What the render is of: the open project, or the open piece (ADR-260).
+  const shownId = useDesign((s) => (s.project && !s.editingItemId ? s.project.id : s.design.id));
 
   // Each Start, Cancel and Close bumps the run: a render that comes back for an older run is thrown away (ADR-259).
   const run = useRef(0);
@@ -96,7 +99,7 @@ export function RenderDialog({
       const png = await j.done;
       if (job.current !== j || run.current !== mine) return;
       // The client sheet prints the last render of this session (ADR-206).
-      if (png) setLastRender(URL.createObjectURL(png));
+      if (png) setLastRender(URL.createObjectURL(png), shownId);
       setState(png ? { kind: 'done', png } : { kind: 'idle' });
     } catch (e) {
       if (run.current !== mine) return;
