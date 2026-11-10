@@ -16,7 +16,6 @@ out of step while editing:
 - In the project editor the header field names the project, so a project piece could not be renamed in the UI.
 - Opening another project did not forget the base of a piece-editor session (`projectBeforeEdit`).
 - In the full piece editor, Edit history was offered while project undo is refused there.
-- Placing a new piece by a tap made a second undo step after the one that added it.
 
 ## Decision
 
@@ -27,7 +26,6 @@ out of step while editing:
 - More actions gets "Rename…", which asks for the piece's name (`askText`) and renames that project piece.
 - `openProject` clears `projectBeforeEdit`.
 - Edit history is off in the full piece editor, with the title "Go back to the project to use its edit history".
-- The placing tap amends the add step, as for a template (ADR-123).
 
 ## Alternatives considered
 
