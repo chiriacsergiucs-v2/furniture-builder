@@ -5,6 +5,7 @@
 // script, no binary committed), types sizes with Keep proportions off and on, resets, undoes, and drags the height
 // handle in 3D in Move mode. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -129,7 +130,7 @@ for (const width of widths) {
     }
   };
   const compose = async () => {
-    await page.getByRole('radio', { name: /Compose/ }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
     await page.waitForTimeout(200);
@@ -155,7 +156,7 @@ for (const width of widths) {
   };
   const front = page.getByRole('figure', { name: /Room seen from the front/ });
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
-  const keep = sel.getByLabel('Keep proportions');
+  const keep = sel.getByLabel('Keep proportions', { exact: true });
 
   // 1. Bare app → new project → Add a piece → My 3D models → import the cube and add it.
   await page.goto(url);
@@ -236,10 +237,18 @@ for (const width of widths) {
 
   // 7. 3D, Move mode: the height handle is found; dragging it up with Keep off changes only the height.
   await keep.uncheck();
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
-  if (!phone) {
+  await goBuild(page);
+  // The 2D/3D choice starts at 2D below 1500 px, phones included (ADR-144, N145): pick 3D at every width.
+  {
     const r = page.getByRole('radio', { name: '3D', exact: true });
     if (await r.isVisible().catch(() => false)) await r.click();
+  }
+  // A phone's Cut list place opens the results on the Parts tab, which leaves the 3D view so short that the tool row
+  // covers the height handle: a click on the open tab closes the results (toggleTab) and gives the 3D view the room.
+  if (phone) {
+    const parts = page.getByRole('tab', { name: 'Parts' }).first();
+    if ((await parts.getAttribute('aria-selected').catch(() => null)) === 'true')
+      await parts.click();
   }
   const three = page.locator('.view.three');
   await three.locator('canvas').first().waitFor({ timeout: 30000 });

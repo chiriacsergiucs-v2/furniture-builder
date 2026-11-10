@@ -18,7 +18,7 @@ import type { AccountLink } from '../core/sync';
 import { t } from '../core/i18n';
 
 /** A device setting kept in IndexedDB (ADR-133): values that localStorage cannot hold, like a folder handle. */
-export interface SettingRow {
+interface SettingRow {
   key: string;
   value: unknown;
 }
@@ -35,13 +35,13 @@ export interface StoredProject {
   updatedAt: string;
   project: Project;
 }
-export interface StoredProjectTemplate {
+interface StoredProjectTemplate {
   id: string;
   name: string;
   updatedAt: string;
   template: ProjectTemplate;
 }
-export interface StoredTemplate {
+interface StoredTemplate {
   id: string;
   updatedAt: string;
   template: LocalTemplate;
@@ -549,7 +549,7 @@ export async function listPrices(database = db): Promise<PriceEntry[]> {
  * The user's fastener list (ADR-074): one row per joint type in the existing `prices` table, id
  * `fastener:<joint type>`, so no new Dexie version is needed. Unreadable rows are skipped and kept (ADR-012).
  */
-export const FASTENER_PREFIX = 'fastener:';
+const FASTENER_PREFIX = 'fastener:';
 type FastenerRow = PriceEntry & { per?: unknown; edge?: unknown };
 export async function listFasteners(database = db): Promise<FastenerChoice[]> {
   const rows = (await database.prices

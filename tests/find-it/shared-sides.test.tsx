@@ -3,7 +3,7 @@
 // sides → the parts list counts 3 sides; with a wardrobe in the selection the toggle is off and says why.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { addPiece, renderApp, WIDTHS } from './setup';
+import { addPiece, composePanel, renderApp, selectRows, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
   it('two base units → Select both → Shared sides → Parts counts 3 sides; a wardrobe makes it off', async () => {
@@ -17,12 +17,8 @@ describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
     await addPiece(user, /Base cabinet, doors: 1 door/);
 
     // Select both: the Select switch, then a tap on each row.
-    const side = screen.getByRole('complementary', { name: 'Compose' });
-    const all = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-    if (all) await user.click(all);
-    await user.click(within(side).getByRole('checkbox', { name: 'Select' }));
-    const rows = within(within(side).getByRole('list', { name: 'Pieces' })).getAllByRole('button');
-    for (const r of rows) if (r.getAttribute('aria-pressed') !== 'true') await user.click(r);
+    const side = composePanel();
+    await selectRows(user, [0, 1]);
     const card = within(side).getByRole('region', { name: /^2 pieces selected/ });
     const common = within(card).getByRole('group', { name: 'Common top, bottom and sides' });
     const top = within(common).getByRole('checkbox', { name: 'Shared sides' });
@@ -41,11 +37,7 @@ describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
     // A wardrobe in the selection: Shared sides is off, disabled, with the reason.
     await user.click(within(side).getByRole('checkbox', { name: 'Select' }));
     await addPiece(user, /Wardrobe/);
-    const all2 = within(side).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-    if (all2) await user.click(all2);
-    await user.click(within(side).getByRole('checkbox', { name: 'Select' }));
-    const rows3 = within(within(side).getByRole('list', { name: 'Pieces' })).getAllByRole('button');
-    for (const r of rows3) if (r.getAttribute('aria-pressed') !== 'true') await user.click(r);
+    await selectRows(user, [0, 1, 2]);
     const card3 = within(side).getByRole('region', { name: /^3 pieces selected/ });
     const top3 = within(
       within(card3).getByRole('group', { name: 'Common top, bottom and sides' }),

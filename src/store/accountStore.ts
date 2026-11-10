@@ -21,7 +21,7 @@ export type AccountDialog =
   | 'privacy'
   | 'delete';
 
-export interface SyncView {
+interface SyncView {
   state: 'idle' | 'syncing' | 'offline' | 'error';
   waiting: number;
   conflicts: string[];

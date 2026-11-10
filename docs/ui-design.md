@@ -274,6 +274,10 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   piece** (card button, peek pencil) keeps the project open, opens the sheet full and shows **Inside this piece**; the
   piece editor screen is **More actions › Open in the piece editor**.
 
+- _Settings and Material in the sheet (ADR-247)._ On a phone in the editor, Settings, Size, boards and construction and
+  Material open inside the Compose sheet at its full stop, in place of the sheet's body; × Close or Esc closes them
+  and the sheet returns to half height. Desktop and the Projects page keep the modal.
+
 ## 5. Rollout
 
 Shipped as one slice on `ccr-38ebfeec-gnv63w` because the tokens, components and screens share one stylesheet; each

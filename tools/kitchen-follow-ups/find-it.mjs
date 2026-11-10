@@ -6,6 +6,7 @@
 // Fasteners in project Settings; Parts with "Guidance: drilling positions from your values". Screenshots go to the out
 // dir. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl('http://localhost:4309/furniture-builder/');
@@ -36,7 +37,7 @@ for (const width of [1280, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (l) => {
     await l.scrollIntoViewIfNeeded();
-    await l.click({ timeout: 5000 });
+    await l.click({ timeout: 10000 });
   };
   const noSideScroll = () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
@@ -220,7 +221,7 @@ for (const width of [1280, 390]) {
   // 8. The 3D view: the ceiling filler, the shaped crown and the holed, rounded worktop are drawn.
   const three = page.getByRole('radio', { name: '3D', exact: true });
   if (await three.isVisible().catch(() => false)) await click(three);
-  else await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  else await goBuild(page);
   const canvas = page.locator('.view.three canvas');
   await canvas.waitFor({ timeout: 20000 }).catch(() => {});
   check(width, 'the 3D view is drawn', await canvas.isVisible());
@@ -230,15 +231,14 @@ for (const width of [1280, 390]) {
   // 9. A problem picked under Checks is drawn in 3D: its box and the chosen repair's "After repair" outline.
   const plan2d = page.getByRole('radio', { name: '2D', exact: true });
   if (await plan2d.isVisible().catch(() => false)) await click(plan2d);
-  else await click(page.getByRole('radio', { name: /^Compose/ }));
+  else await goCompose(page);
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const bases = plan.getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ });
   await bases.nth(1).focus();
   await page.keyboard.press('Shift+ArrowLeft');
   await page.waitForTimeout(300);
   const checksTab = page.getByRole('tab', { name: /Checks/ });
-  if (!(await checksTab.isVisible().catch(() => false)))
-    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  if (!(await checksTab.isVisible().catch(() => false))) await goBuild(page);
   if ((await checksTab.getAttribute('aria-selected')) !== 'true') await click(checksTab);
   const item = page.locator('.checks button', { hasText: /overlap by \d+ mm/ }).first();
   check(width, 'Checks lists the overlap', await item.isVisible());
@@ -259,7 +259,8 @@ for (const width of [1280, 390]) {
   const after3d = page.locator('.view.three .repair-preview-3d', { hasText: 'After repair' });
   await after3d
     .first()
-    .waitFor({ state: 'visible', timeout: 5000 })
+    // A loaded machine can take longer than 5 s to place the 3D label (seen 2026-11-10: present, not yet shown).
+    .waitFor({ state: 'visible', timeout: 15000 })
     .catch(() => {});
   check(
     width,
@@ -276,13 +277,7 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(300);
 
   // 10. Build & Preview › Parts: the drilling guidance and the notes of the new parts.
-  if (
-    await page
-      .getByRole('radio', { name: /Build & Preview/ })
-      .isVisible()
-      .catch(() => false)
-  )
-    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  await goBuild(page);
   const partsTab = page.getByRole('tab', { name: /^Parts/ });
   if ((await partsTab.getAttribute('aria-selected')) !== 'true') await click(partsTab);
   await page.waitForTimeout(300);

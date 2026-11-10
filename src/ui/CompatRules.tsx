@@ -18,7 +18,7 @@ const PLACEMENT_LABEL: Record<string, string> = {
 };
 
 /** "Applies to" in words, from the rule's data. */
-export function appliesText(r: CompatRule): string {
+function appliesText(r: CompatRule): string {
   const a = r.appliesTo;
   const parts = [
     a.productKinds
@@ -34,7 +34,7 @@ export function appliesText(r: CompatRule): string {
 }
 
 /** Severity and where it runs, in words. */
-export function severityText(r: CompatRule): string {
+function severityText(r: CompatRule): string {
   const snap = r.where.includes('snap'),
     checks = r.where.includes('checks');
   if (r.severity === 'refuse')

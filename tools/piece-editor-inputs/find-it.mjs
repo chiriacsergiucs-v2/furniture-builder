@@ -1,5 +1,6 @@
 // Production acceptance for ADR-199: start from the bare app and use visible controls at both widths.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
 const out = outDir('/tmp/furniture-piece-editor-acceptance');
@@ -37,7 +38,7 @@ try {
       .getByRole('button', { name: /Sideboard/ })
       .first()
       .click();
-    await page.getByRole('radio', { name: 'Compose', exact: true }).click();
+    await goCompose(page);
     await sheet();
     await page.getByRole('button', { name: /Edit the interior/ }).click();
     const share = page.getByRole('textbox', { name: 'Left share', exact: true });
@@ -129,7 +130,7 @@ try {
       .getByRole('button', { name: /Sideboard/ })
       .click();
     await sheet();
-    await page.getByRole('button', { name: 'Edit this piece', exact: true }).click();
+    await openPieceEditor(page);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: /^Settings:/ });
     check(

@@ -29,7 +29,7 @@ const writeFlag = (k: string, on: boolean) => {
   }
 };
 
-export interface ChatLine {
+interface ChatLine {
   role: 'user' | 'assistant' | 'error';
   text: string;
 }
@@ -54,7 +54,7 @@ interface AssistantState {
 }
 
 /** What is sent for the open document (ADR-239): its JSON and the selection, never geometry or pictures. */
-export function assistantRequest(message: string, history: ChatTurn[]): AssistantRequest {
+function assistantRequest(message: string, history: ChatTurn[]): AssistantRequest {
   const s = useDesign.getState();
   return {
     message,

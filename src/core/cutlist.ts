@@ -134,19 +134,6 @@ export const areaM2 = (rows: CutRow[], materialId: string) =>
     .filter((r) => r.materialId === materialId)
     .reduce((s, r) => s + r.length * r.width * r.quantity, 0) / 1e6;
 
-export function edgeBandMeters(model: FurnitureModel, materials: Material[]): Map<string, number> {
-  const mats = new Map(materials.map((m) => [m.id, m]));
-  const out = new Map<string, number>();
-  for (const p of model.panels) {
-    const m = mats.get(p.materialId);
-    if (!m) continue;
-    const c = cutDimensions(p, m.grain);
-    const mm = c.edgesL * c.length + c.edgesW * c.width;
-    if (mm) out.set(m.id, (out.get(m.id) ?? 0) + mm / 1000);
-  }
-  return out;
-}
-
 /** Metres of edge band per material from cut rows (works for a piece or a whole project). */
 export function bandMetersFromRows(rows: CutRow[]): Map<string, number> {
   const out = new Map<string, number>();

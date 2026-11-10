@@ -34,7 +34,7 @@ export interface RenderJob {
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-export interface RenderOptions {
+interface RenderOptions {
   width: number;
   height: number;
   samples: number;

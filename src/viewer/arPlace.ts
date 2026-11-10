@@ -10,7 +10,7 @@ import { S } from './pieceDrag';
 
 /** Which point of the content the floor spot marks (ADR-214). Left and right are seen from the front. */
 export type ARPoint = 'centre' | 'back-left' | 'back-right';
-export const AR_POINTS: readonly ARPoint[] = ['centre', 'back-left', 'back-right'];
+const AR_POINTS: readonly ARPoint[] = ['centre', 'back-left', 'back-right'];
 export const nextARPoint = (p: ARPoint): ARPoint =>
   AR_POINTS[(AR_POINTS.indexOf(p) + 1) % AR_POINTS.length];
 
@@ -29,7 +29,7 @@ export interface Spot {
 }
 
 /** (x, z) turned by `yaw` about y, as three turns a child of an object with `rotation.y = yaw`. */
-export function turnXZ(x: number, z: number, yaw: number): [number, number] {
+function turnXZ(x: number, z: number, yaw: number): [number, number] {
   const c = Math.cos(yaw),
     s = Math.sin(yaw);
   return [x * c + z * s, -x * s + z * c];
@@ -112,11 +112,11 @@ export function toWorld(b: Box, pl: Placement, x: number, y: number, z: number):
 // ---------------------------------------------------------------------------
 
 /** A hit counts as floor when its surface's up axis is within this of vertical. */
-export const FLOOR_TILT = (15 * Math.PI) / 180;
+const FLOOR_TILT = (15 * Math.PI) / 180;
 /** Floor frames in a row before the outline shows. */
-export const STEADY_FRAMES = 6;
+const STEADY_FRAMES = 6;
 /** Largest height change between two floor frames that still counts as steady (metres). */
-export const STEADY_HEIGHT = 0.03;
+const STEADY_HEIGHT = 0.03;
 /** How far the outline moves toward each new hit (smoothing). */
 export const SMOOTHING = 0.35;
 
@@ -165,7 +165,7 @@ export function shadowPixels(w: number, d: number, n = 64, strength = 0.5): Uint
 }
 
 /** One dimension label: which size, its value in mm, where it stands (metres, the content's own frame). */
-export interface DimLabel {
+interface DimLabel {
   key: 'w' | 'h' | 'd';
   mm: number;
   at: [number, number, number];
@@ -211,7 +211,7 @@ export function wallOf(m: ArrayLike<number>): Wall {
 }
 
 /** Two walls make a corner only when their faces differ by more than this. */
-export const CORNER_MIN_ANGLE = (60 * Math.PI) / 180;
+const CORNER_MIN_ANGLE = (60 * Math.PI) / 180;
 
 /**
  * The room corner where two walls meet (ADR-218), at floor height `y`, with the wall the back goes against: the one
@@ -317,6 +317,3 @@ export function pieceLabels(pieces: readonly ARPiece[]) {
     ],
   }));
 }
-
-/** Depth occlusion bias: the real surface is drawn this far behind what the phone measured (metres). */
-export const occlusionBias = (d: number) => Math.max(0.04, 0.03 * d);

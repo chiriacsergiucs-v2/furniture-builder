@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/merge/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose, openPieceEditor, openTab, showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -47,7 +48,11 @@ for (const width of [1440, 375]) {
   };
   const addPiece = async (search, name) => {
     await openSheet();
-    await page.getByRole('button', { name: 'Add a piece' }).click();
+    await page
+      .getByRole('button', { name: 'Add a piece' })
+      .filter({ visible: true })
+      .first()
+      .click();
     const dlg = page.locator('dialog[open]');
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.getByRole('button', { name }).first().click();
@@ -62,17 +67,21 @@ for (const width of [1440, 375]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addPiece('Base cabinet', /Base cabinet, doors: 1 door \+ shelf/);
   await addPiece('Base cabinet', /Base cabinet, doors: Drawer over door/);
+  await showPieces(page);
   check(width, 'two pieces in the project', (await pieces.count()) === 2);
 
   // 2. Select the first; the merge control is found by its visible text.
   await openSheet();
+  await showPieces(page);
   await pieces.nth(0).getByRole('button').click();
   check(
     width,
-    '"Merge" group in the selected piece (folded since ADR-117)',
-    await page.locator('details.group > summary', { hasText: /^Merge$/ }).isVisible(),
+    '"Merge" group in the selected piece (folded since ADR-117; "More: clearance, merge" since ADR-160)',
+    await page
+      .locator('details.group > summary', { hasText: /^More: clearance, merge$/ })
+      .isVisible(),
   );
-  await openGroup('Merge');
+  await openGroup('More: clearance, merge');
   const btn = page.getByRole('button', {
     name: /^Merge with right piece Base cabinet, drawer over door$/,
   });
@@ -89,6 +98,13 @@ for (const width of [1440, 375]) {
   await btn.dispatchEvent('click');
   await page.locator('dialog[open]').getByRole('button', { name: 'Merge', exact: true }).click();
   await page.waitForTimeout(300);
+  check(
+    width,
+    'merged piece is selected',
+    await page.getByRole('region', { name: /Selected piece: Base cabinet, 1 door \+/ }).isVisible(),
+  );
+  // All pieces shows the list and clears the selection (ADR-160); the piece is selected again after.
+  await showPieces(page);
   const rowText = (await pieces.allInnerTexts()).join(' | ');
   check(width, 'one piece after merging', (await pieces.count()) === 1, rowText);
   check(
@@ -97,25 +113,18 @@ for (const width of [1440, 375]) {
     /Base cabinet, 1 door \+ Base cabinet, drawer over door/.test(rowText) &&
       /1200 ×/.test(rowText),
   );
-  check(
-    width,
-    'merged piece is selected',
-    await page.getByRole('region', { name: /Selected piece: Base cabinet, 1 door \+/ }).isVisible(),
-  );
+  await pieces.nth(0).getByRole('button').click();
   await shot('after');
 
   // 4. Open it in the editor: one cabinet, three uprights (two sides + one divider) in the parts.
-  await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
+  await openPieceEditor(page);
   // The parts list is under Build & Preview (ADR-080; on a phone Compose shows the drawing only, N82). A tap on the
   // open tab closes the results on a phone (ADR-091), so only a closed tab is tapped.
-  await page.getByRole('radio', { name: /^Build & Preview/ }).click();
-  {
-    const t = page.getByRole('tab', { name: /Parts/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
-  }
+  await goBuild(page);
+  await openTab(page, /Parts/);
   await page.waitForTimeout(300);
   const parts = await page.locator('#panel-parts').innerText();
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   check(
     width,
     'editor parts list the divider of the merged cabinet',
@@ -127,8 +136,9 @@ for (const width of [1440, 375]) {
   // 5. A taller piece next to it cannot be merged; the reason is shown and the button is disabled.
   await addPiece('chest of drawers', /Chest of drawers/);
   await openSheet();
+  await showPieces(page);
   await pieces.nth(1).getByRole('button').click();
-  await openGroup('Merge');
+  await openGroup('More: clearance, merge');
   const no = page.getByRole('button', {
     name: /^Merge with left piece Base cabinet, 1 door \+ Base cabinet, drawer over door$/,
   });

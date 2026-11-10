@@ -371,7 +371,6 @@ export const ru_editors = {
   '— {n|# price|# prices} missing (incomplete)': '— нет {n|# цены|# цен|# цен} (неполная)',
   ' — every line priced': ' — все строки с ценой',
   'About the estimate': 'Об оценке',
-  'Your prices, saved on this device.': 'Ваши цены, сохранённые на этом устройстве.',
   'what is not counted': 'что не учитывается',
   'Done with prices': 'Готово с ценами',
   Prices: 'Цены',

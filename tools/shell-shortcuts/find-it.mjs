@@ -1,5 +1,6 @@
 // Production acceptance for ADR-198. Run with the existing Playwright browser tooling, as other tools/* scripts.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
 const out = outDir('/tmp/furniture-shell-acceptance');
@@ -69,7 +70,7 @@ try {
         before + 50,
     );
     await dialog.getByRole('button', { name: 'Done', exact: true }).click();
-    await page.getByRole('radio', { name: 'Compose', exact: true }).click();
+    await goCompose(page);
     const space = page.getByRole('button', { name: /^3 drawers space/ });
     await space.focus();
     await page.keyboard.press('Enter');

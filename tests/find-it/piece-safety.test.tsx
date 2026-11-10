@@ -7,28 +7,9 @@
 // the piece editor goes up one level. Saved data is put in storage first (a returning user), then found by role and text.
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { newProjectNamed, renderApp, toProjects, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function newProjectNamed(user: User, name: string) {
-  await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
-  const create = await screen.findByRole('dialog');
-  const box = within(create).getByRole('textbox');
-  await user.clear(box);
-  await user.type(box, name);
-  await user.click(within(create).getByRole('button', { name: 'Create project' }));
-  await screen.findByRole('complementary', { name: 'Compose' });
-}
-
-async function toProjects(user: User) {
-  await user.click(
-    screen
-      .queryAllByRole('link', { name: 'Projects' })
-      .concat(screen.queryAllByRole('button', { name: 'Projects' }))[0],
-  );
-  await screen.findByRole('main', { name: 'Projects' });
-}
 
 /** The Delete action of a saved project's row: a button on a wide screen, in the row's ⋯ menu on a phone. */
 async function deleteRow(user: User, name: string, width: number) {

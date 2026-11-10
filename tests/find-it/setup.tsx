@@ -178,6 +178,50 @@ export async function selectRows(user: User, which: number[], multi = true) {
       await user.click(rows[i]);
 }
 
+/** Projects › Create a new project named `name`, then waits for the editor. */
+export async function newProjectNamed(user: User, name: string) {
+  await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
+  const create = await screen.findByRole('dialog');
+  const box = within(create).getByRole('textbox');
+  await user.clear(box);
+  await user.type(box, name);
+  await user.click(within(create).getByRole('button', { name: 'Create project' }));
+  await screen.findByRole('complementary', { name: 'Compose' });
+}
+
+/** The Projects place (a link in the nav, or a button on the bar). */
+export async function toProjects(user: User) {
+  await user.click(
+    screen
+      .queryAllByRole('link', { name: 'Projects' })
+      .concat(screen.queryAllByRole('button', { name: 'Projects' }))[0],
+  );
+  await screen.findByRole('main', { name: 'Projects' });
+}
+
+/**
+ * Bare app → Create a new project → Add a piece `search` (the first match, placed to the right when asked) → Add the
+ * room. Returns the Compose panel, with the sheet open on a phone.
+ */
+export async function projectWithRoom(user: User, search = 'Sideboard') {
+  await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
+  const create = await screen.findByRole('dialog');
+  await user.click(within(create).getByRole('button', { name: 'Create project' }));
+  const panel = await screen.findByRole('complementary', { name: 'Compose' });
+  await openSheet(user, panel);
+  await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
+  const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
+  await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), search);
+  await user.click(within(dlg).getAllByRole('button', { name: new RegExp(search) })[0]);
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
+  const place = screen.queryByRole('button', { name: 'Place to the right' });
+  if (place) await user.click(place);
+  await openSheet(user, panel);
+  await user.click(await screen.findByRole('button', { name: 'Add the room' }));
+  await openSheet(user, panel);
+  return panel;
+}
+
 /** Opens the app's More menu (⋯), or the control labelled `name`. */
 export async function openMore(user: User, name: RegExp | string = /^More$/) {
   await user.click(screen.getByLabelText(name));

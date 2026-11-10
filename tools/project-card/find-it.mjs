@@ -4,6 +4,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/project-card/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -57,7 +58,7 @@ for (const width of [1280, 390]) {
   await dlg.locator('input').fill(`Card ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');
@@ -69,16 +70,27 @@ for (const width of [1280, 390]) {
   const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
 
-  // 2. "Doors and fronts" (shown as "Fronts", ADR-112) sits in the same row as Snap, Select and Clear.
+  // 2. "Doors and fronts" (shown as "Fronts", ADR-112) sits in the same row as Snap, Select and Clear. On a phone Snap
+  //    and the clearances sit behind the row's "Options" button (ADR-144, G-269): Fronts is in the row with Options,
+  //    and Snap is inside it.
   const doors = front.getByRole('checkbox', { name: 'Doors and fronts', exact: true });
   const snap = front.getByRole('checkbox', { name: 'Snap', exact: true });
-  const [db, sb] = [await doors.boundingBox(), await snap.boundingBox()];
+  const options = front.locator('details.view-options > summary');
+  const rowMate = phone ? options : snap;
+  const [db, sb] = [await doors.boundingBox(), await rowMate.boundingBox()];
   check(
     width,
-    '"Doors and fronts" in the row with "Snap"',
+    phone
+      ? '"Doors and fronts" in the row with "Options"'
+      : '"Doors and fronts" in the row with "Snap"',
     !!db && !!sb && Math.abs(db.y + db.height / 2 - (sb.y + sb.height / 2)) < sb.height / 2,
-    db && sb ? `doors y ${Math.round(db.y)}, snap y ${Math.round(sb.y)}` : 'not found',
+    db && sb ? `doors y ${Math.round(db.y)}, row-mate y ${Math.round(sb.y)}` : 'not found',
   );
+  if (phone) {
+    await options.click();
+    check(width, '"Snap" behind "Options"', await snap.isVisible());
+    await page.keyboard.press('Escape');
+  }
   check(
     width,
     'only one "Doors and fronts"',

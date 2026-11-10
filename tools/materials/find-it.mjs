@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { crc32, deflateSync } from 'node:zlib';
 
@@ -125,14 +126,15 @@ for (const width of [1440, 375]) {
   };
   // A phone shows the View switch in Build & Preview only, and the drawing on its own in Compose (ADR-080).
   const show3d = async (p = page) => {
-    if (!(await p.getByRole('radio', { name: '3D' }).isVisible()))
-      await p.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (!(await p.getByRole('radio', { name: '3D' }).isVisible())) await goBuild(p);
     await p.getByRole('radio', { name: '3D' }).click();
     await p.waitForTimeout(1500);
   };
   const showFront = async () => {
-    if (phone) await page.getByRole('radio', { name: 'Compose' }).click();
-    else await page.getByRole('radio', { name: '2D' }).click();
+    if (phone) await goCompose(page);
+    // The phone Editor place has the 3D/2D switch too and keeps the last view (ADR-241): pick 2D at every width.
+    const flat = page.getByRole('radio', { name: '2D' });
+    if (await flat.isVisible().catch(() => false)) await flat.click();
     await page.waitForTimeout(300);
   };
   const canvasShare = async () =>
@@ -330,17 +332,30 @@ for (const width of [1440, 375]) {
       .locator('input.mat-name')
       .evaluateAll((xs) => xs.some((x) => x.value === 'Egger H1145 Bardolino Oak')),
   );
-  // The board choices sit in Settings with the boards since ADR-080.
-  const boardChoices = await dlg.locator('select option').allInnerTexts();
+  await closeDialog();
+  // ADR-163: board choices live in the one Material dialog (top-bar "Material") and read "name, thickness mm"; the
+  // "· maker, type" suffix was removed there and the labels stay on the Boards panel (checked above).
+  await page.getByRole('button', { name: 'Material', exact: true }).first().click();
+  const matDlg = page.getByRole('dialog', { name: 'Material' });
+  await matDlg.waitFor({ timeout: 5000 }).catch(() => {});
+  const boardChoices = await matDlg
+    .getByLabel('Board', { exact: true })
+    .locator('option')
+    .allInnerTexts()
+    .catch(() => []);
   await closeDialog();
   check(
     width,
-    'board choices show labels',
-    boardChoices.includes('PAL 18 white · Egger, Kitchen worktop') &&
-      boardChoices.includes('Egger H1145 Bardolino Oak · Egger, PAL'),
+    'board choices name the boards ("name, thickness mm", no maker/type suffix, ADR-163)',
+    boardChoices.includes('PAL 18 white, 18 mm') &&
+      boardChoices.includes('Egger H1145 Bardolino Oak, 18 mm') &&
+      boardChoices.every((o) => !o.includes(' · ')),
+    JSON.stringify(boardChoices),
   );
   {
     const t = page.getByRole('tab', { name: /Checks/ });
+    // A phone's results tabs are in the Cut list place (ADR-241).
+    if (!(await t.isVisible().catch(() => false))) await goBuild(page);
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
   }
   check(
@@ -410,7 +425,14 @@ for (const width of [1440, 375]) {
   check(
     width,
     'cleanup: 1 unused picture deleted',
-    await page.getByText('1 unused picture deleted.').isVisible(),
+    // The deletion is asynchronous: wait for its message instead of reading it at once.
+    await page
+      .getByText('1 unused picture deleted.')
+      .waitFor({ timeout: 8000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);

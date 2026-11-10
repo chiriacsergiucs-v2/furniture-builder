@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/drill-select/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -33,7 +34,7 @@ for (const width of [390, 1280]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   ck('front view shown', await page.locator('figure.elevation').isVisible());
 
   // 2. Three taps at one spot in the hanging space, then a fourth.
@@ -82,7 +83,7 @@ for (const width of [390, 1280]) {
 
   // 3b. The same taps in 3D (phone, Build & Preview): the peek row names the selection.
   if (phone) {
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await goBuild(page);
     // A phone opens Build & Preview in 2D (ADR-144): tap "3D" as a user would.
     const three3d = page.getByRole('radio', { name: '3D', exact: true });
     if ((await three3d.getAttribute('aria-checked')) !== 'true') await three3d.click();
@@ -132,7 +133,7 @@ for (const width of [390, 1280]) {
       seen.join(' › ') === 'Divided space › Hanging › Whole cabinet › Divided space',
       seen.join(' › '),
     );
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
   }
 
   // 4. A project (ADR-083, ADR-088): a tap on the selected piece selects the whole piece; the project stays open.
@@ -171,11 +172,13 @@ for (const width of [390, 1280]) {
   );
   await tapPlan();
   await sheet(true);
-  t = await page.getByRole('region', { name: 'Inside this piece' }).innerText();
+  // textContent: the phone sheet may skip rendering the region off screen, so innerText holds only its title. The
+  // phone has no "Project" heading (ADR-241); the project's Add a piece button shows the project is still open.
+  t = await page.getByRole('region', { name: 'Inside this piece' }).textContent();
   ck(
     'project: a tap on the selected piece selects the whole piece, project still open',
     t.includes('Selected: Whole cabinet') &&
-      (await page.getByRole('heading', { name: 'Project', exact: true }).isVisible()),
+      (await page.getByRole('button', { name: 'Add a piece', exact: true }).count()) > 0,
     t.slice(0, 80),
   );
   await page.screenshot({ path: `${out}/drill-project-${width}.png` });

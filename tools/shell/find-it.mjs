@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/shell/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { openPieceEditor, showPieces } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -217,7 +218,7 @@ for (const width of [1280, 390, 360]) {
       await peek.click();
   };
   await openSheet();
-  await page.getByRole('button', { name: 'Add a piece' }).click();
+  await page.getByRole('button', { name: 'Add a piece' }).filter({ visible: true }).first().click();
   const add = page.locator('dialog[open]');
   await add.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
   await add
@@ -226,8 +227,9 @@ for (const width of [1280, 390, 360]) {
     .click();
   await add.waitFor({ state: 'detached' }).catch(() => {});
   await openSheet();
+  await showPieces(page);
   await page.locator('ul.pieces > li').first().getByRole('button').click();
-  await page.getByRole('button', { name: 'Edit this piece' }).click();
+  await openPieceEditor(page);
   const back = page.getByRole('button', { name: 'Back to project Shell test' });
   check(
     width,
@@ -277,6 +279,11 @@ for (const width of [1280, 390, 360]) {
   // 9. Feature Research from ⋯; old links still open their pages.
   await more.click();
   await menu.getByRole('button', { name: /Feature Research/ }).click();
+  // The page is a lazy chunk: wait for its heading before checking it.
+  await page
+    .getByRole('heading', { name: /Feature Research/ })
+    .waitFor({ timeout: 10000 })
+    .catch(() => {});
   check(
     width,
     'Feature Research opens from ⋯',

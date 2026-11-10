@@ -5,6 +5,7 @@
 // since ADR-112 never the card over the drawing or over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -52,7 +53,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
   await page.waitForTimeout(300);
 
@@ -106,7 +107,10 @@ for (const width of [1280, 390]) {
   await sheet(false);
 
   // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-112).
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
+  // N145: the view stays when the mode changes (2D below 1500 px), so 3D is picked from the View row.
+  const three = page.getByRole('radio', { name: '3D', exact: true });
+  if (await three.isVisible().catch(() => false)) await three.click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const dock3 = phone ? page.locator('#count-dock') : page.locator('.view.three');
@@ -126,7 +130,7 @@ for (const width of [1280, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   // The editor remembers Build & Preview from step 5; pieces are added under Compose.
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');
@@ -187,11 +191,16 @@ for (const width of [1280, 390]) {
   await sheet(false);
   await tapPlan();
   await sheet(true);
+  // ADR-160: the phone sheet hides the space's heading (`.side .insp-head`); its path ends at the space instead.
+  const spaceShown = phone
+    ? inside
+        .getByRole('navigation', { name: 'Where this space sits' })
+        .locator('[aria-current="true"]', { hasText: 'Interior' })
+    : inside.getByRole('heading', { name: 'Divided space' });
   check(
     width,
     'drilled, a space inside selected: no "Width" or "Depth" in the card',
-    (await inside.getByRole('heading', { name: 'Divided space' }).isVisible()) &&
-      (await inCard.count()) === 0,
+    (await spaceShown.isVisible()) && (await inCard.count()) === 0,
   );
   await shot('project-inside');
   await sheet(false);

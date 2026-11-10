@@ -5,6 +5,7 @@
 // Sideboard (the card over the drawing and over 3D, Width in the side panel / bottom sheet), then a Sideboard in a
 // project (the plan toolbar row, the card over the front view). Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -69,7 +70,8 @@ for (const width of [1280, 390]) {
     (await c.getByLabel('Width').count()) === 0 &&
     (await c.getByLabel('Depth').count()) === 0 &&
     (await c.getByText(/Width|Depth/).count()) === 0;
-  // Each row at most 52 px tall; at 390 with touch every button at least 44 × 44 px.
+  // Each row at most 52 px tall. At 390 px N121 (user 2026-10-27) overrides ADR-112's 44 px: the card's buttons are
+  // just taller than their line of text (18 px).
   const sizes = async (c) => {
     const rows = await c
       .locator('.cs-row')
@@ -95,8 +97,8 @@ for (const width of [1280, 390]) {
     if (phone)
       check(
         width,
-        `${where}: card buttons ≥ 44 × 44 px with touch`,
-        btns.length > 0 && btns.every(([w, h]) => w >= 44 && h >= 44),
+        `${where}: card buttons ≥ 18 px tall with touch (N121)`,
+        btns.length > 0 && btns.every(([w, h]) => w >= 18 && h >= 18),
         btns.map((b) => b.join('×')).join(', '),
       );
   };
@@ -109,7 +111,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await page.waitForTimeout(300);
   const elev = front.getByRole('figure', { name: /^Front view/ });
   const m0 = await measure(elev);
@@ -209,7 +211,10 @@ for (const width of [1280, 390]) {
   await sheet(false);
 
   // 5. 3D (Build & Preview): the card over the view (docked under it on a phone, G-070) has no Width or Depth.
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
+  // Build & Preview (and the phone's Cut list place, ADR-241) keep the 2D/3D switch on the drawing: pick 3D.
+  const r3 = page.getByRole('radio', { name: '3D', exact: true });
+  if (await r3.isVisible().catch(() => false)) await r3.click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const c3 = card(phone ? page.locator('#count-dock') : page.locator('.view.three'));
@@ -226,7 +231,7 @@ for (const width of [1280, 390]) {
   await dlg.locator('input').fill(`Stage ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');
@@ -240,27 +245,42 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(300);
 
   // 7. The plan toolbar: "Fronts", "Snap", "Select" and "Clear." on one row; the checkboxes keep their full names.
+  // The front view now has its own Select too, so the row is looked for in the plan figure. On a phone Snap and
+  // Clear. sit behind the row's Options menu (ADR-144, G-269): there the row is Fronts, Select and Options.
+  const planFig = front.getByRole('figure', { name: /^Room plan, seen from above/ });
+  const planMenu = planFig.locator('details.view-options');
   const tools = [
-    front.getByText('Fronts', { exact: true }),
-    front.getByRole('checkbox', { name: 'Snap', exact: true }),
-    front.getByRole('checkbox', { name: 'Select', exact: true }),
-    front.getByText('Clear.', { exact: true }),
+    planFig.getByText('Fronts', { exact: true }),
+    planFig.getByRole('checkbox', { name: 'Select', exact: true }),
+    ...(phone
+      ? []
+      : [
+          planFig.getByRole('checkbox', { name: 'Snap', exact: true }),
+          planFig.getByText('Clear.', { exact: true }),
+        ]),
   ];
   const tb = await Promise.all(tools.map(box));
   const mid = tb.map((b) => b.y + b.height / 2);
   check(
     width,
-    '"Fronts", "Snap", "Select" and "Clear." on one row',
-    tb.every((b) => b.width > 0) && Math.max(...mid) - Math.min(...mid) < 12,
+    phone
+      ? '"Fronts" and "Select" on one row, "Options" in the plan toolbar'
+      : '"Fronts", "Snap", "Select" and "Clear." on one row',
+    tb.every((b) => b.width > 0) &&
+      Math.max(...mid) - Math.min(...mid) < 12 &&
+      (!phone || (await planMenu.locator(':scope > summary').isVisible())),
     tb.map(fmt).join(' | '),
   );
+  if (phone) await planMenu.locator(':scope > summary').click();
   check(
     width,
-    'checkboxes named "Doors and fronts" and "Clearances"',
-    (await front.getByRole('checkbox', { name: 'Doors and fronts', exact: true }).isVisible()) &&
-      (await front.getByRole('checkbox', { name: 'Clearances', exact: true }).isVisible()),
+    `checkboxes named "Doors and fronts" and "Clearances"${phone ? ' (Clearances and Snap under Options)' : ''}`,
+    (await planFig.getByRole('checkbox', { name: 'Doors and fronts', exact: true }).isVisible()) &&
+      (await planFig.getByRole('checkbox', { name: 'Clearances', exact: true }).isVisible()) &&
+      (await planFig.getByRole('checkbox', { name: 'Snap', exact: true }).isVisible()),
   );
   await shot('plan-row');
+  if (phone) await planMenu.locator(':scope > summary').click();
 
   // 8. Front view, nothing drilled: measure; then one tap on the piece shows the card (ADR-109) with counts only.
   const fv = front.getByRole('figure', { name: /^Room seen from the front/ });

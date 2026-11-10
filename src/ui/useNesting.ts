@@ -6,7 +6,7 @@ import type { NestJob, NestResult } from '../core/nesting/types';
 import type { NestResponse } from '../core/nesting/worker';
 import { useView } from '../store/useView';
 
-export type NestState =
+type NestState =
   | { status: 'idle' }
   | { status: 'running' }
   | { status: 'done'; results: NestResult[]; jobs: NestJob[]; rows: CutRow[] }

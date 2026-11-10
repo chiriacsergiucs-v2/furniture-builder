@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
  * Light / dark theme. Follows the system until the user picks one; the choice is kept on this device only
  * (localStorage, no telemetry — ADR-002). `data-theme` on <html> drives the CSS tokens.
  */
-export type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark';
 const KEY = 'fb:theme';
 const listeners = new Set<() => void>();
 
@@ -18,12 +18,12 @@ function stored(): Theme | null {
 }
 let chosen: Theme | null = stored();
 
-export function systemTheme(): Theme {
+function systemTheme(): Theme {
   return typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches
     ? 'dark'
     : 'light';
 }
-export function currentTheme(): Theme {
+function currentTheme(): Theme {
   return chosen ?? systemTheme();
 }
 

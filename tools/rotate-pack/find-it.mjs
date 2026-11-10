@@ -88,19 +88,27 @@ for (const width of [1280, 390]) {
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'three pieces on the plan', (await pieces.count()) === 3, `${await pieces.count()}`);
 
-  // 2. Rotation (°) 30 on the first piece: drawn turned on the plan, the overlap is reported.
+  // 2. Turn the first piece to 30°: drawn turned on the plan, the overlap is reported. The typed Rotation (°) field is
+  // hidden (ADR-160, G-311 "Keep hidden"); ADR-169 turns a piece to any whole degree with the plan's Turn handle and
+  // the [ ] keys, so the angle is set with ] (1° each) and read from the handle's slider value. Shift+] (15°) is not
+  // used: a real Shift+] sends "}", which the app does not read (reported, not fixed here).
   await page.keyboard.press('Escape');
   await tap(0);
+  const turnHandle = plan.getByRole('slider', { name: /^Turn / });
+  check(width, 'the selected piece has a "Turn" handle on the plan', await turnHandle.isVisible());
+  await pieces.nth(0).focus();
+  for (let i = 0; i < 30; i++) await page.keyboard.press(']');
+  await page.waitForTimeout(300);
+  check(
+    width,
+    '] pressed 30 times turns it to 30°',
+    (await turnHandle.getAttribute('aria-valuenow')) === '30',
+    `${await turnHandle.getAttribute('aria-valuenow')}`,
+  );
   await sheet(true);
   const pos = page.locator('details.group > summary', { hasText: /^Position$/ }).first();
   await pos.scrollIntoViewIfNeeded().catch(() => {});
   if (!(await pos.evaluate((s) => s.parentElement.open).catch(() => true))) await click(pos);
-  const rot = page.getByLabel('Rotation (°)', { exact: true });
-  check(width, '"Rotation (°)" on the selected-piece card', await rot.isVisible());
-  await rot.fill('30');
-  await rot.press('Enter');
-  await page.waitForTimeout(300);
-  check(width, 'Rotation (°) reads 30', (await rot.inputValue()) === '30');
   // The card's Position group names the overlap the turned piece now makes.
   check(
     width,
@@ -121,9 +129,8 @@ for (const width of [1280, 390]) {
   await shot('rotation-plan');
 
   // 3. 3D: drawn on demand — once it has settled, no draws while idle; it draws again on orbit.
-  // (A phone shows the 3D view under Build & Preview; a computer has the 3D view switch.)
-  if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
-  else await page.getByRole('radio', { name: '3D', exact: true }).click();
+  // The 3D/2D switch is in the phone's Editor place too (ADR-241), so both widths use it.
+  await page.getByRole('radio', { name: '3D', exact: true }).click();
   const canvas = page.locator('.view.three canvas');
   await canvas.waitFor({ state: 'visible', timeout: 20000 });
   // Settled: the first 1.5 s window without a draw, within 15 s (loading, saving and the light arriving draw).
@@ -152,8 +159,7 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(500);
   check(width, 'orbiting or tapping draws again', (await draws()) > d1);
   await shot('3d');
-  if (phone) await page.getByRole('radio', { name: /Compose/ }).click();
-  else await planRadio.click();
+  await planRadio.click();
   await page.waitForTimeout(300);
 
   // 4. Select all three → Mirror: positions mirror, the turned piece's turn becomes 330°.

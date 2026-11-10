@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 // setting for this page only, never saved in the project.
 let clearancesOn = false;
 const clearanceListeners = new Set<() => void>();
-export function setClearances(v: boolean) {
+function setClearances(v: boolean) {
   clearancesOn = v;
   clearanceListeners.forEach((f) => f());
 }

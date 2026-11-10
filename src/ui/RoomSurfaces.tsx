@@ -21,7 +21,7 @@ import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
  */
 
 /** A stored picture's pixel size, read once per id from this device; null while unknown or missing. */
-export function usePictureSize(id: string | undefined): { w: number; h: number } | null {
+function usePictureSize(id: string | undefined): { w: number; h: number } | null {
   const [size, setSize] = useState<{ id: string; w: number; h: number } | null>(null);
   useEffect(() => {
     if (!id) return;

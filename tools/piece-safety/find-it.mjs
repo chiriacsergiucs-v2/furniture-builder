@@ -10,6 +10,7 @@
 //   6. Deleting a project with a kept version asks "Also delete its 1 kept version?"; Esc keeps it.
 // The script writes its own model file into <out dir>; no binary is committed. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -146,7 +147,7 @@ for (const width of widths) {
   const said = () =>
     (phone ? page.locator('.sheet-peek') : page.locator('aside.side')).innerText().catch(() => '');
   const compose = async () => {
-    await page.getByRole('radio', { name: /Compose/ }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
     await page.waitForTimeout(250);
@@ -173,7 +174,7 @@ for (const width of widths) {
     await click(loc);
     await page.waitForTimeout(250);
     await sheet(true);
-    await click(btn('Edit this piece'));
+    await openPieceEditor(page);
     await page.locator('figure.elevation').waitFor({ state: 'visible', timeout: 5000 });
     await page.waitForTimeout(250);
   };
@@ -185,8 +186,13 @@ for (const width of widths) {
   };
   const three = page.locator('.view.three');
   const canvas = three.locator('canvas').first();
-  const to3d = async () => {
-    if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  // `tall`: on a phone, the Editor place's 3D view (it has the 3D/2D switch too, ADR-241), taller than the Cut list
+  // place's, where the wrapped 3D toolbar and the drag note cover most of a piece and its Move ghost.
+  const to3d = async (tall = false) => {
+    if (phone && tall) {
+      await goCompose(page);
+      await sheet(false);
+    } else if (phone) await goBuild(page);
     await page.getByRole('radio', { name: '3D', exact: true }).click();
     await canvas.waitFor({ state: 'visible', timeout: 30000 });
     await page.waitForTimeout(1500);
@@ -223,7 +229,7 @@ for (const width of widths) {
       .first()
       .click();
     await page.locator('main.work').waitFor({ state: 'visible' });
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     const hanging = page.getByRole('button', { name: /^Hanging space, / });
     const tap = async () => {
       const b = await hanging.boundingBox();
@@ -444,7 +450,7 @@ for (const width of widths) {
       !!square && !!angled && angled !== square,
       `${square} → ${angled}`,
     );
-    await to3d();
+    await to3d(true);
     {
       // The Simple look draws fast enough in a software-rendered browser; on a phone it sits in a view menu.
       const simple = page.getByRole('radio', { name: 'Simple' }).filter({ visible: true }).first();
@@ -466,7 +472,7 @@ for (const width of widths) {
     await compose();
     await click(planPiece(0));
     await page.waitForTimeout(250);
-    await to3d();
+    await to3d(true);
     await page.waitForTimeout(800);
     const after = await canvasPixels();
     await shot('angled-selected');
@@ -488,14 +494,16 @@ for (const width of widths) {
             (r.bottom - cr.top) * k,
           ]);
         }
-        // The quick-count card can sit outside .view.three; it is a region named after the counts.
+        // The quick-count card can sit outside .view.three; it is a region named after the counts. On a phone's
+        // Editor place the sheet and the bottom nav lie over the canvas's foot (ADR-241), with a shadow above them.
         for (const el of document.querySelectorAll(
-          '.quick-count, .count-card, [aria-label="Quick counts"]',
+          '.quick-count, .count-card, [aria-label="Quick counts"], .sheet-peek, aside.side, nav[aria-label="Places"]',
         )) {
           const r = el.getBoundingClientRect();
+          const shade = el.matches('.sheet-peek, aside.side, nav') ? 24 : 0;
           out.push([
             (r.left - cr.left) * k,
-            (r.top - cr.top) * k,
+            (r.top - shade - cr.top) * k,
             (r.right - cr.left) * k,
             (r.bottom - cr.top) * k,
           ]);

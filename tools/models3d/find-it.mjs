@@ -4,6 +4,7 @@
 // files into <out dir> (a red cube as .glb, a .gltf that points outside itself); no binary model is committed.
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -174,18 +175,17 @@ for (const width of widths) {
     return redPixels();
   };
   const show3d = async () => {
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
-    if (!phone) {
-      const r = page.getByRole('radio', { name: '3D', exact: true });
-      if (await r.isVisible().catch(() => false)) await r.click();
-    }
+    await goBuild(page);
+    // The phone's Cut list place has the 3D/2D switch too and keeps the last view (ADR-241): pick 3D at every width.
+    const r = page.getByRole('radio', { name: '3D', exact: true });
+    if (await r.isVisible().catch(() => false)) await r.click();
     await page.locator('.view.three canvas').first().waitFor({ timeout: 30000 });
     // The simple look draws the same model with less work (no occlusion pass).
     const simple = page.getByRole('radio', { name: 'Simple' });
     if (await simple.isVisible().catch(() => false)) await simple.click();
   };
   const showPlan = async () => {
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
   };

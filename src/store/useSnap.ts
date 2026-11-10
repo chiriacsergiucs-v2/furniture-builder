@@ -9,7 +9,7 @@ const KEY = 'fb:plan-snap';
 const listeners = new Set<() => void>();
 
 /** Stored 'off' turns snapping off; anything else (nothing stored, unreadable) leaves it on. */
-export function parseSnap(v: string | null): boolean {
+function parseSnap(v: string | null): boolean {
   return v !== 'off';
 }
 
@@ -25,7 +25,7 @@ let on = stored();
 /** The toggle as it is now, for handlers outside React (ADR-094: a drop from the piece list). */
 export const snapIsOn = () => on;
 
-export function setSnap(v: boolean) {
+function setSnap(v: boolean) {
   on = v;
   try {
     localStorage.setItem(KEY, v ? 'on' : 'off');

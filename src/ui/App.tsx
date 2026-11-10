@@ -911,11 +911,14 @@ export function App() {
                 aria-expanded={sheetOpen}
                 onClick={() => setSheetOpen(!sheetOpen)}
               >
-                <span>{peek}</span>
+                {/* One line; a long piece name ends in an ellipsis and shows in full on hover (ADR-114). */}
+                <span title={peek}>{peek}</span>
                 <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
               </button>
               {phone && inProject && <PeekActions onAdd={openPieces} />}
             </div>
+            {/* Phones: Settings and Material open here, the sheet at full height (ADR-247). */}
+            <div id="sheet-slot" className="sheet-slot" />
             <div className="side-body">
               {inProject ? (
                 <ProjectPanel mode="compose" onAdd={openPieces} />

@@ -22,21 +22,17 @@ const SOURCES: { id: string; load: () => Promise<string> }[] = [
 ];
 
 let loading: Promise<SellerCatalog[]> | null = null;
-let loaded: SellerCatalog[] | null = null;
 
 /** Loads (once) and returns every seller catalog. */
 export function loadSellerCatalogs(): Promise<SellerCatalog[]> {
-  loading ??= Promise.all(SOURCES.map((s) => s.load().then((t) => JSON.parse(t) as SellerCatalog)))
-    .then((c) => (loaded = c))
-    .catch((e) => {
-      loading = null;
-      throw e;
-    });
+  loading ??= Promise.all(
+    SOURCES.map((s) => s.load().then((t) => JSON.parse(t) as SellerCatalog)),
+  ).catch((e) => {
+    loading = null;
+    throw e;
+  });
   return loading;
 }
-
-/** The catalogs when already loaded, else null. */
-export const sellerCatalogs = () => loaded;
 
 export interface Offer {
   seller: SellerCatalog;

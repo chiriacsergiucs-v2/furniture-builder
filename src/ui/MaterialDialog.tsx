@@ -1,3 +1,4 @@
+import { useMediaQuery } from '../store/useMediaQuery';
 import { useEffect, useMemo, useState } from 'react';
 import { boardChoices, projectBands } from '../core/boards';
 import { bandKey } from '../core/cutlist';
@@ -83,10 +84,12 @@ function partRows(d: Design) {
  * (the selected items, else the item's run) or the whole project, on any combination of part roles.
  */
 export function MaterialDialog() {
+  const phone = useMediaQuery('(max-width: 760px)');
   const open = useUi((s) => s.materialOpen);
   const setOpen = useUi((s) => s.setMaterialOpen);
   return (
     <Dialog
+      inSheet={phone}
       open={open}
       onClose={() => setOpen(false)}
       title={t('Material')}

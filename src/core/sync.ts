@@ -14,11 +14,6 @@ import { t } from './i18n';
  */
 
 export type LocalTable = 'designs' | 'templates' | 'images';
-export const KIND_OF: Record<LocalTable, RecordKind> = {
-  designs: 'design',
-  templates: 'template',
-  images: 'image',
-};
 export const TABLE_OF: Record<RecordKind, LocalTable> = {
   design: 'designs',
   template: 'templates',

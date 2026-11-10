@@ -6,6 +6,7 @@
 // and segmented label against its line height (one line each), and each control's height: 38 px with a mouse, 30 in
 // toolbars and tables (`--control-h`, `--control-h-sm`), and at least 44 × 44 with touch. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose, showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -89,10 +90,11 @@ const audit = (page, scope) =>
             if (!e.title) wraps.push(`"${name(e)}" in ${tag(e)} is cut and has no title`);
           }
         }
-        // List rows and two-line buttons (a name and a sub-line), the card's fold row, chips and the 3D handles keep
-        // their own height: they are measured for touch only. Stepper buttons and inner inputs belong to their field.
+        // List rows and two-line buttons (a name and a sub-line), the card's fold row, chips, the 3D handles and the
+        // icon-over-label arrange row (52 px, ADR-160) keep their own height: they are measured for touch only.
+        // Stepper buttons and inner inputs belong to their field.
         const kind = e.matches(
-          '.row-btn, .btn.stack, .steps button, .cs-fold, .chip, .model-handle, .front-hit',
+          '.row-btn, .btn.stack, .steps button, .cs-fold, .chip, .model-handle, .front-hit, .arrange-tools .btn',
         )
           ? 'row'
           : e.closest('.segmented') && e.matches('button')
@@ -102,9 +104,11 @@ const audit = (page, scope) =>
               : e.matches('.mm input, .search input')
                 ? 'inner'
                 : 'control';
-        // Icon buttons are square and named by an aria-label.
+        // Icon buttons are square and named by an aria-label. A field's trailing bind button (ƒ, ADR-166) takes the
+        // field's height, like its steppers.
         if (
           e.matches('.btn.icon') &&
+          !e.matches('.mm .btn.bind') &&
           (!e.getAttribute('aria-label') || Math.abs(r.width - r.height) > 1)
         )
           icons.push(
@@ -116,6 +120,7 @@ const audit = (page, scope) =>
           w: r.width,
           h: r.height,
           small: !!e.closest(TOOLBARS),
+          counts: !!e.closest('.count-stepper'),
         });
       }
       for (const s of root.querySelectorAll('.segmented')) {
@@ -180,6 +185,8 @@ for (const width of [1280, 390]) {
     for (const s of a.sizes) {
       if (phone) {
         if (s.kind === 'inner') continue;
+        // The phone's quick-count card is about 65 % size by the user's decision (N121, 2026-10-27).
+        if (s.counts) continue;
         if (s.kind === 'segmented') continue;
         if (s.h < 43.5 || (s.w < 43.5 && s.kind !== 'step'))
           bad.push(`${s.what} ${Math.round(s.w)}×${Math.round(s.h)}`);
@@ -212,7 +219,8 @@ for (const width of [1280, 390]) {
     return a;
   };
   // One row at this width: all the elements share a top and none is cut.
-  const oneRow = async (name, loc) => {
+  // `rows`: the result tabs may take a second row rather than hide behind a sideways scroll (N82).
+  const oneRow = async (name, loc, rows = 1) => {
     const info = await loc.evaluateAll((els) =>
       els.map((e) => {
         const r = e.getBoundingClientRect();
@@ -222,8 +230,8 @@ for (const width of [1280, 390]) {
     const tops = new Set(info.map((i) => i.top));
     check(
       width,
-      `${name} fit one row`,
-      info.length > 0 && tops.size === 1 && info.every((i) => !i.cut && i.right <= width + 0.5),
+      rows === 1 ? `${name} fit one row` : `${name} fit ${rows} rows, none cut`,
+      info.length > 0 && tops.size <= rows && info.every((i) => !i.cut && i.right <= width + 0.5),
       `${info.length} found, ${tops.size} rows${info.some((i) => i.cut) ? ', cut' : ''}`,
     );
   };
@@ -277,7 +285,7 @@ for (const width of [1280, 390]) {
   await dlg.locator('input').fill(`Rule ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await state('Project, Compose (empty)');
   const addPiece = async (search, name) => {
@@ -296,6 +304,7 @@ for (const width of [1280, 390]) {
   await sheet(true);
   await state('Project, Compose (three pieces)');
   // The middle piece has a neighbour on each side: both merge buttons show.
+  await showPieces(page);
   await page.locator('ul.pieces > li').nth(1).getByRole('button').first().click();
   await sheet(true);
   await unfold();
@@ -331,10 +340,14 @@ for (const width of [1280, 390]) {
   await page.keyboard.press('Escape');
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
-  // 4. Build & Preview, project: the mode switch and the five result tabs, then each tab's panel.
+  // 4. Build & Preview, project: the mode switch and the six result tabs, then each tab's panel.
+  // A phone has no mode switch: the Cut list place shows the results (ADR-241).
   const bp = page.getByRole('radio', { name: 'Build & Preview' });
-  await oneLine('Build & Preview', bp);
-  await bp.click();
+  if (phone) await goBuild(page);
+  else {
+    await oneLine('Build & Preview', bp);
+    await bp.click();
+  }
   await page.waitForTimeout(800);
   const tabs = page
     .getByRole('tablist')
@@ -342,12 +355,12 @@ for (const width of [1280, 390]) {
     .getByRole('tab');
   check(
     width,
-    'result tabs: Parts, Sheets, Hardware, Shopping, Checks',
+    'result tabs: Parts, Sheets, Hardware, Assembly, Shopping, Checks',
     (await tabs.allInnerTexts()).map((t) => t.replace(/\s*\d+$/, '').trim()).join(',') ===
-      'Parts,Sheets,Hardware,Shopping,Checks',
+      'Parts,Sheets,Hardware,Assembly,Shopping,Checks',
     (await tabs.allInnerTexts()).join(','),
   );
-  await oneRow('the five result tabs', tabs);
+  await oneRow('the six result tabs', tabs, 2);
   check(
     width,
     'the Shopping tab keeps the accessible name "Shopping list"',
@@ -370,7 +383,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await unfold();
   await state('Piece, Compose (whole piece)');
@@ -394,9 +407,9 @@ for (const width of [1280, 390]) {
   await state('Piece Settings', 'dialog[open]');
   await page.keyboard.press('Escape');
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  await page.getByRole('radio', { name: 'Build & Preview' }).click();
+  await goBuild(page);
   await page.waitForTimeout(800);
-  await oneRow('the five result tabs (piece)', page.getByRole('tab'));
+  await oneRow('the six result tabs (piece)', page.getByRole('tab'), 2);
   for (const t of ['Parts', 'Sheets', 'Hardware', 'Shopping list', 'Checks']) {
     const tab = page.getByRole('tab', { name: new RegExp(`^${t}`) });
     if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.dispatchEvent('click');

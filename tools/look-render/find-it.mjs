@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/look-render/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -83,7 +84,7 @@ for (const width of [1280, 390]) {
   const before3d = chunks.length;
   // A phone shows 3D in Build & Preview only (ADR-079), its view controls under "Options" (N82); a desktop picks 3D.
   if (phone) {
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await goBuild(page);
     await page.locator('.view.three canvas').waitFor({ timeout: 20000 });
     await page.locator('details.view-options > summary').click();
   } else await page.getByRole('radio', { name: '3D' }).click();

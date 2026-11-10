@@ -23,7 +23,6 @@ import type { Answers, Compartment, Option, StepDef } from './types';
 
 export const MAX_DIVIDERS = 7;
 const MAX_COMP_SHELVES = 20;
-export const MAX_COMP_DRAWERS = 10;
 
 // ---------------------------------------------------------------------------
 // Reading answers

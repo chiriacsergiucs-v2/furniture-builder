@@ -30,7 +30,7 @@ const shipped = (bundles: ResearchBundle[]): StoredBundle[] =>
   bundles.map((b) => storedOf(b, '2026-10-23T00:00:00.000Z'));
 
 /** Shipped editions win over a stored copy of the same edition (research records are never edited by the user). */
-export function seedShipped(
+function seedShipped(
   stored: StoredBundle[],
   bundles: ResearchBundle[],
   at: string,

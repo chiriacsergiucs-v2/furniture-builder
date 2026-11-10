@@ -5,6 +5,7 @@
 // project; a bed dragged next to a kitchen base → "Won’t snap to …" naming the family rule; two base units of
 // different depths → Checks shows the depth warning; Settings › Rules lists the rules. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -153,8 +154,7 @@ for (const width of [1440, 390]) {
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
   await sheet(false);
   const checksTab = page.getByRole('tab', { name: /Checks/ });
-  if (!(await checksTab.isVisible().catch(() => false)))
-    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  if (!(await checksTab.isVisible().catch(() => false))) await goBuild(page);
   if ((await checksTab.getAttribute('aria-selected')) !== 'true') await click(checksTab);
   await page.waitForTimeout(200);
   const depthWarn = page.locator('.checks', { hasText: /different depths/ }).first();
@@ -177,14 +177,7 @@ for (const width of [1440, 390]) {
   check(width, 'no sideways scroll (Checks)', await noSideScroll());
 
   // 4. Settings › Rules lists every rule with its text, what it applies to and its severity.
-  if (
-    phone &&
-    (await page
-      .getByRole('radio', { name: 'Compose' })
-      .isVisible()
-      .catch(() => false))
-  )
-    await click(page.getByRole('radio', { name: 'Compose' }));
+  if (phone) await goCompose(page);
   await click(page.getByRole('button', { name: 'Settings' }).first());
   await dlg.waitFor({ state: 'visible' }).catch(() => {});
   const rules = dlg.getByRole('region', { name: 'Rules' });
