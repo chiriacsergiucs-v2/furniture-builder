@@ -1111,7 +1111,7 @@ export const useDesign = create<State>((rawSet, get) => {
       // Clearing a part also clears its own band (ADR-188).
       const bands = { ...d.partBands };
       if (!materialId) delete bands[panelId];
-      commit({
+      return commit({
         ...d,
         schemaVersion: SCHEMA_VERSION,
         partMaterials: Object.keys(next).length ? next : undefined,

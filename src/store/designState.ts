@@ -157,7 +157,8 @@ export interface State {
   /** A board for one loose part of a panel set, copied into the piece when it is not there yet (ADR-164). */
   setLoosePanelBoard: (panelId: string, board: Material) => void;
   /** A board for one part instead of its group's board; null goes back to the group's board. */
-  setPartMaterial: (panelId: string, materialId: string | null) => void;
+  /** Why the change was refused (a boards lock, ADR-243), else null (ADR-255). */
+  setPartMaterial: (panelId: string, materialId: string | null) => string | null;
   updatePanel: (patch: Partial<PanelParams>) => void;
   updateFrame: (patch: Partial<FrameParams>) => void;
   /** Width or depth of the whole open piece, from its selection (ADR-106). */
@@ -456,7 +457,7 @@ export interface State {
    */
   setAgainstWall: (id: string, on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
-  clearPartBoard: (id: string | null, panelId: string) => void;
+  clearPartBoard: (id: string | null, panelId: string) => string | null;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
   placeAt: (x: number, z: number) => void;
   stopPlacing: () => void;

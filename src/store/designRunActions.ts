@@ -308,7 +308,7 @@ export function runActions(h: StoreHelpers): RunActions {
           partBands: Object.keys(bands).length ? bands : undefined,
         };
       };
-      commitProject(
+      return commitProject(
         { ...p, items: p.items.map((i) => (i.id === id ? { ...i, design: drop(i.design) } : i)) },
         t('Clear part board'),
       );

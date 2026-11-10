@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useUi } from '../store/uiStore';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
-import { t } from '../core/i18n';
+import { t, tr } from '../core/i18n';
 import {
   BAND_COLUMNS,
   DECOR_COLUMNS,
@@ -19,6 +19,7 @@ import { newProject } from '../core/project';
 import { roomPresets } from '../core/catalog/roomPresets';
 import { projectFromTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import {
+  clearBands,
   clearDecors,
   listBands,
   listDecors,
@@ -508,6 +509,7 @@ export function MaterialsPanel() {
   const add = useDesign((s) => s.addMaterial);
   const remove = useDesign((s) => s.removeMaterial);
   const [why, setWhy] = useState<{ id: string; text: string } | null>(null);
+  const [nameMsg, setNameMsg] = useState<{ id: string; text: string } | null>(null);
   // The user's decor list (ADR-049): the decor choice appears only once a list has been imported.
   const [decors, setDecors] = useState<Decor[]>([]);
   const [decorMsg, setDecorMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -722,6 +724,32 @@ export function MaterialsPanel() {
               }}
             />
           </label>
+          {/* The band list can be removed, as the decor list can (ADR-255). */}
+          {bands.length > 0 && (
+            <button
+              type="button"
+              className="btn sm ghost"
+              onClick={async () => {
+                if (
+                  !(await askConfirm(
+                    t('Remove the band list from this device? Boards keep the bands already picked.'),
+                    { confirmLabel: t('Remove list'), danger: true },
+                  ))
+                )
+                  return;
+                try {
+                  await clearBands();
+                } catch {
+                  setBandMsg({ ok: false, text: t('The band list could not be removed on this device.') });
+                  return;
+                }
+                setBands([]);
+                setBandMsg(null);
+              }}
+            >
+              {t('Remove band list')}
+            </button>
+          )}
         </div>
         {bandMsg && (
           <p
@@ -735,7 +763,8 @@ export function MaterialsPanel() {
       </div>
       <ul className="materials">
         {materials.map((m: Material) => (
-          <li key={m.id}>
+          // Each board's fields are found and announced within their board (ADR-255).
+          <li key={m.id} role="group" aria-label={t('Board {name}', { name: tr(m.name) })}>
             <input
               type="color"
               aria-label={t('{name} colour', { name: m.name })}
@@ -747,8 +776,23 @@ export function MaterialsPanel() {
               aria-label={t('Name')}
               defaultValue={m.name}
               key={m.name}
-              onBlur={(e) => e.target.value.trim() && update(m.id, { name: e.target.value.trim() })}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                // An empty name goes back to the stored one, and the row says so (ADR-008, ADR-255).
+                if (!v) {
+                  e.target.value = m.name;
+                  setNameMsg({ id: m.id, text: t('A board needs a name; it keeps {name}.', { name: m.name }) });
+                  return;
+                }
+                setNameMsg(null);
+                if (v !== m.name) update(m.id, { name: v });
+              }}
             />
+            {nameMsg?.id === m.id && (
+              <p className="hint" role="status">
+                {nameMsg.text}
+              </p>
+            )}
             <MmField
               label={t('Thickness')}
               value={m.thickness}

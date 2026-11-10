@@ -48,8 +48,15 @@ export const ru_editors = {
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',
   Chosen: 'Выбрано',
-  '{id} no longer exists; its board is not used.':
-    '{id} больше не существует; её плита не используется.',
+  'A part this piece no longer builds has its own board; it is not used.':
+    'У детали, которой больше нет в изделии, есть своя плита; она не используется.',
+  'Clear the board of a removed part': 'Убрать плиту удалённой детали',
+  'Board {name}': 'Плита «{name}»',
+  'Remove the band list from this device? Boards keep the bands already picked.':
+    'Удалить список кромок с этого устройства? Плиты сохранят уже выбранные кромки.',
+  'The band list could not be removed on this device.': 'Не удалось удалить список кромок на этом устройстве.',
+  'Remove band list': 'Удалить список кромок',
+  'A board needs a name; it keeps {name}.': 'У плиты должно быть название; остаётся «{name}».',
   Clear: 'Очистить',
   Checks: 'Проверки',
   checks: 'проверки',

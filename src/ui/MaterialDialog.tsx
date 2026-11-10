@@ -241,6 +241,7 @@ function MaterialFields() {
         : [],
     [cats, chosen],
   );
+  const badThickness = own.thickness.trim() !== '' && parseTenths(own.thickness) === null;
   const ownBand: EdgeBand | null = (() => {
     const th = parseTenths(own.thickness);
     if (th === null) return null;
@@ -344,6 +345,7 @@ function MaterialFields() {
               className={scope === s.value ? 'on' : ''}
               disabled={s.disabled}
               title={s.title}
+              aria-describedby={s.disabled && s.title ? 'material-scope-why' : undefined}
               onClick={() => {
                 setScope(s.value);
                 setMsg(null);
@@ -353,6 +355,14 @@ function MaterialFields() {
             </button>
           ))}
         </div>
+        {/* Why a scope is off, as visible text a touch screen can read (ADR-255). */}
+        {scopes
+          .filter((x) => x.disabled && x.title)
+          .map((x) => (
+            <p key={x.value} id="material-scope-why" className="hint">
+              {x.title}
+            </p>
+          ))}
       </div>
       {needsItem && <p className="hint">{t('No item is selected.')}</p>}
       {scope === 'part' ? (
@@ -379,9 +389,14 @@ function MaterialFields() {
             type="button"
             className="btn outline sm"
             onClick={() => {
-              clearPart(inProject ? itemId : null, part.id);
+              // A refused change is said as refused (ADR-244, ADR-255).
+              const why = clearPart(inProject ? itemId : null, part.id);
               setMsg(
-                t("{part}: back to its group's board.", { part: tr(part.label.split(' — ')[0]) }),
+                why
+                  ? t('Nothing changed: {why}.', { why: tr(why) })
+                  : t("{part}: back to its group's board.", {
+                      part: tr(part.label.split(' — ')[0]),
+                    }),
               );
             }}
           >
@@ -389,15 +404,25 @@ function MaterialFields() {
           </button>
         </p>
       )}
+      {/* Parts the piece no longer builds: no internal id is shown (ADR-255). */}
       {scope === 'part' &&
-        lost.map((id) => (
+        lost.map((id, i) => (
           <p key={id} className="alert warning">
             <span>
-              {t('{id} no longer exists; its board is not used.', { id })}{' '}
+              {t('A part this piece no longer builds has its own board; it is not used.')}
+              {lost.length > 1 ? ` (${i + 1})` : ''}{' '}
               <button
                 type="button"
                 className="btn outline sm"
-                onClick={() => clearPart(inProject ? itemId : null, id)}
+                aria-label={
+                  lost.length > 1
+                    ? `${t('Clear the board of a removed part')} (${i + 1})`
+                    : t('Clear the board of a removed part')
+                }
+                onClick={() => {
+                  const why = clearPart(inProject ? itemId : null, id);
+                  setMsg(why ? t('Nothing changed: {why}.', { why: tr(why) }) : null);
+                }}
               >
                 {t('Clear')}
               </button>
@@ -469,8 +494,16 @@ function MaterialFields() {
               inputMode="decimal"
               value={own.thickness}
               placeholder="0.8"
+              aria-invalid={badThickness || undefined}
+              aria-describedby={badThickness ? 'own-band-th-err' : undefined}
               onChange={(e) => setOwn((o) => ({ ...o, thickness: e.target.value }))}
             />
+            {/* A typed thickness that is not tenths of a mm is marked, with the board band editor's text (ADR-255). */}
+            {badThickness && (
+              <p className="field-error" id="own-band-th-err">
+                {t('From 0.1 to 10 mm, one decimal.')}
+              </p>
+            )}
           </div>
           <MmField
             label={t('Band width')}
