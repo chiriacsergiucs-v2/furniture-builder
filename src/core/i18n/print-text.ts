@@ -303,6 +303,11 @@ export const PRINT_RU = {
   '{n|# linie fără preț|# linii fără preț}': '{n|# строка без цены|# строки без цены|# строк без цены}',
   // The printed Shopping list's estimate (ADR-260)
   'Estimare: {total} {currency}': 'Оценка: {total} {currency}',
+  // The printed front view's space labels (ADR-265)
+  Gol: 'Пусто',
+  '{n|# raft|# rafturi}': '{n|# полка|# полки|# полок}',
+  '{n|# sertar|# sertare}': '{n|# ящик|# ящика|# ящиков}',
+  'Spațiu de agățat': 'Для вешалок',
   ' — {n|# preț lipsă|# prețuri lipsă}': ' — без цены: {n}',
   ' (prețurile tale; {n|# linie|# linii} la prețuri de vânzător: {sellers})':
     ' (ваши цены; {n|# строка|# строки|# строк} по ценам продавца: {sellers})',
@@ -589,6 +594,10 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Preț estimat': 'Estimated price',
   '{n|# linie fără preț|# linii fără preț}': '{n|# line without a price|# lines without a price}',
   'Estimare: {total} {currency}': 'Estimate: {total} {currency}',
+  Gol: 'Empty',
+  '{n|# raft|# rafturi}': '{n|# shelf|# shelves}',
+  '{n|# sertar|# sertare}': '{n|# drawer|# drawers}',
+  'Spațiu de agățat': 'Hanging',
   ' — {n|# preț lipsă|# prețuri lipsă}': ' — {n|# price missing|# prices missing}',
   ' (prețurile tale; {n|# linie|# linii} la prețuri de vânzător: {sellers})':
     ' (your prices; {n|# line|# lines} at seller prices: {sellers})',

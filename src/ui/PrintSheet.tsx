@@ -61,7 +61,7 @@ export function PrintSheet() {
       {view.mode === 'design' ? (
         <section className="pr-block pr-elev">
           <h2>{pt('Vedere frontală')}</h2>
-          <Elevation />
+          <Elevation print />
         </section>
       ) : (
         project && (

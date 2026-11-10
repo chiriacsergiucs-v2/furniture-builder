@@ -475,7 +475,7 @@ function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }
                   <Icon name="project" />
                 </span>
                 <span>
-                  <strong>{pr.name}</strong>
+                  <strong>{tr(pr.name)}</strong>
                   <span className="sub">
                     {t('{n|# piece|# pieces}', { n: pr.template.items.length })}
                     {t(', with the room')}

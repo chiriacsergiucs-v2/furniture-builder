@@ -781,8 +781,10 @@ export interface MoveResult {
 /** A piece's name, with its number in the project when another piece has the same name. */
 export function pieceName(project: Project, id: string): string {
   const i = project.items.findIndex((x) => x.id === id);
-  const name = project.items[i]?.design.name ?? '';
-  return project.items.some((x) => x.id !== id && x.design.name === name)
+  const stored = project.items[i]?.design.name ?? '';
+  // A built-in name in the user's language (ADR-265); a name the user typed stays as typed.
+  const name = tr(stored);
+  return project.items.some((x) => x.id !== id && x.design.name === stored)
     ? t('{name} (piece {n})', { name, n: i + 1 })
     : name;
 }
@@ -1556,7 +1558,7 @@ export function buildProjectModel(input: Project): ProjectModel {
         severity: 'error',
         code: 'piece-errors',
         message: t('{name} has {n|# problem|# problems}; open it to fix.', {
-          name: pc.item.design.name,
+          name: tr(pc.item.design.name),
           n: errs,
         }),
         nodeId: pc.item.id,

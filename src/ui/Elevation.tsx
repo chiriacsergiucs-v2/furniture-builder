@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
+import { pt } from '../core/i18n/print';
 import { t } from '../core/i18n';
 import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
@@ -24,7 +25,21 @@ const DRAWER_BOX = new Set<Panel['role']>([
   'drawer-bottom',
 ]);
 
-function describe(s: SpaceOpening, count?: number): string {
+function describe(s: SpaceOpening, count?: number, print = false): string {
+  // On a printed sheet the labels follow the print language (ADR-157, ADR-265).
+  if (print)
+    switch (s.kind) {
+      case 'empty':
+        return pt('Gol');
+      case 'shelves':
+        return pt('{n|# raft|# rafturi}', { n: count ?? 0 });
+      case 'drawers':
+        return pt('{n|# sertar|# sertare}', { n: count ?? 0 });
+      case 'hanging':
+        return pt('Spațiu de agățat');
+      case 'split':
+        return '';
+    }
   switch (s.kind) {
     case 'empty':
       return t('Empty');
@@ -43,7 +58,8 @@ function describe(s: SpaceOpening, count?: number): string {
  * Front elevation: the editing surface. Structure is drawn solid, fronts as dashed outlines,
  * a tap selects the whole piece, then one level smaller per tap (ADR-083). Y is flipped so the floor is at the bottom.
  */
-export function Elevation() {
+/** `print`: drawn on a printed sheet, labels in the print language (ADR-265). */
+export function Elevation({ print = false }: { print?: boolean } = {}) {
   const model = useDesign((s) => s.model);
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
@@ -256,7 +272,7 @@ export function Elevation() {
             dominantBaseline="middle"
             textAnchor="middle"
           >
-            {describe(s, counts.get(s.nodeId))}
+            {describe(s, counts.get(s.nodeId), print)}
           </text>
         ))}
         {selectedSpace && (

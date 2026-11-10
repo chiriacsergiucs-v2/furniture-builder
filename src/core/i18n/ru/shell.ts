@@ -401,4 +401,6 @@ export const ru_shell = {
     'Не удалось создать файл: картинки или 3D-модели не читаются в этом браузере.',
   'The setting could not be saved on this device.': 'Не удалось сохранить настройку на этом устройстве.',
   'Shared links could not be loaded.': 'Не удалось загрузить общие ссылки.',
+  'The language could not be saved in this browser’s storage.':
+    'Не удалось сохранить язык в хранилище этого браузера.',
 } satisfies Record<string, string>;

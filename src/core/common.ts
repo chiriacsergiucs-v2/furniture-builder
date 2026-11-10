@@ -4,7 +4,7 @@
  * kept; the common panel takes the leftmost member's top (bottom) board. A link that no longer fits is not built and
  * warned about, and the members get their own panels back.
  */
-import { t } from './i18n';
+import { t, tr } from './i18n';
 import { bounds2, footprint, isRect, rectOf, sharedLength, unionOutline, type Pt } from './outline';
 import { placeItem, type CommonPanel, type Project } from './project';
 import type { Design, Diagnostic, Face, Panel } from './types';
@@ -117,7 +117,7 @@ export function commonPanelCheck(
   if (items.length < 2) return fail(t('Select two or more items standing side by side.'));
   if (items.some((i) => !i)) return fail(t('An item of this common panel was removed.'));
   for (const it of items) {
-    const name = it!.design.name;
+    const name = tr(it!.design.name);
     if (!JOINS.has(it!.design.product.kind))
       return fail(t('{name} is not a cabinet, corner unit or desk.', { name }));
     if (kind === 'bottom' && it!.design.product.kind === 'desk')
@@ -128,7 +128,7 @@ export function commonPanelCheck(
   const p0 = plinthOf(items[0]!.design),
     b0 = backOf(items[0]!.design);
   for (const it of items) {
-    const name = it!.design.name;
+    const name = tr(it!.design.name);
     const ph = plinthOf(it!.design),
       bk = backOf(it!.design);
     if (ph !== null && p0 !== null && ph !== p0)
@@ -146,7 +146,7 @@ export function commonPanelCheck(
     if (!m.panel)
       return fail(
         t('{name} has no {part}.', {
-          name: m.it.design.name,
+          name: tr(m.it.design.name),
           part: kind === 'top' ? t('top@@role') : t('bottom@@role'),
         }),
       );
@@ -154,11 +154,11 @@ export function commonPanelCheck(
     h0 = own[0].panel!.box.h;
   for (const m of own) {
     if (m.panel!.box.y !== y0)
-      return fail(t('{name} is not the same height or floor level.', { name: m.it.design.name }));
+      return fail(t('{name} is not the same height or floor level.', { name: tr(m.it.design.name) }));
     if (m.panel!.box.h !== h0)
       return fail(
         t('The {part} of {name} is another thickness.', {
-          name: m.it.design.name,
+          name: tr(m.it.design.name),
           part: kind === 'top' ? t('top@@role') : t('bottom@@role'),
         }),
       );
@@ -189,7 +189,7 @@ export function commonPanelCheck(
         if (!fullSide(i, j) || !fullSide(j, i))
           return fail(
             t('{name} is not the same depth or not in line.', {
-              name: (rect[i] && !desk[i] ? own[i] : own[j]).it.design.name,
+              name: tr((rect[i] && !desk[i] ? own[i] : own[j]).it.design.name),
             }),
           );
         linked[i][j] = linked[j][i] = true;
@@ -241,7 +241,7 @@ export function commonPanelCheck(
   if (away >= 0)
     return fail(
       t('{name} does not touch the others and is not in line with them.', {
-        name: own[away].it.design.name,
+        name: tr(own[away].it.design.name),
       }),
     );
   if (!unionOutline([...fp, ...gaps.map((g) => g.rect)]))

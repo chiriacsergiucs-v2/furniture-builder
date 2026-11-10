@@ -575,11 +575,12 @@ export function App() {
       ? t('{n} pieces selected', { n: selectedCount })
       : selectedItem || selectedModel
         ? t('Selected: {name}', {
+            // Built-in names in the user's language (ADR-265).
             name: drillLevel
-              ? `${selectedItem!.design.name} › ${drillLevel}`
-              : String(selectedItem?.design.name ?? selectedModel?.name),
+              ? `${tr(selectedItem!.design.name)} › ${drillLevel}`
+              : tr(String(selectedItem?.design.name ?? selectedModel?.name)),
           })
-        : t('{name}: {n|# piece|# pieces}', { name: project!.name, n: project!.items.length })
+        : t('{name}: {n|# piece|# pieces}', { name: tr(project!.name), n: project!.items.length })
     : (() => {
         const l = selectionLabel(design.product, selectedId);
         return l ? t('Selected: {name}', { name: l }) : t('Tap a space to edit it');
@@ -589,14 +590,16 @@ export function App() {
     <input
       className="name"
       aria-label={inProject ? t('Name of this project') : t('Name of this piece')}
-      defaultValue={inProject ? project!.name : design.name}
+      // Shown in the user's language; the stored built-in name is kept unless the user types another (ADR-265).
+      defaultValue={tr(inProject ? project!.name : design.name)}
       key={inProject ? `p-${project!.id}-${project!.name}` : `${design.id}-${design.name}`}
       onBlur={(e) => {
         const v = e.target.value.trim();
         if (!v) return;
         if (inProject) {
-          if (v !== project!.name) useDesign.getState().updateProject((p) => ({ ...p, name: v }));
-        } else if (v !== design.name) rename(v);
+          if (v !== project!.name && v !== tr(project!.name))
+            useDesign.getState().updateProject((p) => ({ ...p, name: v }));
+        } else if (v !== design.name && v !== tr(design.name)) rename(v);
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();

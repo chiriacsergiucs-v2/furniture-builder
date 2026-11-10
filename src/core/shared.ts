@@ -8,7 +8,7 @@
  * is always the one kept and the desk leaves its gable out. L-shape and diagonal corners, pedestal ends and two desks
  * are refused with the reason.
  */
-import { t } from './i18n';
+import { t, tr } from './i18n';
 import { placeItem, type Project, type ProjectItem, type SharedSides } from './project';
 import type { Design, Diagnostic, Panel, PinRows } from './types';
 
@@ -55,7 +55,7 @@ interface Member {
 /** The member, or why the piece cannot share a side. */
 function memberOf(it: ProjectItem): Member | string {
   const p = it.design.product;
-  const name = it.design.name;
+  const name = tr(it.design.name);
   if (p.kind === 'cabinet') {
     const q = p.params;
     return {
@@ -117,7 +117,7 @@ export function sharedSideCheck(project: Project, itemIds: readonly string[]): S
   if (items.some((i) => !i)) return fail(t('An item of these shared sides was removed.'));
   const members = new Map<string, Member>();
   for (const it of items) {
-    const name = it!.design.name;
+    const name = tr(it!.design.name);
     const m = memberOf(it!);
     if (typeof m === 'string') return fail(m);
     members.set(it!.id, m);
@@ -132,7 +132,7 @@ export function sharedSideCheck(project: Project, itemIds: readonly string[]): S
     it.design.materials.find((m) => m.id === members.get(it.id)!.bodyMaterialId)?.thickness;
   for (const it of items) {
     const p = members.get(it!.id)!;
-    const name = it!.design.name;
+    const name = tr(it!.design.name);
     if (p.height !== m0.height)
       return fail(t('{name} is not the same height or floor level.', { name }));
     if (p.depth !== m0.depth)
@@ -173,8 +173,8 @@ export function sharedSideCheck(project: Project, itemIds: readonly string[]): S
     if (!inLine || !touching)
       return fail(
         t('{a} and {b} do not touch.', {
-          a: row[i - 1].pc.item.design.name,
-          b: row[i].pc.item.design.name,
+          a: tr(row[i - 1].pc.item.design.name),
+          b: tr(row[i].pc.item.design.name),
         }),
       );
     // ADR-207: the ends that meet. A blind corner only at its straight end; a desk only at a gable end; two desks
@@ -186,8 +186,8 @@ export function sharedSideCheck(project: Project, itemIds: readonly string[]): S
     if (ml.kind === 'desk' && mr.kind === 'desk')
       return fail(
         t('{a} and {b} are both desks; a desk shares a side only with a cabinet.', {
-          a: left.design.name,
-          b: right.design.name,
+          a: tr(left.design.name),
+          b: tr(right.design.name),
         }),
       );
     const ends: [ProjectItem, Member, 'left' | 'right'][] = [
@@ -195,7 +195,7 @@ export function sharedSideCheck(project: Project, itemIds: readonly string[]): S
       [right, mr, 'left'],
     ];
     for (const [it, m, end] of ends) {
-      const name = it.design.name;
+      const name = tr(it.design.name);
       if (m.kind === 'corner' && m.blindAt === end)
         return fail(
           t('{name} meets its neighbour at its blind end; only its straight end shares a side.', {

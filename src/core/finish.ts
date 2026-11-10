@@ -2,7 +2,7 @@
  * Finish scope (ADR-055): put one board on the fronts or the carcass of this piece, this run or the whole project.
  * A one-time change: every piece stays its own copy (ADR-022) and can be changed again on its own.
  */
-import { t } from './i18n';
+import { t, tr } from './i18n';
 import { buildModel } from './build';
 import { newId, SCHEMA_VERSION } from './design';
 import {
@@ -117,12 +117,12 @@ export function applyFinish(
     if (roleBoard(it.design, role) === null) {
       skipped.push(
         role === 'front'
-          ? t('{name} has no fronts', { name: it.design.name })
-          : t('{name} has no carcass', { name: it.design.name }),
+          ? t('{name} has no fronts', { name: tr(it.design.name) })
+          : t('{name} has no carcass', { name: tr(it.design.name) }),
       );
       return it;
     }
-    applied.push(it.design.name);
+    applied.push(tr(it.design.name));
     return { ...it, design: putRoleBoard(it.design, role, board) };
   });
   // Fillers and covers next to changed fronts take the new board; the worktop keeps its own.
@@ -406,13 +406,13 @@ export function applyMaterial(
     if (!r.applied.length) {
       skipped.push(
         t('{name} has no {parts}', {
-          name: it.design.name,
+          name: tr(it.design.name),
           parts: r.skipped.map(roleName).join(', '),
         }),
       );
       return it;
     }
-    applied.push(it.design.name);
+    applied.push(tr(it.design.name));
     return { ...it, design: r.design };
   });
   const runParts =
