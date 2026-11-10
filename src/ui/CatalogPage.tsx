@@ -217,7 +217,12 @@ export function CatalogPage({
   const importLocal = async (file: File) => {
     try {
       const data = JSON.parse(await file.text()) as { templates?: unknown[] };
-      const list = Array.isArray(data.templates) ? data.templates : [];
+      // A JSON file that is not a templates file is said as such, not as "0 templates imported" (ADR-262).
+      if (!data || !Array.isArray(data.templates)) {
+        setMsg(t('That file could not be read as a templates file.'));
+        return;
+      }
+      const list = data.templates;
       let ok = 0,
         bad = 0,
         kept = 0;
@@ -246,10 +251,13 @@ export function CatalogPage({
             kept++;
             continue;
           }
+        }
+        // A refused write is shown as the storage alert and not counted as imported (ADR-195). The device's other
+        // edits of the family go only once the imported one is saved, so a failed save loses nothing (ADR-262).
+        if (await store.save(tpl)) {
+          ok++;
           for (const l of edited) if (l.id !== tpl.id) await store.remove(l.id);
         }
-        // A refused write is shown as the storage alert and not counted as imported (ADR-195).
-        if (await store.save(tpl)) ok++;
       }
       setMsg(
         `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}${kept ? t(', {n} kept as they were', { n: kept }) : ''}.`,
@@ -653,6 +661,8 @@ function ItemCard({
         type="button"
         className="btn sm outline"
         disabled={!ok}
+        // Says which item it opens, as More and I check it myself do (ADR-262).
+        aria-describedby={nameId}
         onClick={() => {
           const d = insertVariant(f, v);
           if (d) onTake(d);
@@ -697,6 +707,7 @@ function FamilyBlock({
   );
   const [about, setAbout] = useState(false);
   const aboutId = useId();
+  const headId = useId();
   const aliases = f.aliases.length > 0 && (
     <span className="aliases">
       {t('also called {names}', { names: f.aliases.map((a) => tr(a)).join(', ') })}
@@ -709,7 +720,7 @@ function FamilyBlock({
           <Icon name={familyGlyph(f)} />
         </span>
         <div>
-          <h3>
+          <h3 id={headId}>
             {tr(f.name)} <span className="ro">{f.nameRo}</span>
           </h3>
           <p className="chips">
@@ -735,12 +746,13 @@ function FamilyBlock({
             className="btn sm ghost family-about"
             aria-expanded={about}
             aria-controls={aboutId}
+            aria-describedby={headId}
             onClick={() => setAbout(!about)}
           >
             {t('About this family')}
             <Icon name="chevron-down" className="sm" />
           </button>
-          <button type="button" className="btn sm" onClick={onEdit}>
+          <button type="button" className="btn sm" onClick={onEdit} aria-describedby={headId}>
             <Icon name="pencil" className="sm" />
             {t('Edit template')}
           </button>
@@ -919,14 +931,20 @@ function DecorBrandList({
   onTake: (d: Design) => void;
   children?: ReactNode;
 }) {
-  const [data, setData] = useState<{ decors: Decor[]; saved: StoredDesign[] } | 'error' | null>(
+  const [data, setData] = useState<
+    { decors: Decor[]; saved: StoredDesign[]; savedFailed?: boolean } | 'error' | null
+  >(
     null,
   );
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    Promise.all([listDecors(), listDesigns().catch(() => [] as StoredDesign[])])
-      .then(([decors, saved]) => live && setData({ decors, saved }))
+    // A failed read of the saved pieces is said in the brand's section, never as "none" (ADR-262).
+    Promise.all([listDecors(), listDesigns().catch(() => null)])
+      .then(
+        ([decors, saved]) =>
+          live && setData({ decors, saved: saved ?? [], savedFailed: saved === null }),
+      )
       .catch(() => live && setData('error'));
     return () => {
       live = false;
@@ -1008,7 +1026,13 @@ function DecorBrandList({
               ))}
             </ul>
           ) : (
-            <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
+            data.savedFailed ? (
+              <p className="alert error" role="alert">
+                {t('Designs saved on this device could not be read.')}
+              </p>
+            ) : (
+              <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
+            )
           )}
         </section>
       )}
@@ -1092,7 +1116,13 @@ function TemplateEditor({
     setF({ variants: vs });
   };
   // Each problem as a sentence for the user, never the validator's code (ADR-195).
-  const errs = templateProblemTexts(validateLocalTemplate({ ...tpl, updatedAt: now() }));
+  const problems = validateLocalTemplate({ ...tpl, updatedAt: now() });
+  const errs = templateProblemTexts(problems);
+  // Problems also under the field they name (ADR-262).
+  const fieldErr = (codes: string[]) =>
+    templateProblemTexts(problems.filter((p) => codes.includes(p.code))).join(' ');
+  const nameErr = fieldErr(['no-name', 'long-name']);
+  const roomsErr = fieldErr(['no-rooms', 'bad-rooms']);
   return (
     <section className="template-editor" aria-label={t('Edit template {name}', { name: f.name })}>
       <div className="card-title">
@@ -1106,7 +1136,18 @@ function TemplateEditor({
       <div className="dims2">
         <div className="field">
           <label htmlFor="te-name">{t('Name')}</label>
-          <input id="te-name" value={f.name} onChange={(e) => setF({ name: e.target.value })} />
+          <input
+            id="te-name"
+            value={f.name}
+            aria-invalid={!!nameErr || undefined}
+            aria-describedby={nameErr ? 'te-name-err' : undefined}
+            onChange={(e) => setF({ name: e.target.value })}
+          />
+          {nameErr && (
+            <p className="field-error" id="te-name-err">
+              {nameErr}
+            </p>
+          )}
         </div>
         <div className="field">
           <label htmlFor="te-aliases">{t('Other names (comma-separated)')}</label>
@@ -1138,8 +1179,17 @@ function TemplateEditor({
           ))}
         </select>
       </div>
-      <fieldset className="field rooms">
+      <fieldset
+        className="field rooms"
+        aria-invalid={!!roomsErr || undefined}
+        aria-describedby={roomsErr ? 'te-rooms-err' : undefined}
+      >
         <legend>{t('Rooms (the first ticked is the main one)')}</legend>
+        {roomsErr && (
+          <p className="field-error" id="te-rooms-err">
+            {roomsErr}
+          </p>
+        )}
         {ROOMS.map((r) => (
           <label key={r} className="toggle small">
             <input
@@ -1182,14 +1232,16 @@ function TemplateEditor({
         <span className="field-label">{t('Variants (1–5; the first is the default)')}</span>
         <ul className="variant-edit">
           {f.variants.map((v, i) => (
-            <li key={v.id}>
+            // Each row's controls are named with the row (ADR-262).
+            <li key={v.id} aria-label={t('Variant {n}', { n: i + 1 })} role="group">
               <input
-                aria-label={t('Variant name')}
+                aria-label={t('Variant {n} name', { n: i + 1 })}
                 value={v.name}
+                aria-invalid={!v.name.trim() || v.name.length > 200 || undefined}
                 onChange={(e) => setV(i, { name: e.target.value })}
               />
               <input
-                aria-label={t('Variant summary')}
+                aria-label={t('Variant {n} summary', { n: i + 1 })}
                 value={v.summary}
                 onChange={(e) => setV(i, { summary: e.target.value })}
               />
@@ -1258,7 +1310,7 @@ function TemplateEditor({
       {errs.length > 0 && (
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
-          <span>{errs.slice(0, 3).join(' ')}</span>
+          <span>{errs.join(' ')}</span>
         </p>
       )}
       <div className="split-actions">
