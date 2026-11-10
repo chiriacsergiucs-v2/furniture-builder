@@ -194,6 +194,15 @@ on restores it unchanged.
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
   screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
   questions if there are any (user rule 2026-10-29).
+- Skips and proof (user rule 2026-11-10, from the cleanup-skip review in `docs/research/2026-11-09-cleanup-audit.md`):
+  - Every skip states its blocker, what unblocks it, and its cost (S/M/L). "Not started" is not a reason; when the
+    reason is scope, write "scope".
+  - Before calling a change unprovable, try the cheapest proof (fix the failing check's cause, or test the pure part);
+    skip only if that fails, and say what was tried.
+  - Judge duplicates segment by segment, and check each difference against the code before calling it intentional.
+  - A change that makes tests or scripts stale fixes them in the same pull request, or lists each one as a blocker.
+  - Order work by dependency: prerequisites first; never cite a blocker that a later item of the same plan removes.
+  - "Decide and go" means finishing every low-risk item; stop only for consent items (deleting, branch-wide moves).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from

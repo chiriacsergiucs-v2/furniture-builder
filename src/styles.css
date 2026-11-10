@@ -5027,6 +5027,9 @@ button.tile:hover {
 /* The running cost estimate (ADR-172): a pill that opens the Shopping list. */
 .estimate-chip {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h-sm);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   background: var(--surface);
@@ -5244,8 +5247,13 @@ button.tile:hover {
   }
   /* Template mode (ADR-195): the variant, Save and Cancel take their own row under the tools, so no tool button
      covers Cancel at 390 px. */
-  .bar:has(> .path.template) {
+  .bar:has(> .path.template),
+  .bar:has(> .path.piece) {
     flex-wrap: wrap;
+  }
+  .bar .path.piece {
+    order: 1;
+    flex-basis: 100%;
   }
   .bar .path.template {
     order: 1;
@@ -7605,4 +7613,35 @@ fieldset.group-locked {
   width: 100%;
   min-width: 0;
   resize: vertical;
+}
+
+/* Touch targets the earlier coarse rules missed (ADR-114): the estimate chip, the bar's back arrow, and the size fields
+   with the ƒ binding button. On a phone the ƒ button (44 px wide) overflowed its 28 px column and the steppers were
+   32 px wide, so the sizes stack one per row, like the research page, and every part of the field is 44 px. */
+@media (pointer: coarse) {
+  .estimate-chip,
+  .bar button.crumb.back {
+    min-height: 44px;
+  }
+  .bar button.crumb.back {
+    min-width: 44px;
+    justify-content: center;
+  }
+  .dims2,
+  .dims3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dims3 .mm .step {
+    display: revert;
+  }
+  .mm.with-trailing,
+  .dims3 .mm.with-trailing {
+    grid-template-columns: 44px 1fr auto 44px 44px;
+  }
+  .dims3 .mm:not(.with-trailing) {
+    grid-template-columns: 44px 1fr auto 44px;
+  }
+  .mm .btn.bind {
+    min-height: 44px;
+  }
 }
