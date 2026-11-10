@@ -2,6 +2,7 @@
 //   npm run build && npx vite preview --port 4173 &  node tools/ensemble/find-it-adrs.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -169,7 +170,7 @@ for (const width of [1440, 375]) {
   // ADR-054/0058: sides on the bottom → run plinth; scribe; automatic refresh after a gap change.
   for (let i = 0; i < 3; i++) {
     await selectPiece(i);
-    await click(btn('Edit this piece'));
+    await openPieceEditor(page);
     await click(page.getByRole('radio', { name: 'Under the sides' }));
     await click(btn('Back to project'));
   }

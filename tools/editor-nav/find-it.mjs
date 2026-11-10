@@ -11,6 +11,7 @@
 //    project" opens it and Delete asks and removes one.
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl('http://localhost:4311/furniture-builder/');
@@ -277,7 +278,7 @@ for (const width of [1280, 390]) {
   );
   await shot('lock-menu');
   await click(menu.getByRole('button', { name: 'Lock boards' }));
-  await click(card.getByRole('button', { name: 'Edit this piece' }));
+  await openPieceEditor(page, card);
   await click(btn('Settings'));
   const settings = page.getByRole('dialog', { name: /^Settings/ });
   const boards = settings.locator('details#g-boards');

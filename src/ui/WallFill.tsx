@@ -25,7 +25,7 @@ import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
-import { Icon } from './icons';
+import { FillFooter, Field, MixWarnings, Problems, ResultProblems, SaveError } from './fillParts';
 
 type StepId = 'wall' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -107,45 +107,6 @@ function toInput(f: Form): WallInput {
 }
 
 /** A whole-mm answer kept as typed (ADR-008); shared with Fill the room. */
-export function Field({
-  label,
-  value,
-  onChange,
-  hint,
-  unit = t('mm'),
-  placeholder,
-  problem,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  hint?: string;
-  unit?: string;
-  placeholder?: string;
-  /** Ids of the problems that name this field (ADR-193): marks it invalid and points to them. */
-  problem?: string;
-}) {
-  const id = useId();
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      <div className="mm wz-int">
-        <input
-          id={id}
-          inputMode="numeric"
-          value={value}
-          placeholder={placeholder}
-          aria-invalid={problem ? true : undefined}
-          aria-describedby={problem}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        <span className="unit">{unit}</span>
-      </div>
-      {hint && <p className="hint">{hint}</p>}
-    </div>
-  );
-}
-
 const picture = (m: Mix) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
 
@@ -170,21 +131,7 @@ function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
         <strong>{m.widths}</strong> {t('mm')}
       </span>
       <span className="wz-card-label">{m.summary}</span>
-      {m.warnings.length > 0 && (
-        <ul className="wf-warnings">
-          {m.warnings.slice(0, 3).map((w, i) => (
-            <li key={i} className="alert warning">
-              <Icon name="alert-triangle" className="sm" />
-              <span>{w.message}</span>
-            </li>
-          ))}
-          {m.warnings.length > 3 && (
-            <li className="hint">
-              {t('…and {n} more in the project.', { n: m.warnings.length - 3 })}
-            </li>
-          )}
-        </ul>
-      )}
+      <MixWarnings warnings={m.warnings} />
       <button type="button" className="btn sm primary" onClick={onUse}>
         {t('Use this mix')}
       </button>
@@ -205,27 +152,6 @@ export function WallFillDialog({
     <Dialog open={open} onClose={onClose} title={t('Fill a wall')} wide>
       {open && <WallFill onClose={onClose} onOpened={onOpened} />}
     </Dialog>
-  );
-}
-
-/** The problems with the answers, under the fields of the step (ADR-193). */
-export function Problems({
-  list,
-  idOf,
-}: {
-  list: { message: string }[];
-  idOf: (i: number) => string;
-}) {
-  if (!list.length) return null;
-  return (
-    <div className="wf-problems">
-      {list.map((p, i) => (
-        <p key={i} id={idOf(i)} className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{p.message}</span>
-        </p>
-      ))}
-    </div>
   );
 }
 
@@ -411,11 +337,13 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('Tall cabinet height')}
               value={form.tallHeight}
               onChange={set('tallHeight')}
+              problem={problem('tallHeight')}
             />
             <Field
               label={t('Wall cabinet depth')}
               value={form.wallDepth}
               onChange={set('wallDepth')}
+              problem={problem('wallDepth')}
             />
           </div>
           <Segmented
@@ -454,12 +382,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               })}
             </span>
           </div>
-          {result.problems.map((p, i) => (
-            <p key={i} className={`alert ${p.severity}`} role="status">
-              <Icon name={p.severity === 'error' ? 'alert-circle' : 'info'} className="sm" />
-              <span>{p.message}</span>
-            </p>
-          ))}
+          <ResultProblems problems={result.problems} />
           {result.mixes.length > 0 && (
             <ul className="wz-cards wf-cards">
               {result.mixes.map((m) => (
@@ -467,39 +390,24 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               ))}
             </ul>
           )}
-          {saveError && (
-            <p className="alert error" role="alert">
-              <Icon name="alert-circle" className="sm" />
-              <span>{saveError}</span>
-            </p>
-          )}
+          <SaveError message={saveError} />
         </section>
       )}
-      <div className="wizard-footer">
-        <button
-          type="button"
-          className="btn"
-          disabled={step === 'wall'}
-          // Back to Suggestions with nothing applied yet makes them from the typed answers (ADR-193).
-          onClick={() =>
-            step === 'refine' && !applied ? suggest() : go(step === 'refine' ? 'mixes' : 'wall')
-          }
-        >
-          {t('Back')}
-        </button>
-        <span className="wz-spacer" />
-        <button type="button" className="btn ghost" onClick={onClose}>
-          {t('Cancel')}
-        </button>
-        {/* The step's primary action is the form's submit, so Enter does it (ADR-193). */}
-        <button type="submit" className="btn primary">
-          {step === 'wall'
+      <FillFooter
+        backDisabled={step === 'wall'}
+        // Back to Suggestions with nothing applied yet makes them from the typed answers (ADR-193).
+        onBack={() =>
+          step === 'refine' && !applied ? suggest() : go(step === 'refine' ? 'mixes' : 'wall')
+        }
+        onClose={onClose}
+        submit={
+          step === 'wall'
             ? t('Show suggestions')
             : step === 'mixes'
               ? t('Refine')
-              : t('Suggest again')}
-        </button>
-      </div>
+              : t('Suggest again')
+        }
+      />
     </form>
   );
 }

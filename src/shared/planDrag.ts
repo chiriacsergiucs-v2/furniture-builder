@@ -23,8 +23,7 @@ export interface DragGesture {
   dz: number;
 }
 
-export type DragEnd =
-  { kind: 'tap'; id: string } | { kind: 'drop'; id: string; dx: number; dz: number };
+type DragEnd = { kind: 'tap'; id: string } | { kind: 'drop'; id: string; dx: number; dz: number };
 
 export interface PointerAt {
   pointerId: number;
@@ -90,8 +89,8 @@ export function arrowMove(key: string, shift: boolean): { dx: number; dz: number
 // ── Turning with the handle (ADR-169) ───────────────────────────────────────────────────────────────────────────
 
 /** Degrees the pointer stays within of a quarter turn to snap to it; Shift steps instead. */
-export const TURN_SNAP_DEG = 5;
-export const TURN_SHIFT_STEP = 15;
+const TURN_SNAP_DEG = 5;
+const TURN_SHIFT_STEP = 15;
 
 export interface TurnGesture {
   id: string;

@@ -4,6 +4,7 @@
 // The user's steps: tap the piece, tap a part of it, tap again → the whole piece is selected again, outlined, nothing
 // faded, and the quick-count card names it and acts on it.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -60,7 +61,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
 
   // 2. Drawing: three taps at one spot in the right bay.
   const bay = front.getByRole('button', { name: /^1 shelf space/ }).last();
@@ -107,7 +108,7 @@ for (const width of [1280, 390]) {
 
   // 3. 3D (phone: Build & Preview; desktop: Compose › 3D, beside the inspector): clear the selection with a tap on
   //    empty space, then three taps at one spot.
-  if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  if (phone) await goBuild(page);
   else await page.getByRole('radio', { name: '3D', exact: true }).click();
   const canvas = three.locator('canvas');
   await canvas.waitFor({ state: 'visible', timeout: 20000 });

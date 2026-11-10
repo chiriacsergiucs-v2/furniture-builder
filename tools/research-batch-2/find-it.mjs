@@ -5,6 +5,7 @@
 // "Lock size" → "Size locked" and "Size locked — unlock to change" → 3D, Move, the "Change height" handle dragged up →
 // "From floor … mm" → "Section" with "Width" / "Height" / "Depth" and "Cut at … mm" → "Isolate". Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -79,7 +80,7 @@ for (const width of [1280, 390]) {
     await page.waitForTimeout(600);
   };
   const toPlan = async () => {
-    if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (phone) await goBuild(page);
     const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
     await page.waitForTimeout(300);
@@ -87,7 +88,7 @@ for (const width of [1280, 390]) {
   const three = page.locator('.view.three');
   const canvas = three.locator('canvas');
   const to3d = async () => {
-    if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (phone) await goBuild(page);
     await page.getByRole('radio', { name: '3D', exact: true }).click();
     await canvas.waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1200);
@@ -149,7 +150,7 @@ for (const width of [1280, 390]) {
   );
   // On a phone the cards are under Compose.
   const compose = async () => {
-    if (phone) await page.getByRole('radio', { name: /Compose/ }).click();
+    if (phone) await goCompose(page);
     await page.waitForTimeout(300);
   };
   await compose();

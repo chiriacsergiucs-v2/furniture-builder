@@ -45,6 +45,10 @@ describe.each(WIDTHS)('Fill a wall and Fill the room at %ipx (find-it, ADR-204)'
       await within(dlg).findByText(/Wall cabinet depth must be a whole number of mm above 0\./),
     ).toBeTruthy();
     expect(within(dlg).queryByRole('button', { name: 'Use this mix' })).toBeNull();
+    // The field itself is marked and points to its problem, as Fill the room does (cleanup audit 2026-11-09, item 5).
+    const named = within(dlg).getByLabelText('Wall cabinet depth');
+    expect(named.getAttribute('aria-invalid')).toBe('true');
+    expect(named.getAttribute('aria-describedby')).toBeTruthy();
 
     // Good values: cards again.
     await user.click(step(dlg, 'Fill a wall steps', 'Refine'));

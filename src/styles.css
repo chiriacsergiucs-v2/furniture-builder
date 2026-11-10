@@ -241,14 +241,7 @@ output,
   font-size: var(--fs-xs);
   color: var(--ink-2);
 }
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
+
 .icon {
   width: 20px;
   height: 20px;
@@ -373,12 +366,10 @@ output,
     .bar,
     .stage-tools,
     .plan-tools,
-    .view-tools,
     .view-options-panel,
     .catalog-toolbar,
     .family-tools,
     .price-tools,
-    .bulk-bar,
     .count-stepper,
     table,
     [role='toolbar']
@@ -390,12 +381,10 @@ output,
     .bar,
     .stage-tools,
     .plan-tools,
-    .view-tools,
     .view-options-panel,
     .catalog-toolbar,
     .family-tools,
     .price-tools,
-    .bulk-bar,
     .count-stepper,
     table,
     [role='toolbar']
@@ -1380,9 +1369,6 @@ td.note {
   grid-template-columns: minmax(0, 1fr);
   height: 100%;
 }
-.app:has(.piece-banner) {
-  grid-template-rows: auto auto 1fr;
-}
 
 /* The top bar: this one rule, plus the phone rule in section 14 (sticky, narrower sides). It never wraps (ADR-116). */
 .bar {
@@ -1488,11 +1474,7 @@ td.note {
 .bar > .theme:focus-visible {
   outline-color: var(--accent);
 }
-.actions .cluster {
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-}
+
 .actions .btn {
   color: var(--bar-ink);
   background: transparent;
@@ -1545,27 +1527,6 @@ td.note {
 .actions .menu > summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-.piece-banner {
-  display: flex;
-  gap: var(--s-3);
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--s-2) var(--s-4);
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: var(--fs-sm);
-}
-.piece-banner .btn {
-  background: var(--on-accent);
-  color: var(--accent);
-  border-color: var(--on-accent);
-  font-weight: 600;
-}
-.piece-banner .btn:hover:not(:disabled) {
-  background: #2a2100;
-  border-color: #2a2100;
 }
 
 .work {
@@ -2286,8 +2247,7 @@ td.note {
   stroke-width: 4;
   vector-effect: non-scaling-stroke;
 }
-.plan .wall-label,
-.plan .dim-text {
+.plan .wall-label {
   fill: var(--ink-2);
   font-family: var(--font);
 }
@@ -2807,12 +2767,7 @@ table.buy {
   .actions .divider {
     display: none;
   }
-  .actions .cluster {
-    flex: 0 0 auto;
-  }
-  .actions .cluster.end {
-    margin-left: auto;
-  }
+
   .menu-items {
     position: fixed;
     left: 16px;
@@ -2943,43 +2898,7 @@ table.buy {
 .start-group h4 {
   margin: 0 0 var(--s-1);
 }
-.start-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--s-1);
-  align-items: center;
-}
-.start-row .row-btn {
-  grid-template-columns: auto 1fr;
-}
-.start-row .no-more {
-  width: 32px;
-}
-.start-row .more {
-  font-family: var(--num);
-  font-size: var(--fs-xs);
-  margin-left: var(--s-1);
-}
-.variant-picks {
-  list-style: none;
-  margin: var(--s-1) 0 var(--s-1) calc(var(--s-8) + var(--s-4));
-  padding: 0;
-  display: grid;
-  gap: var(--s-1);
-}
-.variant-picks .link {
-  text-align: left;
-  padding: var(--s-1) 0;
-}
-.variant-picks .link:disabled {
-  color: var(--ink-3);
-  cursor: not-allowed;
-}
-.variant-picks .sub {
-  display: block;
-  color: var(--ink-2);
-  font-size: var(--fs-xs);
-}
+
 .catalog-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -3026,6 +2945,7 @@ table.buy {
   gap: var(--s-2);
   align-content: start;
 }
+
 .fam-card.support-reference {
   background: var(--surface-2);
 }
@@ -3237,9 +3157,7 @@ table.buy {
   color: var(--ink-2);
   font-size: var(--fs-xs);
 }
-.piece-banner .btn.primary {
-  margin-left: auto;
-}
+
 @media (max-width: 760px) {
   .fam-grid {
     grid-template-columns: 1fr;
@@ -3723,17 +3641,7 @@ table.buy {
 }
 
 /* Home: the welcome page the app starts on (N38) ---------- */
-.app.on-home .bar > .name,
-.app.on-home .bar > .status,
-.app.on-home .actions {
-  display: none;
-}
-.app.on-home {
-  padding-bottom: 0;
-}
-.app.on-home .bar > .theme {
-  margin-left: auto;
-}
+
 .home-page {
   max-width: 960px;
   width: 100%;
@@ -5432,6 +5340,22 @@ button.tile:hover {
   .pages.places a .badge.error {
     background: var(--error);
   }
+  /* ADR-247: Settings and Material open inside the Compose sheet (full height), in place of the sheet's body. */
+  .side:has(.sheet-slot > dialog[open]) .side-body {
+    display: none;
+  }
+  .sheet-slot > dialog.sheet-dialog {
+    position: static;
+    inset: auto;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
   /* ADR-241: on a phone the Editor and Cut list places replace the Compose · Build & Preview row. */
   .modes {
     display: none;
@@ -5545,11 +5469,6 @@ button.tile:hover {
     overscroll-behavior: contain;
   }
   .work.mode-compose:not(.sheet-open) .side-body {
-    display: none;
-  }
-  /* Configure: the settings page only. */
-  .work.mode-configure .stage,
-  .work.mode-configure .output {
     display: none;
   }
   /* Build & Preview: 3D on top, then the results. */
@@ -5740,9 +5659,7 @@ button.tile:hover {
 }
 
 /* Clearances overlay on the plan (ADR-073) --------------------------------- */
-.plan.has-tools {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
+
 .zone-legend {
   margin: 0;
   display: flex;

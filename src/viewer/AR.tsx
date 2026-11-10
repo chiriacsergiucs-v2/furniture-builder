@@ -137,9 +137,9 @@ const xrSystem = (): XRSystemLike | undefined => (navigator as unknown as { xr?:
 // State shared with the toolbar and the overlay
 // ---------------------------------------------------------------------------
 
-export type ARState = 'off' | 'placing' | 'placed';
+type ARState = 'off' | 'placing' | 'placed';
 /** What the overlay shows (ADR-213 to ADR-215). One object, replaced on every change (stable for React). */
-export interface ARUi {
+interface ARUi {
   state: ARState;
   /** While placing: a steady floor is under the outline. */
   found: boolean;
@@ -940,7 +940,7 @@ export const dimensionText = (key: 'w' | 'h' | 'd', mm: number) =>
       : t('D {mm} mm', { mm });
 
 /** A size label: its text and where it stands (metres, the content's own frame). */
-export interface SizeLabel {
+interface SizeLabel {
   text: string;
   at: [number, number, number];
 }

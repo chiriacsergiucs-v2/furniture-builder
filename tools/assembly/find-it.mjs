@@ -5,6 +5,7 @@
 // (the viewer reports how many parts are lit on the 3D view's data-lit, ADR-230); ← → move between steps; a second piece gets its
 // own section. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -71,7 +72,7 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await add('Base cabinet', /^Base cabinet/);
-  await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  await goBuild(page);
   const three = page.getByRole('radio', { name: '3D', exact: true });
   if (await three.isVisible().catch(() => false)) await click(three);
   await page.locator('canvas').first().waitFor({ state: 'visible', timeout: 20000 });
@@ -149,9 +150,9 @@ for (const width of [1440, 390]) {
   );
 
   // 3. A second piece: its own section.
-  await click(page.getByRole('radio', { name: 'Compose' }));
+  await goCompose(page);
   await add('Chest', /^Chest/);
-  await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  await goBuild(page);
   const tab2 = page.getByRole('tab', { name: /^Assembly/ });
   // On a phone the tabs fold; a tap on the open tab would fold them again.
   if ((await tab2.getAttribute('aria-selected')) !== 'true') await click(tab2);

@@ -22,10 +22,7 @@ import { tNode } from './i18n';
  * The template status of a piece or saved design against the catalog and this device's templates (ADR-096); null until
  * this device's templates are read, so the notice never shows a shipped-only answer first.
  */
-export function useTemplateStatus(item: {
-  design: Design;
-  templateSeen?: number;
-}): TemplateStatus | null {
+function useTemplateStatus(item: { design: Design; templateSeen?: number }): TemplateStatus | null {
   const locals = useLocalTemplates();
   return useMemo(
     () => (locals ? templateStatus(item, catalogFamilies, locals) : null),

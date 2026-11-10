@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/merge/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -105,7 +106,7 @@ for (const width of [1440, 375]) {
   await shot('after');
 
   // 4. Open it in the editor: one cabinet, three uprights (two sides + one divider) in the parts.
-  await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
+  await openPieceEditor(page);
   // The parts list is under Build & Preview (ADR-080; on a phone Compose shows the drawing only, N82). A tap on the
   // open tab closes the results on a phone (ADR-091), so only a closed tab is tapped.
   await page.getByRole('radio', { name: /^Build & Preview/ }).click();
@@ -115,7 +116,7 @@ for (const width of [1440, 375]) {
   }
   await page.waitForTimeout(300);
   const parts = await page.locator('#panel-parts').innerText();
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   check(
     width,
     'editor parts list the divider of the merged cabinet',

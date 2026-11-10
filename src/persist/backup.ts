@@ -90,7 +90,7 @@ export async function askPersist(): Promise<boolean> {
 /** Whether this device was asked already: read once per visit (ADR-235), not at every save. */
 let persistAsked: Promise<boolean> | undefined;
 /** At the first save on this device, ask once (G-239); later the button in Settings asks again. */
-export async function askPersistOnce(): Promise<void> {
+async function askPersistOnce(): Promise<void> {
   const asked = (persistAsked ??= getSetting<boolean>(PERSIST_ASKED_KEY).then((v) => !!v));
   persistAsked = Promise.resolve(true);
   if (await asked) return;

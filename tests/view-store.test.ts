@@ -24,7 +24,8 @@ describe('view store (ADR-230)', () => {
 
   it('no DOM side channel is left in the viewer or the ui', () => {
     const src = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
-    const viewer = src('viewer/Viewer3D.tsx');
+    // The viewer's code is Viewer3D.tsx and the scene parts moved out of it (cleanup audit 2026-11-09, item 13).
+    const viewer = src('viewer/Viewer3D.tsx') + src('viewer/ViewerScene.tsx');
     const app = src('ui/App.tsx');
     for (const text of [viewer, app]) {
       expect(text).not.toMatch(/document\.body\.dataset/);

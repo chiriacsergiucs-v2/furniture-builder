@@ -6,6 +6,7 @@
 // and segmented label against its line height (one line each), and each control's height: 38 px with a mouse, 30 in
 // toolbars and tables (`--control-h`, `--control-h-sm`), and at least 44 × 44 with touch. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -277,7 +278,7 @@ for (const width of [1280, 390]) {
   await dlg.locator('input').fill(`Rule ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await state('Project, Compose (empty)');
   const addPiece = async (search, name) => {
@@ -370,7 +371,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await unfold();
   await state('Piece, Compose (whole piece)');

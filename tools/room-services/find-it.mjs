@@ -4,6 +4,7 @@
 // room, "Add pipe" and "Add outlet" in the Room panel, both drawn on the plan, and the pipe behind the cabinet
 // reported as a warning. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -112,8 +113,7 @@ for (const width of [1440, 1280, 390, 375]) {
   );
   /** Where the project's checks are listed: Build & Preview → Checks on a phone, the Checks tab on a desktop. */
   const showChecks = async () => {
-    const build = page.getByRole('radio', { name: /Build & Preview/ });
-    if (phone && (await build.isVisible().catch(() => false))) await build.click();
+    if (phone) await goBuild(page);
     const checks = page.getByRole('tab', { name: /Checks/ });
     await checks.waitFor({ timeout: 5000 }).catch(() => {});
     if (
@@ -147,7 +147,7 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('warning');
 
   // 5. Move the pipe along the wall, clear of the cabinet: its warning goes, the outlet's stays.
-  if (phone) await page.getByRole('radio', { name: 'Compose' }).click();
+  if (phone) await goCompose(page);
   await openSheet();
   const from = page
     .getByRole('region', { name: 'Room' })

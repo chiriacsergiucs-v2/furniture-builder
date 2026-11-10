@@ -43,8 +43,6 @@ export const ru_variables = {
   'Variable “{name}”: {problem}': 'Переменная «{name}»: {problem}',
   '{name}, {field}: {problem}': '{name}, {field}: {problem}',
   '{name} has no {field} to bind.': 'У {name} нет поля «{field}» для привязки.',
-  '{name}: {field} follows “{expr}” although its size is locked.':
-    '{name}: {field} следует «{expr}», хотя размер заблокирован.',
   '{name}: {field} follows “{expr}”; unbind it to change it.':
     '{name}: {field} следует «{expr}»; отвяжите, чтобы изменить.',
   // store steps

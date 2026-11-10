@@ -4,7 +4,7 @@
  * ADR-235) after any row of a user table is created, changed or deleted. Listeners run after the current task, never
  * inside the transaction.
  */
-export interface SavedChange {
+interface SavedChange {
   table: string;
   key: string;
   deleted: boolean;

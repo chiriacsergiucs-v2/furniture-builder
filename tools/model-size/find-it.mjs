@@ -5,6 +5,7 @@
 // script, no binary committed), types sizes with Keep proportions off and on, resets, undoes, and drags the height
 // handle in 3D in Move mode. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -129,7 +130,7 @@ for (const width of widths) {
     }
   };
   const compose = async () => {
-    await page.getByRole('radio', { name: /Compose/ }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
     await page.waitForTimeout(200);
@@ -155,7 +156,7 @@ for (const width of widths) {
   };
   const front = page.getByRole('figure', { name: /Room seen from the front/ });
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
-  const keep = sel.getByLabel('Keep proportions');
+  const keep = sel.getByLabel('Keep proportions', { exact: true });
 
   // 1. Bare app → new project → Add a piece → My 3D models → import the cube and add it.
   await page.goto(url);
@@ -236,7 +237,7 @@ for (const width of widths) {
 
   // 7. 3D, Move mode: the height handle is found; dragging it up with Keep off changes only the height.
   await keep.uncheck();
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   if (!phone) {
     const r = page.getByRole('radio', { name: '3D', exact: true });
     if (await r.isVisible().catch(() => false)) await r.click();

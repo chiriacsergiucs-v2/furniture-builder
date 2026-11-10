@@ -9,7 +9,7 @@ export type SectionAxis = 'x' | 'y' | 'z';
  * everything past a cut plane across one axis (any of the three, user answer 2026-10-27 "Accept default"); Isolate
  * shows only the selected pieces. This page only, never saved; it stays while the 3D view is hidden and shown again.
  */
-export interface SectionState {
+interface SectionState {
   on: boolean;
   axis: SectionAxis;
   /** Where the cut is, mm along the axis; null = the middle of what is shown. */

@@ -22,3 +22,5 @@ description: Default implementation flow — ask only low-confidence questions i
    while off, ask first). No babysit or merge unless asked.
 8. **Reply:** where to click and whether it is live (pushed ≠ merged ≠ deployed), **Decided**, **Skipped this
    iteration**.
+   When **Skipped this iteration** is not empty, run the `skip-review` skill's stage 03 on it first: each skip
+   states its blocker, what unblocks it and its cost, and a premature or avoidance skip is built instead.

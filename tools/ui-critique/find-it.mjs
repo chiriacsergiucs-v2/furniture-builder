@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/ui-critique/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -109,7 +110,7 @@ for (const width of [390, 1280, 1600]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await page.waitForTimeout(400);
   const front = page.locator('.view.front');
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
@@ -179,7 +180,7 @@ for (const width of [390, 1280, 1600]) {
   }
 
   // 2. Build & Preview: one toolbar row on a phone, the rest under "Options".
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const tools = page.locator('.stage-tools');

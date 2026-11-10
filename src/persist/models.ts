@@ -15,7 +15,7 @@ import {
 import { base64ToBytes, bytesToBase64 } from '../core/surface';
 import { db, loadModel, saveModel, type StoredModel } from './db';
 
-export type ModelImport = { ok: true; model: StoredModel } | { ok: false; problem: string };
+type ModelImport = { ok: true; model: StoredModel } | { ok: false; problem: string };
 
 /** The reader with three.js; loaded only when needed, like the 3D view (ADR-013). */
 const reader = () => import('./gltf');
@@ -142,7 +142,7 @@ async function sameModel(name: string, bytes: ArrayBuffer, database = db) {
 // Project files carry their models (ADR-076, like pictures in ADR-048)
 // ---------------------------------------------------------------------------
 
-export interface ModelFile {
+interface ModelFile {
   id: string;
   name: string;
   format: 'glb' | 'gltf';

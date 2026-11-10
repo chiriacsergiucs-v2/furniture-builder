@@ -6,6 +6,7 @@
 // modes (ADR-079/080: Parts CSV and Print on the Parts list in Build & Preview, Materials in the Settings dialog)
 // and the phone layout (N82: the project panel is a bottom sheet; Compose shows the drawing only).
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -149,7 +150,7 @@ for (const width of [1440, 375]) {
   // In-context editing: "Edit this piece" opens the piece inside the project; changes stay in the project.
   // Rewritten (ADR-078): the "Editing … in project" banner became the top-bar path "‹ <project> › <piece>".
   await selectPiece(1);
-  await page.getByRole('button', { name: 'Edit this piece' }).click();
+  await openPieceEditor(page);
   const backToProject = page.getByRole('button', { name: `Back to project Verify ${width}` });
   check(
     width,

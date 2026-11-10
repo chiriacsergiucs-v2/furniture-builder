@@ -61,4 +61,37 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
     await user.click(within(menu).getByRole('button', { name: 'Open in the piece editor' }));
     expect(await screen.findByLabelText('Name of this piece')).toBeTruthy();
   });
+
+  it('Settings and Material open inside the Compose sheet on a phone, over the page on a desktop (ADR-247)', async () => {
+    const { user } = await renderApp(width);
+    await user.click(await screen.findByRole('button', { name: 'New single piece' }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    for (const [button, title] of [
+      ['Settings', /^Settings: /],
+      ['Material', /^Material$/],
+    ] as const) {
+      await user.click(screen.getByRole('button', { name: button }));
+      const dlg = await screen.findByRole('dialog', { name: title });
+      expect(composePanel().contains(dlg)).toBe(width === PHONE_WIDTH);
+      await user.click(within(dlg).getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: title })).toBeNull());
+    }
+  });
+
+  it('in the Cut list place on a phone, Settings opens over the page, not in the hidden sheet (ADR-247)', async () => {
+    const { user } = await renderApp(width);
+    await user.click(await screen.findByRole('button', { name: 'New single piece' }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    if (width === PHONE_WIDTH) await user.click(places().getByRole('link', { name: /Cut list/ }));
+    else await user.click(screen.getByRole('radio', { name: /Build & Preview/ }));
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    const dlg = await screen.findByRole('dialog', { name: /^Settings: / });
+    expect(composePanel().contains(dlg)).toBe(false);
+  });
 });

@@ -5,7 +5,7 @@ export type StageView = 'front' | '3d' | 'both';
 
 export const NO_3D_REASON = t('3D preview is not available in this browser');
 
-export interface ViewOption {
+interface ViewOption {
   id: StageView;
   label: string;
   disabled: boolean;
@@ -40,7 +40,7 @@ export function bringDrawingForward(view: StageView): StageView {
 }
 
 /** The view tools of the stage and the plan (ADR-144). */
-export type ViewTool =
+type ViewTool =
   | 'fronts'
   | 'select'
   | 'move'

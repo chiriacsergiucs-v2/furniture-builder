@@ -42,7 +42,7 @@ const when = (iso: string) =>
     minute: '2-digit',
   });
 
-export const REMINDER_KEY = 'backup-reminder-days';
+const REMINDER_KEY = 'backup-reminder-days';
 const NOTICE_KEY = 'device-notice-dismissed-at';
 const LATER_KEY = 'backup-reminder-later-at';
 const FIRST_SAVE_KEY = 'first-save-at';

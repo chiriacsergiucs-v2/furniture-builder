@@ -11,6 +11,7 @@
 // first 8 samples; and the wall behind the sideboard opened with "Edit this piece". Not part of `pnpm test`.
 // Not checked here: AR on a real phone (Android View in AR, iPhone AR Quick Look); that needs the devices.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -574,7 +575,7 @@ for (const width of [1280, 390]) {
       .first(),
   );
   await sheet(true);
-  await click(btn('Edit this piece'));
+  await openPieceEditor(page);
   await sheet(false);
   const behind = page.getByRole('img', { name: 'Wall 1 behind the piece' });
   await behind.waitFor({ state: 'attached', timeout: 8000 }).catch(() => {});

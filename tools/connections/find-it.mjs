@@ -9,6 +9,7 @@
 // exploded and after Disconnect. ADR-201 (G-346): in Build & Preview › 3D with Move on, dragging a connected piece moves
 // the connected set along, and on a desktop an Alt drag moves that piece alone (then one Undo). Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -204,10 +205,9 @@ for (const width of [1440, 390]) {
     }
     return seams();
   };
-  const compose = page.getByRole('radio', { name: 'Compose' });
   const show3d = async () => {
     await sheet(false);
-    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+    await goBuild(page);
     const r = page.getByRole('radio', { name: '3D', exact: true });
     if (await r.isVisible().catch(() => false)) await click(r);
     await page.locator('canvas').first().waitFor({ state: 'visible', timeout: 30000 });
@@ -223,7 +223,7 @@ for (const width of [1440, 390]) {
     await click(exploded);
     check(width, 'the seam line is back after Exploded 3D off', (await waitSeams('1')) === '1');
   }
-  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await goCompose(page);
   await selectRows(0, 1);
   const pairCard = side.getByRole('region', { name: /^2 pieces selected/ });
   await click(pairCard.getByRole('checkbox', { name: 'Connected' }));
@@ -233,7 +233,7 @@ for (const width of [1440, 390]) {
   check(width, 'no seam line in 3D after Disconnect', (await waitSeams('0')) === '0');
   await shot('3d-disconnected');
   // Connect them again for the steps below.
-  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await goCompose(page);
   await selectRows(0, 1);
   await click(
     side
@@ -421,7 +421,7 @@ for (const width of [1440, 390]) {
       JSON.stringify(await lefts()) === JSON.stringify(z1) && (await ticks.count()) === 2,
     );
   }
-  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await goCompose(page);
   await showPlan();
 
   if (!phone) {
@@ -457,8 +457,7 @@ for (const width of [1440, 390]) {
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
   await sheet(false);
   const checksTab = page.getByRole('tab', { name: /Checks/ });
-  if (!(await checksTab.isVisible().catch(() => false)))
-    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  if (!(await checksTab.isVisible().catch(() => false))) await goBuild(page);
   if ((await checksTab.getAttribute('aria-selected')) !== 'true') await click(checksTab);
   await page.waitForTimeout(200);
   const warnText =
@@ -477,7 +476,7 @@ for (const width of [1440, 390]) {
   check(width, 'no sideways scroll (Checks)', await noSideScroll());
 
   // 7. Back in Compose, the toggle disconnects the pair.
-  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await goCompose(page);
   await selectRows(0, 1);
   const card2 = side.getByRole('region', { name: /^2 pieces selected/ });
   const connected2 = card2.getByRole('checkbox', { name: 'Connected' });

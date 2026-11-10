@@ -186,7 +186,7 @@ const keepSelection = (d: Design, sel: Selection): Selection =>
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'assembly' | 'shopping' | 'checks';
 
 /** How a move was made (ADR-168): `snapped` = the drop snapped; `alone` = Alt held, so connected pieces stay. */
-export interface MoveOpts {
+interface MoveOpts {
   snapped?: boolean;
   alone?: boolean;
 }

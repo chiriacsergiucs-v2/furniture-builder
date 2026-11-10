@@ -43,6 +43,14 @@ for folder in (ADR, DONE):
                 errors.append(f"{rel}: missing '- {key}:' line")
         adrs[num] = (f, status)
 
+# The ledgers' tables stay unpadded (cleanup audit 2026-11-09, item 11): Prettier no longer formats them, and a cell
+# padded with runs of spaces would make every row as long as the longest one again.
+for ledger in ("docs/backlog.md", "docs/adr/README.md"):
+    for n, line in enumerate((REPO / ledger).read_text().splitlines(), 1):
+        if line.startswith("|") and (re.search(r" {3,}\|", line) or re.search(r"-{4,}", line) and set(line) <= set("|-: ")):
+            errors.append(f"{ledger}:{n}: padded table cell (keep '| a | b |' and '| --- |')")
+            break
+
 MARKER = "find-it pending (light, ADR-066)"
 # "N60" -> (status, evidence)
 backlog = {m.group(1): (m.group(2).strip(), m.group(3))

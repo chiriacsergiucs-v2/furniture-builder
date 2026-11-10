@@ -13,6 +13,7 @@
 // window.print is replaced by a counter so the print sheet stays on screen for checks; Chromium's own PDF printer
 // counts the client sheet's pages. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl('http://localhost:4306/furniture-builder/');
@@ -111,7 +112,7 @@ for (const width of [1280, 390]) {
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
   const results3d = async () => {
-    if (phone) await click(page.getByRole('radio', { name: /Build & Preview/ }));
+    if (phone) await goBuild(page);
     const three = page.getByRole('radio', { name: '3D', exact: true });
     if (await three.isVisible().catch(() => false)) await click(three);
     await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 30000 });
@@ -361,7 +362,7 @@ for (const width of [1280, 390]) {
     .waitFor();
   await click(dlg.getByRole('button', { name: 'Done' }));
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  if (phone) await click(page.getByRole('radio', { name: /Build & Preview/ }));
+  if (phone) await goBuild(page);
   panel = await tab(/^Shopping/);
   const wtProduct = panel.getByRole('button', { name: /^Product for Worktop/ }).filter({
     hasNotText: 'fixings',

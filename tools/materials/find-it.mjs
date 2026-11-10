@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { crc32, deflateSync } from 'node:zlib';
 
@@ -125,13 +126,12 @@ for (const width of [1440, 375]) {
   };
   // A phone shows the View switch in Build & Preview only, and the drawing on its own in Compose (ADR-080).
   const show3d = async (p = page) => {
-    if (!(await p.getByRole('radio', { name: '3D' }).isVisible()))
-      await p.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (!(await p.getByRole('radio', { name: '3D' }).isVisible())) await goBuild(p);
     await p.getByRole('radio', { name: '3D' }).click();
     await p.waitForTimeout(1500);
   };
   const showFront = async () => {
-    if (phone) await page.getByRole('radio', { name: 'Compose' }).click();
+    if (phone) await goCompose(page);
     else await page.getByRole('radio', { name: '2D' }).click();
     await page.waitForTimeout(300);
   };
@@ -410,7 +410,14 @@ for (const width of [1440, 375]) {
   check(
     width,
     'cleanup: 1 unused picture deleted',
-    await page.getByText('1 unused picture deleted.').isVisible(),
+    // The deletion is asynchronous: wait for its message instead of reading it at once.
+    await page
+      .getByText('1 unused picture deleted.')
+      .waitFor({ timeout: 8000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
