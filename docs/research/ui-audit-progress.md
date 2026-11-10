@@ -18,7 +18,7 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 | 11  | Checks and problems        |         |              |              |                     |
 | 12  | Views                      |         |              |              |                     |
 | 13  | Output                     |         |              |              |                     |
-| 14  | Projects                   |         |              |              |                     |
+| 14  | Projects                   | ADR-260 | 2026-11-10 | 2026-11-10 |                     |
 | 15  | Catalog and templates      | ADR-261 | 2026-11-10 | 2026-11-10 |                     |
 | 16  | Saving, backup and sharing |         |              |              |                     |
 | 17  | Account                    |         |              |              |                     |
