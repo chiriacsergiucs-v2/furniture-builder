@@ -3,7 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/ui-polish/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
-import { goBuild, goCompose } from '../lib/steps.mjs';
+import { goBuild, goCompose, openTab } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -37,6 +37,15 @@ const yellows = (page) =>
       })
       .map((e) => e.innerText.trim().replace(/\s+/g, ' '));
   });
+
+/**
+ * Pick a view on the 2D · 3D · Both switch (ADR-144). The view is kept across Compose and Build & Preview (and the
+ * phone's Editor and Cut list places, ADR-241), so a script picks the one it needs in each.
+ */
+const pickView = async (page, name) => {
+  const r = page.getByRole('radio', { name, exact: true });
+  if (await r.isVisible().catch(() => false)) await r.click();
+};
 
 for (const width of [390, 1280]) {
   const phone = width < 500;
@@ -95,6 +104,7 @@ for (const width of [390, 1280]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await goBuild(page);
+  await pickView(page, '3D');
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   check(
     width,
@@ -120,7 +130,7 @@ for (const width of [390, 1280]) {
   );
 
   // 3. Hardware on a phone: the item column gets the room.
-  await page.getByRole('tab', { name: /^Hardware/ }).click();
+  await openTab(page, /^Hardware/);
   await page.waitForTimeout(300);
   const share = await page.evaluate(() => {
     const t = document.querySelector('.hardware table.cut');
@@ -137,12 +147,14 @@ for (const width of [390, 1280]) {
 
   // 4. Quick counts over 3D (G-058): a phone folds the card to one row and remembers it; wide screens never fold.
   await goCompose(page);
+  await pickView(page, '2D');
   const svg = page.locator('.view.front svg').first();
   const b = await svg.boundingBox();
   if (phone) await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height * 0.7);
   else await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.7);
   await page.waitForTimeout(300);
   await goBuild(page);
+  await pickView(page, '3D');
   await page.waitForTimeout(1500);
   // On a phone the card is docked under the 3D view (G-070) and folds there (G-058); wide screens float it over 3D.
   const card = page
@@ -175,10 +187,12 @@ for (const width of [390, 1280]) {
     await places.getByRole('link', { name: /Editor/ }).click();
     await page.locator('main.work').waitFor({ state: 'visible' });
     await goCompose(page);
+    await pickView(page, '2D');
     const b2 = await page.locator('.view.front svg').first().boundingBox();
     await page.touchscreen.tap(b2.x + b2.width / 2, b2.y + b2.height * 0.7);
     await page.waitForTimeout(300);
     await goBuild(page);
+    await pickView(page, '3D');
     await page.waitForTimeout(1500);
     check(
       width,
@@ -263,7 +277,7 @@ for (const width of [390, 1280]) {
   check(width, 'no sideways scroll (Catalog)', await noSideScroll());
   await shot('catalog');
 
-  // 7. Wizard: Type first; Skip says what it does.
+  // 7. Wizard: Type first; Skip (now "Use …", ADR-191) says what it does.
   await page.getByRole('button', { name: 'New piece', exact: true }).click();
   await dlg.getByRole('heading', { name: 'New piece' }).waitFor();
   check(
@@ -271,12 +285,20 @@ for (const width of [390, 1280]) {
     'wizard opens on Type',
     (await dlg.locator('.steps [aria-current="step"] .lbl').innerText()) === 'Type',
   );
+  // ADR-191 (finding 4): Skip now says what it does in its label, "Use <first type>" on the Type step (its title
+  // tooltip went).
   check(
     width,
-    'Skip has a title',
-    ((await dlg.getByRole('button', { name: 'Skip' }).getAttribute('title')) ?? '').startsWith(
-      'Skip:',
-    ),
+    'Skip says what it does ("Use …" on the Type step)',
+    await dlg
+      .getByRole('button', { name: /^Use \S/ })
+      .first()
+      .isVisible(),
+    await dlg
+      .getByRole('button', { name: /^Use \S/ })
+      .first()
+      .innerText()
+      .catch(() => ''),
   );
   await shot('wizard');
   // The wizard has no Cancel since ADR-118; the dialog's × closes it.
@@ -316,13 +338,14 @@ for (const width of [390, 1280]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await goBuild(page);
+  await pickView(page, '3D');
   await page.waitForTimeout(1500);
   check(
     width,
     'empty project: 3D says "Add pieces under Compose"',
     await page.getByText('Add pieces under Compose to see them in 3D.').isVisible(),
   );
-  await page.getByRole('tab', { name: /^Checks/ }).click();
+  await openTab(page, /^Checks/);
   check(
     width,
     'empty project: Checks says "Nothing to check yet", not "No problems found"',
