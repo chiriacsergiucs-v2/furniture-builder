@@ -55,7 +55,7 @@ function OptionalMm({
           placeholder={t('not set')}
           aria-invalid={!valid}
           aria-describedby={`${id}-help`}
-          onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
+          onChange={(e) => setText(e.target.value.replace(/[^\d.,-]/g, ''))}
           onBlur={commit}
           onKeyDown={(e) => {
             // Enter leaves the field; the blur commits, once (committing here too made two undo steps).

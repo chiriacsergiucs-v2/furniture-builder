@@ -238,13 +238,23 @@ function OrphanVersions({ reload }: { reload: number }) {
   const openProject = useDesign((s) => s.openProject);
   const [rows, setRows] = useState<ProjectVersion[]>([]);
   const [again, setAgain] = useState(0);
+  const [readError, setReadError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   useEffect(() => {
     let live = true;
     listOrphanVersions()
-      .then((v) => live && setRows(v))
-      .catch(() => live && setRows([]));
+      .then((v) => {
+        if (!live) return;
+        setRows(v);
+        setReadError(false);
+      })
+      .catch(() => {
+        // Said, with Retry, as the project's own versions do (ADR-261): never shown as "none".
+        if (!live) return;
+        setRows([]);
+        setReadError(true);
+      });
     return () => {
       live = false;
     };
@@ -259,6 +269,17 @@ function OrphanVersions({ reload }: { reload: number }) {
       }),
     [],
   );
+  if (readError)
+    return (
+      <Group title={t('Versions of deleted projects')} defaultOpen={false}>
+        <p className="alert error" role="alert">
+          <span>{t('Saved work could not be read from this browser.')}</span>
+          <button type="button" className="btn outline sm" onClick={() => setAgain((n) => n + 1)}>
+            {t('Retry')}
+          </button>
+        </p>
+      </Group>
+    );
   if (!rows.length) return null;
   const run = async (work: () => Promise<void>, errorText: string) => {
     if (busy) return;
@@ -348,6 +369,8 @@ function EditHistory({ open, onClose }: { open: boolean; onClose: () => void }) 
   const past = useDesign((s) => s.projectPastNames);
   const future = useDesign((s) => s.projectFutureNames);
   const jump = useDesign((s) => s.jumpProject);
+  // After 100 steps the oldest are dropped: the first row is then the earliest kept step (ADR-261).
+  const trimmed = useDesign((s) => s.projectHistoryTrimmed);
   return (
     <Dialog open={open} onClose={onClose} title={t('Edit history')}>
       {past.length === 0 && future.length === 0 ? (
@@ -356,7 +379,7 @@ function EditHistory({ open, onClose }: { open: boolean; onClose: () => void }) 
         <ol className="steps-log">
           <li>
             <button type="button" className="row-btn" onClick={() => jump(-past.length)}>
-              <span>{t('As opened')}</span>
+              <span>{trimmed ? t('Earliest kept step') : t('As opened')}</span>
             </button>
           </li>
           {past.map((name, i) => (

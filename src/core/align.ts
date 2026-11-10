@@ -132,6 +132,39 @@ const unionOf = (boxes: Box[]): Box => {
 };
 
 /**
+ * The axes of the wall a piece stands along (ADR-251), from its quarter turn: `along` the wall and `depth` across it,
+ * with the direction (−1 towards the smaller coordinate, +1 the larger) of the piece's own left and of its back.
+ * Turn 0 faces +z (back at the back wall), 90 faces +x, 180 faces −z, 270 faces −x (`FACING`, project.ts).
+ */
+interface WallAxes {
+  along: 'x' | 'z';
+  depth: 'x' | 'z';
+  left: 1 | -1;
+  back: 1 | -1;
+}
+function wallAxes(it: ProjectItem | undefined): WallAxes {
+  switch (it?.rotationY ?? 0) {
+    case 90:
+      return { along: 'z', depth: 'x', left: 1, back: -1 };
+    case 180:
+      return { along: 'x', depth: 'z', left: 1, back: 1 };
+    case 270:
+      return { along: 'z', depth: 'x', left: -1, back: 1 };
+    default:
+      return { along: 'x', depth: 'z', left: -1, back: -1 };
+  }
+}
+const lo = (b: Box, a: 'x' | 'z') => b[a];
+const len = (b: Box, a: 'x' | 'z') => (a === 'x' ? b.w : b.d);
+const hi = (b: Box, a: 'x' | 'z') => b[a] + len(b, a);
+/** An offset of `v` mm on axis `a`, as `shiftEach` takes it. */
+const on = (a: 'x' | 'z', v: number) => (a === 'x' ? { dx: v, dz: 0 } : { dx: 0, dz: v });
+const itemOf = (project: Project, id: string) => project.items.find((i) => i.id === id);
+/** Whether two pieces stand along the same wall direction (their quarter turns on one axis). */
+const sameAxis = (a: ProjectItem | undefined, b: ProjectItem | undefined) =>
+  (a?.rotationY ?? 0) % 180 === (b?.rotationY ?? 0) % 180;
+
+/**
  * Align the selected pieces to the first one (ADR-099): its left edge, centre line or right edge along the wall, or its
  * back or front in depth, or its top or underside in height (ADR-122). A centre that falls on a half mm rounds down
  * (whole mm). Grouped pieces move together (ADR-148), so a group aligns as one block by its outer box, moved through
@@ -174,28 +207,46 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
       skipped: [...stays(sameGroup.map((id) => !!dy(bounds.get(id)!))), ...res.skipped],
     };
   }
+  // Along the wall the first piece stands on (ADR-251): its own left, right and back, on its wall's axes.
+  const ax = wallAxes(itemOf(project, known[0]));
+  const edge = (b: Box, a: 'x' | 'z', side: 1 | -1) => (side < 0 ? lo(b, a) : hi(b, a));
   const target = (b: Box): { dx: number; dz: number } => {
     switch (how) {
       case 'left':
-        return { dx: ref.x - b.x, dz: 0 };
-      case 'right':
-        return { dx: ref.x + ref.w - (b.x + b.w), dz: 0 };
+        return on(ax.along, edge(ref, ax.along, ax.left) - edge(b, ax.along, ax.left));
+      case 'right': {
+        const r = ax.left === 1 ? -1 : 1;
+        return on(ax.along, edge(ref, ax.along, r) - edge(b, ax.along, r));
+      }
       case 'centre':
-        return { dx: ref.x + Math.floor((ref.w - b.w) / 2) - b.x, dz: 0 };
+        return on(
+          ax.along,
+          lo(ref, ax.along) +
+            Math.floor((len(ref, ax.along) - len(b, ax.along)) / 2) -
+            lo(b, ax.along),
+        );
       case 'back':
-        return { dx: 0, dz: ref.z - b.z };
-      case 'front':
-        return { dx: 0, dz: ref.z + ref.d - (b.z + b.d) };
+        return on(ax.depth, edge(ref, ax.depth, ax.back) - edge(b, ax.depth, ax.back));
+      case 'front': {
+        const f = ax.back === 1 ? -1 : 1;
+        return on(ax.depth, edge(ref, ax.depth, f) - edge(b, ax.depth, f));
+      }
       default:
         return { dx: 0, dz: 0 };
     }
   };
-  const res = shiftEach(project, new Map(units.map(([id, b]) => [id, target(b)])));
+  // A piece or group standing along another wall stays and is named (ADR-251).
+  const other = units.filter(([id]) => !sameAxis(itemOf(project, id), itemOf(project, known[0])));
+  const along = units.filter(([id]) => !other.some(([o]) => o === id));
+  const otherWall = other.map(([id]) =>
+    t('{name} stands along another wall.', { name: pieceName(project, id) }),
+  );
+  const res = shiftEach(project, new Map(along.map(([id, b]) => [id, target(b)])));
   const off = sameGroup.map((id) => {
     const m = target(bounds.get(id)!);
     return !!(m.dx || m.dz);
   });
-  return { ...res, skipped: [...stays(off), ...res.skipped] };
+  return { ...res, skipped: [...stays(off), ...otherWall, ...res.skipped] };
 }
 
 /**
@@ -239,8 +290,14 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
         'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.',
       ),
     };
+  // Along the wall the first piece stands on (ADR-251); a block along another wall stays and is named.
+  const ax = wallAxes(itemOf(project, known[0])).along;
+  const firstItem = itemOf(project, known[0]);
+  const otherWall = blocks
+    .filter(([id]) => !sameAxis(itemOf(project, id), firstItem))
+    .map(([id]) => t('{name} stands along another wall.', { name: pieceName(project, id) }));
   const box = new Map(blocks);
-  const lead = blocks.map(([id]) => id);
+  const lead = blocks.filter(([id]) => sameAxis(itemOf(project, id), firstItem)).map(([id]) => id);
   // Rows: blocks whose heights overlap, chained (a block joins every row it overlaps, and those rows merge).
   const level = (a: Box, b: Box) => Math.min(a.y + a.h, b.y + b.h) > Math.max(a.y, b.y);
   const rows: string[][] = [];
@@ -264,21 +321,21 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
       continue;
     }
     const order = [...row].sort(
-      (a, b) => box.get(a)!.x - box.get(b)!.x || lead.indexOf(a) - lead.indexOf(b),
+      (a, b) => lo(box.get(a)!, ax) - lo(box.get(b)!, ax) || lead.indexOf(a) - lead.indexOf(b),
     );
     spaced.push(order);
     const first = box.get(order[0])!,
       last = box.get(order[order.length - 1])!;
-    const widths = order.map((id) => box.get(id)!.w);
-    const free = last.x + last.w - first.x - widths.reduce((a, w) => a + w, 0);
+    const widths = order.map((id) => len(box.get(id)!, ax));
+    const free = hi(last, ax) - lo(first, ax) - widths.reduce((a, w) => a + w, 0);
     const n = order.length - 1;
     const each = Math.floor(free / n);
     const extra = free - each * n;
     const gaps = Array.from({ length: n }, (_, i) => each + (i < extra ? 1 : 0));
-    let x = first.x + first.w;
+    let x = hi(first, ax);
     for (let i = 1; i < order.length - 1; i++) {
       x += gaps[i - 1];
-      moves.set(order[i], { dx: x - box.get(order[i])!.x, dz: 0 });
+      moves.set(order[i], on(ax, x - lo(box.get(order[i])!, ax)));
       x += widths[i];
     }
   }
@@ -288,14 +345,14 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
   const gaps = spaced.flatMap((order) => {
     const after = order.map((id) => {
       const b = box.get(id)!,
-        dx = now.get(id)!.x - bounds.get(id)!.x;
-      return { ...b, x: b.x + dx };
+        d = lo(now.get(id)!, ax) - lo(bounds.get(id)!, ax);
+      return { ...b, [ax]: b[ax] + d };
     });
-    return after.slice(1).map((b, i) => b.x - (after[i].x + after[i].w));
+    return after.slice(1).map((b, i) => lo(b, ax) - hi(after[i], ax));
   });
   return {
     ...res,
-    skipped: [...res.skipped, ...short],
+    skipped: [...res.skipped, ...otherWall, ...short],
     ...(spaced.length ? { gaps } : {}),
   };
 }

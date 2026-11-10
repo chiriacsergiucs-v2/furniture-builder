@@ -100,13 +100,15 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
     await user.clear(known);
     await user.type(known, '3000{Enter}');
     await waitFor(() => expect(img().getAttribute('width')).toBe('6000'));
-    // A bad length (0) is shown as a problem and changes nothing (never throws); leaving the field restores it.
+    // A bad length (0) is shown as a problem and changes nothing (never throws); it stays until Escape (ADR-253).
     await user.clear(known);
     await user.type(known, '0');
     expect(known.getAttribute('aria-invalid')).toBe('true');
     expect(within(section).getByText('Whole number from 1 to 100000.')).toBeTruthy();
     await user.type(known, '{Enter}');
     expect(img().getAttribute('width')).toBe('6000');
+    expect((known as HTMLInputElement).value).toBe('0');
+    await user.type(known, '{Escape}');
     expect((known as HTMLInputElement).value).toBe('3000');
 
     // Show the plan picture off and on, then Remove the plan picture.

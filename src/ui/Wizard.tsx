@@ -801,7 +801,11 @@ function Wizard({
     setDone(nowDone);
     go(nextOpenStep(s.answers, step.id, nowDone));
   };
+  // One tap makes one piece (ADR-248): a second tap or Enter while it saves does nothing.
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
   const create = async () => {
+    if (saving.current) return;
     const res = createPiece(a, new Date().toISOString(), from ?? undefined);
     if (!res.ok) return;
     // A project piece reopened from its Settings (ADR-203, G-359): Update piece replaces that piece in the project's own
@@ -813,6 +817,8 @@ function Wizard({
       else onCreated();
       return;
     }
+    saving.current = true;
+    setBusy(true);
     try {
       await saveDesign(res.design);
       if (toProject) addPiece(res.design, res.design.id);
@@ -822,6 +828,9 @@ function Wizard({
       onCreated();
     } catch {
       setSaveError(t('The piece could not be saved in this browser’s storage.'));
+    } finally {
+      saving.current = false;
+      setBusy(false);
     }
   };
   const isReview = step.id === REVIEW;
@@ -862,6 +871,7 @@ function Wizard({
           {offerDraft && draft && step.id === TYPE && (
             <div className="alert info wz-draft" role="status">
               <Icon name="info" className="sm" />
+              <span>{t('You have a draft of a new piece from earlier in this session.')}</span>
               <span className="wz-draft-actions">
                 <button type="button" className="btn sm primary" onClick={continueDraft}>
                   {t('Continue where you left off')}
@@ -1035,7 +1045,7 @@ function Wizard({
           <button
             type="button"
             className="btn primary"
-            disabled={!c.design || c.errors > 0}
+            disabled={!c.design || c.errors > 0 || busy}
             title={c.errors ? t('Fix the problems listed under Checks first') : undefined}
             onClick={() => void create()}
           >

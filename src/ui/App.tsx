@@ -43,7 +43,6 @@ import { setTheme, useTheme } from '../store/useTheme';
 import { setLook, useLook } from '../store/useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
-import { SceneMenu } from './SceneMenu';
 import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from '../store/useMediaQuery';
@@ -125,11 +124,15 @@ function EstimateChip({ compact = false }: { compact?: boolean }) {
     (!est.priced && !est.missing.length) ||
     (!est.priced && est.total === 0);
   const amount = t('{amount} {currency}', { amount: formatMoney(est.total), currency });
-  const full = none
-    ? t('No prices yet')
-    : est.missing.length
-      ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
-      : t('Estimate: {amount}', { amount });
+  // A price list the device could not read is said as such, not as "No prices yet" (ADR-260).
+  const full =
+    priceState === 'failed'
+      ? t('Prices could not be read')
+      : none
+        ? t('No prices yet')
+        : est.missing.length
+          ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
+          : t('Estimate: {amount}', { amount });
   return (
     <button
       type="button"
@@ -540,7 +543,10 @@ export function App() {
       // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
-        if (st.project && !st.editingItemId) st.selectItem(null);
+        // Inside a drilled project piece Esc also goes up one level; only the whole piece clears the selection (ADR-249).
+        if (st.project && !st.editingItemId && st.drillItemId && st.selectedId !== null)
+          st.select(parentOf(st.model, st.selectedId));
+        else if (st.project && !st.editingItemId) st.selectItem(null);
         // In the piece editor Esc goes up one level: a space → the one around it → the whole piece → nothing (ADR-203).
         else st.select(parentOf(st.model, st.selectedId));
       }
@@ -569,11 +575,12 @@ export function App() {
       ? t('{n} pieces selected', { n: selectedCount })
       : selectedItem || selectedModel
         ? t('Selected: {name}', {
+            // Built-in names in the user's language (ADR-265).
             name: drillLevel
-              ? `${selectedItem!.design.name} › ${drillLevel}`
-              : String(selectedItem?.design.name ?? selectedModel?.name),
+              ? `${tr(selectedItem!.design.name)} › ${drillLevel}`
+              : tr(String(selectedItem?.design.name ?? selectedModel?.name)),
           })
-        : t('{name}: {n|# piece|# pieces}', { name: project!.name, n: project!.items.length })
+        : t('{name}: {n|# piece|# pieces}', { name: tr(project!.name), n: project!.items.length })
     : (() => {
         const l = selectionLabel(design.product, selectedId);
         return l ? t('Selected: {name}', { name: l }) : t('Tap a space to edit it');
@@ -583,14 +590,16 @@ export function App() {
     <input
       className="name"
       aria-label={inProject ? t('Name of this project') : t('Name of this piece')}
-      defaultValue={inProject ? project!.name : design.name}
+      // Shown in the user's language; the stored built-in name is kept unless the user types another (ADR-265).
+      defaultValue={tr(inProject ? project!.name : design.name)}
       key={inProject ? `p-${project!.id}-${project!.name}` : `${design.id}-${design.name}`}
       onBlur={(e) => {
         const v = e.target.value.trim();
         if (!v) return;
         if (inProject) {
-          if (v !== project!.name) useDesign.getState().updateProject((p) => ({ ...p, name: v }));
-        } else if (v !== design.name) rename(v);
+          if (v !== project!.name && v !== tr(project!.name))
+            useDesign.getState().updateProject((p) => ({ ...p, name: v }));
+        } else if (v !== design.name && v !== tr(design.name)) rename(v);
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -896,7 +905,7 @@ export function App() {
             <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
           )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
-          {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
+          {page === 'info' && <InfoPage onDone={() => setPage('editor')} designOpen={designOpen} />}
         </Suspense>
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
@@ -961,12 +970,21 @@ export function App() {
                     className={shown === o.id ? 'on' : ''}
                     disabled={o.disabled}
                     title={o.reason}
+                    aria-describedby={o.reason ? 'no-3d-why' : undefined}
                     onClick={() => setView(o.id)}
                   >
                     {o.label}
                   </button>
                 ))}
               </div>
+              {/* Why 3D is off, as visible text beside the switch (ADR-081, ADR-259). */}
+              {!has3d && (
+                <p id="no-3d-why" className="hint">
+                  {t(
+                    '3D preview is not available in this browser. The front view and parts list still work.',
+                  )}
+                </p>
+              )}
               {/* Fronts stays in the row on a phone too (G-269); the other tools go behind Options there. */}
               {!frontsInPlan && (
                 <label className="toggle small">
@@ -1032,7 +1050,6 @@ export function App() {
                     {t('Render')}
                   </button>
                 )}
-                {mount3d && <SceneMenu name={inProject ? project!.name : design.name} />}
               </ViewOptions>
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>

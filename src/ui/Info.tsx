@@ -35,7 +35,14 @@ function Domain({ d, open }: { d: FeatureDomain; open: boolean }) {
  * Information and guides (ADR-158): what the app can do, as a tree of domains with each feature's ADRs. Domains
  * start open on a wide screen and closed on a phone.
  */
-export function InfoPage({ onDone }: { onDone: () => void }) {
+/** `designOpen`: Back to the editor only when there is a design to go back to (ADR-120 item 5, ADR-266). */
+export function InfoPage({
+  onDone,
+  designOpen = true,
+}: {
+  onDone: () => void;
+  designOpen?: boolean;
+}) {
   const wide = !useMediaQuery(PHONE);
   const total = FEATURES.reduce((n, d) => n + count(d), 0);
   return (
@@ -52,10 +59,12 @@ export function InfoPage({ onDone }: { onDone: () => void }) {
             )}
           </p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-left" className="sm" />
-          {t('Back to the editor')}
-        </button>
+        {designOpen && (
+          <button type="button" className="btn outline" onClick={onDone}>
+            <Icon name="chevron-left" className="sm" />
+            {t('Back to the editor')}
+          </button>
+        )}
       </header>
       <section aria-labelledby="info-features">
         <h2 id="info-features">{t('Features')}</h2>

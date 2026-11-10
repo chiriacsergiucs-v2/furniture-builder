@@ -59,13 +59,12 @@ export function roomActions(h: StoreHelpers): RoomActions {
     startDrawRoom: () => set({ drawingRoom: [], placingItemId: null }),
     addRoomCorner: (x, z) => {
       const pts = get().drawingRoom;
-      if (pts)
-        set({
-          drawingRoom: [
-            ...pts,
-            snapCorner(pts[pts.length - 1], x, z, 10, pts.length >= 2 ? pts[0] : undefined),
-          ],
-        });
+      if (!pts) return;
+      const next = snapCorner(pts[pts.length - 1], x, z, 10, pts.length >= 2 ? pts[0] : undefined);
+      // A corner equal to the last one adds no wall (a double tap): ignored (ADR-257).
+      const last = pts[pts.length - 1];
+      if (last && last[0] === next[0] && last[1] === next[1]) return;
+      set({ drawingRoom: [...pts, next] });
     },
     finishDrawRoom: () => {
       const { drawingRoom: pts, project: p } = get();
@@ -93,18 +92,19 @@ export function roomActions(h: StoreHelpers): RoomActions {
       const next = moveModelTo(p, id, d.position);
       if (next !== p) commitProject(next);
     },
-    startScalePlan: () => set({ scalingPlan: [], drawingRoom: null, placingItemId: null }),
+    startScalePlan: () =>
+      set({ scalingPlan: [], scaleSamePoint: false, drawingRoom: null, placingItemId: null }),
     addScalePoint: (pt) => {
       const pts = get().scalingPlan;
       const p = get().project;
       if (!pts || !p?.planPicture) return;
-      if (!pts.length) return set({ scalingPlan: [pt] });
-      set({ scalingPlan: null });
+      if (!pts.length) return set({ scalingPlan: [pt], scaleSamePoint: false });
       const a = pts[0];
-      // Two taps on the same pixel give no distance: the scale stays as it was.
-      if (a[0] === pt[0] && a[1] === pt[1]) return;
+      // Two taps on the same pixel give no distance: Set the scale stays on, waiting for another point (ADR-257).
+      if (a[0] === pt[0] && a[1] === pt[1]) return set({ scaleSamePoint: true });
+      set({ scalingPlan: null, scaleSamePoint: false });
       commitProject({ ...p, planPicture: { ...p.planPicture, a, b: pt } });
     },
-    cancelScalePlan: () => set({ scalingPlan: null }),
+    cancelScalePlan: () => set({ scalingPlan: null, scaleSamePoint: false }),
   };
 }

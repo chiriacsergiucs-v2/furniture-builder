@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Find-it for Fill the room (ADR-173, N176), in jsdom (ADR-108): More → New… → Fill the room → Room (rectangle)
 // → Walls → Show suggestions → cards → Use this mix → the project opens with its room and pieces; in that project
-// the ⋯ menu offers "Fill the room…", which adds a mix to the project. ADR-177 (N180): the mix's piece list shows
+// the ⋯ menu offers "Fill the room…", whose mixes are checked against the project's pieces (ADR-248). ADR-177 (N180): the mix's piece list shows
 // the wall corner (Wall blind corner) above the corner cabinet.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -50,15 +50,16 @@ describe.each(WIDTHS)('fill the room at %ipx (find-it, ADR-173)', (width) => {
     for (const name of [/^Wall 1,/, /^Wall 2,/, /^Wall 4,/])
       await user.click(within(walls2).getByRole('checkbox', { name }));
     await user.click(within(again).getByRole('button', { name: 'Show suggestions' }));
-    const add = await within(again).findAllByRole('button', { name: 'Add this mix' });
-    await user.click(add[0]);
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Fill the room' })).toBeNull());
+    // Wall 3 meets the filled wall 2 at their corner: every mix would overlap a piece already there, so none is offered
+    // and the dialog says why (ADR-248; Add this mix is checked against the open project).
+    expect(
+      await within(again).findByText(/No mix fits beside the pieces already in this project/),
+    ).toBeTruthy();
+    expect(within(again).queryAllByRole('button', { name: 'Add this mix' })).toHaveLength(0);
     const all2 = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
     if (all2) await user.click(all2);
-    await waitFor(() =>
-      expect(
-        within(within(panel).getByRole('list', { name: 'Pieces' })).getAllByRole('button').length,
-      ).toBeGreaterThan(before),
-    );
+    expect(
+      within(within(panel).getByRole('list', { name: 'Pieces' })).getAllByRole('button').length,
+    ).toBe(before);
   });
 });

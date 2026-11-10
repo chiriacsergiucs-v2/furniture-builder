@@ -7653,8 +7653,7 @@ fieldset.group-locked {
   .bar button.crumb.back {
     min-height: 44px;
   }
-  /* The two "More 3D actions" menus (ADR-206, ADR-208) were 42 and 32 px wide. */
-  .scene-menu > summary,
+  /* The "More 3D actions" menu (ADR-206, ADR-208, one since ADR-259) was 32 px wide. */
   .three-more > summary {
     min-width: 44px;
     min-height: 44px;

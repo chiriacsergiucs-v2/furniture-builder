@@ -182,6 +182,8 @@ function ProjectOrder({ stages }: { stages: ProjectStage[] }) {
 }
 
 export function Assembly() {
+  // Printing is blocked while there is an error, as the parts and sheets are (ADR-008, ADR-260).
+  const blocked = useView().diagnostics.some((d) => d.severity === 'error');
   const pieces = usePieceSteps();
   const order = useProjectOrder();
   const setLit = useDesign((s) => s.setLit);
@@ -256,7 +258,8 @@ export function Assembly() {
         <button
           type="button"
           className="btn primary"
-          disabled={taking}
+          disabled={taking || blocked}
+          title={blocked ? t('Fix the problems listed under Checks first') : undefined}
           onClick={() => void print()}
         >
           <Icon name="printer" className="sm" />

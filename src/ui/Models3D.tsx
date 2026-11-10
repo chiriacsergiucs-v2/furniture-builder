@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import {
   makeModelItem,
   modelYaw,
-  MODEL_SIDE_MAX,
+  modelSideRange,
   resizeModel,
   type ModelFront,
   type ModelItem,
@@ -118,8 +118,9 @@ export function ModelFields({ item }: { item: ModelItem }) {
             key={side}
             label={label}
             value={item.size[side]}
-            min={1}
-            max={MODEL_SIDE_MAX}
+            // With Keep proportions the range keeps every side 1 to 10 000 mm; outside it is refused (ADR-259).
+            min={modelSideRange(item.size, side, keep).min}
+            max={modelSideRange(item.size, side, keep).max}
             onChange={(v) => patch(item.id, { size: resizeModel(item.size, side, v, keep) })}
           />
         ))}
@@ -543,7 +544,6 @@ export function PlanModels({
   const select = useDesign((s) => s.selectItem);
   const dropModel = useDesign((s) => s.dropModel);
   const project = useDesign((s) => s.project);
-  const patch = usePatchModel();
   const [snapOn] = useSnap();
   const [drag, setDragState] = useState<{ g: DragGesture; alt: boolean } | null>(null);
   const dragRef = useRef<{ g: DragGesture; alt: boolean } | null>(null);
@@ -612,13 +612,8 @@ export function PlanModels({
               const m = tapping ? null : arrowMove(e.key, e.shiftKey);
               if (!m) return onEnter(() => select(item.id))(e);
               e.preventDefault();
-              patch(item.id, {
-                position: {
-                  ...item.position,
-                  x: item.position.x + m.dx,
-                  z: item.position.z + m.dz,
-                },
-              });
+              // The drag's path (ADR-259): one undo step per press, and a model on a piece lifts off as a drag does.
+              dropModel(item.id, m.dx, m.dz, false);
             }}
           >
             <rect x={b.x} y={b.z} width={b.w} height={b.d} />

@@ -40,6 +40,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { useFocusedProblem } from '../store/focusedProblem';
+import { useUi } from '../store/uiStore';
 import { connectionSeams } from '../core/connections';
 import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
@@ -128,6 +129,14 @@ import {
  * The 3D toolbar's ⋯ menu (ADR-208): View in AR when this device offers immersive AR, and Export for AR (.usdz). The
  * AR overlay (dom-overlay) holds the hint, Turn 90° ↻ and Exit AR.
  */
+/** A file name from a design or project name (as the app's files use, ADR-206). */
+const sceneFileName = (s: string) =>
+  s
+    .trim()
+    .replace(/[^\w\- ]+/g, '')
+    .replace(/\s+/g, '-')
+    .toLowerCase() || 'design';
+
 export function ThreeMore({ name }: { name: string }) {
   const canAR = useARSupported();
   const arUi = useARUi();
@@ -191,12 +200,50 @@ export function ThreeMore({ name }: { name: string }) {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              setNote(await exportUsdz(name));
+              // Said like the scene export, in the app's notice: saved, or why not (ADR-259).
+              const why = await exportUsdz(name);
               setBusy(false);
               menu.current?.removeAttribute('open');
+              useUi
+                .getState()
+                .setNotice(
+                  why
+                    ? { ok: false, text: why }
+                    : { ok: true, text: t('Saved {name}.', { name: `${name}.usdz` }) },
+                );
             }}
           >
             {t('Export for AR (.usdz)')}
+          </button>
+          {/* Export scene (.glb) (ADR-206) lives here too, so one ⋯ holds the 3D actions (ADR-259). */}
+          <button
+            type="button"
+            className="btn sm outline"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              menu.current?.removeAttribute('open');
+              const { exportSceneGlb } = await import('./exportScene');
+              try {
+                const blob = await exportSceneGlb();
+                const file = `${sceneFileName(name)}-scene.glb`;
+                const url = URL.createObjectURL(blob);
+                Object.assign(document.createElement('a'), { href: url, download: file }).click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                useUi.getState().setNotice({ ok: true, text: t('Saved {name}.', { name: file }) });
+              } catch (e) {
+                useUi.getState().setNotice({
+                  ok: false,
+                  text: t('The scene could not be exported: {message}', {
+                    message: e instanceof Error ? e.message : String(e),
+                  }),
+                });
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {t('Export scene (.glb)')}
           </button>
         </div>
       </details>

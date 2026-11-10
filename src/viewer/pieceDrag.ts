@@ -5,6 +5,7 @@ import { floorDrop, floorPoint, modelDrop, type FloorPoint } from '../core/drag3
 import { isLocked, LOCKED_HINT, moveBlocked } from '../core/project';
 import type { SnapResult } from '../core/snap';
 import { useDesign } from '../store/designStore';
+import { moveAloneIsOn } from '../store/useMoveAlone';
 import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 
 /** mm → metres: the 3D scene's scale, shared with Viewer3D so pointer and boards agree. */
@@ -164,8 +165,13 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
       const from = toFloor(ne.clientX, ne.clientY, baseY);
       if (!from) return;
       e.stopPropagation();
+      // A piece of a selection of several keeps the selection: the drag moves them all, as on the plan (ADR-097,
+      // ADR-250, user 2026-11-10).
+      const several = !pc
+        ? false
+        : st.selectedItemIds.length > 1 && st.selectedItemIds.includes(id);
       // Pressing a piece selects it; the click that follows must not also open it (ADR-083).
-      if (st.selectedItemId !== id) {
+      if (!several && st.selectedItemId !== id) {
         st.selectItem(id);
         swallow.current = true;
       }
@@ -206,8 +212,15 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
           st2.dropModel(g.id, g.to.x - g.from.x, g.to.z - g.from.z, snapping);
           return;
         }
+        // A selection of several: every piece moves by the same whole mm, one undo step (ADR-097, ADR-250).
+        if (st2.selectedItemIds.length > 1 && st2.selectedItemIds.includes(g.id)) {
+          st2.moveSelectionBy(g.to.x - g.from.x, g.to.z - g.from.z, 1, {
+            alone: ev.altKey || moveAloneIsOn(),
+          });
+          return;
+        }
         // Alt: the piece moves without its connected neighbours (ADR-168).
-        st2.dropItemAt(g.id, g.from, g.to, snapping, ev.altKey);
+        st2.dropItemAt(g.id, g.from, g.to, snapping, ev.altKey || moveAloneIsOn());
       };
       const onCancel = (ev: PointerEvent) => {
         const g = gesture.current;

@@ -20,6 +20,9 @@ import { useUi } from '../../store/uiStore';
 import { LanguageMenu } from './LanguageMenu';
 import { t } from '../../core/i18n';
 
+const FILE_FAILED = () =>
+  t('The file could not be made: pictures or 3D models could not be read from this browser.');
+
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
  * the clean-up of unused pictures since G-059), Feature Research and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
@@ -43,6 +46,8 @@ export function MoreMenu({
   const project = useDesign((s) => s.project);
   const editingItemId = useDesign((s) => s.editingItemId);
   const inProject = !!project && !editingItemId;
+  const blocked = model.diagnostics.some((d) => d.severity === 'error');
+  const blockedWhy = blocked ? t('Fix the problems listed under Checks first') : undefined;
   const setNotice = useUi((s) => s.setNotice);
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
@@ -117,6 +122,13 @@ export function MoreMenu({
             <Icon name="plus" />
             {t('New…')} <small>{t('piece or project')}</small>
           </button>
+          {/* Fill the room (ADR-173), beside New… and outside Files (ADR-248): mixes for every wall of this project's room, added to the project. */}
+          {inProject && project.room && (
+            <button type="button" onClick={run(() => setRoomFill(true))}>
+              <Icon name="project" />
+              {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
+            </button>
+          )}
           <p className="menu-head" id="menu-files">
             {t('Files')}
           </p>
@@ -124,17 +136,22 @@ export function MoreMenu({
             {inProject ? (
               <button
                 type="button"
-                onClick={run(async () =>
-                  download(
-                    `${fileName(project.name)}-project.json`,
-                    JSON.stringify(
-                      await withPictures(await withModels(project), pictureHolders(project)),
-                      null,
-                      2,
-                    ),
-                    'application/json',
-                  ),
-                )}
+                onClick={run(async () => {
+                  // A file that cannot be made is said (ADR-263), never a silent nothing.
+                  try {
+                    download(
+                      `${fileName(project.name)}-project.json`,
+                      JSON.stringify(
+                        await withPictures(await withModels(project), pictureHolders(project)),
+                        null,
+                        2,
+                      ),
+                      'application/json',
+                    );
+                  } catch {
+                    setNotice({ ok: false, text: FILE_FAILED() });
+                  }
+                })}
               >
                 <Icon name="download" />
                 {t('Project file')} <small>{t('to open on another device')}</small>
@@ -147,40 +164,42 @@ export function MoreMenu({
                 {t('Hand to a professional…')} <small>{t('one .zip to check the plan')}</small>
               </button>
             )}
-            {/* Fill the room (ADR-173): mixes for every wall of this project's room, added to the project. */}
-            {inProject && project.room && (
-              <button type="button" onClick={run(() => setRoomFill(true))}>
-                <Icon name="project" />
-                {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
-              </button>
-            )}
             {inProject ? null : (
               <>
                 <button
                   type="button"
-                  onClick={run(async () =>
-                    download(
-                      `${fileName(design.name)}.json`,
-                      JSON.stringify(await withPictures(design, [design]), null, 2),
-                      'application/json',
-                    ),
-                  )}
+                  onClick={run(async () => {
+                    try {
+                      download(
+                        `${fileName(design.name)}.json`,
+                        JSON.stringify(await withPictures(design, [design]), null, 2),
+                        'application/json',
+                      );
+                    } catch {
+                      setNotice({ ok: false, text: FILE_FAILED() });
+                    }
+                  })}
                 >
                   <Icon name="download" />
                   {t('Design file')} <small>{t('to open on another device')}</small>
                 </button>
+                {/* Exports are blocked while the piece has an error, with the reason (ADR-008, ADR-260). */}
                 <button
                   type="button"
+                  disabled={blocked}
+                  title={blockedWhy}
                   onClick={run(async () => {
                     if (!(await downloadFrontSvg(design)))
                       setNotice({ ok: false, text: t('Open the piece in the editor first.') });
                   })}
                 >
                   <Icon name="front" />
-                  {t('Front view drawing')} <small>SVG</small>
+                  {t('Front view drawing')} <small>{blockedWhy ?? 'SVG'}</small>
                 </button>
                 <button
                   type="button"
+                  disabled={blocked}
+                  title={blockedWhy}
                   onClick={run(() =>
                     download(
                       `${fileName(design.name)}-fusion.py`,
@@ -190,7 +209,8 @@ export function MoreMenu({
                   )}
                 >
                   <Icon name="cube" />
-                  {t('Fusion 360 script')} <small>{t('not yet tested in Fusion')}</small>
+                  {t('Fusion 360 script')}{' '}
+                  <small>{blockedWhy ?? t('not yet tested in Fusion')}</small>
                 </button>
               </>
             )}

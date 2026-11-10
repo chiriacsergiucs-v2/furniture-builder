@@ -48,6 +48,7 @@ import {
   rememberLast as stored_rememberLast,
   rememberLastProject as stored_rememberLastProject,
   replaceBands as stored_replaceBands,
+  clearBands as stored_clearBands,
   replaceDecors as stored_replaceDecors,
   saveDesign as stored_saveDesign,
   saveGapMark as stored_saveGapMark,
@@ -103,6 +104,7 @@ export const replaceDecors = (decors: Decor[]) => stored_replaceDecors(decors);
 export const clearDecors = () => stored_clearDecors();
 export const listBands = () => stored_listBands();
 export const replaceBands = (bands: Band[]) => stored_replaceBands(bands);
+export const clearBands = () => stored_clearBands();
 
 // ---- Marks on gaps (ADR-101) -----------------------------------------------------------------------------------------
 export const listGapMarks = () => stored_listGapMarks();

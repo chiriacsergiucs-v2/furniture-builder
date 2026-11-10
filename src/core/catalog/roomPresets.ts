@@ -4,7 +4,6 @@
  * lists them; one becomes a project through `projectFromTemplate`. A preset whose variant is not insertable is not
  * listed. Pure: geometry comes from the pieces' own footprints (`placedBounds`), never computed in the UI.
  */
-import { t } from '../i18n';
 import { makeItem, newProject, placedBounds, type Project, type ProjectItem } from '../project';
 import { templateFromProject, type ProjectTemplate } from '../projectTemplate';
 import {
@@ -90,7 +89,7 @@ function bedroom(): Project | null {
   const b = firstVariant('nightstand');
   const wardrobe = firstVariant('wardrobe');
   if (!bed || !a || !b || !wardrobe) return null;
-  const p = newProject(t('Bedroom: bed, two nightstands and a wardrobe'));
+  const p = newProject('Bedroom: bed, two nightstands and a wardrobe');
   const room = presetRoom();
   p.room = room;
   // The bed between its nightstands from the corner of wall 1; the wardrobe on wall 3 at the other side of the room,
@@ -111,7 +110,7 @@ function office(): Project | null {
   const desk = firstVariant('desk');
   const bookcase = firstVariant('bookcase');
   if (!desk || !bookcase) return null;
-  const p = newProject(t('Home office: desk and bookcase'));
+  const p = newProject('Home office: desk and bookcase');
   const room = presetRoom();
   p.room = room;
   // The desk on wall 1, the bookcase on wall 3.
@@ -127,7 +126,7 @@ function kitchenDesk(): Project | null {
   // Fill a wall's first mix for a 2400 mm stretch of wall 1 (ADR-103/104).
   const mix = suggestMixes({ width: 2400, depth: 560, height: room.height }).mixes[0];
   if (!mix) return null;
-  const p = newProject(t('Kitchen and desk'));
+  const p = newProject('Kitchen and desk');
   p.room = room;
   const rotationY = turnFor(wallInward(room, 0));
   for (const it of mix.project.items) {

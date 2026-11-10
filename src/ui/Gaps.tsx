@@ -40,6 +40,8 @@ const GAP_IDS = new Set(GAPS.map((g) => g.id));
  * user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
  * Claude, who applies them to `docs/adr/GAPS.md`. Nothing here changes the ledger itself (ADR-002).
  */
+const SAVE_FAILED = 'Your mark could not be saved on this device.';
+
 export function GapsPage({
   onDone,
   designOpen = true,
@@ -69,8 +71,25 @@ export function GapsPage({
       );
   }, []);
 
-  const write = (mark: GapMark) =>
-    saveGapMark(mark).catch(() => setError('Your mark could not be saved on this device.'));
+  // The banner for a failed save goes only once every mark that failed is saved; another failure keeps it (ADR-266).
+  // Marks whose save failed are written again with the next save.
+  const unsaved = useRef(new Map<string, GapMark>());
+  const saveOne = (mark: GapMark) =>
+    saveGapMark(mark).then(
+      () => {
+        if (unsaved.current.get(mark.gapId) === mark) unsaved.current.delete(mark.gapId);
+        if (!unsaved.current.size) setError((e) => (e === SAVE_FAILED ? null : e));
+      },
+      () => {
+        unsaved.current.set(mark.gapId, mark);
+        setError(SAVE_FAILED);
+      },
+    );
+  const write = (mark: GapMark) => {
+    unsaved.current.delete(mark.gapId);
+    const again = [...unsaved.current.values()];
+    return Promise.all([saveOne(mark), ...again.map(saveOne)]).then(() => undefined);
+  };
   // A note still waiting for its timer is written when the page closes or goes away.
   useEffect(() => {
     const queue = pending.current;
@@ -169,7 +188,8 @@ export function GapsPage({
     });
     setFileMsg({
       ok: r.skipped === 0,
-      text: `Imported ${r.imported} ${r.imported === 1 ? 'mark' : 'marks'}, skipped ${r.skipped}.`,
+      // Only the marks really applied count as imported; older ones are said as kept (ADR-266).
+      text: `Imported ${r.apply.length} ${r.apply.length === 1 ? 'mark' : 'marks'}, kept ${r.kept} (yours are newer), skipped ${r.skipped}.`,
     });
   };
   const copy = () => {

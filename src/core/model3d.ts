@@ -123,6 +123,28 @@ export function resizeModel(
   return { w: scaled(size.w), h: scaled(size.h), d: scaled(size.d), [side]: value };
 }
 
+/**
+ * The values `side` can take (whole mm) so that every side stays 1 to `MODEL_SIDE_MAX` (ADR-259): without `keep`, that
+ * full range; with Keep proportions, the range in which the other two sides, scaled with it, stay inside it too.
+ */
+export function modelSideRange(
+  size: ModelSize,
+  side: keyof ModelSize,
+  keep: boolean,
+): { min: Mm; max: Mm } {
+  if (!keep) return { min: 1, max: MODEL_SIDE_MAX };
+  const v = size[side];
+  let min = 1,
+    max = MODEL_SIDE_MAX;
+  for (const o of ['w', 'h', 'd'] as const) {
+    if (o === side) continue;
+    // o * value / v must round to 1 .. MAX: value ≥ v * 0.5 / o and value ≤ v * (MAX + 0.5) / o.
+    min = Math.max(min, Math.ceil((v * 0.5) / size[o]));
+    max = Math.min(max, Math.floor((v * (MODEL_SIDE_MAX + 0.5)) / size[o] - 1e-9));
+  }
+  return { min, max: Math.max(min, max) };
+}
+
 /** The side of the model's own size that lies along a room axis, after its turn: x and z swap at 90° and 270°. */
 export function roomSide(m: Pick<ModelItem, 'rotationY' | 'front'>, axis: 'x' | 'y' | 'z') {
   if (axis === 'y') return 'h';
@@ -143,7 +165,9 @@ export function dragResize(
   keep: boolean,
 ): ModelSize {
   const side = roomSide(m, axis);
-  const value = Math.min(MODEL_SIDE_MAX, Math.max(1, Math.round(start[side] + by)));
+  // Held to the range that keeps every side 1 to MODEL_SIDE_MAX (ADR-259).
+  const r = modelSideRange(start, side, keep);
+  const value = Math.min(r.max, Math.max(r.min, Math.round(start[side] + by)));
   return resizeModel(start, side, value, keep);
 }
 

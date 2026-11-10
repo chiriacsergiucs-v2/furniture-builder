@@ -8,7 +8,7 @@
 import { footprintOf } from './geometry';
 import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
-import { t } from './i18n';
+import { t, tr } from './i18n';
 
 export type Pt = [Mm, Mm];
 
@@ -552,7 +552,7 @@ export function roomChecks(
       diagnostics.push({
         severity: 'error',
         code: 'room-feature',
-        message: t('{name} is on a wall the room does not have.', { name: f.label }),
+        message: t('{name} is on a wall the room does not have.', { name: tr(f.label) }),
       });
       continue;
     }
@@ -564,14 +564,14 @@ export function roomChecks(
           code: 'room-feature',
           message: t(
             '{name} runs {mm} mm past the end of wall {n} ({len} mm long): move it or make it narrower.',
-            { name: f.label, mm: f.from + f.width - len, n: f.wall + 1, len },
+            { name: tr(f.label), mm: f.from + f.width - len, n: f.wall + 1, len },
           ),
         });
     } else if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
       diagnostics.push({
         severity: 'error',
         code: 'room-feature',
-        message: t('{name} is outside the room: move it inside the walls.', { name: f.label }),
+        message: t('{name} is outside the room: move it inside the walls.', { name: tr(f.label) }),
       });
     if (f.kind === 'obstacle') obstacles.push({ label: f.label, box: b });
   }
@@ -616,7 +616,7 @@ export function roomChecks(
         diagnostics.push({
           severity: 'error',
           code: 'hits-obstacle',
-          message: t('{name} runs into {other}.', { name: pc.name, other: f.label }),
+          message: t('{name} runs into {other}.', { name: pc.name, other: tr(f.label) }),
           nodeId: pc.id,
         });
       if (f.kind === 'door' && boxesOverlap(b, fb) && pc.hitsPanels(fb))
@@ -625,7 +625,7 @@ export function roomChecks(
           code: 'blocks-door',
           message: t('{name} is in the way of {door} (it needs {mm} mm to swing).', {
             name: pc.name,
-            door: f.label,
+            door: tr(f.label),
             mm: f.width,
           }),
           nodeId: pc.id,
@@ -638,7 +638,7 @@ export function roomChecks(
             code: 'covers-window',
             message: t(
               '{name} covers the window {window}: it stands against its wall and is {mm} mm higher than its sill.',
-              { name: pc.name, window: f.label, mm: b.y + b.h - f.sill },
+              { name: pc.name, window: tr(f.label), mm: b.y + b.h - f.sill },
             ),
             nodeId: pc.id,
           });
@@ -748,7 +748,7 @@ function serviceIssue(
       severity: 'warning',
       code: 'outlet-hidden',
       message: t('{outlet} is hidden behind {name}: move the outlet or the piece.', {
-        outlet: f.label,
+        outlet: tr(f.label),
         name: pc.name,
       }),
       nodeId: pc.id,
@@ -762,7 +762,7 @@ function serviceIssue(
       f.kind === 'pipe'
         ? 'Pipe behind {name} ({label}): cut the {part} or move the piece.'
         : 'Outlet behind {name} ({label}): cut the {part} or move the piece.',
-      { name: pc.name, label: f.label, part },
+      { name: pc.name, label: tr(f.label), part },
     ),
     nodeId: pc.id,
     // A back can be cut around it (ADR-205, "Cut the back around it").

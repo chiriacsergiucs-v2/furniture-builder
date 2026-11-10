@@ -88,7 +88,7 @@ export const rules: Rule[] = [
               'shelf-span',
               t(
                 'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).',
-                { span, t: m.thickness, name: m.name, limit },
+                { span, t: m.thickness, name: tr(m.name), limit },
               ),
               p.nodeId,
               [p.id],

@@ -30,6 +30,7 @@ import { insertable } from './catalog/types';
 import { newId } from './design';
 import {
   buildProjectModel,
+  isPieceWarning,
   makeItem,
   newProject,
   type Project,
@@ -913,7 +914,11 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
       ...(wall ? { wall, wallWidths: wall.map((x) => x.width).join(' · ') } : {}),
       project,
       model,
-      warnings: [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')],
+      // A piece's own guidance carried into the project (ADR-258) is not counted against a mix.
+      warnings: [
+        ...tallWarn,
+        ...model.diagnostics.filter((d) => d.severity === 'warning' && !isPieceWarning(d)),
+      ],
     });
   }
   const problems: Diagnostic[] = [];

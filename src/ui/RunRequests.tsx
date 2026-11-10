@@ -553,7 +553,7 @@ function HeightField({
           placeholder={t('mm')}
           aria-invalid={showErr}
           aria-describedby="trim-height-hint"
-          onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d.,-]/g, ''))}
         />
         <span className="unit">{t('mm')}</span>
       </div>
@@ -589,7 +589,7 @@ function TypedMm({
           placeholder={t('mm')}
           aria-invalid={showErr}
           aria-describedby={`${id}-hint`}
-          onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d.,-]/g, ''))}
         />
         <span className="unit">{t('mm')}</span>
       </div>
@@ -653,7 +653,7 @@ function OffsetMm({
           placeholder={t('centred')}
           aria-invalid={!ok}
           aria-describedby={`${id}-hint`}
-          onChange={(e) => setText(e.target.value.replace(/[^\d]/g, ''))}
+          onChange={(e) => setText(e.target.value.replace(/[^\d.,-]/g, ''))}
           onBlur={commit}
           onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
         />

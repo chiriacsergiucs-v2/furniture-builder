@@ -34,6 +34,7 @@ export function PieceSize({
   const bed = useMemo(() => bedSizeFields(product), [product]);
   const fields = useMemo(() => (bed.length ? bed : sizeFields(product)), [bed, product]);
   if (!fields.length) return null;
+  const shownLocked = fields.filter((f) => lockedKeys.includes(f.key));
   return (
     <div
       className={`piece-size ${fields.length === 3 ? 'dims3' : fields.length === 2 ? 'dims2' : ''} ${className ?? ''}`}
@@ -56,13 +57,16 @@ export function PieceSize({
           />
         );
       })}
-      {(locked || lockedKeys.length > 0) && (
+      {/* Only sizes this piece shows are named; a bed names its fields by their labels (ADR-253). */}
+      {(locked || shownLocked.length > 0) && (
         <p className="hint size-lock-hint" role="note">
           {lockedHint ??
             (locked
               ? tr(SIZE_LOCKED_HINT)
               : t('{axes} locked — unlock to change', {
-                  axes: axesText(fields.map((f) => f.key).filter((k) => lockedKeys.includes(k))),
+                  axes: bed.length
+                    ? shownLocked.map((f) => tr(f.label)).join(', ')
+                    : axesText(shownLocked.map((f) => f.key)),
                 }))}
         </p>
       )}

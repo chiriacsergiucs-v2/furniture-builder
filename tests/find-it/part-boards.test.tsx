@@ -49,9 +49,16 @@ describe.each(WIDTHS)('part boards at %ipx (find-it, ADR-108)', (width) => {
     await user.click(within(settings).getByRole('radio', { name: 'Wall brackets' }));
     await user.click(within(settings).getByRole('button', { name: 'Done' }));
     dlg = await openMaterial();
-    expect(within(dlg).getByText(/no longer exists; its board is not used/)).toBeTruthy();
-    await user.click(within(dlg).getByRole('button', { name: 'Clear' }));
-    expect(within(dlg).queryByText(/no longer exists/)).toBeNull();
+    // A removed part's board names no internal id (ADR-255).
+    expect(
+      within(dlg).getByText(
+        /A part this piece no longer builds has its own board; it is not used\./,
+      ),
+    ).toBeTruthy();
+    await user.click(
+      within(dlg).getByRole('button', { name: /^Clear the board of a removed part/ }),
+    );
+    expect(within(dlg).queryByText(/no longer builds/)).toBeNull();
     expect(
       within(within(dlg).getByRole('combobox', { name: 'Part' })).getByRole('option', {
         name: /^Left side — PAL 18 oak/,

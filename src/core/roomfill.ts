@@ -20,6 +20,7 @@ import { cornerDefaults, newId, templates } from './design';
 import { t } from './i18n';
 import {
   buildProjectModel,
+  isPieceWarning,
   makeItem,
   newProject,
   type Project,
@@ -79,6 +80,11 @@ export interface RoomInput extends Omit<WallInput, 'width' | 'height'> {
   ceiling?: number;
   /** An island of base cabinets (ADR-210): `walkway` is the user's walkway width, required (no prefill, ADR-010). */
   island?: { walkway?: Mm };
+  /**
+   * The open project the mix is added to (ADR-173 "Add this mix", ADR-248): each mix is also checked with this project's
+   * pieces and kept only when it adds no error.
+   */
+  into?: Project;
 }
 
 /** A stretch of a wall that pieces may stand on: `from`..`to` along the wall from its start corner. */
@@ -446,7 +452,7 @@ export function cornerWalls(input: RoomInput, walls: number[]): number[] {
 }
 
 /** A problem with the input; `field` names the answer or room size it is about (ADR-193). */
-export type RoomIssue = Diagnostic & { field?: WallField | RoomSizeField };
+export type RoomIssue = Diagnostic & { field?: WallField | RoomSizeField | 'walkway' };
 
 /**
  * Problems with the input: the ready shape's sizes (ADR-193), the room's outline, the ticked walls and the per-wall
@@ -472,9 +478,15 @@ export function checkRoom(input: RoomInput): RoomIssue[] {
   if (input.island) {
     const w = input.island.walkway;
     if (w === undefined)
-      out.push(err('room-island', t('Type the walkway width to place an island.')));
+      out.push({
+        ...err('room-island', t('Type the walkway width to place an island.')),
+        field: 'walkway',
+      });
     else if (!Number.isInteger(w) || w < 1 || w > 10000)
-      out.push(err('room-island', t('The walkway width must be a whole number of mm above 0.')));
+      out.push({
+        ...err('room-island', t('The walkway width must be a whole number of mm above 0.')),
+        field: 'walkway',
+      });
     if (!isRectangle(input.room))
       out.push(err('room-island', t('An island needs a rectangle room.')));
   }
@@ -733,7 +745,20 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   const plans = corner === 'none' ? [[]] : cornerPlans(room, corners, take);
   const depth = runDepth(input, perWall);
   const memo = roomMemo();
-  const ctx: PlanContext = { input, walls, corner, corners, take, depth, perWall, island, memo };
+  // The errors the open project already has; a mix that adds one to it is not offered (ADR-248).
+  const intoErrors = input.into ? errorCount(buildProjectModel(input.into)) : 0;
+  const ctx: PlanContext = {
+    input,
+    walls,
+    corner,
+    corners,
+    take,
+    depth,
+    perWall,
+    island,
+    memo,
+    intoErrors,
+  };
   // The combinations are shared out: each plan gets its part of MAX_BUILDS, so a call tries no more than before.
   const budget = Math.ceil(MAX_BUILDS / plans.length);
   const results = plans.map((kept) =>
@@ -747,12 +772,22 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
     )
     .slice(0, limit);
   const overBudget = results.reduce((a, r) => a + r.overBudget, 0);
+  const clashed = results.reduce((a, r) => a + r.clashed, 0);
   const prices = results.flatMap((r) => (r.cheapest === undefined ? [] : [r.cheapest]));
   const cheapest = prices.length ? Math.min(...prices) : undefined;
   // The problems of the plan that gave the best mix; with no mix, the first plan's and every plan's errors.
   const from = results.find((r) => mixes[0] && r.mixes.includes(mixes[0])) ?? results[0];
   const problems = [...from.problems];
-  if (!mixes.length && !overBudget) {
+  if (!mixes.length && !overBudget && clashed) {
+    problems.push(
+      err(
+        'room-clash',
+        t(
+          'No mix fits beside the pieces already in this project. Untick the walls that are already filled.',
+        ),
+      ),
+    );
+  } else if (!mixes.length && !overBudget) {
     for (const r of results)
       for (const p of r.problems)
         if (p.severity === 'error' && !problems.some((q) => q.message === p.message))
@@ -786,6 +821,8 @@ interface PlanContext {
   perWall: WallInput;
   island: IslandPlan | null;
   memo: RoomMemo;
+  /** Error diagnostics of `input.into` alone (ADR-248). */
+  intoErrors: number;
 }
 
 /**
@@ -803,16 +840,18 @@ function fillPlan(
   problems: Diagnostic[];
   failed: number;
   overBudget: number;
+  /** Mixes that would add an error to `input.into` (ADR-248). */
+  clashed: number;
   cheapest?: number;
 } {
-  const { input, walls, corner, corners, take, depth, perWall, island, memo } = ctx;
+  const { input, walls, corner, corners, take, depth, perWall, island, memo, intoErrors } = ctx;
   const room = input.room;
   const n = room.outline.length;
   const min = input.minWidth ?? 400;
   const height = perWall.height;
   const has = new Set(kept);
   const problems: Diagnostic[] = [];
-  const none = { mixes: [], problems, failed: 0, overBudget: 0 };
+  const none = { mixes: [], problems, failed: 0, overBudget: 0, clashed: 0 };
 
   // Stretches per wall, after the corners' reservations; an empty corner is reserved as `none` reserves it (ADR-216).
   let stretches: Stretch[] = [];
@@ -931,6 +970,7 @@ function fillPlan(
   const seen = new Set<string>();
   let failed = 0;
   let overBudget = 0;
+  let clashed = 0;
   let cheapest: number | undefined;
   for (const combo of combos) {
     if (mixes.length >= limit) break;
@@ -941,6 +981,19 @@ function fillPlan(
     const built = build(picks);
     if (errors(built)) {
       failed++;
+      continue;
+    }
+    // Added to an open project (ADR-248): checked with its pieces, as `fillRoom` will add it.
+    if (
+      input.into &&
+      errorCount(
+        buildProjectModel({
+          ...input.into,
+          items: [...input.into.items, ...built.project.items],
+        }),
+      ) > intoErrors
+    ) {
+      clashed++;
       continue;
     }
     // Its estimate (ADR-210); a mix above the ceiling is hidden and counted.
@@ -977,7 +1030,14 @@ function fillPlan(
       ...(island ? { island: summaryOf(island.slots) } : {}),
     });
   }
-  return { mixes, problems, failed, overBudget, ...(cheapest !== undefined ? { cheapest } : {}) };
+  return {
+    mixes,
+    problems,
+    failed,
+    overBudget,
+    clashed,
+    ...(cheapest !== undefined ? { cheapest } : {}),
+  };
 }
 
 /** A built mix's warnings: every piece above the height, then the project's own warnings. */
@@ -998,7 +1058,11 @@ function warningsOf(model: ProjectModel, height: Mm): Diagnostic[] {
         itemIds: [pc.item.id],
       });
   }
-  return [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')];
+  // A piece's own guidance, carried into the project's checks (ADR-258), is the same in every mix: not counted here.
+  return [
+    ...tallWarn,
+    ...model.diagnostics.filter((d) => d.severity === 'warning' && !isPieceWarning(d)),
+  ];
 }
 
 const summaryOf = (slots: Slot[]): string => {
@@ -1230,4 +1294,9 @@ function roomSize(room: Room): { w: Mm; d: Mm } {
   const xs = room.outline.map((p) => p[0]),
     zs = room.outline.map((p) => p[1]);
   return { w: Math.max(...xs) - Math.min(...xs), d: Math.max(...zs) - Math.min(...zs) };
+}
+
+/** The error diagnostics of a built project (ADR-248). */
+function errorCount(model: ProjectModel): number {
+  return model.diagnostics.filter((d) => d.severity === 'error').length;
 }

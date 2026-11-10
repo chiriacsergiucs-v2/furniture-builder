@@ -30,7 +30,7 @@ import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
 import { useMediaQuery } from '../../store/useMediaQuery';
-import { t } from '../../core/i18n';
+import { t, tr } from '../../core/i18n';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */
 const NARROW = '(max-width: 520px)';
@@ -108,8 +108,16 @@ export function ProjectsPage({
   const create = async () => {
     const name = await askText(t('Name of the new project'), t('New project'), t('Create project'));
     if (name === null) return;
-    const p = newProject(name.trim() || t('New project'));
-    void saveProject(p);
+    // The prefilled default is stored in English and shown translated (ADR-265); a typed name stays as typed.
+    const typed = name.trim();
+    const p = newProject(typed && typed !== t('New project') ? typed : undefined);
+    // Saved before it opens; a failed save is said here and nothing opens (ADR-193, ADR-248).
+    try {
+      await saveProject(p);
+    } catch {
+      setMsg({ ok: false, text: t('The project could not be saved in this browser’s storage.') });
+      return;
+    }
     openProject(p);
     onOpened();
   };
@@ -157,9 +165,31 @@ export function ProjectsPage({
             cancelFirst: true,
           },
         ));
-      await deleteProject(r.id);
-      if (dropVersions) await deleteProjectVersions(versions.map((v) => v.id));
-    } else await deleteDesign(r.id);
+      // A failed delete is said; the list is read again either way (ADR-261).
+      try {
+        await deleteProject(r.id);
+      } catch {
+        setMsg({
+          ok: false,
+          text: t('The project could not be deleted from this browser’s storage.'),
+        });
+        refresh();
+        return;
+      }
+      if (dropVersions)
+        await deleteProjectVersions(versions.map((v) => v.id)).catch(() =>
+          setMsg({
+            ok: false,
+            text: t('The project was deleted; its kept versions could not be deleted.'),
+          }),
+        );
+    } else
+      await deleteDesign(r.id).catch(() =>
+        setMsg({
+          ok: false,
+          text: t('The piece could not be deleted from this browser’s storage.'),
+        }),
+      );
     refresh();
   };
   const when = (iso: string) => new Date(iso).toLocaleDateString();
@@ -170,6 +200,8 @@ export function ProjectsPage({
     sub: string,
     open: () => void,
   ) => {
+    // A built-in name in the user's language (ADR-265); a name the user typed stays as typed.
+    const name = tr(r.name);
     // Settings edit the open copy (ADR-080): this row becomes the one open now, and autosave writes it back.
     const settings = () => {
       if (r.id !== currentId) open();
@@ -190,17 +222,17 @@ export function ProjectsPage({
             <Icon name={glyph} />
           </span>
           <span>
-            <strong>{r.name}</strong>
+            <strong>{name}</strong>
             <span className="sub">{sub}</span>
           </span>
           {r.id === currentId && <span className="chip">{t('Open now')}</span>}
           {kind === 'piece' && <AccountBadge table="designs" id={r.id} />}
         </button>
-        {kind === 'piece' && <AccountRowActions table="designs" id={r.id} name={r.name} />}
+        {kind === 'piece' && <AccountRowActions table="designs" id={r.id} name={name} />}
         {/* A small phone folds the three buttons into one ⋯ menu, so the name keeps its line (ADR-120). */}
         {narrow ? (
           <RowMenu
-            name={r.name}
+            name={name}
             isOpen={r.id === currentId}
             onSettings={settings}
             onDuplicate={() => void duplicate(r, kind)}
@@ -211,7 +243,7 @@ export function ProjectsPage({
             <button
               type="button"
               className="btn sm icon"
-              aria-label={t('Settings for {name}', { name: r.name })}
+              aria-label={t('Settings for {name}', { name })}
               title={t('Settings')}
               onClick={settings}
             >
@@ -221,7 +253,7 @@ export function ProjectsPage({
               type="button"
               className="btn sm icon"
               onClick={() => void duplicate(r, kind)}
-              aria-label={t('Duplicate {name}', { name: r.name })}
+              aria-label={t('Duplicate {name}', { name })}
               title={t('Duplicate')}
             >
               <Icon name="copy" className="sm" />
@@ -230,7 +262,7 @@ export function ProjectsPage({
               type="button"
               className="btn sm icon danger"
               disabled={r.id === currentId}
-              aria-label={t('Delete {name}', { name: r.name })}
+              aria-label={t('Delete {name}', { name })}
               title={r.id === currentId ? t('Open something else first') : t('Delete')}
               onClick={() => void remove(r, kind)}
             >

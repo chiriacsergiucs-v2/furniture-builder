@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 /**
  * Select the problem and offer previewed repairs (ADR-071): the check picked under Checks, shown above the plan
  * with its repairs (computed in the core, smallest move first). The chosen repair is drawn on the plan as a dashed
@@ -5,7 +6,7 @@
  * A repair the moved piece's group cannot follow is listed disabled with "Refused: {reason}" and cannot be applied
  * (ADR-176).
  */
-import { applicable, type Repair } from '../core/repairs';
+import { applicable, mayRepair, type Repair } from '../core/repairs';
 import { useDesign } from '../store/designStore';
 import type { FocusedProblem } from '../store/focusedProblem';
 import { t } from '../core/i18n';
@@ -36,10 +37,21 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
     close();
     setNotice({ ok: true, text: t('Applied: {repair}. Undo puts it back.', { repair: r.label }) });
   };
+  // Each tap of a check moves focus here, so the problem is read out (ADR-258).
+  const box = useRef<HTMLElement>(null);
+  const tapped = useProblem((s) => s.tapped);
+  useEffect(() => {
+    if (tapped) box.current?.focus({ preventScroll: true });
+  }, [tapped]);
   const error = d.severity === 'error';
   const first = repairs.find(applicable);
   return (
-    <section className={`problem-banner ${d.severity}`} aria-label={t('Problem and repairs')}>
+    <section
+      ref={box}
+      tabIndex={-1}
+      className={`problem-banner ${d.severity}`}
+      aria-label={t('Problem and repairs')}
+    >
       <p className="problem-msg">
         <Icon name={error ? 'alert-circle' : 'alert-triangle'} className="sm" />
         <span>
@@ -73,9 +85,12 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
         </fieldset>
       ) : (
         <p className="hint">
-          {t(
-            'No repair clears this without causing another problem. Move or change the pieces yourself.',
-          )}
+          {/* Only a problem with repairs to try can say none worked (ADR-258). */}
+          {mayRepair(d)
+            ? t(
+                'No repair clears this without causing another problem. Move or change the pieces yourself.',
+              )
+            : t('This problem has no automatic repair. Move or change the pieces yourself.')}
         </p>
       )}
       <div className="repair-actions">

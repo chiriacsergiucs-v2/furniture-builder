@@ -25,10 +25,12 @@ import type { HardwareProduct } from '../core/types';
 import { validPer } from '../core/design';
 import { notCountedPrint } from '../core/fasteners';
 import { ProductPicker } from './ProductPicker';
+import { fileName } from './shell/files';
 import {
   NOT_COUNTED,
   shopSectionPrint,
   shoppingCsvRo,
+  UNIT_PRINT,
   unitPricePrint,
   type ShopLine,
   type ShopSection,
@@ -113,6 +115,14 @@ export function ShoppingList() {
     void storePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
   };
   const importCsv = async (f: File) => {
+    // A read or save the device refuses is said here (ADR-260), never an unhandled rejection.
+    try {
+      await importPrices(f);
+    } catch {
+      setMsg(t('The prices could not be saved on this device.'));
+    }
+  };
+  const importPrices = async (f: File) => {
     const r = parsePricesCsv(await f.text());
     if (!r.prices.length) {
       setMsg(
@@ -149,7 +159,7 @@ export function ShoppingList() {
             .map((l) => {
               const p = linePrice(l, map, seller);
               const u = unitPrice(l, map, seller);
-              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(l.printLabel ?? tr(l.label))}</td><td>${esc(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
+              return `<tr><td>${String(l.quantity).replace('.', ',')} ${esc(pt(UNIT_PRINT[l.unit]))}</td><td>${esc(l.printLabel ?? tr(l.label))}</td><td>${esc(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
@@ -158,17 +168,18 @@ export function ShoppingList() {
     const name =
       view.mode === 'design' && view.title === design.name ? printPieceName(design) : view.title;
     const title = esc(pt('Listă de cumpărături — {name}', { name }));
+    // The estimate line in the print language too (ADR-181, ADR-260): a print never mixes languages.
     const estimate = esc(
-      t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
+      pt('Estimare: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length
-          ? t(' — {n|# price missing|# prices missing}', { n: est.missing.length })
+          ? pt(' — {n|# preț lipsă|# prețuri lipsă}', { n: est.missing.length })
           : '') +
         (est.fromSeller
-          ? t(' (your prices; {n|# line|# lines} at seller prices: {sellers})', {
+          ? pt(' (prețurile tale; {n|# linie|# linii} la prețuri de vânzător: {sellers})', {
               n: est.fromSeller,
               sellers: est.sellers.join('; '),
             })
-          : t(' (your prices)')),
+          : pt(' (prețurile tale)')),
     );
     w.document.write(
       `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(notCountedPrint())}</p><p>${estimate}</p>`,
@@ -241,7 +252,7 @@ export function ShoppingList() {
           title={blockedTitle ?? t('Download the shopping list as CSV')}
           onClick={() =>
             save(
-              `${view.title}-shopping.csv`,
+              `${fileName(view.title)}-shopping.csv`,
               shoppingCsvRo(
                 lines,
                 (l) => linePrice(l, map, seller),
@@ -409,6 +420,9 @@ function Line({
                   inputMode="decimal"
                   defaultValue={e && e.unit === unit ? (e.amount / 100).toFixed(2) : ''}
                   className={bad ? 'bad' : undefined}
+                  // A wrong price is named, not only coloured (ADR-260).
+                  aria-invalid={bad || undefined}
+                  title={bad ? t('An amount, for example 12.50') : undefined}
                   onBlur={(ev) => {
                     const a = parseMoney(ev.target.value);
                     setBad(ev.target.value.trim() !== '' && a === null);
@@ -483,6 +497,7 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
   const project = useDesign((s) => s.project);
   const [open, setOpen] = useState(false);
   const [bad, setBad] = useState(false);
+  const [badQty, setBadQty] = useState(false);
   const { hardwareKind, sizeMm, runKey } = l;
   // A run part (ADR-206) is linked in the project; a hardware or fastener line in the design (ADR-161, ADR-206).
   const productKey = runKey ?? l.productKey;
@@ -522,14 +537,24 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
             min={0}
             max={9999}
             step={1}
-            aria-label={t('Quantity of {item}', { item: l.label })}
+            aria-label={t('Quantity of {item}', { item: tr(l.label) })}
             defaultValue={l.quantity}
+            // A wrong quantity is said, not dropped in silence (ADR-008, ADR-260).
+            aria-invalid={badQty || undefined}
+            aria-describedby={badQty ? `qty-${i}-err` : undefined}
             onBlur={(e) => {
               const v = Number(e.target.value);
-              if (Number.isInteger(v) && v >= 0 && v <= 9999) change(v);
+              const ok = Number.isInteger(v) && v >= 0 && v <= 9999;
+              setBadQty(!ok);
+              if (ok) change(v);
             }}
           />
         </label>
+        {badQty && (
+          <span className="field-error" id={`qty-${i}-err`}>
+            {t('Whole number from {min} to {max}.', { min: 0, max: 9999 })}
+          </span>
+        )}
         <button type="button" className="btn sm ghost" onClick={() => change(0)}>
           {t('Remove')}
         </button>
@@ -561,6 +586,8 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
               aria-label={t('Seller units per item for {item}', { item })}
               defaultValue={String(l.per ?? 1)}
               className={bad ? 'bad' : undefined}
+              aria-invalid={bad || undefined}
+              aria-describedby={bad ? `per-${productKey}-err` : undefined}
               onBlur={(e) => {
                 const v = Number(e.target.value.trim().replace(',', '.'));
                 const ok = validPer(v);
@@ -569,6 +596,11 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
               }}
             />
           </label>
+          {bad && (
+            <span className="field-error" id={`per-${productKey}-err`}>
+              {t('A number above 0, for example 1 or 0.5.')}
+            </span>
+          )}
           <button
             type="button"
             className="btn sm ghost"

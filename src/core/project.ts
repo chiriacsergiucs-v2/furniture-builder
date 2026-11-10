@@ -95,7 +95,7 @@ import type {
   Space,
   Yaw,
 } from './types';
-import { t, type Key } from './i18n';
+import { t, tr, type Key } from './i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
@@ -779,10 +779,16 @@ export interface MoveResult {
 }
 
 /** A piece's name, with its number in the project when another piece has the same name. */
+/** A project diagnostic that is one piece's own warning carried into the project's checks (ADR-258). */
+const PIECE_WARNINGS = new WeakSet<Diagnostic>();
+export const isPieceWarning = (d: Diagnostic): boolean => PIECE_WARNINGS.has(d);
+
 export function pieceName(project: Project, id: string): string {
   const i = project.items.findIndex((x) => x.id === id);
-  const name = project.items[i]?.design.name ?? '';
-  return project.items.some((x) => x.id !== id && x.design.name === name)
+  const stored = project.items[i]?.design.name ?? '';
+  // A built-in name in the user's language (ADR-265); a name the user typed stays as typed.
+  const name = tr(stored);
+  return project.items.some((x) => x.id !== id && x.design.name === stored)
     ? t('{name} (piece {n})', { name, n: i + 1 })
     : name;
 }
@@ -1521,7 +1527,7 @@ export function buildProjectModel(input: Project): ProjectModel {
           code: 'material-sheet-conflict',
           message: t(
             "{board} has different sheet settings in {name}; the first piece's sheet ({l} × {w}) is used for the whole project.",
-            { board: m.name, name: pc.item.design.name, l: a.length, w: a.width },
+            { board: tr(m.name), name: tr(pc.item.design.name), l: a.length, w: a.width },
           ),
           nodeId: pc.item.id,
         });
@@ -1539,13 +1545,27 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `${pc.item.id}:${h.nodeId}`,
         quantity: h.quantity * pc.item.quantity,
       });
+    // A piece's own warnings reach the project's checks and prints (ADR-258), named by the piece; its errors are
+    // summarised below. Panel ids follow the project's `item:panel` form.
+    for (const d of pc.model.diagnostics)
+      if (d.severity === 'warning') {
+        const carried: Diagnostic = {
+          ...d,
+          message: t('{name}: {message}', { name: tr(pc.item.design.name), message: d.message }),
+          nodeId: pc.item.id,
+          itemIds: [pc.item.id],
+          ...(d.panelIds ? { panelIds: d.panelIds.map((id) => `${pc.item.id}:${id}`) } : {}),
+        };
+        PIECE_WARNINGS.add(carried);
+        diagnostics.push(carried);
+      }
     const errs = pc.model.diagnostics.filter((d) => d.severity === 'error').length;
     if (errs)
       diagnostics.push({
         severity: 'error',
         code: 'piece-errors',
         message: t('{name} has {n|# problem|# problems}; open it to fix.', {
-          name: pc.item.design.name,
+          name: tr(pc.item.design.name),
           n: errs,
         }),
         nodeId: pc.item.id,
@@ -1650,7 +1670,7 @@ export function buildProjectModel(input: Project): ProjectModel {
         code: 'band-narrow',
         message: t('Edge band {band} on {board} ({part}) is narrower than the {t} mm board.', {
           band: bandText(band),
-          board: rp.material.name,
+          board: tr(rp.material.name),
           part: rp.label,
           t: th,
         }),

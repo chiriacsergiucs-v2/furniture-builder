@@ -3,6 +3,7 @@ import { RoomFront, RoomPlan } from './RoomDrawings';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { bedSizeFields, sizeFields } from '../core/pieceSize';
 import { touchingRun } from '../core/arrange';
 import { identicalPieces, linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
@@ -56,6 +57,7 @@ import {
   DEFAULT_ROOM_HEIGHT,
   keepWallFinishes,
   outlineIssues,
+  checkRoomSizes,
   setWallLength,
   shapeOutline,
   suggestRoomSize,
@@ -184,8 +186,9 @@ export function ProjectPanel({
       ))
     )
       return;
-    update(item.id, { design: structuredClone(d) });
-    setLibMsg(t('Updated from the saved piece.'));
+    // Said as done only when the store took it (ADR-261); a refusal shows its reason.
+    const why = update(item.id, { design: structuredClone(d) });
+    setLibMsg(why ? tr(why) : t('Updated from the saved piece.'));
   };
 
   if (mode === 'configure')
@@ -441,7 +444,7 @@ export function ProjectPanel({
                   label={t('Gap to {name} on the left', { name: tr(left.item.design.name) })}
                   value={left.gap}
                   min={0}
-                  max={5000}
+                  max={20000}
                   onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
                 />
                 <Toggle
@@ -703,7 +706,7 @@ function AgainstWall({ project, id }: { project: Project; id: string }) {
         info={
           <InfoTip label={t('About against the wall')} align="start">
             {t(
-              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.',
+              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging or Move alone moves it away and takes it off the wall.',
             )}
           </InfoTip>
         }
@@ -841,6 +844,11 @@ function PieceMenu({
   };
   const [msg, setMsg] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  // The sizes this piece shows (a bed: its mattress; a panel: no depth), for Lock {axis} (ADR-253).
+  const lockableAxes = useMemo(() => {
+    const bed = bedSizeFields(item.design.product);
+    return (bed.length ? bed : sizeFields(item.design.product)).map((f) => f.key);
+  }, [item.design.product]);
   const run = useMemo(
     () =>
       touchingRun(
@@ -961,6 +969,8 @@ function PieceMenu({
           {!isSizeLocked(item) &&
             SIZE_AXES.map((axis) => {
               const on = (item.sizeLocks ?? []).includes(axis);
+              // Only the sizes the piece shows are offered (ADR-253); a stored lock stays unlockable.
+              if (!on && !lockableAxes.includes(axis)) return null;
               const label = { width: t('Width'), height: t('Height'), depth: t('Depth') }[axis];
               return (
                 <button
@@ -1268,7 +1278,13 @@ type PlacementKind = Placement['kind'] | 'free';
 /** Where the selected piece sits: on the floor, on the wall, on or above another piece, or anywhere (ADR-031). */
 function PlacementFields({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
-  const update = useDesign((s) => s.updateItem);
+  const updateItem = useDesign((s) => s.updateItem);
+  // A refused change is said here, under the fields it came from (ADR-244, ADR-250), not only on the plan.
+  const [refused, setRefused] = useState<{ id: string; text: string } | null>(null);
+  const update = (id: string, patch: Partial<ProjectItem>) => {
+    const why = updateItem(id, patch);
+    setRefused(why ? { id, text: why } : null);
+  };
   const bases = useMemo(() => placementBases(project, item.id), [project, item.id]);
   const pl = item.placement;
   const kind: PlacementKind = pl?.kind ?? 'free';
@@ -1339,7 +1355,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Underside above the floor')}
             value={pl.height}
             min={0}
-            max={3000}
+            max={20000}
             onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
             disabled={!!hint('mountHeight')}
             hint={hint('mountHeight')}
@@ -1405,13 +1421,18 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Above floor')}
             value={pos.y}
             min={0}
-            max={3000}
+            max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
             disabled={!!hint('y')}
             hint={hint('y')}
             trailing={<BindButton itemId={item.id} target="y" />}
           />
         </div>
+      )}
+      {refused?.id === item.id && (
+        <p className="hint" role="status">
+          {refused.text}
+        </p>
       )}
     </>
   );
@@ -1449,6 +1470,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const cancelDraw = useDesign((s) => s.cancelDrawRoom);
   // Setting the plan picture's scale (ADR-208): two taps on the plan.
   const scaling = useDesign((s) => s.scalingPlan);
+  const scaleSame = useDesign((s) => s.scaleSamePoint);
   const cancelScale = useDesign((s) => s.cancelScalePlan);
   const hasPicture = useDesign((s) => !!s.project?.planPicture);
   useEffect(() => {
@@ -1481,6 +1503,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
           <span>
             {t('Tap a corner of the plan, then the other end of a wall you know.')}{' '}
             {t('{n} of 2', { n: scaling.length })}
+            {scaleSame ? ` ${t('Tap a different point.')}` : ''}
           </span>
           <button type="button" className="btn sm ghost" onClick={cancelScale}>
             {t('Cancel')}
@@ -1581,10 +1604,15 @@ export function AddPieceList({
     return true;
   };
   const [saved, setSaved] = useState<StoredDesign[]>([]);
+  // A read the device refuses is said, not shown as an empty list (ADR-261).
+  const [readFailed, setReadFailed] = useState(false);
   useEffect(() => {
     listDesigns()
       .then(setSaved)
-      .catch(() => setSaved([]));
+      .catch(() => {
+        setSaved([]);
+        setReadFailed(true);
+      });
   }, []);
   // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
   const insertTemplate = useDesign((s) => s.insertTemplate);
@@ -1593,10 +1621,18 @@ export function AddPieceList({
   useEffect(() => {
     listProjectTemplates()
       .then(setProjectTemplates)
-      .catch(() => setProjectTemplates([]));
+      .catch(() => {
+        setProjectTemplates([]);
+        setReadFailed(true);
+      });
   }, []);
   return (
     <>
+      {readFailed && (
+        <p className="alert error" role="alert">
+          {t('Saved work could not be read from this browser.')}
+        </p>
+      )}
       {onWizard && (
         <button
           type="button"
@@ -1871,6 +1907,13 @@ function RoomSection() {
     if (room) make(shape, next);
   };
   const issues = room ? outlineIssues(room.outline) : [];
+  // A ready shape's sizes are checked by field and named there (ADR-193 item 2, ADR-257); the outline is still set.
+  const sizeIssues = room?.shape ? checkRoomSizes(shape, shown, room.height) : [];
+  const sizeError = (f: string) =>
+    sizeIssues
+      .filter((i) => i.field === f)
+      .map((i) => i.message)
+      .join(' ') || undefined;
   const walls = room ? room.outline.map((_, i) => i) : [];
   return (
     <section className="section room" aria-label={t('Room')}>
@@ -1944,6 +1987,7 @@ function RoomSection() {
                       min={500}
                       max={30000}
                       onChange={(v) => setSize('width', v)}
+                      error={sizeError('width')}
                     />
                     <MmField
                       label={t('Room depth')}
@@ -1951,6 +1995,7 @@ function RoomSection() {
                       min={500}
                       max={30000}
                       onChange={(v) => setSize('depth', v)}
+                      error={sizeError('depth')}
                     />
                     {shape !== 'rectangle' && (
                       <>
@@ -1966,6 +2011,7 @@ function RoomSection() {
                           min={100}
                           max={20000}
                           onChange={(v) => setSize('cutWidth', v)}
+                          error={sizeError('cutWidth')}
                         />
                         <MmField
                           label={
@@ -1979,6 +2025,7 @@ function RoomSection() {
                           min={100}
                           max={20000}
                           onChange={(v) => setSize('cutDepth', v)}
+                          error={sizeError('cutDepth')}
                         />
                         {shape !== 'l-shape' && (
                           <MmField
@@ -1991,6 +2038,7 @@ function RoomSection() {
                             min={0}
                             max={20000}
                             onChange={(v) => setSize('offset', v)}
+                            error={sizeError('offset')}
                           />
                         )}
                       </>

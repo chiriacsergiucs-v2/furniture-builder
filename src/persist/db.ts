@@ -507,6 +507,10 @@ export async function replaceBands(bands: Band[], database = db): Promise<void> 
     await database.bands.bulkPut(bands);
   });
 }
+/** Remove the band list from this device (ADR-255); boards keep the bands already picked. */
+export async function clearBands(database = db): Promise<void> {
+  await database.bands.clear();
+}
 /** The band list; unreadable rows are skipped and kept (ADR-012). */
 export async function listBands(database = db): Promise<Band[]> {
   const rows = await database.bands.toArray();
@@ -607,6 +611,8 @@ export async function unusedImageIds(
     ...(await database.projects.toArray()),
     ...(await database.templates.toArray()),
     ...(await database.projectTemplates.toArray()),
+    // A kept project version holds a whole project: its pictures are in use too (ADR-263).
+    ...(await database.projectVersions.toArray()),
   ]
     .map((r) => JSON.stringify(r))
     .join('\n');

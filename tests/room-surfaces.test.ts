@@ -266,7 +266,7 @@ describe('plan picture to trace over (ADR-208 item 5)', () => {
       `Plan pictures need project schemaVersion ${PROJECT_SCHEMA}`,
     );
   });
-  it('Set the scale: two taps on the plan set a and b in one undo step; the same pixel twice changes nothing', () => {
+  it('Set the scale: two taps on the plan set a and b in one undo step; the same pixel twice changes nothing and keeps scaling on', () => {
     st().openProject({ ...withPiece(), planPicture: pp });
     const past = st().projectPast.length;
     st().startScalePlan();
@@ -285,7 +285,9 @@ describe('plan picture to trace over (ADR-208 item 5)', () => {
     st().addScalePoint([7, 7]);
     st().addScalePoint([7, 7]);
     expect(st().project!.planPicture).toEqual(pp);
-    expect(st().scalingPlan).toBeNull();
+    // The same pixel twice keeps Set the scale on, waiting for a different point (ADR-257).
+    expect(st().scalingPlan).toEqual([[7, 7]]);
+    expect(st().scaleSamePoint).toBe(true);
   });
 });
 

@@ -99,7 +99,12 @@ describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
       input,
       new File([JSON.stringify(marks)], 'gap-marks.json', { type: 'application/json' }),
     );
-    expect(await within(page).findByText('Imported 2 marks, skipped 2.')).toBeTruthy();
+    // Only applied marks count as imported; the older one is said as kept (ADR-266).
+    expect(
+      await within(page).findByText(
+        /^Imported \d marks?, kept \d \(yours are newer\), skipped 2\.$/,
+      ),
+    ).toBeTruthy();
     expect(
       within(rowOf('G-902')).getByRole('button', { name: 'Make ADR' }).getAttribute('aria-pressed'),
     ).toBe('true');
@@ -134,7 +139,8 @@ describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
     await within(settings).findByText(/1 decor imported from decors\.csv/);
     const boardRow = () =>
       within(settings)
-        .getAllByRole('listitem')
+        // Each board row is a group named after its board (ADR-255).
+        .getAllByRole('group', { name: /^Board / })
         .find((li) => within(li).queryByRole('group', { name: /^Edge band for / }))!;
     await user.selectOptions(
       within(boardRow()).getByLabelText('Decor from your list'),

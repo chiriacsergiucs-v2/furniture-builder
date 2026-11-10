@@ -103,8 +103,6 @@ export const ru_catalog = {
   'Default structure': 'Структура по умолчанию',
   'What can be changed (one per line)': 'Что можно изменить (по одному в строке)',
   'Variants (1–5; the first is the default)': 'Варианты (1–5; первый — по умолчанию)',
-  'Variant name': 'Название варианта',
-  'Variant summary': 'Описание варианта',
   'Move up': 'Переместить вверх',
   'Move down': 'Переместить вниз',
   'Edit design': 'Изменить проект',
@@ -151,6 +149,9 @@ export const ru_catalog = {
   '“{name}” was edited after it was added. Its own changes go onto revision {latest} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.':
     '«{name}» изменяли после добавления. Его собственные изменения переносятся на ревизию {latest} там, где есть такая же настройка; в результате будет указано, что сохранилось, а что нет. Положение, поворот, количество, размещение, зоны и плиты сохраняются.',
   Replace: 'Заменить',
+  'Variant {n}': 'Вариант {n}',
+  'Variant {n} name': 'Название варианта {n}',
+  'Variant {n} summary': 'Описание варианта {n}',
   '{updated}. {from}; nothing changes unless you choose.':
     '{updated}. {from}; ничего не изменится, пока вы не выберете.',
   'Replace with the new revision': 'Заменить новой ревизией',

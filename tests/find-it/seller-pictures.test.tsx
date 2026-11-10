@@ -80,7 +80,7 @@ describe.each(WIDTHS)('shipped seller board pictures at %ipx (find-it, ADR-162)'
     const settings = await screen.findByRole('dialog');
     await user.click(within(settings).getByText('Boards, sheets and saw cut'));
     const white = within(settings)
-      .getAllByRole('listitem')
+      .getAllByRole('group', { name: /^Board / })
       .find((li) => within(li).queryByDisplayValue('PAL 18 white'))!;
 
     await user.click(within(white).getByRole('button', { name: 'Product from a seller' }));

@@ -49,6 +49,7 @@ import {
   type PointerAt,
 } from '../shared/planDrag';
 import { useSnap } from '../store/useSnap';
+import { useMoveAlone } from '../store/useMoveAlone';
 import { newPieceTarget, registerPlanHit } from './pieceDrag';
 import { usePieceList } from '../store/pieceListStore';
 import {
@@ -175,6 +176,7 @@ export function RoomPlan({
   // Snapping (ADR-070): the Snap toggle, and Alt held while dragging to place freely.
   const project = useDesign((s) => s.project);
   const [snapOn, setSnapOn] = useSnap();
+  const [moveAlone, setMoveAlone] = useMoveAlone();
   const [alt, setAlt] = useState(false);
   const setDrag = (g: DragGesture | null, altKey = false) => {
     // Alt is read when a press starts and forgotten when it ends, so a missed keyup never carries over.
@@ -321,7 +323,12 @@ export function RoomPlan({
   const turnPc =
     !tapping && selectedIds.length === 1
       ? pm.pieces.find(
-          (x) => x.item.id === selectedIds[0] && !isLocked(x.item) && !isTurnLocked(x.item),
+          (x) =>
+            x.item.id === selectedIds[0] &&
+            !isLocked(x.item) &&
+            !isTurnLocked(x.item) &&
+            // A grouped piece turns only with its group (ADR-148, ADR-250): no handle for it alone.
+            !project?.groups?.some((g) => g.itemIds.includes(x.item.id)),
         )
       : undefined;
   return (
@@ -345,6 +352,8 @@ export function RoomPlan({
             clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
         <ViewOptions menu={inOptions('snap', phone)}>
           <Toggle label={t('Snap')} checked={snapOn} onChange={setSnapOn} />
+          {/* Move alone (ADR-251): Alt for connections, with a touch path; this session only. */}
+          <Toggle label={t('Move alone')} checked={moveAlone} onChange={setMoveAlone} />
           <ZoneToolbar on={showZones} onChange={setShowZones} />
         </ViewOptions>
       </div>
@@ -421,7 +430,13 @@ export function RoomPlan({
           setBox(null);
           // A press without a drag is not a box.
           if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.z - bx.b.z) < 1) return;
-          const hit = itemsInBox(project, bx.a, bx.b, footprints);
+          // 3D models are taken too, by their plan box (ADR-252).
+          const hit = itemsInBox(
+            project,
+            bx.a,
+            bx.b,
+            new Map([...footprints, ...pm.models.map((m) => [m.item.id, m.box] as const)]),
+          );
           selectItems(bx.add ? [...selectedIds, ...hit] : hit);
         }}
         onPointerCancel={() => setBox(null)}
@@ -549,8 +564,8 @@ export function RoomPlan({
                 e.preventDefault();
                 // On a piece of a selection of several, the arrows move them all (ADR-097).
                 if (selectedIds.length > 1 && selectedIds.includes(pc.item.id))
-                  moveSelectionBy(m.dx, m.dz);
-                else moveItemBy(pc.item.id, m.dx, m.dz);
+                  moveSelectionBy(m.dx, m.dz, undefined, { alone: moveAlone });
+                else moveItemBy(pc.item.id, m.dx, m.dz, undefined, { alone: moveAlone });
               }}
               onPointerDown={
                 tapping
@@ -616,7 +631,7 @@ export function RoomPlan({
                       ? dropTarget(project, others, end.id, end.dx, end.dz, true)
                       : null;
                   // Alt moves the pieces without their connected neighbours (ADR-168).
-                  const opts = { snapped: !!t?.snap, alone: e.altKey };
+                  const opts = { snapped: !!t?.snap, alone: e.altKey || moveAlone };
                   if (t?.snap)
                     moveSelectionBy(
                       t.position.x - pc.item.position.x,
@@ -634,7 +649,7 @@ export function RoomPlan({
                     : null;
                 // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step. A snapped
                 // drop connects the piece to a valid neighbour; Alt moves it without its connected ones (ADR-168).
-                const opts = { snapped: !!t?.snap, alone: e.altKey };
+                const opts = { snapped: !!t?.snap, alone: e.altKey || moveAlone };
                 if (!t?.snap) moveItemBy(end.id, end.dx, end.dz, undefined, opts);
                 else
                   moveItemBy(

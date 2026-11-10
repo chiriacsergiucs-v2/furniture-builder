@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useUi } from '../store/uiStore';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
-import { t } from '../core/i18n';
+import { t, tr } from '../core/i18n';
 import {
   BAND_COLUMNS,
   DECOR_COLUMNS,
@@ -19,6 +19,7 @@ import { newProject } from '../core/project';
 import { roomPresets } from '../core/catalog/roomPresets';
 import { projectFromTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import {
+  clearBands,
   clearDecors,
   listBands,
   listDecors,
@@ -393,7 +394,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
-      <RoomPresets onOpened={opened} />
+      <RoomPresets open={open} onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
@@ -411,19 +412,44 @@ export function NewDialog({
  * New… → Room preset (ADR-210): the shipped room presets; one becomes a project with its room, saved on this device and
  * opened (ADR-060). Presets are built when the row opens.
  */
-function RoomPresets({ onOpened }: { onOpened: () => void }) {
+function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }) {
   const openProject = useDesign((s) => s.openProject);
+  const saving = useRef(false);
   const [shown, setShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A failed save is said only while the dialog stays open: each opening starts without it (ADR-248).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setError(null);
+  }
+  // The guard below is lifted each time the dialog opens, as the New dialog's own (ADR-193).
+  useEffect(() => {
+    if (open) saving.current = false;
+  }, [open]);
   const presets = useMemo(() => (shown ? roomPresets() : []), [shown]);
+  // One tap makes one project (ADR-193, ADR-248): a second tap while it saves does nothing, and a retry after a failed
+  // save saves the same project again.
+  const made = useRef<{
+    template: ProjectTemplate;
+    project: ReturnType<typeof projectFromTemplate>;
+  } | null>(null);
   const use = async (template: ProjectTemplate) => {
+    if (saving.current) return;
+    saving.current = true;
     try {
-      const p = projectFromTemplate(template);
+      const p =
+        made.current?.template === template ? made.current.project : projectFromTemplate(template);
+      made.current = { template, project: p };
       await saveProject(p);
+      made.current = null;
+      setError(null);
       openProject(p);
       onOpened();
+      // Stays set until the dialog opens again: a late second tap makes nothing more.
     } catch {
-      setError(t('The project could not be created on this device.'));
+      saving.current = false;
+      setError(t('The project could not be saved in this browser’s storage.'));
     }
   };
   return (
@@ -456,7 +482,7 @@ function RoomPresets({ onOpened }: { onOpened: () => void }) {
                   <Icon name="project" />
                 </span>
                 <span>
-                  <strong>{pr.name}</strong>
+                  <strong>{tr(pr.name)}</strong>
                   <span className="sub">
                     {t('{n|# piece|# pieces}', { n: pr.template.items.length })}
                     {t(', with the room')}
@@ -490,6 +516,7 @@ export function MaterialsPanel() {
   const add = useDesign((s) => s.addMaterial);
   const remove = useDesign((s) => s.removeMaterial);
   const [why, setWhy] = useState<{ id: string; text: string } | null>(null);
+  const [nameMsg, setNameMsg] = useState<{ id: string; text: string } | null>(null);
   // The user's decor list (ADR-049): the decor choice appears only once a list has been imported.
   const [decors, setDecors] = useState<Decor[]>([]);
   const [decorMsg, setDecorMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -704,6 +731,37 @@ export function MaterialsPanel() {
               }}
             />
           </label>
+          {/* The band list can be removed, as the decor list can (ADR-255). */}
+          {bands.length > 0 && (
+            <button
+              type="button"
+              className="btn sm ghost"
+              onClick={async () => {
+                if (
+                  !(await askConfirm(
+                    t(
+                      'Remove the band list from this device? Boards keep the bands already picked.',
+                    ),
+                    { confirmLabel: t('Remove list'), danger: true },
+                  ))
+                )
+                  return;
+                try {
+                  await clearBands();
+                } catch {
+                  setBandMsg({
+                    ok: false,
+                    text: t('The band list could not be removed on this device.'),
+                  });
+                  return;
+                }
+                setBands([]);
+                setBandMsg(null);
+              }}
+            >
+              {t('Remove band list')}
+            </button>
+          )}
         </div>
         {bandMsg && (
           <p
@@ -717,7 +775,8 @@ export function MaterialsPanel() {
       </div>
       <ul className="materials">
         {materials.map((m: Material) => (
-          <li key={m.id}>
+          // Each board's fields are found and announced within their board (ADR-255).
+          <li key={m.id} role="group" aria-label={t('Board {name}', { name: tr(m.name) })}>
             <input
               type="color"
               aria-label={t('{name} colour', { name: m.name })}
@@ -729,8 +788,26 @@ export function MaterialsPanel() {
               aria-label={t('Name')}
               defaultValue={m.name}
               key={m.name}
-              onBlur={(e) => e.target.value.trim() && update(m.id, { name: e.target.value.trim() })}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                // An empty name goes back to the stored one, and the row says so (ADR-008, ADR-255).
+                if (!v) {
+                  e.target.value = m.name;
+                  setNameMsg({
+                    id: m.id,
+                    text: t('A board needs a name; it keeps {name}.', { name: m.name }),
+                  });
+                  return;
+                }
+                setNameMsg(null);
+                if (v !== m.name) update(m.id, { name: v });
+              }}
             />
+            {nameMsg?.id === m.id && (
+              <p className="hint" role="status">
+                {nameMsg.text}
+              </p>
+            )}
             <MmField
               label={t('Thickness')}
               value={m.thickness}

@@ -173,6 +173,8 @@ export function ResearchPage({
             key={tb}
             type="button"
             role="tab"
+            id={`research-tab-${tb}`}
+            aria-controls="research-panel"
             aria-selected={tab === tb}
             tabIndex={rovingTab(
               tab === tb,
@@ -186,22 +188,25 @@ export function ResearchPage({
           </button>
         ))}
       </nav>
-      {tab === 'features' &&
-        (detail && view.features.has(detail) ? (
-          <FeatureDetail
-            key={detail}
-            ctx={ctx}
-            f={view.features.get(detail)!}
-            onBack={() => setDetail(null)}
-          />
-        ) : (
-          <>
-            <AppSummary ctx={ctx} />
-            <AssessmentDashboard ctx={ctx} />
-            <Explorer ctx={ctx} query={query} setQuery={setQuery} />
-          </>
-        ))}
-      {tab === 'competitors' && <Competitors ctx={ctx} />}
+      {/* The section shown, as the tabs' panel (ADR-266, as Output.tsx does). */}
+      <div id="research-panel" role="tabpanel" aria-labelledby={`research-tab-${tab}`}>
+        {tab === 'features' &&
+          (detail && view.features.has(detail) ? (
+            <FeatureDetail
+              key={detail}
+              ctx={ctx}
+              f={view.features.get(detail)!}
+              onBack={() => setDetail(null)}
+            />
+          ) : (
+            <>
+              <AppSummary ctx={ctx} />
+              <AssessmentDashboard ctx={ctx} />
+              <Explorer ctx={ctx} query={query} setQuery={setQuery} />
+            </>
+          ))}
+        {tab === 'competitors' && <Competitors ctx={ctx} />}
+      </div>
     </main>
   );
 }

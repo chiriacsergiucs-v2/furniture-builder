@@ -319,7 +319,12 @@ export function shoppingList(input: {
 }
 
 /** The CSV's units and the section titles of the CSV and the printed list, in the print language (ADR-181). */
-const UNIT_PRINT: Record<ShopUnit, PrintKey> = { sheet: 'plăci', m2: 'm²', m: 'm', piece: 'buc' };
+export const UNIT_PRINT: Record<ShopUnit, PrintKey> = {
+  sheet: 'plăci',
+  m2: 'm²',
+  m: 'm',
+  piece: 'buc',
+};
 const SECTION_PRINT: Record<ShopSection, PrintKey> = {
   boards: 'Plăci',
   banding: 'Cant',

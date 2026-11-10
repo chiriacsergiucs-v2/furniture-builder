@@ -11,7 +11,17 @@ import { importDocument, type ImportResult } from './shell/importFile';
 /** The app's address without its #part, for links. */
 const appBase = () => (typeof location === 'undefined' ? '' : location.href.split('#')[0]);
 
-const copy = (text: string) => navigator.clipboard?.writeText(text).catch(() => undefined);
+/** Whether the browser took the text (ADR-263): a refusal is said, never reported as copied. */
+const copy = async (text: string): Promise<boolean> => {
+  try {
+    if (!navigator.clipboard) return false;
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
+const REFUSED = () => t('This browser did not allow copying. Select the link and copy it.');
 
 /**
  * Copy code (ADR-124): the open project (or design) as a text code and a link that opens it on another device. Made
@@ -74,10 +84,7 @@ export function CopyCodeDialog({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="btn outline"
-              onClick={() => {
-                void copy(code);
-                setCopied(t('Code copied.'));
-              }}
+              onClick={async () => setCopied((await copy(code)) ? t('Code copied.') : REFUSED())}
             >
               <Icon name="copy" className="sm" />
               {t('Copy code')}
@@ -85,10 +92,7 @@ export function CopyCodeDialog({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="btn outline"
-              onClick={() => {
-                void copy(link);
-                setCopied(t('Link copied.'));
-              }}
+              onClick={async () => setCopied((await copy(link)) ? t('Link copied.') : REFUSED())}
             >
               <Icon name="copy" className="sm" />
               {t('Copy link')}

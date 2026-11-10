@@ -35,11 +35,23 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
     if (!open || !project || !pm) return;
     let live = true;
     void (async () => {
-      const json = JSON.stringify(
-        await withPictures(await withModels(project), pictureHolders(project)),
-        null,
-        2,
-      );
+      let json: string;
+      try {
+        json = JSON.stringify(
+          await withPictures(await withModels(project), pictureHolders(project)),
+          null,
+          2,
+        );
+      } catch {
+        // Said in the dialog; Download stays off (ADR-260).
+        if (live)
+          setMsg(
+            t(
+              'The pack could not be made: pictures or 3D models could not be read from this browser.',
+            ),
+          );
+        return;
+      }
       const base = fileName(project.name);
       const files = reviewPackFiles(
         project,

@@ -241,6 +241,8 @@ interface GapMarksImport {
   apply: GapMark[];
   /** Valid rows for a gap in the ledger (applied or older than the device's mark). */
   imported: number;
+  /** Valid rows not applied because the device's mark is as new or newer (ADR-266). */
+  kept: number;
   /** Rows that are invalid or name a gap not in the ledger. */
   skipped: number;
   /** Set when the file itself cannot be read; nothing is applied. */
@@ -260,6 +262,7 @@ export function readGapMarksFile(
   const notAFile = {
     apply: [],
     imported: 0,
+    kept: 0,
     skipped: 0,
     problem: 'The file is not a gap-marks file.',
   };
@@ -276,6 +279,7 @@ export function readGapMarksFile(
     return {
       apply: [],
       imported: 0,
+      kept: 0,
       skipped: 0,
       problem: 'The file is from another version of the app.',
     };
@@ -297,5 +301,6 @@ export function readGapMarksFile(
     const prev = best.get(mark.gapId) ?? current[mark.gapId];
     if (!prev || mark.updatedAt > prev.updatedAt) best.set(mark.gapId, mark);
   }
-  return { apply: [...best.values()], imported, skipped };
+  const apply = [...best.values()];
+  return { apply, imported, kept: imported - apply.length, skipped };
 }

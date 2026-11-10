@@ -41,14 +41,24 @@ export const ru_editors = {
   'Niche depth': 'Глубина ниши',
   'Apply a layout from the catalog': 'Применить планировку из каталога',
   'About applying a layout': 'О применении планировки',
-  'Replaces what is inside this space; the outer size stays. Undo brings it back.':
-    'Заменяет содержимое этого пространства; внешний размер сохраняется. «Отменить» всё вернёт.',
+  'Replaces what is inside this space; the outer size stays.':
+    'Заменяет содержимое этого пространства; внешний размер сохраняется.',
+  'Replace what is in this space with {name}?':
+    'Заменить содержимое этого пространства на «{name}»?',
   'Choose a layout…': 'Выберите планировку…',
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',
   Chosen: 'Выбрано',
-  '{id} no longer exists; its board is not used.':
-    '{id} больше не существует; её плита не используется.',
+  'A part this piece no longer builds has its own board; it is not used.':
+    'У детали, которой больше нет в изделии, есть своя плита; она не используется.',
+  'Clear the board of a removed part': 'Убрать плиту удалённой детали',
+  'Board {name}': 'Плита «{name}»',
+  'Remove the band list from this device? Boards keep the bands already picked.':
+    'Удалить список кромок с этого устройства? Плиты сохранят уже выбранные кромки.',
+  'The band list could not be removed on this device.':
+    'Не удалось удалить список кромок на этом устройстве.',
+  'Remove band list': 'Удалить список кромок',
+  'A board needs a name; it keeps {name}.': 'У плиты должно быть название; остаётся «{name}».',
   Clear: 'Очистить',
   Checks: 'Проверки',
   checks: 'проверки',
@@ -220,6 +230,14 @@ export const ru_editors = {
     'Перетащите элемент на план (на телефоне сначала удерживайте его) или нажмите на него, а затем на план.',
   Close: 'Закрыть',
   'Move to': 'Переместить',
+  '{p|# piece|# pieces} and {m|# 3D model|# 3D models} selected':
+    'Выбрано: {p|# изделие|# изделия|# изделий} и {m|# 3D-модель|# 3D-модели|# 3D-моделей}',
+  '3D models are not grouped.': '3D-модели не объединяются в группу.',
+  'Kept: {list}.': 'Сохранено: {list}.',
+  'Group name': 'Название группы',
+  'Type a name for the group.': 'Введите название группы.',
+  'Rename the group': 'Переименовать группу',
+  'Group {n}': 'Группа {n}',
   '{n} pieces selected': 'Выбрано изделий: {n}',
   'Selected pieces': 'Выбранные изделия',
   'About the selected pieces': 'О выбранных изделиях',
@@ -402,9 +420,6 @@ export const ru_editors = {
   'Download CSV': 'Скачать CSV',
   'Print the cutting sheet (in the print language, A4) or save it as PDF':
     'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
-  'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
-  ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
-  ' (your prices)': ' (ваши цены)',
   Print: 'Печать',
   'This project has problems (see Checks). Fix them before cutting.':
     'В этом проекте есть проблемы (см. «Проверки»). Исправьте их перед раскроем.',

@@ -263,6 +263,23 @@ export const ru_project = {
   'More: clearance, merge': 'Ещё: зоны, объединение',
   'More actions': 'Другие действия',
   Linked: 'Связанная',
+  'Move alone': 'Двигать отдельно',
+  '{name}: {message}': '{name}: {message}',
+  'Prices could not be read': 'Не удалось прочитать цены',
+  'Earliest kept step': 'Самый ранний сохранённый шаг',
+  'An amount, for example 12.50': 'Сумма, например 12.50',
+  'A number above 0, for example 1 or 0.5.': 'Число больше 0, например 1 или 0.5.',
+  'The prices could not be saved on this device.': 'Не удалось сохранить цены на этом устройстве.',
+  'The pack could not be made: pictures or 3D models could not be read from this browser.':
+    'Не удалось собрать пакет: картинки или 3D-модели не читаются в этом браузере.',
+  'This problem has no automatic repair. Move or change the pieces yourself.':
+    'У этой проблемы нет автоматического исправления. Передвиньте или измените изделия сами.',
+  'Checks: {n|# problem|# problems}': 'Проверки: {n|# проблема|# проблемы|# проблем}',
+  'Checks: {n} to check': 'Проверки: проверить {n}',
+  'Tap a different point.': 'Коснитесь другой точки.',
+  'Replace picture for the floor': 'Заменить картинку пола',
+  'The prepared picture was not applied because the floor background changed.':
+    'Подготовленная картинка не применена: фон пола изменился.',
   'Turn ↺': 'Повернуть ↺',
   'Turn ↻': 'Повернуть ↻',
   'Add a piece to the project': 'Добавить изделие в проект',
@@ -342,6 +359,8 @@ export const ru_project = {
     'Ни один набор не помещается на участок {w} мм стены {n} в заданном диапазоне ширин.',
   'Wall {n}: {s}': 'Стена {n}: {s}',
   'Corner cabinets only': 'Только угловые шкафы',
+  'No mix fits beside the pieces already in this project. Untick the walls that are already filled.':
+    'Ни один набор не помещается рядом с изделиями, уже стоящими в этом проекте. Снимите отметки со стен, которые уже заполнены.',
   'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.':
     'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
   'No mix could be built.': 'Не удалось построить ни одного набора.',
@@ -370,8 +389,8 @@ export const ru_project = {
   'Against the wall': 'У стены',
   'Off the wall': 'Не у стены',
   'About against the wall': 'Об установке у стены',
-  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.':
-    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании отодвигает его и снимает со стены.',
+  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging or Move alone moves it away and takes it off the wall.':
+    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании или «Двигать отдельно» отодвигает его и снимает со стены.',
   '{n|# wall connection was|# wall connections were} left out: this room has no such wall.':
     '{n|# соединение со стеной пропущено|# соединения со стеной пропущены|# соединений со стеной пропущено}: в этой комнате нет такой стены.',
   'Link identical pieces': 'Связать одинаковые изделия',

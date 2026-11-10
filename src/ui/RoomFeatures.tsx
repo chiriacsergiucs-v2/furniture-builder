@@ -25,8 +25,11 @@ const REMOVE_FEATURE: Record<RoomFeature['kind'], string> = {
 };
 
 /** A new feature of `kind` on `room`, with the starting sizes the room editor has always used. */
-function newFeature(room: Room, kind: RoomFeature['kind']): RoomFeature {
-  const n = room.features.filter((f) => f.kind === kind).length + 1;
+export function newFeature(room: Room, kind: RoomFeature['kind']): RoomFeature {
+  // The lowest number its kind does not use yet, so no two features share a name (ADR-257).
+  const used = new Set(room.features.map((f) => f.label));
+  let n = 1;
+  while (used.has(`${FEATURE_KIND[kind]} ${n}`)) n++;
   if (kind === 'door')
     return {
       id: newId(),

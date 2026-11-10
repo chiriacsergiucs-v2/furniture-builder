@@ -44,6 +44,7 @@ import {
   sameIds,
   turnSelection,
   ungroup,
+  renameGroup,
 } from '../core/selection';
 import { replaceItem, replaceReport } from '../core/replace';
 import { catalogFamilies } from '../core/catalog';
@@ -353,6 +354,8 @@ export const useDesign = create<State>((rawSet, get) => {
       ...(prev && !amend
         ? {
             projectPast: [...get().projectPast, prev].slice(-HISTORY),
+            projectHistoryTrimmed:
+              get().projectHistoryTrimmed || get().projectPast.length + 1 > HISTORY,
             projectPastNames: [...get().projectPastNames, name ?? describeChange(prev, next)].slice(
               -HISTORY,
             ),
@@ -455,6 +458,7 @@ export const useDesign = create<State>((rawSet, get) => {
     drillItemId: null,
     projectDirtyAt: 0,
     projectPast: [],
+    projectHistoryTrimmed: false,
     projectFuture: [],
     projectPastNames: [],
     projectFutureNames: [],
@@ -463,6 +467,7 @@ export const useDesign = create<State>((rawSet, get) => {
     placingItemId: null,
     drawingRoom: null,
     scalingPlan: null,
+    scaleSamePoint: false,
     templateEdit: null,
     notice: null,
 
@@ -483,6 +488,7 @@ export const useDesign = create<State>((rawSet, get) => {
         selectedItemId: null,
         drillItemId: null,
         projectPast: [],
+        projectHistoryTrimmed: false,
         projectFuture: [],
         projectPastNames: [],
         projectFutureNames: [],
@@ -524,6 +530,7 @@ export const useDesign = create<State>((rawSet, get) => {
         highlight: [],
         projectDirtyAt: 0,
         projectPast: [],
+        projectHistoryTrimmed: false,
         projectFuture: [],
         projectPastNames: [],
         projectFutureNames: [],
@@ -561,12 +568,16 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     updateItem: (id, patch) => {
       const p = get().project;
-      if (!p) return;
+      if (!p) return null;
       const next = { ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) };
       // A grouped piece moved from its fields takes its group along (ADR-148).
       const res = 'position' in patch || 'placement' in patch ? carryGroups(p, next, [id]) : null;
-      if (res?.reason) return set({ notice: res.reason });
-      commitProject(res?.project ?? next);
+      if (res?.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      // A lock can refuse the commit too: that reason comes back (ADR-261).
+      return commitProject(res?.project ?? next);
     },
     moveItemBy: (id, dxMm, dzMm, step, opts) => {
       const p = get().project;
@@ -920,9 +931,11 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ notice: carried.reason });
         return carried.reason;
       }
-      if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(carried.project, t('Align'));
-      return skippedText(res);
+      const moved =
+        carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]);
+      if (moved) commitProject(carried.project, t('Align'));
+      // Nothing moved and nothing skipped: said, so the tap is not a dead button (ADR-251).
+      return skippedText(res) || (moved || ids.length < 2 ? '' : t('Already in line.'));
     },
     distributeSelection: () => {
       const p = get().project;
@@ -952,6 +965,8 @@ export const useDesign = create<State>((rawSet, get) => {
       return res.groupId;
     },
     ungroup: (groupId) => projectAction((p) => ungroup(p, groupId), t('Ungroup')),
+    renameGroup: (groupId, name) =>
+      projectAction((p) => renameGroup(p, groupId, name), t('Rename the group')),
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
       if (!item) return;
@@ -1037,6 +1052,7 @@ export const useDesign = create<State>((rawSet, get) => {
       // Every step made inside becomes one: the history as it was, plus the state before (ADR-123, G-157).
       set({
         projectPast: [...past, start].slice(-HISTORY),
+        projectHistoryTrimmed: get().projectHistoryTrimmed || past.length + 1 > HISTORY,
         projectPastNames: [...names, name].slice(-HISTORY),
         projectFuture: [],
         projectFutureNames: [],
@@ -1102,7 +1118,7 @@ export const useDesign = create<State>((rawSet, get) => {
       // Clearing a part also clears its own band (ADR-188).
       const bands = { ...d.partBands };
       if (!materialId) delete bands[panelId];
-      commit({
+      return commit({
         ...d,
         schemaVersion: SCHEMA_VERSION,
         partMaterials: Object.keys(next).length ? next : undefined,
@@ -1163,7 +1179,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const res = resizeGroup(p, g.itemIds, key, value, split);
       if (res.reason) return res.reason;
       if (res.project !== p) commitProject(res.project, t('Resize {name}', { name: g.name }));
-      return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
+      return res.kept.length ? t('Kept: {list}.', { list: res.kept.join(', ') }) : '';
     },
     replaceDesign: (d) => {
       const before = get().design;

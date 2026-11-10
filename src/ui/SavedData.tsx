@@ -19,6 +19,7 @@ import {
   onBackupStatus,
   restoreFromFolder,
   restoreFromZip,
+  RestoreStopped,
   storageState,
   type FolderState,
   type StorageState,
@@ -102,15 +103,39 @@ export function SavedDataPanel() {
     };
   }, []);
 
-  const run = async (f: () => Promise<void>) => {
+  // A failure is said where the user tapped (ADR-263): a restore says how far it got, a backup that it failed.
+  const run = async (
+    f: () => Promise<void>,
+    failed = t('The backup could not be made in this browser.'),
+  ) => {
     setBusy(true);
     setMessage(null);
     try {
       await f();
+    } catch (e) {
+      setMessage({
+        ok: false,
+        text:
+          e instanceof RestoreStopped
+            ? t(
+                'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.',
+                { n: e.done },
+              )
+            : failed,
+      });
     } finally {
       setBusy(false);
     }
   };
+  const restored = (p: RestorePlan, from: string) =>
+    !p.actions.length && !p.identical && !p.skipped.length
+      ? {
+          ok: false,
+          text: t('No backup files found in {name}. Choose a backup .zip made by this app.', {
+            name: from,
+          }),
+        }
+      : { ok: !p.skipped.length, text: restoreText(p) };
 
   return (
     <section className="section saved-data" aria-label={t('Saved data')}>
@@ -222,7 +247,7 @@ export function SavedDataPanel() {
                 Object.assign(document.createElement('a'), { href: url, download: z.name }).click();
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
                 setStatus(z.status);
-              })
+              }, t('The backup could not be made in this browser.'))
             }
           >
             <Icon name="download" className="sm" />
@@ -251,10 +276,16 @@ export function SavedDataPanel() {
             className="btn"
             disabled={busy}
             onClick={() =>
-              run(async () => {
-                const p = await restoreFromFolder();
-                if (p !== 'cancelled') setMessage({ ok: !p.skipped.length, text: restoreText(p) });
-              })
+              run(
+                async () => {
+                  const p = await restoreFromFolder();
+                  if (p !== 'cancelled') setMessage(restored(p, t('the chosen folder')));
+                },
+                t(
+                  'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.',
+                  { n: 0 },
+                ),
+              )
             }
           >
             <Icon name="upload" className="sm" />
@@ -280,10 +311,13 @@ export function SavedDataPanel() {
             const f = e.target.files?.[0];
             e.target.value = '';
             if (f)
-              void run(async () => {
-                const p = await restoreFromZip(f);
-                setMessage({ ok: !p.skipped.length, text: restoreText(p) });
-              });
+              void run(
+                async () => {
+                  const p = await restoreFromZip(f);
+                  setMessage(restored(p, f.name));
+                },
+                t('{file} could not be read.', { file: f.name }),
+              );
           }}
         />
       </div>
@@ -297,7 +331,9 @@ export function SavedDataPanel() {
           onChange={(e) => {
             const d = Number(e.target.value);
             setDays(d);
-            void setSetting(REMINDER_KEY, d);
+            void setSetting(REMINDER_KEY, d).catch(() =>
+              setMessage({ ok: false, text: t('The setting could not be saved on this device.') }),
+            );
           }}
         >
           {REMINDER_DAYS.map((d) => (
@@ -399,7 +435,12 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
           className="btn sm ghost"
           onClick={() => {
             setShown(false);
-            void setSetting(NOTICE_KEY, new Date().toISOString());
+            void setSetting(NOTICE_KEY, new Date().toISOString()).catch(() =>
+              useUi.getState().setNotice({
+                ok: false,
+                text: t('The setting could not be saved on this device.'),
+              }),
+            );
           }}
         >
           {t('Dismiss')}
@@ -450,7 +491,9 @@ export function BackupReminder() {
   return (
     <div className="toast backup-reminder" role="status">
       <span>
-        {due.days === null ? t('No backup yet.') : t('Last backup: {n} days ago.', { n: due.days })}
+        {due.days === null
+          ? t('No backup yet.')
+          : t('Last backup: {n|# day|# days} ago.', { n: due.days })}
       </span>
       <button
         type="button"
@@ -459,7 +502,10 @@ export function BackupReminder() {
           setDue(null);
           if (folderAccess())
             void folderState().then((s) =>
-              s.permission === 'granted' ? void backupNow() : setSavedData(true),
+              s.permission === 'granted'
+                ? // A failed backup opens Saved data, which shows its error (ADR-263).
+                  void backupNow().then((st) => st.error && setSavedData(true))
+                : setSavedData(true),
             );
           else setSavedData(true);
         }}

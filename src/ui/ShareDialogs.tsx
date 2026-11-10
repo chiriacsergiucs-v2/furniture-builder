@@ -1,5 +1,5 @@
 // The share link and shared item dialogs (ADR-138, ADR-143), split from Share.tsx so they load on first use (ADR-222).
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { shareLink, type SharedItem, type ShareLink } from '../core/account';
 import { t } from '../core/i18n';
 import type { LocalTable } from '../core/sync';
@@ -46,13 +46,30 @@ export function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; 
   }, [item, round]);
   const load = () => setRound((n) => n + 1);
   const close = () => set({ shareFor: null });
+  // A failure (the online part not loading, the server refusing) is said here; busy always clears (ADR-263).
   const make = async () => {
     setBusy(true);
     setError(null);
-    const r = await (await online()).createShare(item.table, item.id);
-    setBusy(false);
-    if (!r.ok) setError(r.error);
-    else load();
+    try {
+      const r = await (await online()).createShare(item.table, item.id);
+      if (!r.ok) setError(r.error);
+      else load();
+    } catch {
+      setError(t('Check your connection and try again.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const stop = async (id: string) => {
+    setError(null);
+    try {
+      await (await online()).stopShare(id);
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message ? e.message : t('Check your connection and try again.'),
+      );
+    }
+    load();
   };
   const copy = async (url: string) => {
     try {
@@ -97,14 +114,7 @@ export function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; 
                   <Icon name="copy" className="sm" />
                   {copied === url ? t('Copied') : t('Copy link')}
                 </button>
-                <button
-                  type="button"
-                  className="btn sm"
-                  onClick={async () => {
-                    await (await online()).stopShare(s.id);
-                    load();
-                  }}
-                >
+                <button type="button" className="btn sm" onClick={() => void stop(s.id)}>
                   {t('Stop sharing')}
                 </button>
               </div>
@@ -186,20 +196,30 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
   const close = () => set({ opening: null });
   const parts = view ? view.rows.reduce((n, r) => n + r.quantity, 0) : 0;
   const b = view?.model.bounds;
+  // One tap makes one copy, saved before it opens; a failed save is said here and the dialog stays (ADR-263).
+  const saving = useRef(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const open = async () => {
+    if (saving.current) return;
+    saving.current = true;
     const item = state!.item!;
     const now = new Date().toISOString();
-    if (item.kind === 'design') {
-      const copy = { ...(item.body as Design), id: newId(), updatedAt: now };
-      await saveDesign(copy);
-      useDesign.getState().load(copy);
-      close();
-      onOpened();
-    } else {
-      const tpl = item.body as LocalTemplate;
-      await saveTemplate({ ...tpl, id: newId(), shadows: undefined, updatedAt: now });
-      set({ opening: null });
-      location.hash = '#catalog';
+    try {
+      if (item.kind === 'design') {
+        const copy = { ...(item.body as Design), id: newId(), updatedAt: now };
+        await saveDesign(copy);
+        useDesign.getState().load(copy);
+        close();
+        onOpened();
+      } else {
+        const tpl = item.body as LocalTemplate;
+        await saveTemplate({ ...tpl, id: newId(), shadows: undefined, updatedAt: now });
+        set({ opening: null });
+        location.hash = '#catalog';
+      }
+    } catch {
+      saving.current = false;
+      setSaveError(t('The copy could not be saved in this browser’s storage.'));
     }
   };
   return (
@@ -222,6 +242,12 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
       }
     >
       <div className="shared-preview">
+        {saveError && (
+          <p className="alert error" role="alert">
+            <Icon name="alert-circle" className="sm" />
+            <span>{saveError}</span>
+          </p>
+        )}
         {!state ? (
           <p className="loading">{t('Opening the link…')}</p>
         ) : state.error ? (
@@ -249,7 +275,7 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
             </p>
             {view.diagnostics.some((d) => d.severity === 'error') && (
               <p className="alert warning" role="status">
-                {t('It has problems to fix: {n} errors.', {
+                {t('It has problems to fix: {n|# error|# errors}.', {
                   n: view.diagnostics.filter((d) => d.severity === 'error').length,
                 })}
               </p>

@@ -157,7 +157,8 @@ export interface State {
   /** A board for one loose part of a panel set, copied into the piece when it is not there yet (ADR-164). */
   setLoosePanelBoard: (panelId: string, board: Material) => void;
   /** A board for one part instead of its group's board; null goes back to the group's board. */
-  setPartMaterial: (panelId: string, materialId: string | null) => void;
+  /** Why the change was refused (a boards lock, ADR-243), else null (ADR-255). */
+  setPartMaterial: (panelId: string, materialId: string | null) => string | null;
   updatePanel: (patch: Partial<PanelParams>) => void;
   updateFrame: (patch: Partial<FrameParams>) => void;
   /** Width or depth of the whole open piece, from its selection (ADR-106). */
@@ -214,7 +215,8 @@ export interface State {
    */
   /** `snapped`: the drop snapped against a neighbour, so a valid touching pair is connected (ADR-168). */
   addPieceAt: (d: Design, x: number, z: number, libraryId?: string, snapped?: boolean) => void;
-  updateItem: (id: string, patch: Partial<ProjectItem>) => void;
+  /** The refusal reason when the change cannot be made (ADR-250), else null. */
+  updateItem: (id: string, patch: Partial<ProjectItem>) => string | null;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
    * step. Nothing happens (no step) when the piece would not move; a locked piece stays and the reason is returned
@@ -364,6 +366,8 @@ export interface State {
   /** Keep the selection as a group (ADR-097); returns its id, or null with fewer than two pieces. */
   groupSelection: () => string | null;
   ungroup: (groupId: string) => void;
+  /** Rename a group (ADR-252), one undo step; an empty name changes nothing. */
+  renameGroup: (groupId: string, name: string) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
   undoProject: () => void;
@@ -453,7 +457,7 @@ export interface State {
    */
   setAgainstWall: (id: string, on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
-  clearPartBoard: (id: string | null, panelId: string) => void;
+  clearPartBoard: (id: string | null, panelId: string) => string | null;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
   placeAt: (x: number, z: number) => void;
   stopPlacing: () => void;
@@ -471,6 +475,10 @@ export interface State {
   dropModel: (id: string, dx: number, dz: number, snap: boolean) => void;
   /** Setting a plan picture's scale (ADR-208): the picture points tapped so far, or null when not setting it. */
   scalingPlan: Pt[] | null;
+  /** The second scale tap hit the first one's point: waiting for a different point (ADR-257). */
+  scaleSamePoint: boolean;
+  /** The project's history dropped its oldest step (100 kept, ADR-261): its first row is not the project as opened. */
+  projectHistoryTrimmed: boolean;
   startScalePlan: () => void;
   /** A tap on the plan while setting the scale, as a picture pixel; the second tap sets the picture's two points. */
   addScalePoint: (p: Pt) => void;

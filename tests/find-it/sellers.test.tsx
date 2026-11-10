@@ -22,7 +22,7 @@ describe.each(WIDTHS)('seller products at %ipx (find-it, ADR-161)', (width) => {
     const settings = await screen.findByRole('dialog');
     await user.click(within(settings).getByText('Boards, sheets and saw cut'));
     const white = within(settings)
-      .getAllByRole('listitem')
+      .getAllByRole('group', { name: /^Board / })
       .find((li) => within(li).queryByDisplayValue('PAL 18 white'))!;
 
     // Board: Product from a seller → search → Use this.

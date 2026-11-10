@@ -223,7 +223,12 @@ export function FloorBackground({ room }: { room: Room }) {
     setBusy(true);
     setProblem(null);
     const r = await importImage(file);
-    if (token !== op.current) return;
+    // The choice changed while it was prepared: said, as the wall does (ADR-257).
+    if (token !== op.current) {
+      if (r.ok)
+        setProblem(t('The prepared picture was not applied because the floor background changed.'));
+      return;
+    }
     setBusy(false);
     if (!r.ok) return setProblem(r.problem);
     apply({ colour: r.color, image: { id: r.image.id, name: r.image.name } });
@@ -270,7 +275,9 @@ export function FloorBackground({ room }: { room: Room }) {
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={busy}
-              aria-label={t('Add a picture for the floor')}
+              aria-label={
+                img ? t('Replace picture for the floor') : t('Add a picture for the floor')
+              }
               onChange={(e) => {
                 void pick(e.target.files?.[0]);
                 e.target.value = '';

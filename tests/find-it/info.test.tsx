@@ -42,7 +42,7 @@ describe.each(WIDTHS)('information and guides at %i px (find-it, ADR-158)', (wid
     expect(within(group).getByText('Drag a piece on the plan')).toBeTruthy();
     expect(within(group).getByText('ADR-065')).toBeTruthy();
 
-    await user.click(within(page).getByRole('button', { name: 'Back to the editor' }));
-    expect(screen.queryByRole('main', { name: 'Information and guides' })).toBeNull();
+    // With nothing open there is no editor to go back to (ADR-266).
+    expect(within(page).queryByRole('button', { name: 'Back to the editor' })).toBeNull();
   });
 });

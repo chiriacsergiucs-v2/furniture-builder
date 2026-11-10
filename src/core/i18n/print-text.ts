@@ -300,7 +300,19 @@ export const PRINT_RU = {
   // Client sheet and step pictures (ADR-206)
   'Fișă pentru client': 'Лист для клиента',
   'Preț estimat': 'Ориентировочная цена',
-  'linii fără preț': 'строк без цены',
+  '{n|# linie fără preț|# linii fără preț}':
+    '{n|# строка без цены|# строки без цены|# строк без цены}',
+  // The printed Shopping list's estimate (ADR-260)
+  'Estimare: {total} {currency}': 'Оценка: {total} {currency}',
+  // The printed front view's space labels (ADR-265)
+  Gol: 'Пусто',
+  '{n|# raft|# rafturi}': '{n|# полка|# полки|# полок}',
+  '{n|# sertar|# sertare}': '{n|# ящик|# ящика|# ящиков}',
+  'Spațiu de agățat': 'Для вешалок',
+  ' — {n|# preț lipsă|# prețuri lipsă}': ' — без цены: {n}',
+  ' (prețurile tale; {n|# linie|# linii} la prețuri de vânzător: {sellers})':
+    ' (ваши цены; {n|# строка|# строки|# строк} по ценам продавца: {sellers})',
+  ' (prețurile tale)': ' (ваши цены)',
   'Dimensiuni L × Î × A, mm': 'Размеры Ш × В × Г, мм',
   'Prețuri de vânzător: {sellers}': 'Цены продавца: {sellers}',
   'Imaginile pașilor cer vizualizarea 3D': 'Для картинок шагов нужен 3D-вид',
@@ -581,7 +593,16 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
     'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours ({path}). Glue is not counted.',
   'Fișă pentru client': 'Client sheet',
   'Preț estimat': 'Estimated price',
-  'linii fără preț': 'lines without a price',
+  '{n|# linie fără preț|# linii fără preț}': '{n|# line without a price|# lines without a price}',
+  'Estimare: {total} {currency}': 'Estimate: {total} {currency}',
+  Gol: 'Empty',
+  '{n|# raft|# rafturi}': '{n|# shelf|# shelves}',
+  '{n|# sertar|# sertare}': '{n|# drawer|# drawers}',
+  'Spațiu de agățat': 'Hanging',
+  ' — {n|# preț lipsă|# prețuri lipsă}': ' — {n|# price missing|# prices missing}',
+  ' (prețurile tale; {n|# linie|# linii} la prețuri de vânzător: {sellers})':
+    ' (your prices; {n|# line|# lines} at seller prices: {sellers})',
+  ' (prețurile tale)': ' (your prices)',
   'Dimensiuni L × Î × A, mm': 'Size W × H × D, mm',
   'Prețuri de vânzător: {sellers}': 'Seller prices: {sellers}',
   'Imaginile pașilor cer vizualizarea 3D': 'Step pictures need the 3D view',

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
 import { commonPanelCheck } from '../core/common';
@@ -39,13 +39,22 @@ export function SelectionCard() {
   );
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
+  // 3D models are display only (ADR-076): never grouped, and named apart from the pieces (ADR-252).
+  const models = ids.length - pieceIds.length;
   const g = groupOf(project, ids[0]);
   const isGroup = !!g && sameIds(g.itemIds, ids);
   const say = (text: string | null) => setMsg({ for: key, text });
   return (
     <section
       className="selection-card section"
-      aria-label={`${t('{n} pieces selected', { n: ids.length })}${isGroup ? `: ${g!.name}` : ''}`}
+      aria-label={`${
+        models
+          ? t('{p|# piece|# pieces} and {m|# 3D model|# 3D models} selected', {
+              p: pieceIds.length,
+              m: models,
+            })
+          : t('{n} pieces selected', { n: ids.length })
+      }${isGroup ? `: ${g!.name}` : ''}`}
     >
       <div className="card-title">
         <span className="info-row">
@@ -60,6 +69,7 @@ export function SelectionCard() {
         </span>
         <span className="chip">{t('{n} pieces', { n: ids.length })}</span>
       </div>
+      {isGroup && <GroupName key={g!.id} group={g!} />}
       <div className="arrange-actions">
         <button
           type="button"
@@ -98,15 +108,31 @@ export function SelectionCard() {
             {t('Mirror')}
           </button>
         )}
+        {/* The second click of a double tap does nothing (ADR-252): one tap groups, it does not also ungroup. */}
         {isGroup ? (
-          <button type="button" className="btn outline sm" onClick={() => ungroup(g!.id)}>
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={(e) => {
+              if (e.detail > 1) return;
+              ungroup(g!.id);
+            }}
+          >
             {t('Ungroup')}
           </button>
-        ) : (
-          <button type="button" className="btn outline sm" onClick={() => group()}>
+        ) : pieceIds.length >= 2 ? (
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={(e) => {
+              if (e.detail > 1) return;
+              group();
+              if (models) say(t('3D models are not grouped.'));
+            }}
+          >
             {t('Group')}
           </button>
-        )}
+        ) : null}
         <button
           type="button"
           className="btn outline sm danger"
@@ -230,7 +256,7 @@ function ConnectToggle({
         info={
           <InfoTip label={t('About connections')} align="start">
             {t(
-              'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.',
+              'Connected pieces move together; a snap connects them, Alt while dragging or Move alone moves one alone. A pair that no longer touches is warned about.',
             )}
           </InfoTip>
         }
@@ -344,6 +370,7 @@ function GroupSize({
             min={1}
             max={20000}
             hint={f.differs ? t('Pieces differ') : undefined}
+            commitSame={f.differs}
             onChange={(v) => say(resize(group.id, f.key, v, split) || null)}
           />
         ))}
@@ -407,5 +434,37 @@ export function GroupList() {
         })}
       </ul>
     </section>
+  );
+}
+
+/** The group's name, kept as typed (ADR-252, user 2026-11-10): one undo step; an empty name is refused at the field. */
+function GroupName({ group }: { group: Group }) {
+  const rename = useDesign((s) => s.renameGroup);
+  const id = useId();
+  const [text, setText] = useState(group.name);
+  const empty = !text.trim();
+  const commit = () => {
+    if (!empty && text.trim() !== group.name) rename(group.id, text);
+  };
+  return (
+    <div className="field">
+      <label htmlFor={id}>{t('Group name')}</label>
+      <input
+        id={id}
+        value={text}
+        aria-invalid={empty || undefined}
+        aria-describedby={empty ? `${id}-err` : undefined}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+        }}
+      />
+      {empty && (
+        <p id={`${id}-err`} className="field-error" role="alert">
+          {t('Type a name for the group.')}
+        </p>
+      )}
+    </div>
   );
 }
