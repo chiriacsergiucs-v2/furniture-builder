@@ -43,7 +43,13 @@ for (const width of [375, 390, 1280, 1440]) {
   };
   const addPiece = async (search) => {
     await openSheet();
-    await click(btn('Add a piece'));
+    // The plan's "+" button is named "Add a piece to the project" (Project.tsx), so the name is matched exactly.
+    await click(
+      page
+        .getByRole('button', { name: 'Add a piece', exact: true })
+        .filter({ visible: true })
+        .first(),
+    );
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.locator('.start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});

@@ -37,6 +37,8 @@ const smallTargets = (page) =>
         e.closest('svg, .link, .btn.link, .danger-link, p, li > span')
       )
         continue;
+      // The quick-count card is smaller on phones by the user's choice (N121, overrides the 44 px rule for it).
+      if (e.closest('.count-stepper')) continue;
       if (e.matches('input') && e.closest('.mm, .search')) continue; // the field box is the target
       if (r.width < 43.5 || r.height < 43.5)
         out.push(
@@ -52,7 +54,12 @@ const tinyText = (page) =>
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (w.nextNode()) {
       const el = w.currentNode.parentElement;
-      if (!el || !w.currentNode.textContent.trim() || el.closest('svg, canvas, .print-sheet'))
+      // The quick-count card's 11 px text is the user's choice on phones (N121).
+      if (
+        !el ||
+        !w.currentNode.textContent.trim() ||
+        el.closest('svg, canvas, .print-sheet, .count-stepper')
+      )
         continue;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
@@ -171,7 +178,12 @@ for (const width of [390, 1280, 1600]) {
     check(
       width,
       'sheet shows "Shelves" to edit',
-      await page.locator('.work .side').getByText('Shelves').first().isVisible(),
+      await page
+        .locator('.work .side')
+        .getByText('Shelves')
+        .filter({ visible: true })
+        .first()
+        .isVisible(),
     );
     const s = await smallTargets(page);
     check(width, 'Compose with sheet: every control ≥ 44 px', !s.length, s.join(', '));
@@ -181,6 +193,10 @@ for (const width of [390, 1280, 1600]) {
 
   // 2. Build & Preview: one toolbar row on a phone, the rest under "Options".
   await goBuild(page);
+  // The View switch keeps its choice across modes and starts at 2D below 1500 px (ADR-144, G-266), so 3D is chosen
+  // here for the 3D toolbar checks.
+  const three3d = page.getByRole('radio', { name: '3D', exact: true });
+  if ((await three3d.isVisible()) && !(await three3d.isChecked())) await three3d.click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const tools = page.locator('.stage-tools');
@@ -205,15 +221,14 @@ for (const width of [390, 1280, 1600]) {
       three.height >= 220,
       `${Math.round(three.height)} px`,
     );
+    // Doors and fronts stays in the toolbar row on a phone, as the short "Fronts" checkbox (G-269, ADR-144).
+    check(
+      width,
+      'Build: "Fronts" stays in the toolbar row',
+      await tools.getByRole('checkbox', { name: 'Doors and fronts' }).isVisible(),
+    );
     await options.click();
-    for (const t of [
-      'Doors and fronts',
-      'Exploded 3D',
-      'Reset view',
-      'Simple',
-      'Realistic',
-      'Render',
-    ])
+    for (const t of ['Exploded 3D', 'Reset view', 'Simple', 'Realistic', 'Render'])
       check(
         width,
         `Options shows "${t}"`,
