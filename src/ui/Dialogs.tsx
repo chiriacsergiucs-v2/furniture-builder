@@ -426,7 +426,10 @@ function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }
   // One tap makes one project (ADR-193, ADR-248): a second tap while it saves does nothing, and a retry after a failed
   // save saves the same project again.
   const saving = useRef(false);
-  const made = useRef<{ template: ProjectTemplate; project: ReturnType<typeof projectFromTemplate> } | null>(null);
+  const made = useRef<{
+    template: ProjectTemplate;
+    project: ReturnType<typeof projectFromTemplate>;
+  } | null>(null);
   const use = async (template: ProjectTemplate) => {
     if (saving.current) return;
     saving.current = true;
@@ -732,7 +735,9 @@ export function MaterialsPanel() {
               onClick={async () => {
                 if (
                   !(await askConfirm(
-                    t('Remove the band list from this device? Boards keep the bands already picked.'),
+                    t(
+                      'Remove the band list from this device? Boards keep the bands already picked.',
+                    ),
                     { confirmLabel: t('Remove list'), danger: true },
                   ))
                 )
@@ -740,7 +745,10 @@ export function MaterialsPanel() {
                 try {
                   await clearBands();
                 } catch {
-                  setBandMsg({ ok: false, text: t('The band list could not be removed on this device.') });
+                  setBandMsg({
+                    ok: false,
+                    text: t('The band list could not be removed on this device.'),
+                  });
                   return;
                 }
                 setBands([]);
@@ -781,7 +789,10 @@ export function MaterialsPanel() {
                 // An empty name goes back to the stored one, and the row says so (ADR-008, ADR-255).
                 if (!v) {
                   e.target.value = m.name;
-                  setNameMsg({ id: m.id, text: t('A board needs a name; it keeps {name}.', { name: m.name }) });
+                  setNameMsg({
+                    id: m.id,
+                    text: t('A board needs a name; it keeps {name}.', { name: m.name }),
+                  });
                   return;
                 }
                 setNameMsg(null);

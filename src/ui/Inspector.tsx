@@ -654,7 +654,6 @@ function SpaceEditor({
   );
 }
 
-
 /** The run handle's kind and hole spacing, read-only: the run sets them, the piece's own stay in its design (ADR-203). */
 function RunHandleNote({ handle }: { handle: RunHandle['handle'] }) {
   const kind =
@@ -1102,7 +1101,11 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           ]}
           // Two rails take a single top (user 2026-11-10, ADR-254): a doubled one becomes single in the same step.
           onChange={(v) =>
-            set(v === 'rails' && (p.topLayers ?? 1) > 1 ? { topKind: v, topLayers: 1 } : { topKind: v })
+            set(
+              v === 'rails' && (p.topLayers ?? 1) > 1
+                ? { topKind: v, topLayers: 1 }
+                : { topKind: v },
+            )
           }
         />
         {p.topKind !== 'rails' && (
@@ -1306,8 +1309,7 @@ function RunnerLengths({
     setText(lengths.join(', '));
   }
   const parts = text.split(/[,\s]+/).filter(Boolean);
-  const valid =
-    parts.length > 0 && parts.every((x) => /^\d+$/.test(x) && Number(x) > 0);
+  const valid = parts.length > 0 && parts.every((x) => /^\d+$/.test(x) && Number(x) > 0);
   return (
     <div className="field">
       <div className="label-row">

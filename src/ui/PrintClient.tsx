@@ -86,9 +86,7 @@ export function PrintClient() {
           {pt('Preț estimat')}: {formatMoney(est.total)} {currency}
         </h2>
         {est.missing.length > 0 && (
-          <p>
-            {pt('{n|# linie fără preț|# linii fără preț}', { n: est.missing.length })}
-          </p>
+          <p>{pt('{n|# linie fără preț|# linii fără preț}', { n: est.missing.length })}</p>
         )}
         {est.sellers.length > 0 && (
           <p className="pr-note">

@@ -92,10 +92,12 @@ export const useResearch = create<ResearchState>((set, get) => ({
     // failure for another mark keeps it (ADR-266).
     const all = [
       ...next,
-      ...[...unsaved].filter((id) => !ids.includes(id)).flatMap((id) => {
-        const m = get().marks[id];
-        return m ? [m] : [];
-      }),
+      ...[...unsaved]
+        .filter((id) => !ids.includes(id))
+        .flatMap((id) => {
+          const m = get().marks[id];
+          return m ? [m] : [];
+        }),
     ];
     try {
       await saveResearchMarks(all);

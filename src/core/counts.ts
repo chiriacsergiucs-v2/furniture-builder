@@ -157,6 +157,7 @@ export function stepDrops(t: Space, key: CountKey, delta: 1 | -1): 'last' | 'mer
   if (delta > 0 || (key !== 'vdiv' && key !== 'hdiv')) return null;
   const axis = key === 'vdiv' ? 'x' : 'y';
   if (t.kind !== 'split' || t.axis !== axis) return null;
-  if (t.children.length > 2) return holdsSomething(t.children[t.children.length - 1]) ? 'last' : null;
+  if (t.children.length > 2)
+    return holdsSomething(t.children[t.children.length - 1]) ? 'last' : null;
   return t.children.slice(1).some(holdsSomething) ? 'merge' : null;
 }

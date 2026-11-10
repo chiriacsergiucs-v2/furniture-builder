@@ -275,7 +275,9 @@ export function FloorBackground({ room }: { room: Room }) {
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={busy}
-              aria-label={img ? t('Replace picture for the floor') : t('Add a picture for the floor')}
+              aria-label={
+                img ? t('Replace picture for the floor') : t('Add a picture for the floor')
+              }
               onChange={(e) => {
                 void pick(e.target.files?.[0]);
                 e.target.value = '';

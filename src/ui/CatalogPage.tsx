@@ -933,9 +933,7 @@ function DecorBrandList({
 }) {
   const [data, setData] = useState<
     { decors: Decor[]; saved: StoredDesign[]; savedFailed?: boolean } | 'error' | null
-  >(
-    null,
-  );
+  >(null);
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -1025,14 +1023,12 @@ function DecorBrandList({
                 </li>
               ))}
             </ul>
+          ) : data.savedFailed ? (
+            <p className="alert error" role="alert">
+              {t('Designs saved on this device could not be read.')}
+            </p>
           ) : (
-            data.savedFailed ? (
-              <p className="alert error" role="alert">
-                {t('Designs saved on this device could not be read.')}
-              </p>
-            ) : (
-              <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
-            )
+            <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
           )}
         </section>
       )}

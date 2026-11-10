@@ -83,8 +83,7 @@ export function RenderDialog({
         height: s.height,
         samples: RENDER_SAMPLES,
         onProgress: (n) => {
-          if (run.current === mine)
-            setState((st) => (st.kind === 'rendering' ? { ...st, n } : st));
+          if (run.current === mine) setState((st) => (st.kind === 'rendering' ? { ...st, n } : st));
         },
       });
       // Stopped while the tracer was being prepared: dispose of it, show nothing, keep the last render.

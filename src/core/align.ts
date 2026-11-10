@@ -221,7 +221,9 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
       case 'centre':
         return on(
           ax.along,
-          lo(ref, ax.along) + Math.floor((len(ref, ax.along) - len(b, ax.along)) / 2) - lo(b, ax.along),
+          lo(ref, ax.along) +
+            Math.floor((len(ref, ax.along) - len(b, ax.along)) / 2) -
+            lo(b, ax.along),
         );
       case 'back':
         return on(ax.depth, edge(ref, ax.depth, ax.back) - edge(b, ax.depth, ax.back));

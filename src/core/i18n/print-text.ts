@@ -300,7 +300,8 @@ export const PRINT_RU = {
   // Client sheet and step pictures (ADR-206)
   'Fișă pentru client': 'Лист для клиента',
   'Preț estimat': 'Ориентировочная цена',
-  '{n|# linie fără preț|# linii fără preț}': '{n|# строка без цены|# строки без цены|# строк без цены}',
+  '{n|# linie fără preț|# linii fără preț}':
+    '{n|# строка без цены|# строки без цены|# строк без цены}',
   // The printed Shopping list's estimate (ADR-260)
   'Estimare: {total} {currency}': 'Оценка: {total} {currency}',
   // The printed front view's space labels (ADR-265)

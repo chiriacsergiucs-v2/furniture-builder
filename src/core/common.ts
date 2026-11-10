@@ -154,7 +154,9 @@ export function commonPanelCheck(
     h0 = own[0].panel!.box.h;
   for (const m of own) {
     if (m.panel!.box.y !== y0)
-      return fail(t('{name} is not the same height or floor level.', { name: tr(m.it.design.name) }));
+      return fail(
+        t('{name} is not the same height or floor level.', { name: tr(m.it.design.name) }),
+      );
     if (m.panel!.box.h !== h0)
       return fail(
         t('The {part} of {name} is another thickness.', {

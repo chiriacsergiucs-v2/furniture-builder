@@ -281,7 +281,10 @@ export function SavedDataPanel() {
                   const p = await restoreFromFolder();
                   if (p !== 'cancelled') setMessage(restored(p, t('the chosen folder')));
                 },
-                t('The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.', { n: 0 }),
+                t(
+                  'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.',
+                  { n: 0 },
+                ),
               )
             }
           >
@@ -435,7 +438,10 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
             void setSetting(NOTICE_KEY, new Date().toISOString()).catch(() =>
               useUi
                 .getState()
-                .setNotice({ ok: false, text: t('The setting could not be saved on this device.') }),
+                .setNotice({
+                  ok: false,
+                  text: t('The setting could not be saved on this device.'),
+                }),
             );
           }}
         >
@@ -487,7 +493,9 @@ export function BackupReminder() {
   return (
     <div className="toast backup-reminder" role="status">
       <span>
-        {due.days === null ? t('No backup yet.') : t('Last backup: {n|# day|# days} ago.', { n: due.days })}
+        {due.days === null
+          ? t('No backup yet.')
+          : t('Last backup: {n|# day|# days} ago.', { n: due.days })}
       </span>
       <button
         type="button"

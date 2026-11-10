@@ -167,7 +167,9 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
       e.stopPropagation();
       // A piece of a selection of several keeps the selection: the drag moves them all, as on the plan (ADR-097,
       // ADR-250, user 2026-11-10).
-      const several = !pc ? false : st.selectedItemIds.length > 1 && st.selectedItemIds.includes(id);
+      const several = !pc
+        ? false
+        : st.selectedItemIds.length > 1 && st.selectedItemIds.includes(id);
       // Pressing a piece selects it; the click that follows must not also open it (ADR-083).
       if (!several && st.selectedItemId !== id) {
         st.selectItem(id);

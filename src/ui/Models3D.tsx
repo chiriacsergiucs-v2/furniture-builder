@@ -544,7 +544,6 @@ export function PlanModels({
   const select = useDesign((s) => s.selectItem);
   const dropModel = useDesign((s) => s.dropModel);
   const project = useDesign((s) => s.project);
-  const patch = usePatchModel();
   const [snapOn] = useSnap();
   const [drag, setDragState] = useState<{ g: DragGesture; alt: boolean } | null>(null);
   const dragRef = useRef<{ g: DragGesture; alt: boolean } | null>(null);

@@ -489,7 +489,8 @@ function ValueSets({ project }: { project: Project }) {
   const [failed, setFailed] = useState<string | null>(null);
   const save = async (set: VariableSet) => {
     if (saving.current) return;
-    const p = made.current?.setId === set.id ? made.current.project : projectFromSet(project, set.id);
+    const p =
+      made.current?.setId === set.id ? made.current.project : projectFromSet(project, set.id);
     if (!p) return;
     made.current = { setId: set.id, project: p };
     saving.current = true;
@@ -531,7 +532,9 @@ function ValueSets({ project }: { project: Project }) {
           onSave={() => void save(set)}
           busy={busy}
           saveError={
-            failed === set.id ? t('The project could not be saved in this browser’s storage.') : null
+            failed === set.id
+              ? t('The project could not be saved in this browser’s storage.')
+              : null
           }
         />
       ))}
@@ -611,7 +614,9 @@ function SetCard({
               <input
                 aria-label={t('{set}: value of {name}', { set: set.name, name: v.name })}
                 aria-invalid={(has && r?.value === undefined) || undefined}
-                aria-describedby={has && r?.value === undefined ? `set-res-${set.id}-${v.id}` : undefined}
+                aria-describedby={
+                  has && r?.value === undefined ? `set-res-${set.id}-${v.id}` : undefined
+                }
                 defaultValue={set.values[v.id] ?? ''}
                 key={`${set.id}-${v.id}-${set.values[v.id] ?? ''}`}
                 placeholder={t('not set')}

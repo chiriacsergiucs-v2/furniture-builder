@@ -114,11 +114,7 @@ export function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; 
                   <Icon name="copy" className="sm" />
                   {copied === url ? t('Copied') : t('Copy link')}
                 </button>
-                <button
-                  type="button"
-                  className="btn sm"
-                  onClick={() => void stop(s.id)}
-                >
+                <button type="button" className="btn sm" onClick={() => void stop(s.id)}>
                   {t('Stop sharing')}
                 </button>
               </div>

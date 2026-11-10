@@ -206,7 +206,11 @@ export function ThreeMore({ name }: { name: string }) {
               menu.current?.removeAttribute('open');
               useUi
                 .getState()
-                .setNotice(why ? { ok: false, text: why } : { ok: true, text: t('Saved {name}.', { name: `${name}.usdz` }) });
+                .setNotice(
+                  why
+                    ? { ok: false, text: why }
+                    : { ok: true, text: t('Saved {name}.', { name: `${name}.usdz` }) },
+                );
             }}
           >
             {t('Export for AR (.usdz)')}

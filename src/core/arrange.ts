@@ -364,7 +364,9 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
         grew = true;
       }
   }
-  return [...run].sort((a, b) => bounds.get(a)!.x - bounds.get(b)!.x || bounds.get(a)!.z - bounds.get(b)!.z);
+  return [...run].sort(
+    (a, b) => bounds.get(a)!.x - bounds.get(b)!.x || bounds.get(a)!.z - bounds.get(b)!.z,
+  );
 }
 
 /** The axis a run along the piece's wall takes (ADR-251): x for quarter turns 0 and 180, z for 90 and 270. */

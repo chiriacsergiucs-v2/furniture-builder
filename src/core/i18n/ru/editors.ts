@@ -43,7 +43,8 @@ export const ru_editors = {
   'About applying a layout': 'О применении планировки',
   'Replaces what is inside this space; the outer size stays.':
     'Заменяет содержимое этого пространства; внешний размер сохраняется.',
-  'Replace what is in this space with {name}?': 'Заменить содержимое этого пространства на «{name}»?',
+  'Replace what is in this space with {name}?':
+    'Заменить содержимое этого пространства на «{name}»?',
   'Choose a layout…': 'Выберите планировку…',
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',
@@ -54,7 +55,8 @@ export const ru_editors = {
   'Board {name}': 'Плита «{name}»',
   'Remove the band list from this device? Boards keep the bands already picked.':
     'Удалить список кромок с этого устройства? Плиты сохранят уже выбранные кромки.',
-  'The band list could not be removed on this device.': 'Не удалось удалить список кромок на этом устройстве.',
+  'The band list could not be removed on this device.':
+    'Не удалось удалить список кромок на этом устройстве.',
   'Remove band list': 'Удалить список кромок',
   'A board needs a name; it keeps {name}.': 'У плиты должно быть название; остаётся «{name}».',
   Clear: 'Очистить',

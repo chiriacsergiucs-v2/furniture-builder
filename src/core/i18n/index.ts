@@ -120,14 +120,20 @@ function nameFill(text: string): string | undefined {
       if (/\{\w+\|/.test(k)) continue;
       const names = [...k.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
       if (!names.length || k.indexOf('{') < 1) continue;
-      const re = new RegExp(`^${k.split(/\{\w+\}/).map(escapeRe).join('(.+?)')}$`);
+      const re = new RegExp(
+        `^${k
+          .split(/\{\w+\}/)
+          .map(escapeRe)
+          .join('(.+?)')}$`,
+      );
       namePatterns.push({ re, names, value });
     }
   }
   for (const p of namePatterns) {
     const m = p.re.exec(text);
     // Each filled part is a data text too (a part's name), or the user's own words, kept as typed.
-    if (m) return format(p.value, Object.fromEntries(p.names.map((n, i) => [n, tr(m[i + 1])])), 'ru');
+    if (m)
+      return format(p.value, Object.fromEntries(p.names.map((n, i) => [n, tr(m[i + 1])])), 'ru');
   }
   return undefined;
 }

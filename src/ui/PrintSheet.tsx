@@ -121,7 +121,9 @@ export function PrintSheet() {
                 {list.map((r) => (
                   <tr key={r.panelIds[0]}>
                     <td>
-                      {[...new Set(r.labels.map((l) => printedPartLabel(l, pieceNames)))].join(', ')}
+                      {[...new Set(r.labels.map((l) => printedPartLabel(l, pieceNames)))].join(
+                        ', ',
+                      )}
                     </td>
                     <td className="n">{r.thickness}</td>
                     <td className="n">{r.length}</td>

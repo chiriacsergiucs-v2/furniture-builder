@@ -477,7 +477,10 @@ export function checkRoom(input: RoomInput): RoomIssue[] {
   if (input.island) {
     const w = input.island.walkway;
     if (w === undefined)
-      out.push({ ...err('room-island', t('Type the walkway width to place an island.')), field: 'walkway' });
+      out.push({
+        ...err('room-island', t('Type the walkway width to place an island.')),
+        field: 'walkway',
+      });
     else if (!Number.isInteger(w) || w < 1 || w > 10000)
       out.push({
         ...err('room-island', t('The walkway width must be a whole number of mm above 0.')),
@@ -1026,7 +1029,14 @@ function fillPlan(
       ...(island ? { island: summaryOf(island.slots) } : {}),
     });
   }
-  return { mixes, problems, failed, overBudget, clashed, ...(cheapest !== undefined ? { cheapest } : {}) };
+  return {
+    mixes,
+    problems,
+    failed,
+    overBudget,
+    clashed,
+    ...(cheapest !== undefined ? { cheapest } : {}),
+  };
 }
 
 /** A built mix's warnings: every piece above the height, then the project's own warnings. */

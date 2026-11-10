@@ -190,22 +190,22 @@ export function ResearchPage({
       </nav>
       {/* The section shown, as the tabs' panel (ADR-266, as Output.tsx does). */}
       <div id="research-panel" role="tabpanel" aria-labelledby={`research-tab-${tab}`}>
-      {tab === 'features' &&
-        (detail && view.features.has(detail) ? (
-          <FeatureDetail
-            key={detail}
-            ctx={ctx}
-            f={view.features.get(detail)!}
-            onBack={() => setDetail(null)}
-          />
-        ) : (
-          <>
-            <AppSummary ctx={ctx} />
-            <AssessmentDashboard ctx={ctx} />
-            <Explorer ctx={ctx} query={query} setQuery={setQuery} />
-          </>
-        ))}
-      {tab === 'competitors' && <Competitors ctx={ctx} />}
+        {tab === 'features' &&
+          (detail && view.features.has(detail) ? (
+            <FeatureDetail
+              key={detail}
+              ctx={ctx}
+              f={view.features.get(detail)!}
+              onBack={() => setDetail(null)}
+            />
+          ) : (
+            <>
+              <AppSummary ctx={ctx} />
+              <AssessmentDashboard ctx={ctx} />
+              <Explorer ctx={ctx} query={query} setQuery={setQuery} />
+            </>
+          ))}
+        {tab === 'competitors' && <Competitors ctx={ctx} />}
       </div>
     </main>
   );

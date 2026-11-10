@@ -129,10 +129,10 @@ function EstimateChip({ compact = false }: { compact?: boolean }) {
     priceState === 'failed'
       ? t('Prices could not be read')
       : none
-    ? t('No prices yet')
-    : est.missing.length
-      ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
-      : t('Estimate: {amount}', { amount });
+        ? t('No prices yet')
+        : est.missing.length
+          ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
+          : t('Estimate: {amount}', { amount });
   return (
     <button
       type="button"

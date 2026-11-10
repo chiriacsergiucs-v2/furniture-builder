@@ -185,7 +185,10 @@ export function ProjectsPage({
         );
     } else
       await deleteDesign(r.id).catch(() =>
-        setMsg({ ok: false, text: t('The piece could not be deleted from this browser’s storage.') }),
+        setMsg({
+          ok: false,
+          text: t('The piece could not be deleted from this browser’s storage.'),
+        }),
       );
     refresh();
   };
