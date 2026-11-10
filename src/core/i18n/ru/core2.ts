@@ -423,6 +423,8 @@ export const ru_core2 = {
   'The file has a header row but no bands.': 'В файле есть строка заголовков, но нет кромок.',
   '{name} stands on the floor; Top and Bottom move wall units and stacked pieces.':
     '«{name}» стоит на полу; «Верх» и «Низ» двигают навесные модули и изделия, стоящие на других.',
+  'Already in line.': 'Уже выровнены.',
+  '{name} stands along another wall.': '«{name}» стоит вдоль другой стены.',
   '{name} would go below the floor.': '«{name}» ушло бы ниже пола.',
   '{name} would sink into the piece under it.': '«{name}» вошло бы в изделие под ним.',
   '{names} are in the same group as {ref}; ungroup to align them.':

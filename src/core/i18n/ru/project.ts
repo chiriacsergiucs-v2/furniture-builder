@@ -263,6 +263,7 @@ export const ru_project = {
   'More: clearance, merge': 'Ещё: зоны, объединение',
   'More actions': 'Другие действия',
   Linked: 'Связанная',
+  'Move alone': 'Двигать отдельно',
   'Turn ↺': 'Повернуть ↺',
   'Turn ↻': 'Повернуть ↻',
   'Add a piece to the project': 'Добавить изделие в проект',
@@ -372,8 +373,8 @@ export const ru_project = {
   'Against the wall': 'У стены',
   'Off the wall': 'Не у стены',
   'About against the wall': 'Об установке у стены',
-  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.':
-    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании отодвигает его и снимает со стены.',
+  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging or Move alone moves it away and takes it off the wall.':
+    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании или «Двигать отдельно» отодвигает его и снимает со стены.',
   '{n|# wall connection was|# wall connections were} left out: this room has no such wall.':
     '{n|# соединение со стеной пропущено|# соединения со стеной пропущены|# соединений со стеной пропущено}: в этой комнате нет такой стены.',
   'Link identical pieces': 'Связать одинаковые изделия',

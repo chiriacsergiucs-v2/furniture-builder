@@ -230,7 +230,7 @@ function ConnectToggle({
         info={
           <InfoTip label={t('About connections')} align="start">
             {t(
-              'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.',
+              'Connected pieces move together; a snap connects them, Alt while dragging or Move alone moves one alone. A pair that no longer touches is warned about.',
             )}
           </InfoTip>
         }

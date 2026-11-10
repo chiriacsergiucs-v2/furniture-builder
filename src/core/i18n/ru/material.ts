@@ -167,8 +167,8 @@ export const ru_material = {
   Disconnect: 'Разъединить',
   Connected: 'Соединены',
   'About connections': 'О соединениях',
-  'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.':
-    'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
+  'Connected pieces move together; a snap connects them, Alt while dragging or Move alone moves one alone. A pair that no longer touches is warned about.':
+    'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании или «Двигать отдельно» двигает одно. О паре, которая больше не касается, выводится предупреждение.',
   'Connected to {names}': 'Соединено с: {names}',
   'Connected pieces': 'Соединённые изделия',
   'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.':

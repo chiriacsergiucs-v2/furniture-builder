@@ -5,6 +5,7 @@ import { floorDrop, floorPoint, modelDrop, type FloorPoint } from '../core/drag3
 import { isLocked, LOCKED_HINT, moveBlocked } from '../core/project';
 import type { SnapResult } from '../core/snap';
 import { useDesign } from '../store/designStore';
+import { moveAloneIsOn } from '../store/useMoveAlone';
 import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 
 /** mm → metres: the 3D scene's scale, shared with Viewer3D so pointer and boards agree. */
@@ -211,11 +212,13 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
         }
         // A selection of several: every piece moves by the same whole mm, one undo step (ADR-097, ADR-250).
         if (st2.selectedItemIds.length > 1 && st2.selectedItemIds.includes(g.id)) {
-          st2.moveSelectionBy(g.to.x - g.from.x, g.to.z - g.from.z, 1, { alone: ev.altKey });
+          st2.moveSelectionBy(g.to.x - g.from.x, g.to.z - g.from.z, 1, {
+            alone: ev.altKey || moveAloneIsOn(),
+          });
           return;
         }
         // Alt: the piece moves without its connected neighbours (ADR-168).
-        st2.dropItemAt(g.id, g.from, g.to, snapping, ev.altKey);
+        st2.dropItemAt(g.id, g.from, g.to, snapping, ev.altKey || moveAloneIsOn());
       };
       const onCancel = (ev: PointerEvent) => {
         const g = gesture.current;

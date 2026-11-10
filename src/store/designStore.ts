@@ -924,9 +924,11 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ notice: carried.reason });
         return carried.reason;
       }
-      if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(carried.project, t('Align'));
-      return skippedText(res);
+      const moved =
+        carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]);
+      if (moved) commitProject(carried.project, t('Align'));
+      // Nothing moved and nothing skipped: said, so the tap is not a dead button (ADR-251).
+      return skippedText(res) || (moved || ids.length < 2 ? '' : t('Already in line.'));
     },
     distributeSelection: () => {
       const p = get().project;

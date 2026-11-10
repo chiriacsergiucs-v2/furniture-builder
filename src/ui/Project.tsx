@@ -703,7 +703,7 @@ function AgainstWall({ project, id }: { project: Project; id: string }) {
         info={
           <InfoTip label={t('About against the wall')} align="start">
             {t(
-              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.',
+              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging or Move alone moves it away and takes it off the wall.',
             )}
           </InfoTip>
         }

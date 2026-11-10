@@ -18,6 +18,7 @@ import {
   placedOutline,
   quarterTurn,
   resolvePlacements,
+  rotationOf,
   splitRotation,
   type MoveResult,
   type Project,
@@ -185,8 +186,8 @@ function shifted(it: ProjectItem, dx: number, dz: number): ProjectItem {
 }
 
 /**
- * A copy of a piece with new ids (ADR-011), touching it on its right in the room's x, or on its left when the right
- * is taken and the left is free (otherwise on the right anyway; the overlap is the usual diagnostic). Same placement,
+ * A copy of a piece with new ids (ADR-011), touching it on its own right along the wall it stands on (ADR-251; was the
+ * room's x, ADR-069), or on its left when the right is taken and the left is free (otherwise on the right anyway; the overlap is the usual diagnostic). Same placement,
  * turn and quantity. Returns null when the piece is not in the project.
  */
 export function duplicateItem(
@@ -197,17 +198,25 @@ export function duplicateItem(
   if (at < 0) return null;
   const bounds = boundsOf(project);
   const b = bounds.get(id)!;
-  const free = (x: number) => ![...bounds.values()].some((o) => overlaps(o, { ...b, x }));
-  const right = b.x + b.w,
-    left = b.x - b.w;
-  const x = free(right) || !free(left) ? right : left;
   const src = project.items[at];
+  // Along the wall the piece stands on (ADR-251, user 2026-11-10): on its own right, else its own left. Turn 0 and
+  // 180 run along x, 90 and 270 along z; the piece's right is +x, −z, −x, +z for turns 0, 90, 180, 270.
+  const axis = src.rotationY % 180 === 0 ? 'x' : 'z';
+  const size = axis === 'x' ? b.w : b.d;
+  const rightSign = src.rotationY === 0 || src.rotationY === 270 ? 1 : -1;
+  const at1 = (v: number) => (axis === 'x' ? { ...b, x: v } : { ...b, z: v });
+  const free = (v: number) => ![...bounds.values()].some((o) => overlaps(o, at1(v)));
+  const right = b[axis] + rightSign * size,
+    left = b[axis] - rightSign * size;
+  const to = free(right) || !free(left) ? right : left;
+  const x = axis === 'x' ? to : b.x;
+  const z = axis === 'z' ? to : b.z;
   // The copy is a new piece placed for the user: it starts unlocked (ADR-095) and not linked (ADR-111).
   const { locked: _locked, linkId: _link, ...unlocked } = structuredClone(src);
   void _locked;
   void _link;
   const copy: ProjectItem = {
-    ...shifted(unlocked, x - b.x, 0),
+    ...shifted(unlocked, x - b.x, z - b.z),
     id: newId(),
   };
   copy.design = { ...copy.design, id: newId() };
@@ -332,13 +341,18 @@ const RUN_GAP = 150;
 export function touchingRun(project: Project, id: string, placed?: Map<string, Box>): string[] {
   const bounds = placed ?? boundsOf(project);
   if (!bounds.has(id)) return [];
+  // Along the wall the piece stands on (ADR-251): x for turns 0 and 180, z for 90 and 270.
+  const axis = runAxis(project, id);
   const near = (a: Box, b: Box) => {
-    const gap = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w));
+    const gap =
+      axis === 'x'
+        ? Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w))
+        : Math.max(b.z - (a.z + a.d), a.z - (b.z + b.d));
     return (
       gap >= 0 &&
       gap <= RUN_GAP &&
       spans(a.y, a.y + a.h, b.y, b.y + b.h) &&
-      spans(a.z, a.z + a.d, b.z, b.z + b.d)
+      (axis === 'x' ? spans(a.z, a.z + a.d, b.z, b.z + b.d) : spans(a.x, a.x + a.w, b.x, b.x + b.w))
     );
   };
   const run = new Set([id]);
@@ -350,7 +364,12 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
         grew = true;
       }
   }
-  return [...run].sort((a, b) => bounds.get(a)!.x - bounds.get(b)!.x);
+  return [...run].sort((a, b) => bounds.get(a)!.x - bounds.get(b)!.x || bounds.get(a)!.z - bounds.get(b)!.z);
+}
+
+/** The axis a run along the piece's wall takes (ADR-251): x for quarter turns 0 and 180, z for 90 and 270. */
+function runAxis(project: Project, id: string): 'x' | 'z' {
+  return (project.items.find((i) => i.id === id)?.rotationY ?? 0) % 180 === 0 ? 'x' : 'z';
 }
 
 /**
@@ -366,7 +385,8 @@ export function mirrorRun(
 ): { project: Project; reasons: string[]; refused?: string } {
   const run = withGroups(project, stackedWith(project, touchingRun(project, id)));
   if (!run.length) return { project, reasons: [] };
-  const r = mirrorSet(project, run);
+  // A run on a side wall mirrors along that wall (ADR-251, user 2026-11-10).
+  const r = mirrorSet(project, run, runAxis(project, id));
   return r.refused ? { ...r, refused: t('Mirror the run refused: {why}', { why: r.refused }) } : r;
 }
 
@@ -378,6 +398,7 @@ export function mirrorRun(
 export function mirrorSet(
   project: Project,
   ids: readonly string[],
+  axis: 'x' | 'z' = 'x',
 ): { project: Project; reasons: string[]; refused?: string } {
   const bounds = boundsOf(project),
     outlines = outlinesOf(project);
@@ -395,8 +416,11 @@ export function mirrorSet(
   const refused =
     moveBlocked(project, [...set, ...stacked]) ?? turnBlocked(project, [...set, ...stacked]);
   if (refused) return { project, reasons: [], refused };
-  const x0 = Math.min(...set.map((r) => bounds.get(r)!.x)),
-    x1 = Math.max(...set.map((r) => bounds.get(r)!.x + bounds.get(r)!.w));
+  // Reflected about the centre of the space they take along `axis` (ADR-251: z for a run on a side wall).
+  const lo = (b: Box) => (axis === 'x' ? b.x : b.z);
+  const len = (b: Box) => (axis === 'x' ? b.w : b.d);
+  const x0 = Math.min(...set.map((r) => lo(bounds.get(r)!))),
+    x1 = Math.max(...set.map((r) => lo(bounds.get(r)!) + len(bounds.get(r)!)));
   const reasons: string[] = [];
   const items = project.items.map((it): ProjectItem => {
     if (!inSet.has(it.id) && !stacked.has(it.id)) return it;
@@ -413,8 +437,14 @@ export function mirrorSet(
               offsetX: outlines.get(pl.baseId)!.w - (pl.offsetX + own.w),
             },
           }
-        : shifted(it, x0 + x1 - (own.x + own.w) - own.x, 0);
-    const turn = mirroredRotation(it);
+        : axis === 'x'
+          ? shifted(it, x0 + x1 - (own.x + own.w) - own.x, 0)
+          : shifted(it, 0, x0 + x1 - (own.z + own.d) - own.z);
+    // Reflected along x the turn becomes −θ; along z it becomes 180° − θ (the front keeps facing the same wall).
+    const turn =
+      axis === 'x'
+        ? mirroredRotation(it)
+        : splitRotation((((180 - rotationOf(it)) % 360) + 360) % 360)!;
     // −θ of an angled piece can need the other quarter (−20° is 270° + 70°): its outline swaps width and depth, so
     // keep its centre as `tryTurn` does, with the same rounding (mirroring twice gives the same place back).
     const half = (n: number) => (turn.rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
