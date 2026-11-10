@@ -101,6 +101,19 @@ function issuesOf(l: ProjectItem, r: ProjectItem, lb: Box, rb: Box): string[] {
     );
     return out;
   }
+  // Merging makes a new, wider piece: a size, turn, boards or construction lock on either is refused, never dropped
+  // (ADR-243). A placement lock carries over to the merged piece (below).
+  if (
+    [l, r].some(
+      (i) =>
+        i.sizeLocked ||
+        i.sizeLocks?.length ||
+        i.turnLocked ||
+        i.boardsLocked ||
+        i.constructionLocked,
+    )
+  )
+    out.push(tx('One of them has its size, turn, boards or construction locked; unlock it first.'));
   if (l.rotationY !== r.rotationY) out.push(tx('They are turned differently.'));
   else if (l.angle || r.angle) out.push(tx('One of them is turned at an angle.'));
   if (l.quantity !== r.quantity)

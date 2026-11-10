@@ -111,7 +111,7 @@ import { PieceSize } from './PieceSize';
 import { PieceSettingsDialog } from './Settings';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
-import { askConfirm } from './Confirm';
+import { askConfirm, askText } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
 import {
@@ -709,6 +709,9 @@ function LockChip({ item }: { item: ProjectItem }) {
         (a) => ({ width: t('width'), height: t('height'), depth: t('depth') })[a],
       ),
     );
+  // Boards and construction locks show too (ADR-244).
+  if (item.boardsLocked) what.push(t('boards@@lock'));
+  if (item.constructionLocked) what.push(t('construction@@lock'));
   if (!what.length) return null;
   return (
     <span className="chip lock-chip">
@@ -848,6 +851,8 @@ export async function askRemove(item: ProjectItem, remove: (id: string) => void)
     await askConfirm(t('Remove “{name}” from this project?', { name: tr(item.design.name) }), {
       confirmLabel: t('Remove'),
       danger: true,
+      // Enter keeps the piece; removing takes a deliberate tap (ADR-246).
+      cancelFirst: true,
     })
   )
     remove(item.id);
@@ -876,8 +881,20 @@ function PieceMenu({
   const setBoardsLocked = useDesign((s) => s.setBoardsLocked);
   const setConstructionLocked = useDesign((s) => s.setConstructionLocked);
   const mirrorRun = useDesign((s) => s.mirrorRun);
+  const updateProject = useDesign((s) => s.updateProject);
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
+  // The header names the project; a project piece is renamed here (ADR-245).
+  const rename = async () => {
+    const v = (await askText(t('Name of this piece'), item.design.name))?.trim();
+    if (!v || v === item.design.name) return;
+    updateProject((p) => ({
+      ...p,
+      items: p.items.map((i) =>
+        i.id === item.id ? { ...i, design: { ...i.design, name: v } } : i,
+      ),
+    }));
+  };
   const [msg, setMsg] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const run = useMemo(
@@ -932,6 +949,10 @@ function PieceMenu({
               {t('Open in the piece editor')}
             </button>
           )}
+          <button type="button" onClick={pick(() => void rename())}>
+            <Icon name="pencil" className="sm" />
+            {t('Rename…')}
+          </button>
           <button type="button" onClick={pick(() => setDialog('replace'))}>
             <Icon name="catalog" className="sm" />
             {t('Replace…')}
@@ -978,6 +999,7 @@ function PieceMenu({
           <button
             type="button"
             aria-pressed={isBoardsLocked(item)}
+            title={t('Keep the boards and edge bands of this piece as they are')}
             onClick={pick(() => setBoardsLocked(item.id, !isBoardsLocked(item)))}
           >
             <Icon name="lock" className="sm" />
@@ -986,6 +1008,7 @@ function PieceMenu({
           <button
             type="button"
             aria-pressed={isConstructionLocked(item)}
+            title={t('Keep how this piece is built as it is')}
             onClick={pick(() => setConstructionLocked(item.id, !isConstructionLocked(item)))}
           >
             <Icon name="lock" className="sm" />
@@ -2189,9 +2212,11 @@ function RoomPlan({
                 {tr(pc.item.design.name)}
               </text>
               {/* The badge shows for any lock: place, turn or a size (ADR-095, ADR-171). */}
-              {(locked || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0) && (
-                <LockBadge x={b.x} y={b.z} size={size} />
-              )}
+              {(locked ||
+                isTurnLocked(pc.item) ||
+                lockedAxes(pc.item).length > 0 ||
+                pc.item.boardsLocked ||
+                pc.item.constructionLocked) && <LockBadge x={b.x} y={b.z} size={size} />}
             </g>
           );
         })}

@@ -18,6 +18,7 @@ import {
   pedestalRoot,
   splitSpace,
   unsplit,
+  holdsSomething,
   usesPedestal,
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
@@ -501,7 +502,20 @@ function SpaceEditor({
               value: k,
               label: KIND_LABEL[k],
             }))}
-            onChange={(k) => set((s) => changeKind(s, k))}
+            onChange={async (k) => {
+              // A change of contents resets them: asked first when there is something to lose (ADR-246).
+              if (
+                space.kind !== 'empty' &&
+                !(await askConfirm(
+                  t('Change what goes here? The {what} settings of this space are reset.', {
+                    what: KIND_LABEL[space.kind].toLowerCase(),
+                  }),
+                  { confirmLabel: t('Change') },
+                ))
+              )
+                return;
+              set((s) => changeKind(s, k));
+            }}
           />
           {space.kind === 'shelves' && (
             <Counter
@@ -835,7 +849,18 @@ function SplitEditor({
       s.kind === 'split' ? { ...s, sizes: s.sizes.map((z, j) => (j === i ? size : z)) } : s,
     );
   const n = space.children.length;
-  const setCount = (k: number) =>
+  const setCount = async (k: number) => {
+    // Fewer parts drop the last ones: asked first when one holds something (ADR-246).
+    if (
+      k < space.children.length &&
+      space.children.slice(k).some(holdsSomething) &&
+      !(await askConfirm(t('Remove the last parts and what is in them?'), {
+        confirmLabel: t('Remove'),
+        danger: true,
+        cancelFirst: true,
+      }))
+    )
+      return;
     onChange((s) => {
       if (s.kind !== 'split') return s;
       if (k > s.children.length) {
@@ -853,6 +878,7 @@ function SplitEditor({
       }
       return { ...s, children: s.children.slice(0, k), sizes: s.sizes.slice(0, k) };
     });
+  };
   const across = space.axis === 'x';
   const middle = (i: number) => (n > 3 ? t('Middle {n}', { n: i }) : t('Middle'));
   const names = across
@@ -883,7 +909,13 @@ function SplitEditor({
         ]}
         onChange={(a) => onChange((s) => (s.kind === 'split' ? { ...s, axis: a } : s))}
       />
-      <Counter label={t('Parts@@split')} value={n} min={2} max={8} onChange={setCount} />
+      <Counter
+        label={t('Parts@@split')}
+        value={n}
+        min={2}
+        max={8}
+        onChange={(k) => void setCount(k)}
+      />
       <div className="field">
         <span className="field-label">
           {across ? t('Width of each part') : t('Height of each part')}
@@ -939,7 +971,23 @@ function SplitEditor({
           })}
         </ul>
       </div>
-      <button type="button" className="danger-link" onClick={() => onChange(unsplit)}>
+      <button
+        type="button"
+        className="danger-link"
+        onClick={async () => {
+          // One space again with the first part's contents (ADR-246); the other parts' contents go, asked first.
+          if (
+            space.children.slice(1).some(holdsSomething) &&
+            !(await askConfirm(t('Remove the dividers? Only the first part keeps what is in it.'), {
+              confirmLabel: t('Remove'),
+              danger: true,
+              cancelFirst: true,
+            }))
+          )
+            return;
+          onChange(unsplit);
+        }}
+      >
         {t('Remove dividers')}
       </button>
     </>

@@ -280,7 +280,9 @@ function MaterialFields() {
       scope === 'part'
         ? r.applied.length
           ? t('{part}: board set.', { part: part ? tr(part.label.split(' — ')[0]) : '' })
-          : t('No item is selected.')
+          : r.skipped.length
+            ? t('Nothing changed: {why}.', { why: r.skipped.join('; ') })
+            : t('No item is selected.')
         : r.applied.length
           ? `${t('Applied to {n|# item|# items}', { n: r.applied.length })}${r.skipped.length ? t(', {n} skipped: {list}', { n: r.skipped.length, list: r.skipped.join('; ') }) : ''}.`
           : t('Nothing changed: {why}.', { why: r.skipped.join('; ') || t('no piece reached') }),
@@ -367,6 +369,23 @@ function MaterialFields() {
           }
         />
       ) : null}
+      {/* A part with its own board can go back to its group's board (ADR-151, ADR-246). */}
+      {scope === 'part' && part && target?.partMaterials?.[part.id] && (
+        <p className="hint">
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={() => {
+              clearPart(inProject ? itemId : null, part.id);
+              setMsg(
+                t("{part}: back to its group's board.", { part: tr(part.label.split(' — ')[0]) }),
+              );
+            }}
+          >
+            {t("Use its group's board again")}
+          </button>
+        </p>
+      )}
       {scope === 'part' &&
         lost.map((id) => (
           <p key={id} className="alert warning">

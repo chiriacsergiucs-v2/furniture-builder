@@ -13,7 +13,7 @@ import {
 import { useDesign } from '../store/designStore';
 import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
-import { t, tr } from '../core/i18n';
+import { t, t as tt, tr } from '../core/i18n';
 import { formatMoney } from '../core/prices';
 import { useEstimate } from './useEstimate';
 import { NewDialog } from './Dialogs';
@@ -23,7 +23,7 @@ import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
 import { RoomFillDialog } from './RoomFill';
 import { PrintAssembly } from './Assembly';
-import { ConfirmHost } from './Confirm';
+import { askConfirm, ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { cancelTemplateEdit, saveTemplateEdit } from '../store/templatesStore';
 import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
@@ -488,6 +488,22 @@ export function App() {
         ) {
           e.preventDefault();
           void askRemove(item, st.removeItem);
+        } else if (
+          // Several pieces: the same question as the selection card's Delete (ADR-246).
+          page === 'editor' &&
+          st.project &&
+          st.selectedItemIds.length > 1 &&
+          !st.editingItemId &&
+          !t.closest('dialog, [contenteditable="true"]') &&
+          !document.querySelector('dialog[open]')
+        ) {
+          e.preventDefault();
+          const n = st.selectedItemIds.length;
+          void askConfirm(tt('Delete these {n} pieces from this project?', { n }), {
+            confirmLabel: tt('Delete'),
+            danger: true,
+            cancelFirst: true,
+          }).then((ok) => ok && useDesign.getState().deleteSelection());
         }
       }
       // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
@@ -503,7 +519,9 @@ export function App() {
           !busy
         ) {
           e.preventDefault();
-          st.duplicateItem(st.selectedItemId);
+          // Several pieces are copied as a block, as the selection card does (ADR-246).
+          if (st.selectedItemIds.length > 1) st.duplicateSelection();
+          else st.duplicateItem(st.selectedItemId);
         }
       }
       // Ctrl/Cmd+A selects every piece of the open project (ADR-097).
@@ -676,7 +694,14 @@ export function App() {
                     title={t('Saved to the template on this device')}
                     onClick={async () => {
                       // One save, one revision; a draft that cannot be stored waits on the Catalog page (ADR-195).
-                      await saveTemplateEdit();
+                      // A failed save says so (ADR-244); the draft still waits on the Catalog page.
+                      if (!(await saveTemplateEdit()))
+                        useUi.getState().setNotice({
+                          ok: false,
+                          text: t(
+                            'Not saved to the template; your draft waits on the Catalog page.',
+                          ),
+                        });
                       setPage('catalog');
                     }}
                   >

@@ -10,8 +10,32 @@ import { MOVE_TO_ACTIONS } from '../core/moveTo';
 import { MATERIAL_ROLES } from '../core/roles';
 import type { CountKey } from '../core/counts';
 import type { ActionSpec, ArgSpec } from '../core/assistant';
+import { sizeFields } from '../core/pieceSize';
+import { nameProblem } from '../core/variables';
 import type { Space } from '../core/types';
 import { useDesign } from './designStore';
+
+/**
+ * The same limits the editor's fields apply, for calls from the assistant (ADR-246): a value outside them is refused
+ * with the reason instead of being written and left to diagnostics. Thrown, so the plan's preview lists it.
+ */
+const within = (what: string, v: unknown, min: number, max: number): number => {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < min || n > max)
+    throw new Error(`${what} must be a whole number from ${min} to ${max}.`);
+  return n;
+};
+const checkName = (
+  name: unknown,
+  others: readonly { id?: string; name: string; expr: string }[],
+  id?: string,
+) => {
+  const why = nameProblem(
+    String(name ?? ''),
+    others.filter((v) => v.id !== id) as unknown as Parameters<typeof nameProblem>[1],
+  );
+  if (why) throw new Error(why);
+};
 
 type Store = ReturnType<typeof useDesign.getState>;
 
@@ -72,6 +96,13 @@ export const CATALOG: Record<string, Entry> = {
   setKerf: {
     description: 'Saw cut width in mm for the open piece or project.',
     args: [int('kerf')],
+    // In the project view the project's own saw cut is set, as its field does (ADR-246).
+    run: (s, a) => {
+      const kerf = within('Saw cut', a.kerf, 0, 20);
+      if (s.project && !s.editingItemId && !s.drillItemId)
+        return s.updateProject((p) => ({ ...p, cutting: { ...p.cutting, kerf } }));
+      return s.setKerf(kerf);
+    },
   },
   updateParams: {
     description:
@@ -112,6 +143,11 @@ export const CATALOG: Record<string, Entry> = {
   resizePiece: {
     description: 'Width, height or depth of the whole open piece, whole mm.',
     args: [one('key', SIZE), int('value')],
+    run: (s, a) => {
+      const f = sizeFields(s.design.product).find((x) => x.key === a.key);
+      if (!f) throw new Error(`This piece has no ${String(a.key)} to set.`);
+      return s.resizePiece(f.key, within(f.label, a.value, f.min, f.max));
+    },
   },
   updateMeta: {
     description: 'Catalog metadata and guidance settings of the open piece.',
@@ -165,10 +201,19 @@ export const CATALOG: Record<string, Entry> = {
   addDesignVariable: {
     description: 'Add a variable to the open piece.',
     args: [str('name'), str('expr')],
+    run: (s, a) => {
+      checkName(a.name, s.design.variables ?? []);
+      return s.addDesignVariable(String(a.name), String(a.expr));
+    },
   },
   updateDesignVariable: {
     description: "Change one of the open piece's variables.",
     args: [str('id'), obj('patch')],
+    run: (s, a) => {
+      const patch = a.patch as { name?: string; expr?: string };
+      if (patch.name !== undefined) checkName(patch.name, s.design.variables ?? [], String(a.id));
+      return s.updateDesignVariable(String(a.id), patch);
+    },
   },
   deleteDesignVariable: {
     description: "Delete one of the open piece's variables.",
@@ -338,8 +383,23 @@ export const CATALOG: Record<string, Entry> = {
     description: 'A piece follows the project setting again.',
     args: [id(), str('key')],
   },
-  addVariable: { description: 'Add a project variable.', args: [str('name'), str('expr')] },
-  updateVariable: { description: 'Change a project variable.', args: [str('id'), obj('patch')] },
+  addVariable: {
+    description: 'Add a project variable.',
+    args: [str('name'), str('expr')],
+    run: (s, a) => {
+      checkName(a.name, s.project?.variables ?? []);
+      return s.addVariable(String(a.name), String(a.expr));
+    },
+  },
+  updateVariable: {
+    description: 'Change a project variable.',
+    args: [str('id'), obj('patch')],
+    run: (s, a) => {
+      const patch = a.patch as { name?: string; expr?: string };
+      if (patch.name !== undefined) checkName(patch.name, s.project?.variables ?? [], String(a.id));
+      return s.updateVariable(String(a.id), patch);
+    },
+  },
   deleteVariable: { description: 'Delete a project variable.', args: [str('id')] },
   bindTarget: {
     description: "Bind a piece's size, division or position to a formula; null unbinds.",

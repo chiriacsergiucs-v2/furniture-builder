@@ -24,8 +24,14 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
     // A refused repair is never applied (ADR-176).
     if (r.refused) return;
     // The repair was worked out on `base`; a project changed since then gets new repairs on the next render instead.
-    if (useDesign.getState().project !== problem.base) return;
-    updateProject(() => r.project);
+    if (useDesign.getState().project !== problem.base)
+      return setNotice({
+        ok: false,
+        text: t('The project changed since this repair was worked out; pick it again.'),
+      });
+    // A lock can still refuse it: say so instead of "Applied" (ADR-244).
+    const why = updateProject(() => r.project);
+    if (why) return setNotice({ ok: false, text: why });
     setHighlight([]);
     close();
     setNotice({ ok: true, text: t('Applied: {repair}. Undo puts it back.', { repair: r.label }) });
