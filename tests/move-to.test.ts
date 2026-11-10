@@ -1,63 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { templates } from '../src/core/design';
 import { moveTo, moveToOptions, MOVE_TO_ACTIONS, type MoveToAction } from '../src/core/moveTo';
-import {
-  makeItem,
-  newProject,
-  placedBounds,
-  resolvePlacements,
-  type Placement,
-  type Project,
-  type ProjectItem,
-} from '../src/core/project';
-import { shapeOutline, type Room } from '../src/core/room';
+import { placedBounds, type Project } from '../src/core/project';
+import { moveToProject, type Spec } from './fixtures/moveToProject';
 import { useDesign } from '../src/store/designStore';
 
-const t = (id: string) => templates.find((x) => x.id === id)!.create();
-
-interface Spec {
-  tpl: string;
-  x: number;
-  z?: number;
-  r?: ProjectItem['rotationY'];
-  placement?: Placement;
-  angle?: number;
-  locked?: true;
-}
-/** A project with the given pieces (ids p0, p1, …), in a 4000 × 3000 × 2500 room unless `room` is false. */
-function project(pieces: Spec[], withRoom = true): Project {
-  let p = newProject('Move to');
-  pieces.forEach((s, i) => {
-    const it = makeItem(p, t(s.tpl));
-    p = {
-      ...p,
-      items: [
-        ...p.items,
-        {
-          ...it,
-          id: `p${i}`,
-          position: { ...it.position, x: s.x, z: s.z ?? 0 },
-          rotationY: s.r ?? 0,
-          ...(s.placement ? { placement: s.placement } : {}),
-          ...(s.angle ? { angle: s.angle } : {}),
-          ...(s.locked ? { locked: s.locked } : {}),
-        },
-      ],
-    };
-  });
-  const room: Room = {
-    height: 2500,
-    outline: shapeOutline('rectangle', {
-      width: 4000,
-      depth: 3000,
-      cutWidth: 0,
-      cutDepth: 0,
-      offset: 0,
-    }),
-    features: [],
-  };
-  return resolvePlacements(withRoom ? { ...p, room } : p);
-}
+const project = (pieces: Spec[], withRoom = true) => moveToProject(pieces, 'Move to', withRoom);
 const box = (p: Project, id: string) => placedBounds(p.items.find((i) => i.id === id)!);
 const item = (p: Project, id: string) => p.items.find((i) => i.id === id)!;
 const go = (p: Project, id: string, a: MoveToAction) => {

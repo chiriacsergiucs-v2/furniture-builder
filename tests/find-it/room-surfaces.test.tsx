@@ -7,7 +7,7 @@
 // (and so the ⋯ menu with View in AR and Export for AR) is checked by tools/room-surfaces/find-it.mjs in Chromium.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { hiddenLabelled, openSheet, piecesList, renderApp, WIDTHS } from './setup';
+import { WIDTHS, hiddenLabelled, openSheet, piecesList, projectWithRoom, renderApp } from './setup';
 
 /** Picture import without a real canvas: an 800 × 600 picture, a grey average colour, a small JPEG blob. */
 function stubPictures() {
@@ -40,21 +40,7 @@ describe.each(WIDTHS)('room surfaces at %ipx (find-it, ADR-208)', (width) => {
   it('Floor background, Plan picture with its scale, the wall behind a piece, a model Placed On a piece', async () => {
     const { user } = await renderApp(width);
     stubPictures();
-    await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
-    const create = await screen.findByRole('dialog');
-    await user.click(within(create).getByRole('button', { name: 'Create project' }));
-    const panel = await screen.findByRole('complementary', { name: 'Compose' });
-    await openSheet(user, panel);
-    await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-    const dlg = await screen.findByRole('dialog', { name: 'Add a piece' });
-    await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Sideboard');
-    await user.click(within(dlg).getAllByRole('button', { name: /Sideboard/ })[0]);
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
-    const place = screen.queryByRole('button', { name: 'Place to the right' });
-    if (place) await user.click(place);
-    await openSheet(user, panel);
-    await user.click(await screen.findByRole('button', { name: 'Add the room' }));
-    await openSheet(user, panel);
+    const panel = await projectWithRoom(user, 'Sideboard');
 
     // Wall 1 gets a colour: its 50 mm band shows on the plan.
     await user.selectOptions(screen.getByLabelText('Wall 1 background'), 'Colour');
