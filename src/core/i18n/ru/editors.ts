@@ -221,6 +221,13 @@ export const ru_editors = {
     'Перетащите элемент на план (на телефоне сначала удерживайте его) или нажмите на него, а затем на план.',
   Close: 'Закрыть',
   'Move to': 'Переместить',
+  '{p|# piece|# pieces} and {m|# 3D model|# 3D models} selected':
+    'Выбрано: {p|# изделие|# изделия|# изделий} и {m|# 3D-модель|# 3D-модели|# 3D-моделей}',
+  '3D models are not grouped.': '3D-модели не объединяются в группу.',
+  'Group name': 'Название группы',
+  'Type a name for the group.': 'Введите название группы.',
+  'Rename the group': 'Переименовать группу',
+  'Group {n}': 'Группа {n}',
   '{n} pieces selected': 'Выбрано изделий: {n}',
   'Selected pieces': 'Выбранные изделия',
   'About the selected pieces': 'О выбранных изделиях',

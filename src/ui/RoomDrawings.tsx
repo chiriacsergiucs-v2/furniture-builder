@@ -430,7 +430,13 @@ export function RoomPlan({
           setBox(null);
           // A press without a drag is not a box.
           if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.z - bx.b.z) < 1) return;
-          const hit = itemsInBox(project, bx.a, bx.b, footprints);
+          // 3D models are taken too, by their plan box (ADR-252).
+          const hit = itemsInBox(
+            project,
+            bx.a,
+            bx.b,
+            new Map([...footprints, ...pm.models.map((m) => [m.item.id, m.box] as const)]),
+          );
           selectItems(bx.add ? [...selectedIds, ...hit] : hit);
         }}
         onPointerCancel={() => setBox(null)}

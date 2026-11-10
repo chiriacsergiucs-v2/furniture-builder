@@ -44,6 +44,7 @@ import {
   sameIds,
   turnSelection,
   ungroup,
+  renameGroup,
 } from '../core/selection';
 import { replaceItem, replaceReport } from '../core/replace';
 import { catalogFamilies } from '../core/catalog';
@@ -958,6 +959,8 @@ export const useDesign = create<State>((rawSet, get) => {
       return res.groupId;
     },
     ungroup: (groupId) => projectAction((p) => ungroup(p, groupId), t('Ungroup')),
+    renameGroup: (groupId, name) =>
+      projectAction((p) => renameGroup(p, groupId, name), t('Rename the group')),
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
       if (!item) return;

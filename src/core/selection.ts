@@ -195,9 +195,10 @@ export function duplicateItems(
 /** "Group 1", "Group 2", … the first free name. */
 function nextName(project: Project): string {
   const names = new Set((project.groups ?? []).map((g) => g.name));
+  // In the user's language (ADR-252); a stored name is never rewritten (ADR-011).
   let n = 1;
-  while (names.has(`Group ${n}`)) n++;
-  return `Group ${n}`;
+  while (names.has(t('Group {n}', { n })) || names.has(`Group ${n}`)) n++;
+  return t('Group {n}', { n });
 }
 
 /**
@@ -218,6 +219,17 @@ export function groupItems(
     .filter((g) => g.itemIds.length >= 2);
   const group: Group = { id: newId(), name: name.trim() || nextName(project), itemIds: items };
   return { project: { ...project, groups: [...others, group] }, groupId: group.id };
+}
+
+/** Rename a group (ADR-252); the name is kept as typed, trimmed. The same project for an empty or unchanged name. */
+export function renameGroup(project: Project, groupId: string, name: string): Project {
+  const n = name.trim();
+  const g = project.groups?.find((x) => x.id === groupId);
+  if (!g || !n || g.name === n) return project;
+  return {
+    ...project,
+    groups: project.groups!.map((x) => (x.id === groupId ? { ...x, name: n } : x)),
+  };
 }
 
 /** Remove a group; its pieces stay where they are. */
@@ -246,12 +258,12 @@ export function itemsInBox(
     x1 = Math.max(a.x, b.x),
     z0 = Math.min(a.z, b.z),
     z1 = Math.max(a.z, b.z);
-  return project.items
-    .filter((it) => {
-      const f = placed.get(it.id);
-      return !!f && f.x <= x1 && f.x + f.w >= x0 && f.z <= z1 && f.z + f.d >= z0;
-    })
-    .map((it) => it.id);
+  const hit = (id: string) => {
+    const f = placed.get(id);
+    return !!f && f.x <= x1 && f.x + f.w >= x0 && f.z <= z1 && f.z + f.d >= z0;
+  };
+  // Pieces, then placed 3D models whose box is in `placed` (ADR-252).
+  return [...project.items, ...(project.models ?? [])].map((it) => it.id).filter(hit);
 }
 
 /**
@@ -269,12 +281,12 @@ export function itemsInFrontBox(
     x1 = Math.max(a.x, b.x),
     y0 = Math.min(a.y, b.y),
     y1 = Math.max(a.y, b.y);
-  return project.items
-    .filter((it) => {
-      const f = placed.get(it.id);
-      return !!f && f.x <= x1 && f.x + f.w >= x0 && f.y <= y1 && f.y + f.h >= y0;
-    })
-    .map((it) => it.id);
+  const hit = (id: string) => {
+    const f = placed.get(id);
+    return !!f && f.x <= x1 && f.x + f.w >= x0 && f.y <= y1 && f.y + f.h >= y0;
+  };
+  // Pieces, then placed 3D models whose box is in `placed` (ADR-252).
+  return [...project.items, ...(project.models ?? [])].map((it) => it.id).filter(hit);
 }
 
 /**

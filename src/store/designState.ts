@@ -365,6 +365,8 @@ export interface State {
   /** Keep the selection as a group (ADR-097); returns its id, or null with fewer than two pieces. */
   groupSelection: () => string | null;
   ungroup: (groupId: string) => void;
+  /** Rename a group (ADR-252), one undo step; an empty name changes nothing. */
+  renameGroup: (groupId: string, name: string) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
   undoProject: () => void;
