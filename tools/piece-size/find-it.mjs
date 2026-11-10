@@ -108,6 +108,9 @@ for (const width of [1280, 390]) {
 
   // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-112).
   await goBuild(page);
+  // N145: the view stays when the mode changes (2D below 1500 px), so 3D is picked from the View row.
+  const three = page.getByRole('radio', { name: '3D', exact: true });
+  if (await three.isVisible().catch(() => false)) await three.click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const dock3 = phone ? page.locator('#count-dock') : page.locator('.view.three');
@@ -188,11 +191,16 @@ for (const width of [1280, 390]) {
   await sheet(false);
   await tapPlan();
   await sheet(true);
+  // ADR-160: the phone sheet hides the space's heading (`.side .insp-head`); its path ends at the space instead.
+  const spaceShown = phone
+    ? inside
+        .getByRole('navigation', { name: 'Where this space sits' })
+        .locator('[aria-current="true"]', { hasText: 'Interior' })
+    : inside.getByRole('heading', { name: 'Divided space' });
   check(
     width,
     'drilled, a space inside selected: no "Width" or "Depth" in the card',
-    (await inside.getByRole('heading', { name: 'Divided space' }).isVisible()) &&
-      (await inCard.count()) === 0,
+    (await spaceShown.isVisible()) && (await inCard.count()) === 0,
   );
   await shot('project-inside');
   await sheet(false);
