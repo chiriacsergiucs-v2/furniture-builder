@@ -44,6 +44,10 @@ function seedShipped(
   return out;
 }
 
+/** Research marks whose last save failed (ADR-266). */
+const unsaved = new Set<string>();
+const SAVE_FAILED = () => t('Your decision could not be saved on this device.');
+
 export const useResearch = create<ResearchState>((set, get) => ({
   // Empty until `init` loads the shipped papers: they are a chunk of their own, loaded on first use (ADR-222).
   stored: [],
@@ -84,10 +88,22 @@ export const useResearch = create<ResearchState>((set, get) => ({
       updatedAt: at,
     }));
     set({ marks: { ...get().marks, ...Object.fromEntries(next.map((m) => [m.id, m])) } });
+    // Marks whose save failed are written again with the next save; the banner goes only once they are saved, and a
+    // failure for another mark keeps it (ADR-266).
+    const all = [
+      ...next,
+      ...[...unsaved].filter((id) => !ids.includes(id)).flatMap((id) => {
+        const m = get().marks[id];
+        return m ? [m] : [];
+      }),
+    ];
     try {
-      await saveResearchMarks(next);
+      await saveResearchMarks(all);
+      for (const m of all) unsaved.delete(m.id);
+      if (!unsaved.size && get().error === SAVE_FAILED()) set({ error: null });
     } catch {
-      set({ error: t('Your decision could not be saved on this device.') });
+      for (const m of all) unsaved.add(m.id);
+      set({ error: SAVE_FAILED() });
     }
   },
 }));

@@ -173,6 +173,8 @@ export function ResearchPage({
             key={tb}
             type="button"
             role="tab"
+            id={`research-tab-${tb}`}
+            aria-controls="research-panel"
             aria-selected={tab === tb}
             tabIndex={rovingTab(
               tab === tb,
@@ -186,6 +188,8 @@ export function ResearchPage({
           </button>
         ))}
       </nav>
+      {/* The section shown, as the tabs' panel (ADR-266, as Output.tsx does). */}
+      <div id="research-panel" role="tabpanel" aria-labelledby={`research-tab-${tab}`}>
       {tab === 'features' &&
         (detail && view.features.has(detail) ? (
           <FeatureDetail
@@ -202,6 +206,7 @@ export function ResearchPage({
           </>
         ))}
       {tab === 'competitors' && <Competitors ctx={ctx} />}
+      </div>
     </main>
   );
 }

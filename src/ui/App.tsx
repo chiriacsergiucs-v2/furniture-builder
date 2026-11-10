@@ -905,7 +905,7 @@ export function App() {
             <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
           )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
-          {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
+          {page === 'info' && <InfoPage onDone={() => setPage('editor')} designOpen={designOpen} />}
         </Suspense>
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
