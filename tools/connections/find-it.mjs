@@ -36,8 +36,10 @@ for (const width of [1440, 390]) {
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
   });
+  // Against the screen width, not innerWidth: on a mobile viewport (isMobile) content wider than the screen widens the
+  // layout viewport itself, so innerWidth grows with it and a scrollWidth-vs-innerWidth test passes.
   const noSideScroll = () =>
-    page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+    page.evaluate((w) => document.documentElement.scrollWidth <= w + 1, width);
   const shot = (name) => page.screenshot({ path: `${out}/connections-${name}-${width}.png` });
   const dlg = page.locator('dialog[open]');
   const click = async (loc) => {
@@ -456,8 +458,22 @@ for (const width of [1440, 390]) {
   await click(dlg.getByRole('button', { name: 'Done' }).last());
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
   await sheet(false);
+  // On a phone the quick-count card over the front view, placed while hidden under the open sheet, stuck out past the
+  // right edge and widened the page to 534 px, pushing the bottom nav off screen (hard rule: no sideways scroll at
+  // 390 px; fixed by placing the card only while it shows). Checked here, then the Cut list place is reached anyway
+  // so the steps below still run.
+  await page.waitForTimeout(300);
+  const fits = await noSideScroll();
+  check(width, 'no sideways scroll after the size dialog', fits);
   const checksTab = page.getByRole('tab', { name: /Checks/ });
-  if (!(await checksTab.isVisible().catch(() => false))) await goBuild(page);
+  if (!(await checksTab.isVisible().catch(() => false))) {
+    if (fits) await goBuild(page);
+    else
+      await page
+        .getByRole('navigation', { name: 'Places' })
+        .getByRole('link', { name: /Cut list/ })
+        .dispatchEvent('click');
+  }
   if ((await checksTab.getAttribute('aria-selected')) !== 'true') await click(checksTab);
   await page.waitForTimeout(200);
   const warnText =
