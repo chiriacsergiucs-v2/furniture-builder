@@ -441,7 +441,7 @@ export function ProjectPanel({
                   label={t('Gap to {name} on the left', { name: tr(left.item.design.name) })}
                   value={left.gap}
                   min={0}
-                  max={5000}
+                  max={20000}
                   onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
                 />
                 <Toggle
@@ -1268,7 +1268,13 @@ type PlacementKind = Placement['kind'] | 'free';
 /** Where the selected piece sits: on the floor, on the wall, on or above another piece, or anywhere (ADR-031). */
 function PlacementFields({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
-  const update = useDesign((s) => s.updateItem);
+  const updateItem = useDesign((s) => s.updateItem);
+  // A refused change is said here, under the fields it came from (ADR-244, ADR-250), not only on the plan.
+  const [refused, setRefused] = useState<{ id: string; text: string } | null>(null);
+  const update = (id: string, patch: Partial<ProjectItem>) => {
+    const why = updateItem(id, patch);
+    setRefused(why ? { id, text: why } : null);
+  };
   const bases = useMemo(() => placementBases(project, item.id), [project, item.id]);
   const pl = item.placement;
   const kind: PlacementKind = pl?.kind ?? 'free';
@@ -1339,7 +1345,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Underside above the floor')}
             value={pl.height}
             min={0}
-            max={3000}
+            max={20000}
             onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
             disabled={!!hint('mountHeight')}
             hint={hint('mountHeight')}
@@ -1405,13 +1411,18 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Above floor')}
             value={pos.y}
             min={0}
-            max={3000}
+            max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
             disabled={!!hint('y')}
             hint={hint('y')}
             trailing={<BindButton itemId={item.id} target="y" />}
           />
         </div>
+      )}
+      {refused?.id === item.id && (
+        <p className="hint" role="status">
+          {refused.text}
+        </p>
       )}
     </>
   );

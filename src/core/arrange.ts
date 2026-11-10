@@ -258,6 +258,15 @@ export function setItemRotation(project: Project, id: string, deg: number): Move
     return { project };
   const reason = moveBlocked(project, [id]) ?? turnBlocked(project, [id]);
   if (reason) return { project, reason };
+  // A grouped piece turns only with its group (ADR-148 "Always together", ADR-250).
+  if (withGroups(project, [id]).length > 1)
+    return {
+      project,
+      reason: t(
+        '{name} is in a group; turn the group with Turn ↺ or Turn ↻, or ungroup it to turn it alone.',
+        { name: pieceName(project, id) },
+      ),
+    };
   let next = project;
   // Quarter turns first, the short way round, each keeping the centre.
   const steps = ((split.rotationY - it.rotationY) / 90 + 4) % 4;

@@ -561,12 +561,16 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     updateItem: (id, patch) => {
       const p = get().project;
-      if (!p) return;
+      if (!p) return null;
       const next = { ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) };
       // A grouped piece moved from its fields takes its group along (ADR-148).
       const res = 'position' in patch || 'placement' in patch ? carryGroups(p, next, [id]) : null;
-      if (res?.reason) return set({ notice: res.reason });
+      if (res?.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
       commitProject(res?.project ?? next);
+      return null;
     },
     moveItemBy: (id, dxMm, dzMm, step, opts) => {
       const p = get().project;

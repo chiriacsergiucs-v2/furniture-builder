@@ -214,7 +214,8 @@ export interface State {
    */
   /** `snapped`: the drop snapped against a neighbour, so a valid touching pair is connected (ADR-168). */
   addPieceAt: (d: Design, x: number, z: number, libraryId?: string, snapped?: boolean) => void;
-  updateItem: (id: string, patch: Partial<ProjectItem>) => void;
+  /** The refusal reason when the change cannot be made (ADR-250), else null. */
+  updateItem: (id: string, patch: Partial<ProjectItem>) => string | null;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
    * step. Nothing happens (no step) when the piece would not move; a locked piece stays and the reason is returned

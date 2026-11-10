@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { t, tr } from '../core/i18n';
 import { MOVE_TO_ACTIONS, MOVE_TO_LABELS, moveToOptions, type MoveToAction } from '../core/moveTo';
 import { useDesign } from '../store/designStore';
@@ -23,15 +23,32 @@ export function MoveToButtons({
   const options = useMemo(() => (project ? moveToOptions(project, id) : null), [project, id]);
   const [msg, setMsg] = useState<{ id: string; text: string } | null>(null);
   const key = typeof id === 'string' ? id : id.join(',');
+  // After a tap the tapped button may leave the list (it no longer works): focus stays in the group, on its first
+  // button or else on the group itself, never on the page body (ADR-250).
+  const box = useRef<HTMLDivElement>(null);
+  const [tapped, setTapped] = useState(0);
+  useEffect(() => {
+    if (!tapped) return;
+    const el = box.current;
+    if (!el || el.contains(document.activeElement)) return;
+    (el.querySelector<HTMLElement>('.move-to-buttons button') ?? el).focus();
+  }, [tapped]);
   if (!options) return null;
   const off = MOVE_TO_ACTIONS.filter((a) => options[a]);
   const tap = (a: MoveToAction) => {
     const off = options[a];
     const text = off ?? moveItemTo(id, a);
     setMsg(text ? { id: key, text: `${tr(MOVE_TO_LABELS[a].label)}: ${tr(text)}` } : null);
+    setTapped((n) => n + 1);
   };
   return (
-    <div className={`move-to ${className}`} role="group" aria-label={t('Move to')}>
+    <div
+      ref={box}
+      tabIndex={-1}
+      className={`move-to ${className}`}
+      role="group"
+      aria-label={t('Move to')}
+    >
       <div className="move-to-buttons">
         {(onlyWorking ? MOVE_TO_ACTIONS.filter((a) => !options[a]) : MOVE_TO_ACTIONS).map((a) => {
           const off = options[a];

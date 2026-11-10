@@ -321,7 +321,12 @@ export function RoomPlan({
   const turnPc =
     !tapping && selectedIds.length === 1
       ? pm.pieces.find(
-          (x) => x.item.id === selectedIds[0] && !isLocked(x.item) && !isTurnLocked(x.item),
+          (x) =>
+            x.item.id === selectedIds[0] &&
+            !isLocked(x.item) &&
+            !isTurnLocked(x.item) &&
+            // A grouped piece turns only with its group (ADR-148, ADR-250): no handle for it alone.
+            !project?.groups?.some((g) => g.itemIds.includes(x.item.id)),
         )
       : undefined;
   return (

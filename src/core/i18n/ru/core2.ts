@@ -285,6 +285,8 @@ export const ru_core2 = {
   '{name} already sits on the floor or on a piece; the selected pieces move down together.':
     '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
+  '{name} is in a group; turn the group with Turn ↺ or Turn ↻, or ungroup it to turn it alone.':
+    '{name} входит в группу; поворачивайте группу кнопками «Повернуть ↺» или «Повернуть ↻» либо разгруппируйте, чтобы повернуть отдельно.',
   'Rotation must be whole degrees from 0 to 359.':
     'Поворот должен быть целым числом градусов от 0 до 359.',
   'Mirror the run refused: {why}': 'Отражение линии отклонено: {why}',
