@@ -53,6 +53,15 @@ describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (wid
     const card2 = within(panel).getByRole('region', { name: /^Selected piece: / });
     expect(await within(card2).findByText('Linked: 2 copies')).toBeTruthy();
     expect(within(card2).getByRole('checkbox', { name: 'Change all copies' })).toBeTruthy();
+    // Esc in the plan's Options menu closes the menu only; the piece stays selected (as in a dialog, ADR-160).
+    if (phone) {
+      const options = within(plan).getByText('Options').closest('details')!;
+      await user.click(within(plan).getByText('Options'));
+      expect(options.open).toBe(true);
+      await user.keyboard('{Escape}');
+      expect(options.open).toBe(false);
+      expect(within(panel).getByRole('region', { name: /^Selected piece: / })).toBeTruthy();
+    }
 
     // N119: Back to the editor from the Catalog.
     await user.click(screen.getAllByRole('link', { name: /Catalog/ })[0]);
