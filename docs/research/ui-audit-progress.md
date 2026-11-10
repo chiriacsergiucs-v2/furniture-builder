@@ -6,7 +6,7 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 | #   | Domain                     | ADR     | FLOW 01 done | FLOW 02 done | Open user questions |
 | --- | -------------------------- | ------- | ------------ | ------------ | ------------------- |
 | 01  | Creating                   | ADR-247 | 2026-11-10   | 2026-11-10   | —                   |
-| 02  | Composition                |         |              |              |                     |
+| 02  | Composition                | ADR-248 | 2026-11-10 | 2026-11-10 | D02-F6 |
 | 03  | Moving                     | ADR-249 | 2026-11-10 | 2026-11-10 | D03-F5 |
 | 04  | Aligning and arranging     | ADR-250 | 2026-11-10 | 2026-11-10 | D04-F2 |
 | 05  | Selection and groups       | ADR-251 | 2026-11-10 | 2026-11-10 | D05-F6 |
@@ -22,5 +22,5 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 | 15  | Catalog and templates      | ADR-261 | 2026-11-10 | 2026-11-10 |                     |
 | 16  | Saving, backup and sharing | ADR-262 | 2026-11-10 | 2026-11-10 |                     |
 | 17  | Account                    | ADR-263 | 2026-11-10 | 2026-11-10 |                     |
-| 18  | Language                   |         |              |              |                     |
+| 18  | Language                   | ADR-264 | 2026-11-10 | 2026-11-10 | D18-F6 |
 | 19  | Information                | ADR-265 | 2026-11-10 | 2026-11-10 |                     |
