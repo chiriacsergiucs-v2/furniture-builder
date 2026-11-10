@@ -70,7 +70,7 @@ Reproduction: Catalog → New piece → Cabinet → Next… → `user.dblClick` 
 
 The `role="status"` box (`Wizard.tsx:862-875`) holds only "Continue where you left off" and "Start over"; nothing says a draft exists or how old it is, and the status announcement reads only the button labels.
 
-### D01-F9 — A draft from one project's wizard resumes in another context with that project's board (Suspected, minor)
+### D01-F9 — A draft from one project's wizard resumes in another context with that project's board (Rejected in FLOW 02: named as an error, not silent)
 
 The draft stores answers only (`uiStore.ts:6`, `Wizard.tsx:756-758`), not whether it was started from a project. The Board answer can name a board of project A (`setWizardBoards`, `Wizard.tsx:701-711`); continued in project B or from New…, that board may not be offered. Not reproduced.
 

@@ -5,7 +5,7 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 
 | #   | Domain                     | ADR     | FLOW 01 done | FLOW 02 done | Open user questions |
 | --- | -------------------------- | ------- | ------------ | ------------ | ------------------- |
-| 01  | Creating                   | ADR-247 | 2026-11-10   |              | —                   |
+| 01  | Creating                   | ADR-247 | 2026-11-10   | 2026-11-10   | —                   |
 | 02  | Composition                |         |              |              |                     |
 | 03  | Moving                     |         |              |              |                     |
 | 04  | Aligning and arranging     |         |              |              |                     |

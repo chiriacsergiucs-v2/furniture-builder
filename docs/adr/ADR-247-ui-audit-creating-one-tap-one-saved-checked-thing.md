@@ -35,7 +35,7 @@ them, and one "checked" suggestion is not checked against the open project.
 | D01-F6 | Code-evident | minor    | Fill the room… is inside the More menu's Files group (`MoreMenu.tsx:121-149`).                                                                                        |
 | D01-F7 | Code-evident | minor    | The room preset error outlives the dialog and uses other wording than the row above (`Dialogs.tsx:196,300-303`).                                                      |
 | D01-F8 | Code-evident | minor    | The wizard's draft offer has buttons and no sentence (`Wizard.tsx:862-875`).                                                                                          |
-| D01-F9 | Suspected    | minor    | A draft started in one project resumes elsewhere with that project's board answer (`Wizard.tsx:701-711,756-758`).                                                     |
+| D01-F9 | Rejected     | —        | A draft started in one project resumes elsewhere with that project's board answer (`Wizard.tsx:701-711,756-758`); see Cross-examination.                              |
 
 ## Decision
 
@@ -58,7 +58,7 @@ the user tapped, and a mix said to be checked is checked against what it is adde
 7. **F7:** clear the preset error each time the New dialog opens; use the ADR-193 sentence.
 8. **F8:** add the sentence "You have a draft of a new piece from earlier in this session." before the two buttons
    (`t()` with its Russian entry).
-9. **F9:** no change until reproduced; FLOW 02 decides.
+9. **F9:** no change (rejected in the cross-examination).
 
 ## Alternatives considered
 
@@ -78,7 +78,8 @@ the user tapped, and a mix said to be checked is checked against what it is adde
 
 - Positive: the same save-and-say rule on every creation path; add-mode mixes are honest.
 - Negative / risks: F3 builds each mix with the project's pieces, so add mode is slower for large projects; the
-  room-fill timing check is already deferred (ADR-242).
+  room-fill timing check is already deferred (ADR-242). The find-it step of `tests/find-it/roomfill.test.tsx:44-63`
+  adds a mix on a wall already filled and must change to a free wall or expect the new message.
 
 ## Done when
 
@@ -91,6 +92,22 @@ the user tapped, and a mix said to be checked is checked against what it is adde
 - [ ] The preset error is gone on the next opening and the draft offer has its sentence, in English and Russian (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
 
-## Open questions
+## Cross-examination
 
-- F9: reproduce in FLOW 02; if real, keep the draft's origin or drop a board answer that is not offered.
+One round, 2026-11-10. The skeptic checked each finding for duplicates, for behaviour an implemented ADR intends, for
+conflicts with the hard rules, for over-engineering and for missing tests.
+
+| Id     | Skeptic                                                                                                                                                                   | Proposer                                                                                                                                                                                                        | Verdict  |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| D01-F1 | ADR-193 only covered one row; maybe presets were left out on purpose.                                                                                                     | ADR-193 item 7 states the rule for a new project (ADR-193 lines 46-48, 112-113); nothing exempts presets. Reproduced: 2 projects.                                                                               | Accepted |
+| D01-F2 | Autosave might save the project later.                                                                                                                                    | ADR-193 line 47 records that autosave runs only at the first change; the reproduction shows an unhandled rejection and no alert. `setMsg` takes `{ ok, text }` (`ProjectsPage.tsx:69`).                         | Accepted |
+| D01-F3 | ADR-173 line 22 promises only "adds to the open project"; the errors are shown, not hidden, and undo removes them. Filling around the pieces would be the better product. | ADR-173 line 35 keeps a mix only without an error diagnostic and the card says "each checked for problems" (`RoomFill.tsx:708`); 32 overlap errors break that. Filling around existing pieces is larger: later. | Accepted |
+| D01-F4 | Disabling the button would be enough.                                                                                                                                     | Enter on the form and a second pointer event can arrive before the render; the ref makes it one, the disabled state shows it. Reproduced: 2 designs.                                                            | Accepted |
+| D01-F5 | Accessibility polish, not a bug.                                                                                                                                          | The problem text is shown but not tied to its field, against ADR-193 (problems name their field) and the focus-and-label rule; Fill the room already does it for the same two fields (`RoomFill.tsx:606-616`).  | Accepted |
+| D01-F6 | ADR-173 chose the ⋯ menu.                                                                                                                                                 | It chose the menu, not the Files group (ADR-173 line 22); moving it under New… keeps it in the menu.                                                                                                            | Accepted |
+| D01-F7 | Rare: needs a storage failure first.                                                                                                                                      | Rare, but a stale error on a fresh dialog is untrue, and ADR-193 line 113 clears the sibling's alert; one line of state.                                                                                        | Accepted |
+| D01-F8 | ADR-211 item 4 named only the two buttons.                                                                                                                                | ADR-211 does not forbid a sentence; a status box that announces only button labels says nothing. One `t()` key with its Russian entry.                                                                          | Accepted |
+| D01-F9 | A stale board answer could silently become another board (ADR-008).                                                                                                       | Reproduced in core: away from the project, the answer stays `custom:oak` and the wizard shows the error "Board: choose one of the options." (`engine.ts:147-151`), which blocks Create. Named, not silent.      | Rejected |
+
+No question needs the user: every accepted fix follows an implemented ADR's rule. Decided without asking: F3 filters
+mixes against the open project now; filling around existing pieces is left for later.
