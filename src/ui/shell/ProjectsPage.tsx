@@ -109,7 +109,13 @@ export function ProjectsPage({
     const name = await askText(t('Name of the new project'), t('New project'), t('Create project'));
     if (name === null) return;
     const p = newProject(name.trim() || t('New project'));
-    void saveProject(p);
+    // Saved before it opens; a failed save is said here and nothing opens (ADR-193, ADR-248).
+    try {
+      await saveProject(p);
+    } catch {
+      setMsg({ ok: false, text: t('The project could not be saved in this browser’s storage.') });
+      return;
+    }
     openProject(p);
     onOpened();
   };

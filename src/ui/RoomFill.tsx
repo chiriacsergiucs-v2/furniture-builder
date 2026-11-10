@@ -167,6 +167,8 @@ function stepOf(d: RoomIssue): StepId {
 
 function fieldOf(d: RoomIssue): keyof Form | undefined {
   if (!d.field) return undefined;
+  // The island's walkway (ADR-248).
+  if (d.field === 'walkway') return 'walkway';
   return d.code === 'room-size'
     ? SIZE_FIELD[d.field as RoomSizeField]
     : WALL_FIELD[d.field as WallField];
@@ -297,6 +299,8 @@ function RoomFill({
 }) {
   const openProject = useDesign((s) => s.openProject);
   const projectRoom = useDesign((s) => (addTo ? s.project?.room : undefined));
+  // Add mode: the mixes are checked with the open project's pieces (ADR-248).
+  const intoProject = useDesign((s) => (addTo ? (s.project ?? undefined) : undefined));
   const fillRoom = useDesign((s) => s.fillRoom);
   const uid = useId();
   const [form, setForm] = useState<Form>(START);
@@ -332,14 +336,15 @@ function RoomFill({
   const result = useMemo(
     () =>
       applied
-        ? suggestRoomMixes(
-            toInput(applied.form, projectRoom ?? roomOf(applied.form), applied.walls, {
+        ? suggestRoomMixes({
+            ...toInput(applied.form, projectRoom ?? roomOf(applied.form), applied.walls, {
               styles,
               prices,
             }),
-          )
+            ...(intoProject ? { into: intoProject } : {}),
+          })
         : null,
-    [applied, projectRoom, styles, prices],
+    [applied, projectRoom, intoProject, styles, prices],
   );
   const badCeiling = form.ceiling.trim() !== '' && parseMoney(form.ceiling) === null;
   const rectangle = isRectangle(room);
@@ -639,6 +644,7 @@ function RoomFill({
               label={t('Budget ceiling')}
               value={form.ceiling}
               onChange={set('ceiling')}
+              problem={badCeiling ? `${uid}-ceiling` : undefined}
               unit={currency}
               placeholder={t('none')}
               hint={t('Mixes whose estimate is above it are hidden.')}
@@ -660,7 +666,7 @@ function RoomFill({
             </div>
           </div>
           {badCeiling && (
-            <p className="alert error" role="alert">
+            <p id={`${uid}-ceiling`} className="alert error" role="alert">
               <Icon name="alert-circle" className="sm" />
               <span>{t('The budget ceiling is not an amount; it is not applied.')}</span>
             </p>
@@ -680,6 +686,7 @@ function RoomFill({
               label={t('Walkway width')}
               value={form.walkway}
               onChange={set('walkway')}
+              problem={problem('walkway')}
               hint={t('Your walkway around the island, in front of it and behind it.')}
             />
           )}

@@ -393,7 +393,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
-      <RoomPresets onOpened={opened} />
+      <RoomPresets open={open} onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
@@ -411,19 +411,37 @@ export function NewDialog({
  * New… → Room preset (ADR-210): the shipped room presets; one becomes a project with its room, saved on this device and
  * opened (ADR-060). Presets are built when the row opens.
  */
-function RoomPresets({ onOpened }: { onOpened: () => void }) {
+function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }) {
   const openProject = useDesign((s) => s.openProject);
   const [shown, setShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A failed save is said only while the dialog stays open: each opening starts without it (ADR-248).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setError(null);
+  }
   const presets = useMemo(() => (shown ? roomPresets() : []), [shown]);
+  // One tap makes one project (ADR-193, ADR-248): a second tap while it saves does nothing, and a retry after a failed
+  // save saves the same project again.
+  const saving = useRef(false);
+  const made = useRef<{ template: ProjectTemplate; project: ReturnType<typeof projectFromTemplate> } | null>(null);
   const use = async (template: ProjectTemplate) => {
+    if (saving.current) return;
+    saving.current = true;
     try {
-      const p = projectFromTemplate(template);
+      const p =
+        made.current?.template === template ? made.current.project : projectFromTemplate(template);
+      made.current = { template, project: p };
       await saveProject(p);
+      made.current = null;
+      setError(null);
       openProject(p);
       onOpened();
     } catch {
-      setError(t('The project could not be created on this device.'));
+      setError(t('The project could not be saved in this browser’s storage.'));
+    } finally {
+      saving.current = false;
     }
   };
   return (

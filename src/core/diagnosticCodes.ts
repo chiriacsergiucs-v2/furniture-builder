@@ -112,6 +112,7 @@ export const DIAGNOSTIC_CODES = [
   'rail-depth',
   'rail-drop',
   'rail-height',
+  'room-clash',
   'room-empty',
   'room-feature',
   'room-input',

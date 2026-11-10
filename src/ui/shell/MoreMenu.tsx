@@ -117,6 +117,13 @@ export function MoreMenu({
             <Icon name="plus" />
             {t('New…')} <small>{t('piece or project')}</small>
           </button>
+          {/* Fill the room (ADR-173), beside New… and outside Files (ADR-248): mixes for every wall of this project's room, added to the project. */}
+          {inProject && project.room && (
+            <button type="button" onClick={run(() => setRoomFill(true))}>
+              <Icon name="project" />
+              {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
+            </button>
+          )}
           <p className="menu-head" id="menu-files">
             {t('Files')}
           </p>
@@ -145,13 +152,6 @@ export function MoreMenu({
               <button type="button" onClick={run(() => setPack(true))}>
                 <Icon name="upload" />
                 {t('Hand to a professional…')} <small>{t('one .zip to check the plan')}</small>
-              </button>
-            )}
-            {/* Fill the room (ADR-173): mixes for every wall of this project's room, added to the project. */}
-            {inProject && project.room && (
-              <button type="button" onClick={run(() => setRoomFill(true))}>
-                <Icon name="project" />
-                {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
               </button>
             )}
             {inProject ? null : (
