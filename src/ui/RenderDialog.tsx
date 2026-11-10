@@ -52,7 +52,10 @@ export function RenderDialog({
   const holder = useRef<HTMLDivElement>(null);
   const setLastRender = useUi((s) => s.setLastRender);
 
+  // Each Start, Cancel and Close bumps the run: a render that comes back for an older run is thrown away (ADR-259).
+  const run = useRef(0);
   const stop = () => {
+    run.current++;
     job.current?.dispose();
     job.current = null;
     holder.current?.replaceChildren();
@@ -66,6 +69,7 @@ export function RenderDialog({
 
   const start = async () => {
     stop();
+    const mine = run.current;
     const s = RENDER_SIZES.find((x) => x.value === size)!;
     setState({ kind: 'rendering', n: 0 });
     try {
@@ -75,18 +79,27 @@ export function RenderDialog({
         width: s.width,
         height: s.height,
         samples: RENDER_SAMPLES,
-        onProgress: (n) => setState((st) => (st.kind === 'rendering' ? { ...st, n } : st)),
+        onProgress: (n) => {
+          if (run.current === mine)
+            setState((st) => (st.kind === 'rendering' ? { ...st, n } : st));
+        },
       });
+      // Stopped while the tracer was being prepared: dispose of it, show nothing, keep the last render.
+      if (run.current !== mine) {
+        j.dispose();
+        return;
+      }
       job.current = j;
       j.canvas.className = 'render-canvas';
       j.canvas.setAttribute('aria-label', t('Rendered picture'));
       holder.current?.replaceChildren(j.canvas);
       const png = await j.done;
-      if (job.current !== j) return;
+      if (job.current !== j || run.current !== mine) return;
       // The client sheet prints the last render of this session (ADR-206).
       if (png) setLastRender(URL.createObjectURL(png));
       setState(png ? { kind: 'done', png } : { kind: 'idle' });
     } catch (e) {
+      if (run.current !== mine) return;
       stop();
       setState({ kind: 'failed', message: e instanceof Error ? e.message : String(e) });
     }

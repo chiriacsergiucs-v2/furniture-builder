@@ -25,7 +25,6 @@ export const ru_prints = {
   'The scene could not be exported.': 'Не удалось экспортировать сцену.',
   'The scene could not be exported: {message}': 'Не удалось экспортировать сцену: {message}',
   'More 3D actions': 'Другие действия 3D',
-  'the 3D scene with its pictures, for Blender': '3D-сцена с картинками, для Blender',
   // client sheet and step pictures
   'Print one page for your client: a picture, the pieces and the estimated price':
     'Печать одной страницы для клиента: картинка, изделия и ориентировочная цена',

@@ -43,7 +43,6 @@ import { setTheme, useTheme } from '../store/useTheme';
 import { setLook, useLook } from '../store/useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
-import { SceneMenu } from './SceneMenu';
 import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from '../store/useMediaQuery';
@@ -964,12 +963,21 @@ export function App() {
                     className={shown === o.id ? 'on' : ''}
                     disabled={o.disabled}
                     title={o.reason}
+                    aria-describedby={o.reason ? 'no-3d-why' : undefined}
                     onClick={() => setView(o.id)}
                   >
                     {o.label}
                   </button>
                 ))}
               </div>
+              {/* Why 3D is off, as visible text beside the switch (ADR-081, ADR-259). */}
+              {!has3d && (
+                <p id="no-3d-why" className="hint">
+                  {t(
+                    '3D preview is not available in this browser. The front view and parts list still work.',
+                  )}
+                </p>
+              )}
               {/* Fronts stays in the row on a phone too (G-269); the other tools go behind Options there. */}
               {!frontsInPlan && (
                 <label className="toggle small">
@@ -1035,7 +1043,6 @@ export function App() {
                     {t('Render')}
                   </button>
                 )}
-                {mount3d && <SceneMenu name={inProject ? project!.name : design.name} />}
               </ViewOptions>
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
