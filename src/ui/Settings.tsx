@@ -1,3 +1,4 @@
+import { useMediaQuery } from '../store/useMediaQuery';
 import { t } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip } from './controls';
@@ -15,6 +16,7 @@ import { SavedDataPanel } from './SavedData';
  * Changes apply at once, as before: one undo step each, autosaved and checked.
  */
 export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
+  const phone = useMediaQuery('(max-width: 760px)');
   const open = useUi((s) => s.settingsOpen);
   const setOpen = useUi((s) => s.setSettingsOpen);
   const inProject = useDesign((s) => !!s.project && !s.editingItemId);
@@ -26,6 +28,7 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
   const close = () => setOpen(false);
   return (
     <Dialog
+      inSheet={phone}
       open={open}
       onClose={close}
       title={t('Settings: {name}', { name })}
@@ -88,9 +91,11 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
  * step.
  */
 export function PieceSettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const phone = useMediaQuery('(max-width: 760px)');
   const name = useDesign((s) => s.design.name);
   return (
     <Dialog
+      inSheet={phone}
       open={open}
       onClose={onClose}
       title={t('Size, boards and construction: {name}', { name })}

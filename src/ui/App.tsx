@@ -916,6 +916,8 @@ export function App() {
               </button>
               {phone && inProject && <PeekActions onAdd={openPieces} />}
             </div>
+            {/* Phones: Settings and Material open here, the sheet at full height (ADR-247). */}
+            <div id="sheet-slot" className="sheet-slot" />
             <div className="side-body">
               {inProject ? (
                 <ProjectPanel mode="compose" onAdd={openPieces} />

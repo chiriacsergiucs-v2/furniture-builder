@@ -308,3 +308,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-244](../adr-done/ADR-244-report-every-refused-edit-truthfully.md) | Report every refused edit truthfully | ADR-243 | ✅ Implemented |
 | [ADR-245](../adr-done/ADR-245-keep-editing-state-across-template-edits-reloads-and-piece-r.md) | Keep editing state across template edits, reloads and piece renames | — | ✅ Implemented |
 | [ADR-246](../adr-done/ADR-246-ask-before-an-edit-drops-contents-and-hold-the-assistant-to.md) | Ask before an edit drops contents and hold the assistant to the field limits | — | ✅ Implemented |
+| [ADR-247](../adr-done/ADR-247-open-settings-and-material-inside-the-phone-sheet.md) | Open Settings and Material inside the phone sheet | ADR-080, ADR-163, ADR-241 | ✅ Implemented |

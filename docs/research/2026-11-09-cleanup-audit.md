@@ -150,3 +150,36 @@ Not built, and why:
   `research-batch-2`) already fail on `main` before they reach the drag, and no jsdom test can run a WebGL drag. The
   change cannot be proven safe today, so it waits for item 10a.
 - **Items 7–10, 13, 15:** not started. 10b and 13 need your yes.
+
+## Built 2026-11-10, round 2 (user: "build 1-5", then steps 6 and 7 approved, "Finish then push")
+
+After the skip review (`.claude/skills/skip-review/`), every earlier skip was rebuilt or given a stated blocker:
+
+- **Item 5:** `src/ui/fillParts.tsx`
+  - Holds the parts that really are the same: the field, the problems, the mix warnings, the result problems, the
+    save error and the footer.
+  - The Refine field lists and card bodies stay separate: their differences are real.
+  - Bug fixed: Fill a wall now marks Tall cabinet height and Wall cabinet depth. Its test fails without the fix.
+- **Item 6:** `src/viewer/axisDrag.ts` holds the shared drag. Proof: `tools/model-size` and `tools/research-batch-2`
+  give identical results before and after, the drag checks included.
+- **Item 7:** one `VariableSection`. Bug fixed: the piece's formula fields no longer force a number-only keyboard
+  (ADR-195). Its test fails without the fix.
+- **Item 9:** shared setup (`newProjectNamed`, `toProjects`, `projectWithRoom`, `selectRows`,
+  `tests/fixtures/moveToProject.ts`).
+- **Items 10a and 11 (the stale scripts):** `tools/lib/steps.mjs` (`goBuild`, `goCompose`, `openPieceEditor`); 37
+  scripts updated for ADR-241.
+- **Item 10b:** **0 scripts retired.** Each candidate with a jsdom twin still proves something only a browser can:
+  - `count-stepper`: the 3D stepper (ADR-085);
+  - `turn-handle`: ADR-169;
+  - `shell-shortcuts`: the physical drag ADR-198 asked for.
+- **Item 13:** pure moves, each compared line by line with nothing added or lost:
+  - `project.ts` 4 522 → 2 576 lines, into `projectValidate`, `projectProfiles` and `projectWorktops`;
+  - `Project.tsx` 3 421 → 2 055 lines, into `RoomDrawings.tsx`;
+  - `Viewer3D.tsx` 2 563 → 823 lines, into `ViewerScene.tsx`.
+- **`designStore.ts`, not split** (blocker: its actions are closures over one Zustand `set`/`get`, so splitting it is a
+  slice refactor, not a pure move; it unblocks once you ask for that refactor; cost M).
+- **Item 15:** `pnpm dups`, a report-only duplicate finder, with Python tests.
+- **Regression found and fixed:** the first dead-CSS pass deleted `.app.page-editor` and `.support-reference`, which
+  are built at run time. That widened the 390 px editor to 481 px; a browser script caught it. The guard now derives
+  the run-time prefixes from the code.
+- **Step 7 (ADR-247):** Settings and Material open inside the phone sheet.

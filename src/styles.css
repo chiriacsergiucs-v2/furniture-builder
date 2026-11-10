@@ -5340,6 +5340,22 @@ button.tile:hover {
   .pages.places a .badge.error {
     background: var(--error);
   }
+  /* ADR-247: Settings and Material open inside the Compose sheet (full height), in place of the sheet's body. */
+  .side:has(.sheet-slot > dialog[open]) .side-body {
+    display: none;
+  }
+  .sheet-slot > dialog.sheet-dialog {
+    position: static;
+    inset: auto;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
   /* ADR-241: on a phone the Editor and Cut list places replace the Compose · Build & Preview row. */
   .modes {
     display: none;
