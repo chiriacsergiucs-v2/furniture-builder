@@ -9,10 +9,10 @@ hunts bugs and writes its ADR; FLOW 02 runs one cross-examination round on that 
 | 02  | Composition                |         |              |              |                     |
 | 03  | Moving                     |         |              |              |                     |
 | 04  | Aligning and arranging     |         |              |              |                     |
-| 05  | Selection and groups       |         |              |              |                     |
+| 05  | Selection and groups       | ADR-251 | 2026-11-10 | 2026-11-10 | D05-F6 |
 | 06  | Sizing                     |         |              |              |                     |
 | 07  | Construction               | ADR-253 | 2026-11-10 | 2026-11-10 | D07-F4 |
-| 08  | Boards and edges           |         |              |              |                     |
+| 08  | Boards and edges           | ADR-254 | 2026-11-10 | 2026-11-10 | D08-F10 |
 | 09  | Hardware                   | ADR-255 | 2026-11-10 | 2026-11-10 |                     |
 | 10  | Room and walls             | ADR-256 | 2026-11-10 | 2026-11-10 |                     |
 | 11  | Checks and problems        |         |              |              |                     |
