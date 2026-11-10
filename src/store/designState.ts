@@ -476,3 +476,39 @@ export interface State {
   addScalePoint: (p: Pt) => void;
   cancelScalePlan: () => void;
 }
+
+/** The design store's shared helpers (designStore.ts), handed to the action slices that live in their own files. */
+export interface StoreHelpers {
+  set: (partial: Partial<State> | ((s: State) => Partial<State>)) => void;
+  get: () => State;
+  commit: (next: Design) => string | null;
+  leaveLocked: (
+    base: Project,
+    next: Project,
+    keys: readonly ('boardsLocked' | 'constructionLocked')[],
+  ) => { project: Project; kept: string[] };
+  commitApplied: (
+    base: Project,
+    r: { project: Project; applied: string[]; skipped: string[] },
+    name: string,
+    keys: readonly ('boardsLocked' | 'constructionLocked')[],
+  ) => { applied: string[]; skipped: string[] };
+  syncItem: () => void;
+  loadDrill: (item: ProjectItem, sel: Selection) => void;
+  drillView: (st: State) => Partial<State>;
+  settle: (partial: Partial<State>, p?: Project) => Partial<State>;
+  commitProject: (
+    next: Project,
+    name?: string,
+    opts?: { amend?: boolean; base?: Project | null; also?: Partial<State> },
+  ) => string | null;
+  keepSelected: (p: Project, st: State) => Partial<State>;
+  projectAction: (f: (p: Project) => Project, name?: string) => void;
+  restoreProject: (
+    p: Project,
+    projectPast: Project[],
+    projectFuture: Project[],
+    projectPastNames: string[],
+    projectFutureNames: string[],
+  ) => void;
+}
