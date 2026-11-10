@@ -632,6 +632,8 @@ function ModelItemMesh({
   const clone = useMemo(() => ms?.scene.clone(true) ?? null, [ms]);
   const selected = useDesign((s) => s.selectedItemId === item.id) && !plain;
   const selectItem = useDesign((s) => s.selectItem);
+  const toggleItem = useDesign((s) => s.toggleItem);
+  const multi = useDesign((s) => s.multiSelect);
   const { w, h, d } = item.size;
   const outline = useMemo(() => new EdgesGeometry(new BoxGeometry(w * S, h * S, d * S)), [w, h, d]);
   useEffect(() => () => outline.dispose(), [outline]);
@@ -659,7 +661,10 @@ function ModelItemMesh({
           e.stopPropagation();
           // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203).
           if (drag.clicked()) return;
-          selectItem(item.id);
+          // Select mode or a modifier adds the model to the selection, as for a piece (ADR-159, ADR-246).
+          const n = e.nativeEvent;
+          if (multi || n.shiftKey || n.ctrlKey || n.metaKey) toggleItem(item.id);
+          else selectItem(item.id);
         }}
       >
         {clone && ms ? (

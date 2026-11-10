@@ -33,6 +33,8 @@ export function ProjectHistory() {
 function HistoryForProject() {
   const project = useDesign((s) => s.project)!;
   const dirtyAt = useDesign((s) => s.projectDirtyAt);
+  // Project undo waits while a piece is open in the piece editor (ADR-245).
+  const inPieceEditor = useDesign((s) => !!s.editingItemId);
   const id = project.id;
   const [steps, setSteps] = useState(false);
   const [versions, setVersions] = useState<ProjectVersion[]>([]);
@@ -101,7 +103,8 @@ function HistoryForProject() {
         <button
           type="button"
           className="btn outline"
-          disabled={busy}
+          disabled={busy || inPieceEditor}
+          title={inPieceEditor ? t('Go back to the project to use its edit history') : undefined}
           onClick={() => setSteps(true)}
         >
           {t('Edit history')}

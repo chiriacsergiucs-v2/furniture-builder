@@ -690,9 +690,11 @@ export function RoomPlan({
                 {tr(pc.item.design.name)}
               </text>
               {/* The badge shows for any lock: place, turn or a size (ADR-095, ADR-171). */}
-              {(locked || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0) && (
-                <LockBadge x={b.x} y={b.z} size={size} />
-              )}
+              {(locked ||
+                isTurnLocked(pc.item) ||
+                lockedAxes(pc.item).length > 0 ||
+                pc.item.boardsLocked ||
+                pc.item.constructionLocked) && <LockBadge x={b.x} y={b.z} size={size} />}
             </g>
           );
         })}

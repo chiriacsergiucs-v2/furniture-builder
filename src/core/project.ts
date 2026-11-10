@@ -917,6 +917,18 @@ export function linkItemOrigin(
 }
 
 /** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
+/**
+ * Why removing the pieces `ids` is refused (ADR-243), or null: one of them has its placement locked (ADR-095). The
+ * reason names the piece; the user unlocks it first.
+ */
+export function removeBlocked(project: Project, ids: readonly string[]): string | null {
+  const gone = new Set(ids);
+  const own = project.items.find((it) => gone.has(it.id) && it.locked);
+  return own
+    ? t('{name} is locked — unlock it to remove it.', { name: pieceName(project, own.id) })
+    : null;
+}
+
 export function removeProjectItem(project: Project, id: string): Project {
   const items = project.items
     .filter((i) => i.id !== id)

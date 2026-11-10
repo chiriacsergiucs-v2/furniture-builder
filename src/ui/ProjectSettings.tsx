@@ -34,6 +34,8 @@ export function ProjectSettingsPanel() {
   const [msg, setMsg] = useState<string | null>(null);
   const s = project.settings ?? {};
   const apply = (key: SettingKey, value: Parameters<typeof set>[1]) => {
+    // A notice left by an earlier action is not this one's refusal (ADR-244).
+    useDesign.setState({ notice: null });
     const applied = set(key, value);
     // Refused because it would resize a size-locked piece (ADR-122): the store's notice says which.
     const refused = useDesign.getState().notice;
