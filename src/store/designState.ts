@@ -475,6 +475,8 @@ export interface State {
   dropModel: (id: string, dx: number, dz: number, snap: boolean) => void;
   /** Setting a plan picture's scale (ADR-208): the picture points tapped so far, or null when not setting it. */
   scalingPlan: Pt[] | null;
+  /** The second scale tap hit the first one's point: waiting for a different point (ADR-257). */
+  scaleSamePoint: boolean;
   startScalePlan: () => void;
   /** A tap on the plan while setting the scale, as a picture pixel; the second tap sets the picture's two points. */
   addScalePoint: (p: Pt) => void;

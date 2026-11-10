@@ -464,6 +464,7 @@ export const useDesign = create<State>((rawSet, get) => {
     placingItemId: null,
     drawingRoom: null,
     scalingPlan: null,
+    scaleSamePoint: false,
     templateEdit: null,
     notice: null,
 

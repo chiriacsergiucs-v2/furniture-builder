@@ -264,6 +264,10 @@ export const ru_project = {
   'More actions': 'Другие действия',
   Linked: 'Связанная',
   'Move alone': 'Двигать отдельно',
+  'Tap a different point.': 'Коснитесь другой точки.',
+  'Replace picture for the floor': 'Заменить картинку пола',
+  'The prepared picture was not applied because the floor background changed.':
+    'Подготовленная картинка не применена: фон пола изменился.',
   'Turn ↺': 'Повернуть ↺',
   'Turn ↻': 'Повернуть ↻',
   'Add a piece to the project': 'Добавить изделие в проект',

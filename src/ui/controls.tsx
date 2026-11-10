@@ -28,6 +28,7 @@ export function MmField({
   disabled = false,
   trailing,
   commitSame = false,
+  error,
 }: {
   label: string;
   value: number;
@@ -45,6 +46,8 @@ export function MmField({
   trailing?: ReactNode;
   /** Commit the shown value even when it equals `value` (a group whose pieces differ, ADR-253). */
   commitSame?: boolean;
+  /** A problem with the saved value, named at this field (a room size, ADR-257); the range error comes first. */
+  error?: string;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -56,6 +59,7 @@ export function MmField({
   }
   const parsed = Number(text);
   const valid = text.trim() !== '' && Number.isInteger(parsed) && parsed >= min && parsed <= max;
+  const problem = !valid ? t('Whole number from {min} to {max}.', { min, max }) : error;
   const commit = () => {
     if (valid && (parsed !== value || commitSame)) {
       onChange(parsed);
@@ -73,7 +77,7 @@ export function MmField({
   return (
     <div className="field">
       {withInfo(<label htmlFor={id}>{label}</label>, info)}
-      <div className={`mm ${valid ? '' : 'invalid'} ${trailing ? 'with-trailing' : ''}`}>
+      <div className={`mm ${problem ? 'invalid' : ''} ${trailing ? 'with-trailing' : ''}`}>
         <button
           type="button"
           className="step"
@@ -88,8 +92,8 @@ export function MmField({
           inputMode="numeric"
           value={text}
           disabled={disabled}
-          aria-invalid={!valid}
-          aria-describedby={!valid ? `${id}-err` : undefined}
+          aria-invalid={!!problem}
+          aria-describedby={problem ? `${id}-err` : undefined}
           onChange={(e) => setText(e.target.value.replace(/[^\d.,-]/g, ''))}
           onBlur={commit}
           onKeyDown={(e) => {
@@ -110,12 +114,12 @@ export function MmField({
         </button>
         {trailing}
       </div>
-      {!valid && (
-        <p className="field-error" id={`${id}-err`}>
-          {t('Whole number from {min} to {max}.', { min, max })}
+      {problem && (
+        <p className="field-error" id={`${id}-err`} role={valid ? 'alert' : undefined}>
+          {problem}
         </p>
       )}
-      {valid && hint && <p className="hint">{hint}</p>}
+      {!problem && hint && <p className="hint">{hint}</p>}
     </div>
   );
 }

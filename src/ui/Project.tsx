@@ -57,6 +57,7 @@ import {
   DEFAULT_ROOM_HEIGHT,
   keepWallFinishes,
   outlineIssues,
+  checkRoomSizes,
   setWallLength,
   shapeOutline,
   suggestRoomSize,
@@ -1468,6 +1469,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const cancelDraw = useDesign((s) => s.cancelDrawRoom);
   // Setting the plan picture's scale (ADR-208): two taps on the plan.
   const scaling = useDesign((s) => s.scalingPlan);
+  const scaleSame = useDesign((s) => s.scaleSamePoint);
   const cancelScale = useDesign((s) => s.cancelScalePlan);
   const hasPicture = useDesign((s) => !!s.project?.planPicture);
   useEffect(() => {
@@ -1500,6 +1502,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
           <span>
             {t('Tap a corner of the plan, then the other end of a wall you know.')}{' '}
             {t('{n} of 2', { n: scaling.length })}
+            {scaleSame ? ` ${t('Tap a different point.')}` : ''}
           </span>
           <button type="button" className="btn sm ghost" onClick={cancelScale}>
             {t('Cancel')}
@@ -1890,6 +1893,13 @@ function RoomSection() {
     if (room) make(shape, next);
   };
   const issues = room ? outlineIssues(room.outline) : [];
+  // A ready shape's sizes are checked by field and named there (ADR-193 item 2, ADR-257); the outline is still set.
+  const sizeIssues = room?.shape ? checkRoomSizes(shape, shown, room.height) : [];
+  const sizeError = (f: string) =>
+    sizeIssues
+      .filter((i) => i.field === f)
+      .map((i) => i.message)
+      .join(' ') || undefined;
   const walls = room ? room.outline.map((_, i) => i) : [];
   return (
     <section className="section room" aria-label={t('Room')}>
@@ -1963,6 +1973,7 @@ function RoomSection() {
                       min={500}
                       max={30000}
                       onChange={(v) => setSize('width', v)}
+                      error={sizeError('width')}
                     />
                     <MmField
                       label={t('Room depth')}
@@ -1970,6 +1981,7 @@ function RoomSection() {
                       min={500}
                       max={30000}
                       onChange={(v) => setSize('depth', v)}
+                      error={sizeError('depth')}
                     />
                     {shape !== 'rectangle' && (
                       <>
@@ -1985,6 +1997,7 @@ function RoomSection() {
                           min={100}
                           max={20000}
                           onChange={(v) => setSize('cutWidth', v)}
+                          error={sizeError('cutWidth')}
                         />
                         <MmField
                           label={
@@ -1998,6 +2011,7 @@ function RoomSection() {
                           min={100}
                           max={20000}
                           onChange={(v) => setSize('cutDepth', v)}
+                          error={sizeError('cutDepth')}
                         />
                         {shape !== 'l-shape' && (
                           <MmField
@@ -2010,6 +2024,7 @@ function RoomSection() {
                             min={0}
                             max={20000}
                             onChange={(v) => setSize('offset', v)}
+                            error={sizeError('offset')}
                           />
                         )}
                       </>
