@@ -20,6 +20,9 @@ import { useUi } from '../../store/uiStore';
 import { LanguageMenu } from './LanguageMenu';
 import { t } from '../../core/i18n';
 
+const FILE_FAILED = () =>
+  t('The file could not be made: pictures or 3D models could not be read from this browser.');
+
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
  * the clean-up of unused pictures since G-059), Feature Research and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
@@ -133,17 +136,22 @@ export function MoreMenu({
             {inProject ? (
               <button
                 type="button"
-                onClick={run(async () =>
-                  download(
-                    `${fileName(project.name)}-project.json`,
-                    JSON.stringify(
-                      await withPictures(await withModels(project), pictureHolders(project)),
-                      null,
-                      2,
-                    ),
-                    'application/json',
-                  ),
-                )}
+                onClick={run(async () => {
+                  // A file that cannot be made is said (ADR-263), never a silent nothing.
+                  try {
+                    download(
+                      `${fileName(project.name)}-project.json`,
+                      JSON.stringify(
+                        await withPictures(await withModels(project), pictureHolders(project)),
+                        null,
+                        2,
+                      ),
+                      'application/json',
+                    );
+                  } catch {
+                    setNotice({ ok: false, text: FILE_FAILED() });
+                  }
+                })}
               >
                 <Icon name="download" />
                 {t('Project file')} <small>{t('to open on another device')}</small>
@@ -160,13 +168,17 @@ export function MoreMenu({
               <>
                 <button
                   type="button"
-                  onClick={run(async () =>
-                    download(
-                      `${fileName(design.name)}.json`,
-                      JSON.stringify(await withPictures(design, [design]), null, 2),
-                      'application/json',
-                    ),
-                  )}
+                  onClick={run(async () => {
+                    try {
+                      download(
+                        `${fileName(design.name)}.json`,
+                        JSON.stringify(await withPictures(design, [design]), null, 2),
+                        'application/json',
+                      );
+                    } catch {
+                      setNotice({ ok: false, text: FILE_FAILED() });
+                    }
+                  })}
                 >
                   <Icon name="download" />
                   {t('Design file')} <small>{t('to open on another device')}</small>

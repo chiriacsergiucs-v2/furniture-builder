@@ -140,7 +140,7 @@ export const ru_account = {
     'Этот общий элемент не является корректным изделием или шаблоном, поэтому его нельзя открыть.',
   '{kind} · {w} × {h} × {d} mm · {n} parts. Open a copy to save it on this device; the original is not changed.':
     '{kind} · {w} × {h} × {d} мм · {n|# деталь|# детали|# деталей}. Откройте копию, чтобы сохранить её на этом устройстве; оригинал не изменится.',
-  'It has problems to fix: {n} errors.':
+  'It has problems to fix: {n|# error|# errors}.':
     'Есть проблемы, которые нужно исправить: {n|# ошибка|# ошибки|# ошибок}.',
   'Front view': 'Вид спереди',
   'Front view of {name}': 'Вид спереди: {name}',

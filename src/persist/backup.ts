@@ -375,16 +375,29 @@ async function existing() {
 }
 
 /** Restore files read from a folder or a .zip: new copies only, nothing overwritten (G-244). */
+/** A restore the device's storage stopped part-way (ADR-263): `done` items were restored before it. */
+export class RestoreStopped extends Error {
+  constructor(readonly done: number) {
+    super('restore stopped');
+  }
+}
+
 export async function restoreFiles(files: BackupFile[]): Promise<RestorePlan> {
   const plan = planRestore(files, await existing());
+  let done = 0;
   for (const a of plan.actions) {
-    if (a.table === 'designs') await saveDesign(a.design);
-    else if (a.table === 'projects') await saveProject(a.project);
-    else if (a.table === 'templates') await saveTemplate(a.template);
-    else {
-      await db.table(a.table).add(a.row);
-      savedRows(a.table, [a.row[keyOf(a.table)]]);
+    try {
+      if (a.table === 'designs') await saveDesign(a.design);
+      else if (a.table === 'projects') await saveProject(a.project);
+      else if (a.table === 'templates') await saveTemplate(a.template);
+      else {
+        await db.table(a.table).add(a.row);
+        savedRows(a.table, [a.row[keyOf(a.table)]]);
+      }
+    } catch {
+      throw new RestoreStopped(done);
     }
+    done++;
   }
   return plan;
 }

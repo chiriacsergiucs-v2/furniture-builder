@@ -611,6 +611,8 @@ export async function unusedImageIds(
     ...(await database.projects.toArray()),
     ...(await database.templates.toArray()),
     ...(await database.projectTemplates.toArray()),
+    // A kept project version holds a whole project: its pictures are in use too (ADR-263).
+    ...(await database.projectVersions.toArray()),
   ]
     .map((r) => JSON.stringify(r))
     .join('\n');

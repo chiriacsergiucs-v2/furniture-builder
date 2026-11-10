@@ -453,23 +453,50 @@ function SharedLinks() {
     { id: string; name: string; stoppedAt?: string | null }[] | null
   >(null);
   const [round, setRound] = useState(0);
+  // A failed list or Stop sharing is said here (ADR-263), never hidden as "no links".
+  const [error, setError] = useState<string | null>(null);
+  const [listFailed, setListFailed] = useState(false);
   useEffect(() => {
     let live = true;
     online()
       .then((c) => c.listShares())
       .then(
-        (l) => live && setList(l),
-        () => live && setList([]),
+        (l) => {
+          if (!live) return;
+          setList(l);
+          setListFailed(false);
+        },
+        () => {
+          if (!live) return;
+          setList([]);
+          setListFailed(true);
+        },
       );
     return () => {
       live = false;
     };
   }, [round]);
   const live = (list ?? []).filter((s) => !s.stoppedAt);
-  if (!live.length) return null;
+  if (listFailed)
+    return (
+      <div className="shared-links">
+        <p className="alert error" role="alert">
+          {t('Shared links could not be loaded.')}{' '}
+          <button type="button" className="btn sm" onClick={() => setRound((n) => n + 1)}>
+            {t('Retry')}
+          </button>
+        </p>
+      </div>
+    );
+  if (!live.length && !error) return null;
   return (
     <div className="shared-links">
       <p className="hint">{t('Shared links')}</p>
+      {error && (
+        <p className="alert error" role="alert">
+          {error}
+        </p>
+      )}
       <ul className="plain">
         {live.map((s) => (
           <li key={s.id}>
@@ -478,7 +505,16 @@ function SharedLinks() {
               type="button"
               className="btn sm"
               onClick={async () => {
-                await (await online()).stopShare(s.id);
+                setError(null);
+                try {
+                  await (await online()).stopShare(s.id);
+                } catch (e) {
+                  setError(
+                    e instanceof Error && e.message
+                      ? e.message
+                      : t('Check your connection and try again.'),
+                  );
+                }
                 setRound((n) => n + 1);
               }}
             >

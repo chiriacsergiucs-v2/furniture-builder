@@ -311,7 +311,7 @@ export const ru_shell = {
   'Back up': 'Создать копию',
   'Sign in': 'Войти',
   'No backup yet.': 'Резервной копии ещё нет.',
-  'Last backup: {n} days ago.': 'Последняя копия: {n|# день|# дня|# дней} назад.',
+  'Last backup: {n|# day|# days} ago.': 'Последняя копия: {n|# день|# дня|# дней} назад.',
   Later: 'Позже',
 
   // Wizard
@@ -389,4 +389,16 @@ export const ru_shell = {
     'Проект удалён; его сохранённые версии удалить не удалось.',
   'The piece could not be deleted from this browser’s storage.':
     'Не удалось удалить изделие из хранилища этого браузера.',
+  'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.':
+    'Восстановление остановлено: хранилище браузера отказало в сохранении. До этого восстановлено: {n}.',
+  'The backup could not be made in this browser.': 'Не удалось сделать резервную копию в этом браузере.',
+  'No backup files found in {name}. Choose a backup .zip made by this app.':
+    'В {name} не найдено файлов резервной копии. Выберите .zip, сделанный этим приложением.',
+  'the chosen folder': 'выбранной папке',
+  'The copy could not be saved in this browser’s storage.':
+    'Не удалось сохранить копию в хранилище этого браузера.',
+  'The file could not be made: pictures or 3D models could not be read from this browser.':
+    'Не удалось создать файл: картинки или 3D-модели не читаются в этом браузере.',
+  'The setting could not be saved on this device.': 'Не удалось сохранить настройку на этом устройстве.',
+  'Shared links could not be loaded.': 'Не удалось загрузить общие ссылки.',
 } satisfies Record<string, string>;
