@@ -1893,12 +1893,7 @@ export const useDesign = create<State>((rawSet, get) => {
           commitProject(res.project, undefined, { amend: true });
         return;
       }
-      // The tap that places a new piece joins the step that added it, as for a template (ADR-123, ADR-245).
-      commitProject(
-        { ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) },
-        undefined,
-        { amend: true },
-      );
+      commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
     },
     stopPlacing: () => set({ placingItemId: null, placingIds: [] }),
     setRoom: (room) => {
