@@ -145,6 +145,7 @@ export function FrontEditor({
               id={`fit-${space.id}`}
               defaultValue={f.fitting ?? ''}
               key={f.fitting ?? ''}
+              maxLength={200}
               placeholder={t('Maker and type, from its datasheet')}
               onBlur={(e) => {
                 const v = e.target.value.trim();

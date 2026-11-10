@@ -25,7 +25,7 @@ import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
-import { materialKey, runHandleFor, type RunHandle } from '../core/project';
+import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../store/libraryStore';
 import { parentOf as parentSel, type Selection } from '../core/selectPath';
 import { useMediaQuery } from '../store/useMediaQuery';
@@ -654,7 +654,6 @@ function SpaceEditor({
   );
 }
 
-const BAR_SPACINGS = [96, 128, 160, 192, 224, 256, 320];
 
 /** The run handle's kind and hole spacing, read-only: the run sets them, the piece's own stay in its design (ADR-203). */
 function RunHandleNote({ handle }: { handle: RunHandle['handle'] }) {
@@ -712,7 +711,11 @@ function HandleEditor({
             <Select
               label={t('Hole centres')}
               value={String(h.holeSpacing ?? 128)}
-              options={BAR_SPACINGS.map((v) => ({
+              // The value the model uses is always an option, also when it is not in the list (ADR-256).
+              options={[
+                ...BAR_SPACINGS,
+                ...(BAR_SPACINGS.includes(h.holeSpacing ?? 128) ? [] : [h.holeSpacing ?? 128]),
+              ].map((v) => ({
                 value: String(v),
                 label: t('{n} mm', { n: v }),
               }))}

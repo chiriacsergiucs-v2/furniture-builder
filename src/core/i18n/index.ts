@@ -56,6 +56,7 @@ export async function loadDictionary(l: Lang): Promise<void> {
   RU = m.ru;
   RU_ALL = { ...m.ru, ...m.ruData };
   shapes = null;
+  namePatterns = undefined;
 }
 
 /** Russian plural form: 0 one (1, 21), 1 few (2–4, 22–24), 2 many (5–20, 25…). */
@@ -106,6 +107,31 @@ function shapeOf(text: string): { names: string[]; value: string } | undefined {
   return shapes.get(text);
 }
 
+/**
+ * Keys whose placeholders hold names, not only numbers ('Flap fitting: {name}', 'Screws: {a} to {b}'), as patterns,
+ * built once (ADR-256): the text before the first placeholder must be non-empty, so a pattern never matches everything.
+ */
+let namePatterns: { re: RegExp; names: string[]; value: string }[] | undefined;
+const escapeRe = (x: string) => x.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+function nameFill(text: string): string | undefined {
+  if (!namePatterns) {
+    namePatterns = [];
+    for (const [k, value] of Object.entries(RU_ALL)) {
+      if (/\{\w+\|/.test(k)) continue;
+      const names = [...k.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+      if (!names.length || k.indexOf('{') < 1) continue;
+      const re = new RegExp(`^${k.split(/\{\w+\}/).map(escapeRe).join('(.+?)')}$`);
+      namePatterns.push({ re, names, value });
+    }
+  }
+  for (const p of namePatterns) {
+    const m = p.re.exec(text);
+    // Each filled part is a data text too (a part's name), or the user's own words, kept as typed.
+    if (m) return format(p.value, Object.fromEntries(p.names.map((n, i) => [n, tr(m[i + 1])])), 'ru');
+  }
+  return undefined;
+}
+
 /** Russian for a data text with no entry of its own: numbers in it fill a key's placeholders, `A: B` both sides. */
 function trLoose(text: string): string | undefined {
   const nums = text.match(NUM);
@@ -114,6 +140,9 @@ function trLoose(text: string): string | undefined {
     if (s && s.names.length === nums.length)
       return format(s.value, Object.fromEntries(s.names.map((n, i) => [n, nums[i]])), 'ru');
   }
+  // Names in a key's placeholders (ADR-256).
+  const named = nameFill(text);
+  if (named !== undefined) return named;
   const at = text.indexOf(': ');
   if (at > 0) {
     const a = tr(text.slice(0, at));

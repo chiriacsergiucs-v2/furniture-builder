@@ -60,14 +60,18 @@ export function FastenersPanel() {
       {/* Rows mount once the saved list is read, so they start from it and keep focus while typing. */}
       <ul className="fasteners">
         {ready &&
-          JOINTS.map((j) => (
-            <FastenerRow
-              key={j.id}
-              joint={j}
-              count={byJoint.get(j.id) ?? 0}
-              choice={choices.find((c) => c.joint === j.id)}
-            />
-          ))}
+          JOINTS.map((j) => {
+            const c = choices.find((x) => x.joint === j.id);
+            return (
+              <FastenerRow
+                // Keyed by the saved choice: after a failed save the row shows what is really saved (ADR-256).
+                key={`${j.id}|${c?.name ?? ''}|${c?.per ?? ''}|${c?.edge ?? ''}`}
+                joint={j}
+                count={byJoint.get(j.id) ?? 0}
+                choice={c}
+              />
+            );
+          })}
       </ul>
     </Group>
   );
@@ -144,7 +148,7 @@ function FastenerRow({
             value={per}
             aria-invalid={!perOk}
             aria-describedby={!perOk ? `${id}-err` : undefined}
-            onChange={(e) => setPer(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => setPer(e.target.value.replace(/[^\d.,-]/g, ''))}
             onBlur={() => commit()}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
@@ -165,7 +169,7 @@ function FastenerRow({
             placeholder={t('Not set')}
             aria-invalid={!edgeOk}
             aria-describedby={`${id}-edge-hint`}
-            onChange={(e) => setEdge(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => setEdge(e.target.value.replace(/[^\d.,-]/g, ''))}
             onBlur={() => commit()}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
