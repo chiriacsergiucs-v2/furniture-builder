@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { t, tr } from '../core/i18n';
 import type { Project, ProjectItem, RequestTarget, RunRequest } from '../core/project';
 import type { Design, DesignVariable } from '../core/types';
@@ -234,11 +234,14 @@ function BindControl({
               value={expr}
               onChange={(e) => setExpr(e.target.value)}
               placeholder={t('e.g. bottom height + 18')}
+              aria-invalid={(!!preview && preview.value === undefined) || undefined}
+              aria-describedby={preview ? 'bind-formula-result' : undefined}
               autoFocus
             />
           </label>
           {preview && (
             <p
+              id="bind-formula-result"
               className={preview.value === undefined ? 'alert error' : 'hint'}
               role={preview.value === undefined ? 'alert' : 'status'}
             >
@@ -347,12 +350,16 @@ function VariableSection({
                   aria-label={t('Value of {name}', { name: v.name })}
                   defaultValue={v.expr}
                   key={`e-${v.id}-${v.expr}`}
+                  // The field with a problem is marked and points to it (ADR-261).
+                  aria-invalid={r.value === undefined || undefined}
+                  aria-describedby={r.value === undefined ? `var-res-${v.id}` : undefined}
                   onBlur={(e) => {
                     const x = e.target.value.trim();
                     if (x !== v.expr) update(v.id, { expr: x });
                   }}
                 />
                 <span
+                  id={`var-res-${v.id}`}
                   className={`result ${r.value === undefined ? 'error' : ''}`}
                   role={r.value === undefined ? 'alert' : undefined}
                 >
@@ -379,6 +386,8 @@ function VariableSection({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('e.g. bottom height')}
+            aria-invalid={!!msg || undefined}
+            aria-describedby={msg ? 'new-variable-problem' : undefined}
           />
         </label>
         <label className="field">
@@ -390,7 +399,7 @@ function VariableSection({
         </button>
       </div>
       {msg && (
-        <p className="alert error" role="alert">
+        <p id="new-variable-problem" className="alert error" role="alert">
           {msg}
         </p>
       )}
@@ -473,10 +482,29 @@ function ValueSets({ project }: { project: Project }) {
   const [saved, setSaved] = useState<{ name: string; project: Project } | null>(null);
   const sets = project.variableSets ?? [];
   const vars = project.variables ?? [];
+  // One tap saves one project (ADR-261): a second tap while it saves does nothing; a retry saves the same project.
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const made = useRef<{ setId: string; project: Project } | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const save = async (set: VariableSet) => {
-    const p = projectFromSet(project, set.id);
+    if (saving.current) return;
+    const p = made.current?.setId === set.id ? made.current.project : projectFromSet(project, set.id);
     if (!p) return;
-    await saveProject(p);
+    made.current = { setId: set.id, project: p };
+    saving.current = true;
+    setBusy(true);
+    try {
+      await saveProject(p);
+    } catch {
+      setFailed(set.id);
+      return;
+    } finally {
+      saving.current = false;
+      setBusy(false);
+    }
+    made.current = null;
+    setFailed(null);
     setSaved({ name: p.name, project: p });
     const keep = await askConfirm(
       t('Saved as “{name}”. Keep {set} in this project?', { name: p.name, set: set.name }),
@@ -500,7 +528,11 @@ function ValueSets({ project }: { project: Project }) {
           vars={vars}
           onChange={(patch) => updateSet(set.id, patch)}
           onRemove={() => removeSet(set.id)}
-          onSave={() => save(set)}
+          onSave={() => void save(set)}
+          busy={busy}
+          saveError={
+            failed === set.id ? t('The project could not be saved in this browser’s storage.') : null
+          }
         />
       ))}
       <button type="button" className="btn outline" onClick={() => addSet()}>
@@ -520,6 +552,8 @@ function SetCard({
   onChange,
   onRemove,
   onSave,
+  busy = false,
+  saveError = null,
 }: {
   project: Project;
   set: VariableSet;
@@ -527,6 +561,10 @@ function SetCard({
   onChange: (patch: Partial<Pick<VariableSet, 'name' | 'values' | 'origin'>>) => void;
   onRemove: () => void;
   onSave: () => void;
+  /** A save is under way: the button is off (ADR-261). */
+  busy?: boolean;
+  /** Why the last save failed, said under the card (ADR-261). */
+  saveError?: string | null;
 }) {
   const progress = setProgress(project, set);
   const complete = setComplete(project, set);
@@ -572,6 +610,8 @@ function SetCard({
               <span className="name">{v.name}</span>
               <input
                 aria-label={t('{set}: value of {name}', { set: set.name, name: v.name })}
+                aria-invalid={(has && r?.value === undefined) || undefined}
+                aria-describedby={has && r?.value === undefined ? `set-res-${set.id}-${v.id}` : undefined}
                 defaultValue={set.values[v.id] ?? ''}
                 key={`${set.id}-${v.id}-${set.values[v.id] ?? ''}`}
                 placeholder={t('not set')}
@@ -581,7 +621,11 @@ function SetCard({
                     onChange({ values: { ...set.values, [v.id]: x } });
                 }}
               />
-              <span className={`result ${has && r?.value === undefined ? 'error' : ''}`}>
+              <span
+                id={`set-res-${set.id}-${v.id}`}
+                className={`result ${has && r?.value === undefined ? 'error' : ''}`}
+                role={has && r?.value === undefined ? 'alert' : undefined}
+              >
                 {has && r ? evaluatedText(r) : ''}
               </span>
             </li>
@@ -623,7 +667,7 @@ function SetCard({
           type="button"
           className="btn outline"
           onClick={onSave}
-          disabled={!complete}
+          disabled={!complete || busy}
           title={complete ? undefined : t('Set every value first')}
         >
           {t('Save as separate project')}
@@ -635,6 +679,11 @@ function SetCard({
       {!complete && (
         <p className="hint">
           {t('The set draws its pieces and can be saved once every value is set.')}
+        </p>
+      )}
+      {saveError && (
+        <p className="alert error" role="alert">
+          {saveError}
         </p>
       )}
     </section>
@@ -702,6 +751,8 @@ export function VariablesStrip() {
                   aria-label={t('Value of {name}', { name: v.name })}
                   defaultValue={v.expr}
                   key={`${v.id}-${v.expr}`}
+                  aria-invalid={r.value === undefined || undefined}
+                  aria-describedby={r.value === undefined ? `strip-res-${v.id}` : undefined}
                   onBlur={(e) => {
                     const x = e.target.value.trim();
                     if (x !== v.expr) update(v.id, { expr: x });
@@ -710,7 +761,11 @@ export function VariablesStrip() {
                     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                   }}
                 />
-                <span className={`result ${r.value === undefined ? 'error' : ''}`}>
+                <span
+                  id={`strip-res-${v.id}`}
+                  className={`result ${r.value === undefined ? 'error' : ''}`}
+                  role={r.value === undefined ? 'alert' : undefined}
+                >
                   {evaluatedText(r)}
                 </span>
               </li>

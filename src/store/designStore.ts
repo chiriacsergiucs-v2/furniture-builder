@@ -354,6 +354,8 @@ export const useDesign = create<State>((rawSet, get) => {
       ...(prev && !amend
         ? {
             projectPast: [...get().projectPast, prev].slice(-HISTORY),
+            projectHistoryTrimmed:
+              get().projectHistoryTrimmed || get().projectPast.length + 1 > HISTORY,
             projectPastNames: [...get().projectPastNames, name ?? describeChange(prev, next)].slice(
               -HISTORY,
             ),
@@ -456,6 +458,7 @@ export const useDesign = create<State>((rawSet, get) => {
     drillItemId: null,
     projectDirtyAt: 0,
     projectPast: [],
+    projectHistoryTrimmed: false,
     projectFuture: [],
     projectPastNames: [],
     projectFutureNames: [],
@@ -485,6 +488,7 @@ export const useDesign = create<State>((rawSet, get) => {
         selectedItemId: null,
         drillItemId: null,
         projectPast: [],
+    projectHistoryTrimmed: false,
         projectFuture: [],
         projectPastNames: [],
         projectFutureNames: [],
@@ -526,6 +530,7 @@ export const useDesign = create<State>((rawSet, get) => {
         highlight: [],
         projectDirtyAt: 0,
         projectPast: [],
+    projectHistoryTrimmed: false,
         projectFuture: [],
         projectPastNames: [],
         projectFutureNames: [],
@@ -571,8 +576,8 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ notice: res.reason });
         return res.reason;
       }
-      commitProject(res?.project ?? next);
-      return null;
+      // A lock can refuse the commit too: that reason comes back (ADR-261).
+      return commitProject(res?.project ?? next);
     },
     moveItemBy: (id, dxMm, dzMm, step, opts) => {
       const p = get().project;
@@ -1047,6 +1052,7 @@ export const useDesign = create<State>((rawSet, get) => {
       // Every step made inside becomes one: the history as it was, plus the state before (ADR-123, G-157).
       set({
         projectPast: [...past, start].slice(-HISTORY),
+        projectHistoryTrimmed: get().projectHistoryTrimmed || past.length + 1 > HISTORY,
         projectPastNames: [...names, name].slice(-HISTORY),
         projectFuture: [],
         projectFutureNames: [],

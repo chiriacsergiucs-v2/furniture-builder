@@ -477,6 +477,8 @@ export interface State {
   scalingPlan: Pt[] | null;
   /** The second scale tap hit the first one's point: waiting for a different point (ADR-257). */
   scaleSamePoint: boolean;
+  /** The project's history dropped its oldest step (100 kept, ADR-261): its first row is not the project as opened. */
+  projectHistoryTrimmed: boolean;
   startScalePlan: () => void;
   /** A tap on the plan while setting the scale, as a picture pixel; the second tap sets the picture's two points. */
   addScalePoint: (p: Pt) => void;

@@ -266,6 +266,7 @@ export const ru_project = {
   'Move alone': 'Двигать отдельно',
   '{name}: {message}': '{name}: {message}',
   'Prices could not be read': 'Не удалось прочитать цены',
+  'Earliest kept step': 'Самый ранний сохранённый шаг',
   'An amount, for example 12.50': 'Сумма, например 12.50',
   'A number above 0, for example 1 or 0.5.': 'Число больше 0, например 1 или 0.5.',
   'The prices could not be saved on this device.': 'Не удалось сохранить цены на этом устройстве.',

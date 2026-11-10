@@ -383,4 +383,10 @@ export const ru_shell = {
   Collapsed: 'Свёрнута',
   Half: 'Наполовину',
   'Full screen': 'На весь экран',
+  'The project could not be deleted from this browser’s storage.':
+    'Не удалось удалить проект из хранилища этого браузера.',
+  'The project was deleted; its kept versions could not be deleted.':
+    'Проект удалён; его сохранённые версии удалить не удалось.',
+  'The piece could not be deleted from this browser’s storage.':
+    'Не удалось удалить изделие из хранилища этого браузера.',
 } satisfies Record<string, string>;

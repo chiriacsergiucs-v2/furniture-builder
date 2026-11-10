@@ -186,8 +186,9 @@ export function ProjectPanel({
       ))
     )
       return;
-    update(item.id, { design: structuredClone(d) });
-    setLibMsg(t('Updated from the saved piece.'));
+    // Said as done only when the store took it (ADR-261); a refusal shows its reason.
+    const why = update(item.id, { design: structuredClone(d) });
+    setLibMsg(why ? tr(why) : t('Updated from the saved piece.'));
   };
 
   if (mode === 'configure')
@@ -1603,10 +1604,15 @@ export function AddPieceList({
     return true;
   };
   const [saved, setSaved] = useState<StoredDesign[]>([]);
+  // A read the device refuses is said, not shown as an empty list (ADR-261).
+  const [readFailed, setReadFailed] = useState(false);
   useEffect(() => {
     listDesigns()
       .then(setSaved)
-      .catch(() => setSaved([]));
+      .catch(() => {
+        setSaved([]);
+        setReadFailed(true);
+      });
   }, []);
   // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
   const insertTemplate = useDesign((s) => s.insertTemplate);
@@ -1615,10 +1621,18 @@ export function AddPieceList({
   useEffect(() => {
     listProjectTemplates()
       .then(setProjectTemplates)
-      .catch(() => setProjectTemplates([]));
+      .catch(() => {
+        setProjectTemplates([]);
+        setReadFailed(true);
+      });
   }, []);
   return (
     <>
+      {readFailed && (
+        <p className="alert error" role="alert">
+          {t('Saved work could not be read from this browser.')}
+        </p>
+      )}
       {onWizard && (
         <button
           type="button"

@@ -163,9 +163,28 @@ export function ProjectsPage({
             cancelFirst: true,
           },
         ));
-      await deleteProject(r.id);
-      if (dropVersions) await deleteProjectVersions(versions.map((v) => v.id));
-    } else await deleteDesign(r.id);
+      // A failed delete is said; the list is read again either way (ADR-261).
+      try {
+        await deleteProject(r.id);
+      } catch {
+        setMsg({
+          ok: false,
+          text: t('The project could not be deleted from this browser’s storage.'),
+        });
+        refresh();
+        return;
+      }
+      if (dropVersions)
+        await deleteProjectVersions(versions.map((v) => v.id)).catch(() =>
+          setMsg({
+            ok: false,
+            text: t('The project was deleted; its kept versions could not be deleted.'),
+          }),
+        );
+    } else
+      await deleteDesign(r.id).catch(() =>
+        setMsg({ ok: false, text: t('The piece could not be deleted from this browser’s storage.') }),
+      );
     refresh();
   };
   const when = (iso: string) => new Date(iso).toLocaleDateString();
