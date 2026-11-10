@@ -410,7 +410,14 @@ for (const width of [1440, 375]) {
   check(
     width,
     'cleanup: 1 unused picture deleted',
-    await page.getByText('1 unused picture deleted.').isVisible(),
+    // The deletion is asynchronous: wait for its message instead of reading it at once.
+    await page
+      .getByText('1 unused picture deleted.')
+      .waitFor({ timeout: 8000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);

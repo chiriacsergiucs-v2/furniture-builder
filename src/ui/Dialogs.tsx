@@ -81,8 +81,10 @@ export function Dialog({
    */
   inSheet?: boolean;
 }) {
+  // The sheet shows only in Compose (ADR-241: the Cut list place hides it), so elsewhere the modal is used.
+  const compose = useUi((s) => s.mode === 'compose');
   const slot = typeof document === 'undefined' ? null : document.getElementById('sheet-slot');
-  const sheet = !!inSheet && !!slot && slot.closest('main')?.hidden === false;
+  const sheet = !!inSheet && compose && !!slot && slot.closest('main')?.hidden === false;
   if (sheet)
     return open ? (
       <SheetDialog title={title} info={info} footer={footer} onClose={onClose} slot={slot!}>
