@@ -126,15 +126,23 @@ export function cardCorner(
   const cx = sel ? sel.left + sel.width / 2 : frameW / 2;
   const cy = sel ? sel.top + sel.height / 2 : frameH / 2;
   let best = { left: xs[1], top: ys[0] },
+    bestSel = Infinity,
     bestCover = Infinity,
     bestDist = -1;
   for (const top of ys)
     for (const left of xs) {
       const c = { left, top, width: cardW, height: cardH };
-      const cover = avoid.reduce((n, b) => n + overlap(c, b), 0);
+      // The selected part first: no amount of other boxes uncovered is worth covering it.
+      const onSel = sel ? overlap(c, sel) : 0;
+      const cover = avoid.slice(1).reduce((n, b) => n + overlap(c, b), 0);
       const dist = Math.hypot(left + cardW / 2 - cx, top + cardH / 2 - cy);
-      if (cover < bestCover - 1 || (Math.abs(cover - bestCover) <= 1 && dist > bestDist)) {
+      const better =
+        onSel < bestSel - 1 ||
+        (Math.abs(onSel - bestSel) <= 1 &&
+          (cover < bestCover - 1 || (Math.abs(cover - bestCover) <= 1 && dist > bestDist)));
+      if (better) {
         best = { left, top };
+        bestSel = onSel;
         bestCover = cover;
         bestDist = dist;
       }
