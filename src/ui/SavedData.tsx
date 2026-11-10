@@ -160,7 +160,7 @@ export function SavedDataPanel() {
               : t('No backup folder chosen yet.')}{' '}
             {t('Backups run after each change while the app is open, one file per item.')}
           </p>
-          <div className="btn-row">
+          <div className="btn-row backup-actions">
             <button
               type="button"
               className="btn"
@@ -244,7 +244,7 @@ export function SavedDataPanel() {
             })}
           </p>
         ))}
-      <div className="btn-row">
+      <div className="btn-row backup-actions">
         {canFolder && (
           <button
             type="button"
