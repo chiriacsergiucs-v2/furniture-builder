@@ -10,7 +10,11 @@ import {
 import { t } from '../core/i18n';
 import { Icon } from './icons';
 
-/** Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet. */
+/**
+ * Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet.
+ * What is typed stays on screen until it is valid or Escape restores the saved value (ADR-253, ADR-254, as ADR-199):
+ * an invalid draft keeps its error after blur; "." and "," stay in the text, so "2.5" is refused, never read as 25.
+ */
 export function MmField({
   label,
   value,
@@ -23,6 +27,7 @@ export function MmField({
   info,
   disabled = false,
   trailing,
+  commitSame = false,
 }: {
   label: string;
   value: number;
@@ -38,6 +43,8 @@ export function MmField({
   disabled?: boolean;
   /** A control after the field, inside its box (the ƒ bind button, ADR-166). */
   trailing?: ReactNode;
+  /** Commit the shown value even when it equals `value` (a group whose pieces differ, ADR-253). */
+  commitSame?: boolean;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -50,14 +57,19 @@ export function MmField({
   const parsed = Number(text);
   const valid = text.trim() !== '' && Number.isInteger(parsed) && parsed >= min && parsed <= max;
   const commit = () => {
-    if (valid && parsed !== value) {
+    if (valid && (parsed !== value || commitSame)) {
       onChange(parsed);
       // If the parent refuses the edit, display its authoritative value (ADR-199).
       // An accepted update supplies a new value on the next render, as for an external edit.
       setText(String(value));
-    } else if (!valid) setText(String(value));
+    }
+    // An invalid draft stays, marked, until it is fixed or Escape restores the value (ADR-253).
   };
-  const bump = (d: number) => onChange(Math.min(max, Math.max(min, value + d)));
+  // The steppers step from the stored value and clear any draft.
+  const bump = (d: number) => {
+    setText(String(value));
+    onChange(Math.min(max, Math.max(min, value + d)));
+  };
   return (
     <div className="field">
       {withInfo(<label htmlFor={id}>{label}</label>, info)}
@@ -78,7 +90,7 @@ export function MmField({
           disabled={disabled}
           aria-invalid={!valid}
           aria-describedby={!valid ? `${id}-err` : undefined}
-          onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
+          onChange={(e) => setText(e.target.value.replace(/[^\d.,-]/g, ''))}
           onBlur={commit}
           onKeyDown={(e) => {
             // Enter leaves the field; the blur commits, once (committing here too made two undo steps).

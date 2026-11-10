@@ -1172,7 +1172,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const res = resizeGroup(p, g.itemIds, key, value, split);
       if (res.reason) return res.reason;
       if (res.project !== p) commitProject(res.project, t('Resize {name}', { name: g.name }));
-      return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
+      return res.kept.length ? t('Kept: {list}.', { list: res.kept.join(', ') }) : '';
     },
     replaceDesign: (d) => {
       const before = get().design;

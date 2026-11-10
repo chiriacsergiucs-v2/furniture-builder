@@ -3,6 +3,7 @@ import { RoomFront, RoomPlan } from './RoomDrawings';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { bedSizeFields, sizeFields } from '../core/pieceSize';
 import { touchingRun } from '../core/arrange';
 import { identicalPieces, linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
@@ -841,6 +842,11 @@ function PieceMenu({
   };
   const [msg, setMsg] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  // The sizes this piece shows (a bed: its mattress; a panel: no depth), for Lock {axis} (ADR-253).
+  const lockableAxes = useMemo(() => {
+    const bed = bedSizeFields(item.design.product);
+    return (bed.length ? bed : sizeFields(item.design.product)).map((f) => f.key);
+  }, [item.design.product]);
   const run = useMemo(
     () =>
       touchingRun(
@@ -961,6 +967,8 @@ function PieceMenu({
           {!isSizeLocked(item) &&
             SIZE_AXES.map((axis) => {
               const on = (item.sizeLocks ?? []).includes(axis);
+              // Only the sizes the piece shows are offered (ADR-253); a stored lock stays unlockable.
+              if (!on && !lockableAxes.includes(axis)) return null;
               const label = { width: t('Width'), height: t('Height'), depth: t('Depth') }[axis];
               return (
                 <button

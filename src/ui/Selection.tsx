@@ -370,6 +370,7 @@ function GroupSize({
             min={1}
             max={20000}
             hint={f.differs ? t('Pieces differ') : undefined}
+            commitSame={f.differs}
             onChange={(v) => say(resize(group.id, f.key, v, split) || null)}
           />
         ))}

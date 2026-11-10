@@ -224,6 +224,7 @@ export const ru_editors = {
   '{p|# piece|# pieces} and {m|# 3D model|# 3D models} selected':
     'Выбрано: {p|# изделие|# изделия|# изделий} и {m|# 3D-модель|# 3D-модели|# 3D-моделей}',
   '3D models are not grouped.': '3D-модели не объединяются в группу.',
+  'Kept: {list}.': 'Сохранено: {list}.',
   'Group name': 'Название группы',
   'Type a name for the group.': 'Введите название группы.',
   'Rename the group': 'Переименовать группу',
