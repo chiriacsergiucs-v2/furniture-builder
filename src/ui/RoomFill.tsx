@@ -47,7 +47,7 @@ import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { RoomFeatures } from './RoomFeatures';
-import { Field, Problems } from './WallFill';
+import { FillFooter, Field, MixWarnings, Problems, ResultProblems, SaveError } from './fillParts';
 
 type StepId = 'room' | 'walls' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -259,21 +259,7 @@ function MixCard({
         {m.estimate.missing.length > 0 &&
           ` · ${t('{n|# line|# lines} without a price', { n: m.estimate.missing.length })}`}
       </span>
-      {m.warnings.length > 0 && (
-        <ul className="wf-warnings">
-          {m.warnings.slice(0, 3).map((w, i) => (
-            <li key={i} className="alert warning">
-              <Icon name="alert-triangle" className="sm" />
-              <span>{w.message}</span>
-            </li>
-          ))}
-          {m.warnings.length > 3 && (
-            <li className="hint">
-              {t('…and {n} more in the project.', { n: m.warnings.length - 3 })}
-            </li>
-          )}
-        </ul>
-      )}
+      <MixWarnings warnings={m.warnings} />
       <button type="button" className="btn sm primary" onClick={onUse}>
         {label}
       </button>
@@ -727,12 +713,7 @@ function RoomFill({
               </span>
             </p>
           )}
-          {result.problems.map((p, i) => (
-            <p key={i} className={`alert ${p.severity}`} role="status">
-              <Icon name={p.severity === 'error' ? 'alert-circle' : 'info'} className="sm" />
-              <span>{p.message}</span>
-            </p>
-          ))}
+          <ResultProblems problems={result.problems} />
           {result.mixes.length > 0 && (
             <ul className="wz-cards wf-cards">
               {result.mixes.map((m) => (
@@ -746,43 +727,28 @@ function RoomFill({
               ))}
             </ul>
           )}
-          {saveError && (
-            <p className="alert error" role="alert">
-              <Icon name="alert-circle" className="sm" />
-              <span>{saveError}</span>
-            </p>
-          )}
+          <SaveError message={saveError} />
         </section>
       )}
-      <div className="wizard-footer">
-        <button
-          type="button"
-          className="btn"
-          disabled={step === 'room' || (step === 'walls' && !!projectRoom)}
-          // Back to Suggestions with nothing applied yet makes them from the typed answers (ADR-193).
-          onClick={() =>
-            step === 'refine' && !applied
-              ? suggest()
-              : go(step === 'refine' ? 'mixes' : step === 'mixes' ? 'walls' : 'room')
-          }
-        >
-          {t('Back')}
-        </button>
-        <span className="wz-spacer" />
-        <button type="button" className="btn ghost" onClick={onClose}>
-          {t('Cancel')}
-        </button>
-        {/* The step's primary action is the form's submit, so Enter does it (ADR-193). */}
-        <button type="submit" className="btn primary">
-          {step === 'room'
+      <FillFooter
+        backDisabled={step === 'room' || (step === 'walls' && !!projectRoom)}
+        // Back to Suggestions with nothing applied yet makes them from the typed answers (ADR-193).
+        onBack={() =>
+          step === 'refine' && !applied
+            ? suggest()
+            : go(step === 'refine' ? 'mixes' : step === 'mixes' ? 'walls' : 'room')
+        }
+        onClose={onClose}
+        submit={
+          step === 'room'
             ? t('Next')
             : step === 'walls'
               ? t('Show suggestions')
               : step === 'mixes'
                 ? t('Refine')
-                : t('Suggest again')}
-        </button>
-      </div>
+                : t('Suggest again')
+        }
+      />
     </form>
   );
 }

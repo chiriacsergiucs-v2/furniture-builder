@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { t, tr } from '../core/i18n';
 import type { Project, ProjectItem, RequestTarget, RunRequest } from '../core/project';
 import type { Design, DesignVariable } from '../core/types';
@@ -262,15 +262,35 @@ export function VariablesPanel({ scope = 'project' }: { scope?: 'project' | 'des
 }
 
 /** The open piece's own variables (ADR-210): its sizes bind to them with the ƒ button beside each size. */
-function DesignVariables() {
-  const design = useDesign((s) => s.design);
-  const add = useDesign((s) => s.addDesignVariable);
-  const update = useDesign((s) => s.updateDesignVariable);
-  const remove = useDesign((s) => s.deleteDesignVariable);
+/**
+ * The variables of a piece or of the project (ADR-166, ADR-210): one list, one form, the same checks. Formula fields
+ * keep the full keyboard (ADR-195: no `inputMode`).
+ */
+function VariableSection({
+  headId,
+  intro,
+  vars,
+  add,
+  update,
+  remove,
+  usersOf,
+  usedLabel,
+  children,
+}: {
+  headId: string;
+  intro: string;
+  vars: DesignVariable[];
+  add: (name: string, expr: string) => void;
+  update: (id: string, patch: { name?: string; expr?: string }) => void;
+  remove: (id: string) => void;
+  /** What uses the variable, named for the delete question. */
+  usersOf: (id: string) => string[];
+  usedLabel: (id: string) => string;
+  children?: ReactNode;
+}) {
   const [name, setName] = useState('');
   const [expr, setExpr] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const vars: DesignVariable[] = design.variables ?? [];
   const ev = evaluateVariables(vars);
   const problem = nameProblem(name, vars);
   const submit = () => {
@@ -283,11 +303,7 @@ function DesignVariables() {
   };
   const del = async (id: string) => {
     const v = vars.find((x) => x.id === id)!;
-    const users = designVariableUsers(design, id);
-    const names = [
-      ...(users.bindings ? [t('{n|# size|# sizes}', { n: users.bindings })] : []),
-      ...users.vars.map((x) => x.name),
-    ];
+    const names = usersOf(id);
     const message = names.length
       ? t('Delete “{name}”? {list} use it; they keep their current numbers.', {
           name: v.name,
@@ -297,20 +313,17 @@ function DesignVariables() {
     if (await askConfirm(message, { confirmLabel: t('Delete'), danger: true })) remove(id);
   };
   return (
-    <section className="variables section" aria-labelledby="piece-variables-head">
+    <section className="variables section" aria-labelledby={headId}>
       <div className="info-row">
-        <h3 id="piece-variables-head">{t('Variables')}</h3>
+        <h3 id={headId}>{t('Variables')}</h3>
         <InfoTip label={t('About variables')} align="start">
-          {t(
-            'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.',
-          )}
+          {intro}
         </InfoTip>
       </div>
       {vars.length > 0 && (
         <ul className="variable-list" role="list">
           {vars.map((v) => {
             const r = ev.get(v.id)!;
-            const used = designVariableUsers(design, v.id).bindings;
             return (
               <li key={v.id} className="variable-row">
                 <input
@@ -334,7 +347,6 @@ function DesignVariables() {
                   aria-label={t('Value of {name}', { name: v.name })}
                   defaultValue={v.expr}
                   key={`e-${v.id}-${v.expr}`}
-                  inputMode="decimal"
                   onBlur={(e) => {
                     const x = e.target.value.trim();
                     if (x !== v.expr) update(v.id, { expr: x });
@@ -354,143 +366,7 @@ function DesignVariables() {
                 >
                   <Icon name="trash" />
                 </button>
-                <span className="hint">
-                  {used ? t('used by {n|# size|# sizes}', { n: used }) : t('not used')}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div className="variable-add">
-        <label className="field">
-          <span className="field-label">{t('New variable')}</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('e.g. bottom height')}
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">{t('Value or formula')}</span>
-          <input
-            value={expr}
-            onChange={(e) => setExpr(e.target.value)}
-            placeholder="400"
-            inputMode="decimal"
-          />
-        </label>
-        <button type="button" className="btn outline" onClick={submit}>
-          {t('Add variable')}
-        </button>
-      </div>
-      {msg && (
-        <p className="alert error" role="alert">
-          {msg}
-        </p>
-      )}
-    </section>
-  );
-}
-
-/** Project variables and value sets (ADR-166, ADR-167). */
-function ProjectVariables() {
-  const project = useDesign((s) => s.project)!;
-  const add = useDesign((s) => s.addVariable);
-  const update = useDesign((s) => s.updateVariable);
-  const remove = useDesign((s) => s.deleteVariable);
-  const [name, setName] = useState('');
-  const [expr, setExpr] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
-  const vars = project.variables ?? [];
-  const ev = evaluateVariables(vars);
-  const problem = nameProblem(name, vars);
-  const submit = () => {
-    if (problem || !expr.trim())
-      return setMsg(problem ?? t('A variable needs a value or a formula.'));
-    add(name, expr);
-    setName('');
-    setExpr('');
-    setMsg(null);
-  };
-  const del = async (id: string) => {
-    const v = vars.find((x) => x.id === id)!;
-    const users = variableUsers(project, id);
-    const names = [
-      ...users.items.map((i) => tr(i.design.name)),
-      ...users.vars.map((x) => x.name),
-      ...users.sets,
-    ];
-    const message = names.length
-      ? t('Delete “{name}”? {list} use it; they keep their current numbers.', {
-          name: v.name,
-          list: names.join(', '),
-        })
-      : t('Delete “{name}”?', { name: v.name });
-    if (await askConfirm(message, { confirmLabel: t('Delete'), danger: true })) remove(id);
-  };
-  return (
-    <section className="variables section" aria-labelledby="variables-head">
-      <div className="info-row">
-        <h3 id="variables-head">{t('Variables')}</h3>
-        <InfoTip label={t('About variables')} align="start">
-          {t(
-            'A named number or formula. Bind a piece’s width, height, depth, a division or its position to it with the ƒ button beside the field; change the variable and every bound piece follows.',
-          )}
-        </InfoTip>
-      </div>
-      {vars.length > 0 && (
-        <ul className="variable-list" role="list">
-          {vars.map((v) => {
-            const r = ev.get(v.id)!;
-            const users = variableUsers(project, v.id);
-            return (
-              <li key={v.id} className="variable-row">
-                <input
-                  aria-label={t('Name of {name}', { name: v.name })}
-                  defaultValue={v.name}
-                  key={`n-${v.id}-${v.name}`}
-                  onBlur={(e) => {
-                    const n = e.target.value.trim();
-                    if (n === v.name) return;
-                    const p = nameProblem(
-                      n,
-                      vars.filter((x) => x.id !== v.id),
-                    );
-                    if (p) {
-                      setMsg(p);
-                      e.target.value = v.name;
-                    } else update(v.id, { name: n });
-                  }}
-                />
-                <input
-                  aria-label={t('Value of {name}', { name: v.name })}
-                  defaultValue={v.expr}
-                  key={`e-${v.id}-${v.expr}`}
-                  onBlur={(e) => {
-                    const x = e.target.value.trim();
-                    if (x !== v.expr) update(v.id, { expr: x });
-                  }}
-                />
-                <span
-                  className={`result ${r.value === undefined ? 'error' : ''}`}
-                  role={r.value === undefined ? 'alert' : undefined}
-                >
-                  {evaluatedText(r)}
-                </span>
-                <button
-                  type="button"
-                  className="btn icon ghost sm"
-                  onClick={() => del(v.id)}
-                  aria-label={t('Delete {name}', { name: v.name })}
-                >
-                  <Icon name="trash" />
-                </button>
-                <span className="hint">
-                  {users.items.length
-                    ? t('used by {n|# piece|# pieces}', { n: users.items.length })
-                    : t('not used')}
-                </span>
+                <span className="hint">{usedLabel(v.id)}</span>
               </li>
             );
           })}
@@ -518,8 +394,74 @@ function ProjectVariables() {
           {msg}
         </p>
       )}
-      {vars.length > 0 && <ValueSets project={project} />}
+      {children}
     </section>
+  );
+}
+
+/** The open piece's own variables (ADR-210). */
+function DesignVariables() {
+  const design = useDesign((s) => s.design);
+  const add = useDesign((s) => s.addDesignVariable);
+  const update = useDesign((s) => s.updateDesignVariable);
+  const remove = useDesign((s) => s.deleteDesignVariable);
+  return (
+    <VariableSection
+      headId="piece-variables-head"
+      intro={t(
+        'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.',
+      )}
+      vars={design.variables ?? []}
+      add={add}
+      update={update}
+      remove={remove}
+      usersOf={(id) => {
+        const users = designVariableUsers(design, id);
+        return [
+          ...(users.bindings ? [t('{n|# size|# sizes}', { n: users.bindings })] : []),
+          ...users.vars.map((x) => x.name),
+        ];
+      }}
+      usedLabel={(id) => {
+        const used = designVariableUsers(design, id).bindings;
+        return used ? t('used by {n|# size|# sizes}', { n: used }) : t('not used');
+      }}
+    />
+  );
+}
+
+/** Project variables and value sets (ADR-166, ADR-167). */
+function ProjectVariables() {
+  const project = useDesign((s) => s.project)!;
+  const add = useDesign((s) => s.addVariable);
+  const update = useDesign((s) => s.updateVariable);
+  const remove = useDesign((s) => s.deleteVariable);
+  const vars = project.variables ?? [];
+  return (
+    <VariableSection
+      headId="variables-head"
+      intro={t(
+        'A named number or formula. Bind a piece’s width, height, depth, a division or its position to it with the ƒ button beside the field; change the variable and every bound piece follows.',
+      )}
+      vars={vars}
+      add={add}
+      update={update}
+      remove={remove}
+      usersOf={(id) => {
+        const users = variableUsers(project, id);
+        return [
+          ...users.items.map((i) => tr(i.design.name)),
+          ...users.vars.map((x) => x.name),
+          ...users.sets,
+        ];
+      }}
+      usedLabel={(id) => {
+        const n = variableUsers(project, id).items.length;
+        return n ? t('used by {n|# piece|# pieces}', { n }) : t('not used');
+      }}
+    >
+      {vars.length > 0 && <ValueSets project={project} />}
+    </VariableSection>
   );
 }
 

@@ -30,6 +30,9 @@ describe.each(WIDTHS)('variables in a piece at %ipx (find-it, ADR-210)', (width)
     await user.click(within(section).getByRole('button', { name: 'Add variable' }));
     expect(within(section).getByLabelText('Value of w')).toBeTruthy();
     expect(within(section).getByText('not used')).toBeTruthy();
+    // Formula fields keep the full keyboard here too (ADR-195; cleanup audit 2026-11-09, item 7).
+    expect(within(section).getByLabelText('Value of w').getAttribute('inputmode')).toBeNull();
+    expect(within(section).getByLabelText('Value or formula').getAttribute('inputmode')).toBeNull();
 
     await user.click(within(settings).getByRole('button', { name: 'Bind Width to a variable' }));
     const bind = await screen.findByRole('dialog', { name: 'Bind Width' });

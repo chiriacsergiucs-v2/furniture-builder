@@ -9,6 +9,7 @@
 // the turn is read from the plan piece's name, "<name>, W by D mm", whose W and D swap after a quarter turn; and a
 // phone opens Build & Preview in 2D (ADR-144), so `to3d()` taps "3D" there too.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -98,7 +99,7 @@ for (const width of [1440, 390]) {
    *  then back). */
   const read = async () => {
     if (phone) {
-      await page.getByRole('radio', { name: /Compose/ }).click();
+      await goCompose(page);
       await page.waitForTimeout(300);
       // The view choice is kept across modes: back to the plan ("2D") to read and tap the piece there.
       const two = page.getByRole('radio', { name: '2D', exact: true });
@@ -129,7 +130,7 @@ for (const width of [1440, 390]) {
     return { x, size };
   };
   const to3d = async () => {
-    if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (phone) await goBuild(page);
     // A phone opens Build & Preview in 2D (ADR-144): tap "3D" as a user would.
     const three3d = page.getByRole('radio', { name: '3D', exact: true });
     if ((await three3d.getAttribute('aria-checked')) !== 'true') await three3d.click();
@@ -220,7 +221,7 @@ for (const width of [1440, 390]) {
 
   // 3. One Undo puts it back.
   if (phone) {
-    await page.getByRole('radio', { name: /Compose/ }).click();
+    await goCompose(page);
     await page.waitForTimeout(300);
   }
   await click(btn('Undo'));

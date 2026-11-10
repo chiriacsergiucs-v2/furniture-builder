@@ -2946,6 +2946,9 @@ table.buy {
   align-content: start;
 }
 
+.fam-card.support-reference {
+  background: var(--surface-2);
+}
 .fam-card header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -5234,7 +5237,10 @@ button.tile:hover {
   .app {
     padding-bottom: var(--actions-h);
   }
-  /* The phone bar names the app (G-059). */
+  /* The editor's bar holds the path; elsewhere the phone bar names the app (G-059). */
+  .app.page-editor .bar .brand {
+    display: none;
+  }
   .bar .brand-name {
     display: inline;
   }

@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/ui-polish/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -93,7 +94,7 @@ for (const width of [390, 1280]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   check(
     width,
@@ -135,13 +136,13 @@ for (const width of [390, 1280]) {
   await shot('hardware');
 
   // 4. Quick counts over 3D (G-058): a phone folds the card to one row and remembers it; wide screens never fold.
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   const svg = page.locator('.view.front svg').first();
   const b = await svg.boundingBox();
   if (phone) await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height * 0.7);
   else await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.7);
   await page.waitForTimeout(300);
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.waitForTimeout(1500);
   // On a phone the card is docked under the 3D view (G-070) and folds there (G-058); wide screens float it over 3D.
   const card = page
@@ -173,11 +174,11 @@ for (const width of [390, 1280]) {
     // A reload starts on Projects (ADR-078); the Editor place reopens the piece.
     await places.getByRole('link', { name: /Editor/ }).click();
     await page.locator('main.work').waitFor({ state: 'visible' });
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     const b2 = await page.locator('.view.front svg').first().boundingBox();
     await page.touchscreen.tap(b2.x + b2.width / 2, b2.y + b2.height * 0.7);
     await page.waitForTimeout(300);
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await goBuild(page);
     await page.waitForTimeout(1500);
     check(
       width,
@@ -314,7 +315,7 @@ for (const width of [390, 1280]) {
   await page.getByRole('textbox', { name: 'Name of the new project' }).fill(`Empty ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.waitForTimeout(1500);
   check(
     width,

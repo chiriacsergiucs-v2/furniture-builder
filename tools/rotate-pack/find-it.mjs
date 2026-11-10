@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/rotate-pack/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // From the bare app, by visible text, at 1280 and 390 px. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -122,7 +123,7 @@ for (const width of [1280, 390]) {
 
   // 3. 3D: drawn on demand — once it has settled, no draws while idle; it draws again on orbit.
   // (A phone shows the 3D view under Build & Preview; a computer has the 3D view switch.)
-  if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  if (phone) await goBuild(page);
   else await page.getByRole('radio', { name: '3D', exact: true }).click();
   const canvas = page.locator('.view.three canvas');
   await canvas.waitFor({ state: 'visible', timeout: 20000 });
@@ -152,7 +153,7 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(500);
   check(width, 'orbiting or tapping draws again', (await draws()) > d1);
   await shot('3d');
-  if (phone) await page.getByRole('radio', { name: /Compose/ }).click();
+  if (phone) await goCompose(page);
   else await planRadio.click();
   await page.waitForTimeout(300);
 

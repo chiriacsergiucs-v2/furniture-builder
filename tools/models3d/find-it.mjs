@@ -4,6 +4,7 @@
 // files into <out dir> (a red cube as .glb, a .gltf that points outside itself); no binary model is committed.
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -174,7 +175,7 @@ for (const width of widths) {
     return redPixels();
   };
   const show3d = async () => {
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await goBuild(page);
     if (!phone) {
       const r = page.getByRole('radio', { name: '3D', exact: true });
       if (await r.isVisible().catch(() => false)) await r.click();
@@ -185,7 +186,7 @@ for (const width of widths) {
     if (await simple.isVisible().catch(() => false)) await simple.click();
   };
   const showPlan = async () => {
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
   };

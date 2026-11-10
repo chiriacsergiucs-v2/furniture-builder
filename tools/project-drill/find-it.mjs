@@ -4,6 +4,7 @@
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // The user's steps: edit a project, tap a piece, tap it again → still the project editor, with the space's controls.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -184,7 +185,7 @@ for (const width of [1280, 390]) {
       `${before} → ${await partsCount()}`,
     );
     await shot('3d');
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     await page.waitForTimeout(200);
     check(width, '"Compose" still shows the project', await inProject());
     await page.getByRole('button', { name: 'Undo' }).click();
@@ -196,7 +197,7 @@ for (const width of [1280, 390]) {
       '3D, the next tap: the whole piece again',
       await inside.getByText('Selected: Whole cabinet').isVisible(),
     );
-    await page.getByRole('button', { name: 'Edit this piece' }).click();
+    await openPieceEditor(page);
     await page.waitForTimeout(300);
     check(width, '"Edit this piece" still opens the piece editor', !(await inProject()));
   }
@@ -204,7 +205,7 @@ for (const width of [1280, 390]) {
   // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-070); a tap there drills, and Compose's
   //    project panel shows the space.
   if (phone) {
-    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await goBuild(page);
     const canvas = page.locator('.view.three canvas');
     await canvas.waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1500);
@@ -220,7 +221,7 @@ for (const width of [1280, 390]) {
     await page.mouse.click(r.x + r.width * 0.62, r.y + r.height * 0.6);
     await page.waitForTimeout(500);
     await shot('3d');
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     await sheet(true);
     const h = await inside
       .getByRole('heading')

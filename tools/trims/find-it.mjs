@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/trims/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -161,7 +162,7 @@ for (const width of [375, 390, 1280, 1440]) {
   // 5. Close Settings (Done), then Build & Preview → Parts: the worktop and the trims are cut-list rows.
   await click(dlg.getByRole('button', { name: 'Done', exact: true }));
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.waitForTimeout(400);
   const partsTab = page.getByRole('tab', { name: /^Parts/ });
   if (

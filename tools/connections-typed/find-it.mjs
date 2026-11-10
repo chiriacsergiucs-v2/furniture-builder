@@ -8,6 +8,7 @@
 // hardware to the sides" lights the 3D view (`data-lit` on the 3D view, ADR-230), Move step up, Reset the steps; New single
 // piece → Lounger → Settings → Backrest end → Right. No page errors. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl('http://localhost:4307/furniture-builder/');
@@ -43,8 +44,6 @@ for (const width of [1280, 390]) {
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
   const side = page.getByRole('complementary', { name: 'Compose' });
-  const compose = page.getByRole('radio', { name: 'Compose' });
-  const build = page.getByRole('radio', { name: /Build & Preview/ });
   /** The phone's bottom sheet holds the side panel: open or close it. */
   const sheet = async (open) => {
     const peek = page.locator('.sheet-peek');
@@ -53,9 +52,7 @@ for (const width of [1280, 390]) {
     await page.waitForTimeout(200);
   };
   const toCompose = async () => {
-    if (await compose.isVisible().catch(() => false)) {
-      if ((await compose.getAttribute('aria-checked')) !== 'true') await click(compose);
-    }
+    await goCompose(page);
     await page.waitForTimeout(150);
   };
   const allPieces = async () => {
@@ -279,7 +276,7 @@ for (const width of [1280, 390]) {
 
   // 7. Build & Preview › 3D › Assembly: Show step on Fit hardware lights the 3D view; Move step up; Reset.
   await sheet(false);
-  await click(build);
+  await goBuild(page);
   const r3d = page.getByRole('radio', { name: '3D', exact: true });
   if (await r3d.isVisible().catch(() => false)) await click(r3d);
   await page.locator('canvas').first().waitFor({ state: 'visible', timeout: 30000 });

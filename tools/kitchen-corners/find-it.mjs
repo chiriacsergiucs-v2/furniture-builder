@@ -10,6 +10,7 @@
 // snapping to the worktop line (**Snapped to the worktop line**) and placing freely with Alt, and the **Clearances**
 // button in the 3D view drawing the zones. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 const url = previewUrl('http://localhost:4305/furniture-builder/');
@@ -273,8 +274,7 @@ for (const width of [390, 1280]) {
 
   // 4. Checks: the pipe behind the first base unit, and "Cut the back around it".
   const showChecks = async () => {
-    const build = page.getByRole('radio', { name: /Build & Preview/ });
-    if (phone && (await build.isVisible().catch(() => false))) await build.click();
+    if (phone) await goBuild(page);
     const checks = page.getByRole('tab', { name: /Checks/ });
     await checks.waitFor({ timeout: 5000 }).catch(() => {});
     if (

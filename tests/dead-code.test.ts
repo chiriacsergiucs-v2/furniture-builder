@@ -43,9 +43,12 @@ describe('dead code guards (cleanup audit 2026-11-09)', () => {
   it('every CSS class in src/styles.css is produced by some code', () => {
     const css = read('src/styles.css').replace(/\/\*[\s\S]*?\*\//g, '');
     const code = SRC.map((f) => text.get(f)!).join('\n');
-    // Built from a value at run time: `room-${kind}`, `impl-${status}`, `mode-${mode}`, and the research matrix's
-    // `v${band}` and `c${complexity}` (Research.tsx).
-    const DYNAMIC = ['room-', 'impl-', 'mode-'];
+    // Class names built at run time (`page-${page}`, `support-${f.support}`, `mode-${mode}` …): every literal prefix
+    // before a `${` in a template string counts, so a class starting with one is kept. Found from the code, not listed.
+    const DYNAMIC = [
+      ...new Set([...code.matchAll(/([a-z][a-z0-9]*(?:-[a-z0-9]+)*-)\$\{/g)].map((m) => m[1])),
+    ];
+    // The research matrix's `v${band}` and `c${complexity}` (Research.tsx) have no dash.
     const BUILT = /^(v\d+|c\d)$/;
     const classes = new Set([...css.matchAll(/\.([a-z][a-z0-9-]*)/g)].map((m) => m[1]));
     const dead = [...classes].filter(

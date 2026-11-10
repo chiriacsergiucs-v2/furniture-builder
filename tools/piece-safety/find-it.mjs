@@ -10,6 +10,7 @@
 //   6. Deleting a project with a kept version asks "Also delete its 1 kept version?"; Esc keeps it.
 // The script writes its own model file into <out dir>; no binary is committed. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const url = previewUrl();
@@ -146,7 +147,7 @@ for (const width of widths) {
   const said = () =>
     (phone ? page.locator('.sheet-peek') : page.locator('aside.side')).innerText().catch(() => '');
   const compose = async () => {
-    await page.getByRole('radio', { name: /Compose/ }).click();
+    await goCompose(page);
     const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
     await page.waitForTimeout(250);
@@ -173,7 +174,7 @@ for (const width of widths) {
     await click(loc);
     await page.waitForTimeout(250);
     await sheet(true);
-    await click(btn('Edit this piece'));
+    await openPieceEditor(page);
     await page.locator('figure.elevation').waitFor({ state: 'visible', timeout: 5000 });
     await page.waitForTimeout(250);
   };
@@ -186,7 +187,7 @@ for (const width of widths) {
   const three = page.locator('.view.three');
   const canvas = three.locator('canvas').first();
   const to3d = async () => {
-    if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    if (phone) await goBuild(page);
     await page.getByRole('radio', { name: '3D', exact: true }).click();
     await canvas.waitFor({ state: 'visible', timeout: 30000 });
     await page.waitForTimeout(1500);
@@ -223,7 +224,7 @@ for (const width of widths) {
       .first()
       .click();
     await page.locator('main.work').waitFor({ state: 'visible' });
-    await page.getByRole('radio', { name: 'Compose' }).click();
+    await goCompose(page);
     const hanging = page.getByRole('button', { name: /^Hanging space, / });
     const tap = async () => {
       const b = await hanging.boundingBox();

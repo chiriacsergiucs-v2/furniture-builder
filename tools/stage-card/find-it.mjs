@@ -5,6 +5,7 @@
 // Sideboard (the card over the drawing and over 3D, Width in the side panel / bottom sheet), then a Sideboard in a
 // project (the plan toolbar row, the card over the front view). Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -109,7 +110,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await page.waitForTimeout(300);
   const elev = front.getByRole('figure', { name: /^Front view/ });
   const m0 = await measure(elev);
@@ -209,7 +210,7 @@ for (const width of [1280, 390]) {
   await sheet(false);
 
   // 5. 3D (Build & Preview): the card over the view (docked under it on a phone, G-070) has no Width or Depth.
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const c3 = card(phone ? page.locator('#count-dock') : page.locator('.view.three'));
@@ -226,7 +227,7 @@ for (const width of [1280, 390]) {
   await dlg.locator('input').fill(`Stage ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');

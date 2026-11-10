@@ -5,6 +5,7 @@
 // since ADR-112 never the card over the drawing or over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -52,7 +53,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
   await page.waitForTimeout(300);
 
@@ -106,7 +107,7 @@ for (const width of [1280, 390]) {
   await sheet(false);
 
   // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-112).
-  await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  await goBuild(page);
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const dock3 = phone ? page.locator('#count-dock') : page.locator('.view.three');
@@ -126,7 +127,7 @@ for (const width of [1280, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   // The editor remembers Build & Preview from step 5; pieces are added under Compose.
-  await page.getByRole('radio', { name: 'Compose' }).click();
+  await goCompose(page);
   await sheet(true);
   await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');
