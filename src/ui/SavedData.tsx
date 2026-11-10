@@ -436,12 +436,10 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
           onClick={() => {
             setShown(false);
             void setSetting(NOTICE_KEY, new Date().toISOString()).catch(() =>
-              useUi
-                .getState()
-                .setNotice({
-                  ok: false,
-                  text: t('The setting could not be saved on this device.'),
-                }),
+              useUi.getState().setNotice({
+                ok: false,
+                text: t('The setting could not be saved on this device.'),
+              }),
             );
           }}
         >
