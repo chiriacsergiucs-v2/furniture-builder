@@ -49,7 +49,11 @@ for (const width of [1440, 375]) {
   };
   const addPiece = async (search, name) => {
     await openSheet();
-    await page.getByRole('button', { name: 'Add a piece' }).click();
+    await page
+      .getByRole('button', { name: 'Add a piece' })
+      .filter({ visible: true })
+      .first()
+      .click();
     const dlg = page.locator('dialog[open]');
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.getByRole('button', { name }).first().click();

@@ -34,3 +34,41 @@ export async function openPieceEditor(page, scope = page) {
   await where.getByRole('button', { name: 'More actions' }).first().click();
   await page.getByRole('button', { name: 'Open in the piece editor' }).click();
 }
+
+/**
+ * Show the project's piece list (`ul.pieces`): with a piece selected the panel shows that piece, and its All pieces
+ * button goes back to the list (and clears the selection, ADR-160). `scope` is the project panel, or the page.
+ */
+export async function showPieces(page, scope = page) {
+  // A phone's list is in the bottom sheet: open it first.
+  const peek = page.locator('.sheet-peek');
+  if (
+    (await peek.isVisible().catch(() => false)) &&
+    (await peek.getAttribute('aria-expanded')) === 'false'
+  )
+    await peek.click();
+  const all = scope.getByRole('button', { name: /^All pieces/ }).first();
+  if (await all.isVisible().catch(() => false)) await all.click();
+  await scope
+    .locator('ul.pieces')
+    .first()
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => {});
+}
+
+/**
+ * Show a results tab (Parts, Sheets, …). A click on the tab already open closes the results (toggleTab), and the
+ * phone's Cut list place opens them on the Parts tab, so the tab is clicked only when its panel is not showing.
+ */
+export async function openTab(page, name) {
+  const tab = page.getByRole('tab', { name }).first();
+  const id = await tab.getAttribute('aria-controls');
+  const panel = id ? page.locator(`[id="${id}"]`) : null;
+  if (
+    (await tab.getAttribute('aria-selected')) === 'true' &&
+    panel &&
+    (await panel.isVisible().catch(() => false))
+  )
+    return;
+  await tab.click();
+}
