@@ -203,6 +203,11 @@ on restores it unchanged.
   - A change that makes tests or scripts stale fixes them in the same pull request, or lists each one as a blocker.
   - Order work by dependency: prerequisites first; never cite a blocker that a later item of the same plan removes.
   - "Decide and go" means finishing every low-risk item; stop only for consent items (deleting, branch-wide moves).
+- Always pick (user rule 2026-11-10, "Always pick"): every decision point is shown as a pick card (options, the
+  recommended one marked, the one picked and why) and resolved without asking, from the user's earlier answers, a repo
+  rule, the stated goal, or else the recommendation. Ask only when none decides it and the options differ in something
+  hard to undo (deleting saved data or files, spending money, publishing, pushing or merging to `main`, access). Every
+  reply that made picks ends with a Picks list the user can override ("PICK 2 = B").
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
