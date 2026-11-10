@@ -250,6 +250,9 @@ describe('the turn handle (ADR-169)', () => {
     expect(bracketTurn(']', false)).toBe(1);
     expect(bracketTurn('[', true)).toBe(-15);
     expect(bracketTurn('r', false)).toBeNull();
+    // Shift+] on a US keyboard sends '}' (and Shift+[ sends '{'): the 15° step still applies.
+    expect(bracketTurn('}', true)).toBe(15);
+    expect(bracketTurn('{', true)).toBe(-15);
     expect(cancelPress(null)).toBe(false);
     expect(
       cancelPress(
