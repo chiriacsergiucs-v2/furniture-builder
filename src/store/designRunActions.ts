@@ -28,7 +28,7 @@ import type { Design } from '../core/types';
 import { t } from '../core/i18n';
 import type { State, StoreHelpers } from './designState';
 
-export type RunActions = Pick<
+type RunActions = Pick<
   State,
   | 'applyStyle'
   | 'suggestRunParts'

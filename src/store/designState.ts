@@ -52,7 +52,7 @@ import type { VariableSet } from '../core/sets';
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'assembly' | 'shopping' | 'checks';
 
 /** How a move was made (ADR-168): `snapped` = the drop snapped; `alone` = Alt held, so connected pieces stay. */
-export interface MoveOpts {
+interface MoveOpts {
   snapped?: boolean;
   alone?: boolean;
 }

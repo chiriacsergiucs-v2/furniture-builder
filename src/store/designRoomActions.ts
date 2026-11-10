@@ -4,7 +4,7 @@ import { closeOutline, DEFAULT_ROOM_HEIGHT, keepWallFinishes, snapCorner } from 
 import { PROJECT_SCHEMA, tapPosition } from '../core/project';
 import type { State, StoreHelpers } from './designState';
 
-export type RoomActions = Pick<
+type RoomActions = Pick<
   State,
   | 'placeAt'
   | 'stopPlacing'

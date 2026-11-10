@@ -15,7 +15,7 @@ import {
 } from '../core/variables';
 import type { State, StoreHelpers } from './designState';
 
-export type VariableActions = Pick<
+type VariableActions = Pick<
   State,
   | 'addVariable'
   | 'updateVariable'
