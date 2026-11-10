@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Views (`src/ui/info/features.ts:895-1016`, 25 feature lines)
-- ADR: [ADR-258](../adr/ADR-258-ui-audit-views-render-stops-models-keep-range.md)
+- ADR: [ADR-259](../adr/ADR-259-ui-audit-views-render-stops-models-keep-range.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with a
   scratch config; jsdom over `tests/find-it/setup.tsx` at 390 and 1280 px for the app, the `RenderDialog` alone with
   the path tracer module mocked, and the store and core in node). No repo source was changed. WebGL is absent in

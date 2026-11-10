@@ -1,4 +1,4 @@
-# ADR-253: UI audit — Construction: a typed size is kept as typed or refused out loud
+# ADR-254: UI audit — Construction: a typed size is kept as typed or refused out loud
 
 - Status: Pending
 - Date: 2026-11-10
@@ -83,12 +83,12 @@ invalid with the reason, until the user fixes it or presses Escape (ADR-199, ADR
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (also of ADR-247), for behaviour an implemented
+One round, 2026-11-10. The skeptic checked each finding for duplicates (also of ADR-248), for behaviour an implemented
 ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                         | Proposer                                                                                                                                                                                                                | Verdict                    |
 | ------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| D07-F1 | Phones show a digit keypad (`inputMode="numeric"`), so nobody types "."; and `MmField` belongs to every domain. | Many phone keypads and every desktop keyboard have "." and ","; the runner hint itself says "12.5–13 mm" (`Inspector.tsx:1249`). Reproduced at 390 and 1280 px. Construction holds most `MmField` uses; not in ADR-247. | Accepted                   |
+| D07-F1 | Phones show a digit keypad (`inputMode="numeric"`), so nobody types "."; and `MmField` belongs to every domain. | Many phone keypads and every desktop keyboard have "." and ","; the runner hint itself says "12.5–13 mm" (`Inspector.tsx:1249`). Reproduced at 390 and 1280 px. Construction holds most `MmField` uses; not in ADR-248. | Accepted                   |
 | D07-F2 | The error is shown while typing; the reset is old behaviour, not a regression.                                  | ADR-199 line 31 rejected the reset for size fields because it hides the mistake; after Enter the user sees the old value and no reason. Reproduced: error shown=false after Tab.                                        | Accepted                   |
 | D07-F3 | Few users edit runner lengths; the list is sorted and de-duplicated, which is helpful.                          | Dropping "5OO" and "550.5" without a word is a silent change (ADR-008), and text that is not saved looks saved. One validation and one message.                                                                         | Accepted                   |
 | D07-F4 | ADR-105 lines 36-37 chose both the warning and the "shown for a full panel" rule; this is intended.             | Intended, but the warning names a control the user cannot reach without two extra changes. Either fix changes an implemented ADR's UI rule, so it is the user's choice.                                                 | Accepted (user 2026-11-10) |

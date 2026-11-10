@@ -1,4 +1,4 @@
-# ADR-252: UI audit — Sizing: a typed size stays until it is valid, locks name what they lock
+# ADR-253: UI audit — Sizing: a typed size stays until it is valid, locks name what they lock
 
 - Status: Pending
 - Date: 2026-11-10
@@ -76,12 +76,12 @@ sizes the piece has.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour an
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-248), for behaviour an
 implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                                                   | Proposer                                                                                                                                                                                                                                                                                | Verdict  |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| D06-F1 | ADR-199 kept `MmField`'s reset on purpose (its comment says it shows the authoritative value); only split and drawer fields were changed. | That comment covers a _valid_ refused value (`controls.tsx:53-57`); the invalid branch (`:58`) is ADR-199's rejected alternative, "resetting on blur hides the mistake" (ADR-199 line 36), and breaks ADR-106 line 34. Not in ADR-247 (its F5 is `aria-invalid` on Fill wizard fields). | Accepted |
+| D06-F1 | ADR-199 kept `MmField`'s reset on purpose (its comment says it shows the authoritative value); only split and drawer fields were changed. | That comment covers a _valid_ refused value (`controls.tsx:53-57`); the invalid branch (`:58`) is ADR-199's rejected alternative, "resetting on blur hides the mistake" (ADR-199 line 36), and breaks ADR-106 line 34. Not in ADR-248 (its F5 is `aria-invalid` on Fill wizard fields). | Accepted |
 | D06-F2 | Over-engineering: type 901 then 900.                                                                                                      | Two undo steps and a hidden trick for the one action "Pieces differ" invites; the fix is one optional prop. Reproduced: 0 changes.                                                                                                                                                      | Accepted |
 | D06-F3 | ADR-171 locks each of the three sizes one by one for any piece.                                                                           | ADR-171 locks a piece's sizes; a bed has no height field and a panel no depth (`pieceSize.ts:52-61,78-86`). Reproduced: an empty note and no field off. Stored locks stay valid, no data change.                                                                                        | Accepted |
 | D06-F4 | Cosmetic.                                                                                                                                 | The translation rule is hard (CLAUDE.md, ADR-153); reproduced English in Russian; one line.                                                                                                                                                                                             | Accepted |

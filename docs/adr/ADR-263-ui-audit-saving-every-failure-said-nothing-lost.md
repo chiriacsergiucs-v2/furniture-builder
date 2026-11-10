@@ -1,4 +1,4 @@
-# ADR-262: UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy
+# ADR-263: UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy
 
 - Status: Pending
 - Date: 2026-11-10
@@ -22,7 +22,7 @@ Design file, Copy code, Share link, Import a file, Clean up unused pictures, Sav
 
 The storage rules are settled: never delete rows the app cannot read and nothing deletes saved data without the
 user's decision (ADR-012); restore adds copies only (ADR-133); a save is made before something opens and a failure
-is said, one tap makes one thing (ADR-193, ADR-247). Import a file and Open from code keep them; restore, export,
+is said, one tap makes one thing (ADR-193, ADR-248). Import a file and Open from code keep them; restore, export,
 the shared item copy and the picture clean-up do not.
 
 ## Findings
@@ -37,7 +37,7 @@ the shared item copy and the picture clean-up do not.
 | D16-F6  | Proven       | major    | Project file / Design file download nothing and say nothing when a picture or 3D model cannot be read (`MoreMenu.tsx:105-108,122-166`).                      |
 | D16-F7  | Code-evident | minor    | The reminder's Back up now hides a failed backup; reminder and notice settings are written unchecked (`SavedData.tsx:300,402,455-465`).                      |
 | D16-F8  | Code-evident | minor    | Share link: Make a link stays disabled and Stop sharing fails in silence when the online part cannot load (`ShareDialogs.tsx:49-56,100-107`).                |
-| D17-F3  | Moved here   | minor    | Account › Shared links: Stop sharing fails without a word and a failed list hides the section (`AccountDialog.tsx:458-483`); from ADR-263, reproduced there. |
+| D17-F3  | Moved here   | minor    | Account › Shared links: Stop sharing fails without a word and a failed list hides the section (`AccountDialog.tsx:458-483`); from ADR-264, reproduced there. |
 | D16-F9  | Code-evident | polish   | "Last backup: 1 days ago." and "It has problems to fix: 1 errors." in English (`SavedData.tsx:453`, `ShareDialogs.tsx:252`).                                 |
 | D16-F10 | Rejected     | —        | `.filter(…).length` inside the device-only notice's selector (`SavedData.tsx:347-349`); see Cross-examination.                                               |
 
@@ -61,7 +61,7 @@ is deleted that a saved thing still names, and one tap makes one copy.**
 7. **F7:** the reminder's Back up now shows the backup's error in the toast (or opens Saved data, which shows it);
    the two `setSetting` calls catch and say "The setting could not be saved on this device.".
 8. **F8:** `make` and Stop sharing catch and show the error in the dialog's alert; `busy` is cleared in `finally`.
-   **D17-F3** (moved from ADR-263): Account › Shared links does the same for Stop sharing, and a failed list says
+   **D17-F3** (moved from ADR-264): Account › Shared links does the same for Stop sharing, and a failed list says
    "Shared links could not be loaded." instead of hiding the section.
 9. **F9:** `{n|# day|# days}` and `{n|# error|# errors}` in the English keys (Russian entries unchanged).
 10. **F10:** no change (rejected).
@@ -73,7 +73,7 @@ is deleted that a saved thing still names, and one tap makes one copy.**
 - **F1: restore in one transaction, all or nothing** — cleaner, but `saveDesign`/`saveProject` also index and emit
   events per row; a larger change to `src/persist` than saying what happened.
 - **F3: disable the button only** — two pointer events can arrive before the render; the ref is what makes it one
-  (as ADR-247 F4).
+  (as ADR-248 F4).
 
 ## Scope
 
@@ -106,13 +106,13 @@ conflicts with the hard rules, for over-engineering and for missing tests.
 | ------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | D16-F1  | Storage refusing a restore is rare.                                                   | Rare, but restore is what the user runs after losing data; a silent half-restore is the worst moment to say nothing. Reproduced: no message, unhandled rejection.                     | Accepted |
 | D16-F2  | ADR-048 (lines 55-56) scans "stored design, project or template": as decided.         | ADR-048 predates versions (ADR-123); a version is a stored project, and ADR-012 lets nothing delete saved data the user did not choose; the confirm text would be untrue. Reproduced. | Accepted |
-| D16-F3  | `user.dblClick` made one copy; and the shared preview belongs to Account (domain 17). | Two clicks before the render made two (reproduced); ADR-193 and ADR-247 F4 settle the guard. The feature line is in this domain (`features.ts:1366`).                                 | Accepted |
+| D16-F3  | `user.dblClick` made one copy; and the shared preview belongs to Account (domain 17). | Two clicks before the render made two (reproduced); ADR-193 and ADR-248 F4 settle the guard. The feature line is in this domain (`features.ts:1366`).                                 | Accepted |
 | D16-F4  | Clipboard refusal is the browser's business.                                          | The app already says it in the Share link dialog (`ShareDialogs.tsx:57-64`); saying "copied" when nothing was copied is untrue. Reproduced.                                           | Accepted |
 | D16-F5  | The message is accurate: zero items.                                                  | Styled as success (`alert ok`) right after the user chose a wrong file; ADR-133's restore is for recovery, the user needs to know the file was not a backup. One branch.              | Accepted |
 | D16-F6  | Duplicate of D13-F5 (review pack).                                                    | Same cause, different flow and domain: D13-F5 is the review pack dialog, this is the menu's file export, which has no dialog to say it in. Reproduced.                                | Accepted |
 | D16-F7  | Folder backups are desktop Chromium only.                                             | Still the main backup path there; a failed backup that comes back as "No backup yet." misleads. Code-evident: `SavedData.tsx:426,455-465`.                                            | Accepted |
 | D16-F8  | The online part is opt-in; offline the user would not be signed in.                   | A signed-in session persists offline (ADR-134); `online()` is a dynamic import (`accountStore.ts:125`) and `busy` stays set (`ShareDialogs.tsx:50-53`), a dead end.                   | Accepted |
-| D17-F3  | Moved from ADR-263 (Account): same Stop sharing pattern as D16-F8.                    | Share links are this domain's feature line (`features.ts:1360-1366`); one fix pattern for both dialogs.                                                                               | Accepted |
+| D17-F3  | Moved from ADR-264 (Account): same Stop sharing pattern as D16-F8.                    | Share links are this domain's feature line (`features.ts:1360-1366`); one fix pattern for both dialogs.                                                                               | Accepted |
 | D16-F9  | Polish.                                                                               | Two keys, Russian entries already plural (`ru/shell.ts:314`, `ru/account.ts:143-144`).                                                                                                | Accepted |
 | D16-F10 | The rule says no `.filter()` inside a selector.                                       | The rule exists to keep references stable; this selector returns a number, which compares equal between renders. Not a re-render bug.                                                 | Rejected |
 

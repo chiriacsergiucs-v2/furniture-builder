@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Information (`src/ui/info/features.ts:1407-1443`, 7 feature lines)
-- ADR: [ADR-265](../adr/ADR-265-ui-audit-information-honest-pages-and-banners.md)
+- ADR: [ADR-266](../adr/ADR-266-ui-audit-information-honest-pages-and-banners.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom and node tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 390 and 1280 px). No repo source was changed.
 
@@ -45,7 +45,7 @@ the file's): `D19-F2 {"apply":0,"imported":1,"skipped":0} → message: Imported 
 other device's mark arrived. ADR-212 item 2 fixed the words "Imported N marks, skipped M" but not what N counts; ADR-244
 asks that a result never be reported as applied when it was not.
 
-### D19-F3 — The Results tab bar has no arrow keys and six Tab stops (Proven, minor; Moved to ADR-259 in FLOW 02)
+### D19-F3 — The Results tab bar has no arrow keys and six Tab stops (Proven, minor; Moved to ADR-260 in FLOW 02)
 
 The Results tabs (`src/ui/Output.tsx:56-75`) are `role="tablist"` / `role="tab"` without `rovingKeys` or `rovingTab`:
 `D19-F3 tabs [["Parts16","true",0],["Sheets","false",0],…]` (every tab `tabIndex` 0) and

@@ -1,4 +1,4 @@
-# ADR-261: UI audit — Catalog and templates: an import never loses an edit, every failure and button is named
+# ADR-262: UI audit — Catalog and templates: an import never loses an edit, every failure and button is named
 
 - Status: Pending
 - Date: 2026-11-10
@@ -83,7 +83,7 @@ which item it acts on.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of other findings and of ADR-247), for
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of other findings and of ADR-248), for
 behaviour an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                       | Proposer                                                                                                                                                                                                         | Verdict  |

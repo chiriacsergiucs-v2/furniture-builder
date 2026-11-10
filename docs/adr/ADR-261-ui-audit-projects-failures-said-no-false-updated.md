@@ -1,4 +1,4 @@
-# ADR-260: UI audit — Projects: a failed write is said, a refused update is never called done
+# ADR-261: UI audit — Projects: a failed write is said, a refused update is never called done
 
 - Status: Pending
 - Date: 2026-11-10
@@ -66,7 +66,7 @@ tapped, and an action the store refused is never reported as done.**
 ## Alternatives considered
 
 - **F2: disable Save as separate project only** — a keyboard Enter and a fast second pointer event can still pass
-  before the render (ADR-247 F4); the ref makes it one.
+  before the render (ADR-248 F4); the ref makes it one.
 - **F3: hide Update from saved piece on a size-locked piece** — the saved piece may differ in boards or name only,
   which the lock allows; only a size change is refused, so the action stays and reports the truth.
 - **F5: keep the whole history** — unbounded memory for long sessions; the label is what is untrue, not the limit.
@@ -98,18 +98,18 @@ tapped, and an action the store refused is never reported as done.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (within this ADR and against ADR-247), for
+One round, 2026-11-10. The skeptic checked each finding for duplicates (within this ADR and against ADR-248), for
 behaviour an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                                       | Proposer                                                                                                                                                                                                                  | Verdict  |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| D14-F1 | Duplicate of ADR-247 D01-F2 (Projects page, failed write)?                                                                    | D01-F2 is Create project; this is Delete, another function (`ProjectsPage.tsx:136-164`) with its own texts. Reproduced: no alert, the row stays, unhandled rejection. ADR-203 settled which versions go, not failures.    | Accepted |
+| D14-F1 | Duplicate of ADR-248 D01-F2 (Projects page, failed write)?                                                                    | D01-F2 is Create project; this is Delete, another function (`ProjectsPage.tsx:136-164`) with its own texts. Reproduced: no alert, the row stays, unhandled rejection. ADR-203 settled which versions go, not failures.    | Accepted |
 | D14-F2 | ADR-167 item 4 only asks for a new project with new ids; a double tap is rare.                                                | ADR-167 does not exempt it from ADR-193's rule; new ids per call (`sets.ts:502`) make every extra tap a real extra project the user must find and delete. Reproduced: 2 projects; failure silent.                         | Accepted |
 | D14-F3 | The refusal notice is shown, so the user is told (ADR-008 satisfied).                                                         | Two contradicting lines are shown, and the panel line is the one beside the tapped button. Reproduced: "Updated" with the width unchanged. `ReplaceDialog` already reads the refusal (`Replace.tsx:53-56`).               | Accepted |
 | D14-F4 | Duplicate stays on the page and each tap visibly adds a "(copy)" row; two taps asking for two copies is the expected outcome. | The editor's Duplicate (Ctrl+D, `Project.tsx:1192-1214`) also makes one copy per press; nothing opens or closes, so the second copy is seen at once and removed by Delete. No rule breaks.                                | Rejected |
 | D14-F5 | ADR-123 chose a bounded history; this is intended.                                                                            | The bound is kept; only the label "As opened" is untrue past it. Reproduced: kerf 1, opened with none. One boolean in the store, one text.                                                                                | Accepted |
 | D14-F6 | ADR-012 only forbids deleting unreadable rows; an empty list deletes nothing.                                                 | Right on ADR-012, but the same failure is said on the Projects page and in the project's versions (`ProjectsPage.tsx:89-97`, `History.tsx:132-139`); here it reads as "nothing saved". Consistency fix, no new behaviour. | Accepted |
-| D14-F7 | Accessibility polish; ADR-166 tests only check the alert text.                                                                | The problem is shown but not tied to its field, against the focus-and-label rule and ADR-193 (problems name their field); ADR-247 D01-F5 applies the same fix to another domain. Small, testable.                         | Accepted |
+| D14-F7 | Accessibility polish; ADR-166 tests only check the alert text.                                                                | The problem is shown but not tied to its field, against the focus-and-label rule and ADR-193 (problems name their field); ADR-248 D01-F5 applies the same fix to another domain. Small, testable.                         | Accepted |
 
 No question needs the user: every accepted fix follows an implemented ADR's rule (ADR-193, ADR-200, ADR-122). Decided
 without asking: the delete and read-failure sentences reuse the Projects page wording; Duplicate stays unguarded.

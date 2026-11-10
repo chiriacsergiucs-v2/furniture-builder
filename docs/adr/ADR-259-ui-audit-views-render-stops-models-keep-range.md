@@ -1,4 +1,4 @@
-# ADR-258: UI audit — Views: a render stops when closed, one 3D menu, model sizes stay in range
+# ADR-259: UI audit — Views: a render stops when closed, one 3D menu, model sizes stay in range
 
 - Status: Pending
 - Date: 2026-11-10
@@ -86,12 +86,12 @@ stays inside the range it states.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour an
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-248), for behaviour an
 implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                             | Proposer                                                                                                                                                                                                                             | Verdict  |
 | ------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| D12-F1 | The window is short; on a laptop the tracer is ready in a moment. A double tap is not the issue (one call, proven). | On a phone the scene copy and tracer build take seconds (ADR-068 says a phone may be slow); reproduced: disposed 0, Done 256 samples after Cancel. ADR-068 line 34: "Cancel stops and frees the GPU". Not in ADR-247.                | Accepted |
+| D12-F1 | The window is short; on a laptop the tracer is ready in a moment. A double tap is not the issue (one call, proven). | On a phone the scene copy and tracer build take seconds (ADR-068 says a phone may be slow); reproduced: disposed 0, Done 256 samples after Cancel. ADR-068 line 34: "Cancel stops and frees the GPU". Not in ADR-248.                | Accepted |
 | D12-F2 | ADR-081 lines 35-36 chose "disabled with the reason"; a `title` is that reason.                                     | ADR-081 line 74 asks for the reason _shown_; a disabled button takes no focus (`controls.tsx:132-136`) and a touch screen shows no title. Reproduced: the sentence is only in a `display: none` pane. Reuses an existing `t()` text. | Accepted |
 | D12-F3 | Each menu passed its own find-it; merging is a layout change nobody asked for.                                      | ADR-206 line 39 and ADR-208 line 56 both name _the_ 3D toolbar ⋯; two summaries share one accessible name (`SceneMenu.tsx:40`, `Viewer3D.tsx:938`). The in-view menu is the one visible at 390 px without Options.                   | Accepted |
 | D12-F4 | 15 000 mm models are absurd; validation accepts up to 10 000 000 (`model3d.ts:324-325`), so nothing breaks.         | Nothing crashes, but ADR-102 lines 30 and 41 state 1 to 10 000, and the floor at 1 mm changes proportions silently (ADR-008). Reproduced in core. The fix is one core function used by the fields, no new message.                   | Accepted |

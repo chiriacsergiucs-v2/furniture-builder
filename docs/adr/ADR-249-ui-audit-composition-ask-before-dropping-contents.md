@@ -1,4 +1,4 @@
-# ADR-248: UI audit — Composition: ask before any edit drops contents, and fill in no appliance size
+# ADR-249: UI audit — Composition: ask before any edit drops contents, and fill in no appliance size
 
 - Status: Pending
 - Date: 2026-11-10

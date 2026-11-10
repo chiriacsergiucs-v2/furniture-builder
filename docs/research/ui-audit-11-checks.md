@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Checks and problems (`src/ui/info/features.ts:860-894`, 6 feature lines)
-- ADR: [ADR-257](../adr/ADR-257-ui-audit-checks-piece-guidance-listed-repairs-told.md)
+- ADR: [ADR-258](../adr/ADR-258-ui-audit-checks-piece-guidance-listed-repairs-told.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with a
   scratch config: core in node, the app in jsdom over `tests/find-it/setup.tsx` at 1280 px). No repo source was
   changed.
@@ -40,7 +40,7 @@ list. The piece card shows errors only (`Project.tsx:1095-1110`). ADR-035 promis
 Reproduction (core): bookcase +300 mm → `D11-F1 template bookcase + 300 piece warnings: [ 'shelf-span' ] | project
 Checks: []`.
 
-### D11-F2 — Two exports stay open while an error exists (Proven, major — Moved to ADR-259 in FLOW 02: ADR-259 D13-F1)
+### D11-F2 — Two exports stay open while an error exists (Proven, major — Moved to ADR-260 in FLOW 02: ADR-260 D13-F1)
 
 ADR-008: errors block export; `Shopping.tsx:181` states "errors block every export, like Parts CSV and Print cutting
 sheet". Not blocked:
@@ -76,7 +76,7 @@ A check row with `itemIds` opens the banner (`Output.tsx:455-458`). For a code o
 `hits-obstacle` carries `nodeId` only, no `itemIds` or `box` (`room.ts:616-621`); the tap selects the piece
 (`Output.tsx:428-431`) but opens no banner and outlines nothing.
 
-### D11-F6 — The front view drawing (SVG) is downloadable while an error exists (Code-evident — Moved to ADR-259 in FLOW 02: ADR-259 D13-F1)
+### D11-F6 — The front view drawing (SVG) is downloadable while an error exists (Code-evident — Moved to ADR-260 in FLOW 02: ADR-260 D13-F1)
 
 ⋯ More → Front view drawing (`MoreMenu.tsx:171-180`) has no error check. Unlike the design file (which saves work and
 must stay), whether a drawing counts as an export under ADR-008 is not stated in the repo.

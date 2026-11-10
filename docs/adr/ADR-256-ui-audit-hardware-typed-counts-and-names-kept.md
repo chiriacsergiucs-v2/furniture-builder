@@ -1,4 +1,4 @@
-# ADR-255: UI audit — Hardware: typed counts and names are kept as typed, in every language
+# ADR-256: UI audit — Hardware: typed counts and names are kept as typed, in every language
 
 - Status: Pending
 - Date: 2026-11-10
@@ -40,7 +40,7 @@ what is shown is what is saved; a name the user gives is shown inside a translat
 
 1. **F1:** the Per and From each end fields keep "." and "," in their text (letters still stripped), so "1.5" shows
    their existing errors ("Whole number, 1 or more. Not saved until it is." and "Whole number from 0 to 5000. Not
-   saved until it is.") and is not saved. Same rule as ADR-253 item 1.
+   saved until it is.") and is not saved. Same rule as ADR-254 item 1.
 2. **F2:** `trLoose` (`src/core/i18n/index.ts`) also matches a key whose placeholders are names: the label is
    compared with each key that has non-numeric placeholders (built once, like `shapeOf`) and filled with the text it
    captured, so `'Flap fitting: {name}'` and `'Screws: {a} to {b}'` translate. Core only; no change to
@@ -87,12 +87,12 @@ what is shown is what is saved; a name the user gives is shown inside a translat
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (also of ADR-247 and ADR-253), for behaviour
+One round, 2026-11-10. The skeptic checked each finding for duplicates (also of ADR-248 and ADR-254), for behaviour
 an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                           | Proposer                                                                                                                                                                                                    | Verdict  |
 | ------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| D09-F1 | Duplicate of ADR-253's D07-F1.                                                                                    | Same rule, other component (`Fasteners.tsx`, not `MmField`) with its own tests; here it multiplies what is bought and moves drilling guidance. ADR-253 does not touch this file. Reproduced at both widths. | Accepted |
+| D09-F1 | Duplicate of ADR-254's D07-F1.                                                                                    | Same rule, other component (`Fasteners.tsx`, not `MmField`) with its own tests; here it multiplies what is bought and moves drilling guidance. ADR-254 does not touch this file. Reproduced at both widths. | Accepted |
 | D09-F2 | Fitting names and panel names are the user's words; nothing to translate.                                         | The user's words stay; the English around them ("Flap fitting:", "Screws: … to …") is app text, and its Russian keys exist (`ru/data-parts.ts:220-221`). Reproduced: MISSING for both.                      | Accepted |
 | D09-F3 | The alert already says the save failed (ADR-008 is kept).                                                         | The alert is kept; the row then disagrees with the Hardware tab ("choose your fastener"), and a reload would show it empty. Keying the row is one line. Reproduced: field kept, store `undefined`.          | Accepted |
 | D09-F4 | Only an imported or hand-edited file gets other centres; run handles are limited to the list (`project.ts:4380`). | `validateDesign` accepts it (reproduced `validate=[]`), so the app opens it and then shows 96 for 150: the field lies. One extra option; no spec invented (the value is the user's).                        | Accepted |

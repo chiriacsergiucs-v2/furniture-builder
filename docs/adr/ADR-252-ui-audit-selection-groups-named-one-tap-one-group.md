@@ -1,4 +1,4 @@
-# ADR-251: UI audit — Selection and groups: groups named in the user's language, one tap makes one group
+# ADR-252: UI audit — Selection and groups: groups named in the user's language, one tap makes one group
 
 - Status: Pending
 - Date: 2026-11-10
@@ -59,7 +59,7 @@ the app writes is in the user's language.**
 
 - **F1: translate stored names at display (`tr(g.name)`)** — works only for the exact stored text "Group 1"; numbers
   and renamed groups would not match.
-- **F3: an in-flight ref as ADR-247 used** — the action is synchronous; there is nothing in flight, the second click
+- **F3: an in-flight ref as ADR-248 used** — the action is synchronous; there is nothing in flight, the second click
   is a new event.
 - **F3: Ungroup in another place on the card** — moves a control users already know; `detail` is one line.
 - **F4: keep boxes for pieces only** — the front view already builds the models' boxes for the box
@@ -88,14 +88,14 @@ the app writes is in the user's language.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-248), for behaviour
 an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                        | Proposer                                                                                                                                                                                               | Verdict                    |
 | ------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
 | D05-F1 | A group name is stored data, like a project name; the translation rule is for app text.        | The user never typed it: the app wrote it, and nothing lets the user change it. Other app-made names are written through `t()` (`Dialogs.tsx:732`). Reproduced: "Group 1" twice on a Russian screen.   | Accepted                   |
 | D05-F2 | 3D models are display only (ADR-076); grouping them was never promised.                        | Agreed, so the fix does not group them; it stops offering a button that silently does nothing. Ctrl+A takes models since ADR-246 lines 33-34, so a mixed selection is the common case.                 | Accepted                   |
-| D05-F3 | Undo brings the group back; polish.                                                            | Two undo steps and no group, with nothing on screen saying why; the one-tap rule of ADR-247 (F1, F4) covers it. Reproduced with `user.dblClick`.                                                       | Accepted                   |
+| D05-F3 | Undo brings the group back; polish.                                                            | Two undo steps and no group, with nothing on screen saying why; the one-tap rule of ADR-248 (F1, F4) covers it. Reproduced with `user.dblClick`.                                                       | Accepted                   |
 | D05-F4 | ADR-097 and ADR-211 say the box takes "every piece"; models are not pieces.                    | ADR-246 brought models into the selection for a tap and Ctrl+A; the front view already hands the models' boxes to the box (`Project.tsx:2523-2530`). Reproduced in core: a box over a fridge is empty. | Accepted                   |
 | D05-F5 | ADR-211 item 8 gave the tip to "the three Select toggles"; the 3D button has its own `title`.  | The feature line says "each Select", but the implemented ADR chose three; the feature tree changes only when the user asks (CLAUDE.md, user 2026-11-07).                                               | Rejected                   |
 | D05-F6 | "Named groups" with a fixed number is still named; a rename field is a new feature, not a bug. | ADR-097 never specified renaming; whether to add one is the user's choice.                                                                                                                             | Accepted (user 2026-11-10) |

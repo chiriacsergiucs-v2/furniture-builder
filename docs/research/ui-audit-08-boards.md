@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Boards and edges (`src/ui/info/features.ts:639-750`, 21 feature lines)
-- ADR: [ADR-254](../adr/ADR-254-ui-audit-boards-every-board-change-told-truly.md)
+- ADR: [ADR-255](../adr/ADR-255-ui-audit-boards-every-board-change-told-truly.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px and 390 px). No repo source was changed.
 
@@ -97,7 +97,7 @@ The decor list has **Remove decor list** with a confirm (`Dialogs.tsx:524-549`, 
 "parsed like it" (ADR-212 item 8), has only Import (`Dialogs.tsx:576-590`) and storage has no clear function
 (`persist/db.ts:504-515`). Once imported, every board's band editor offers it for good.
 
-### D08-F8 — Apply-material and common-panel messages name pieces untranslated (Code-evident, minor; moved to ADR-264 in FLOW 02)
+### D08-F8 — Apply-material and common-panel messages name pieces untranslated (Code-evident, minor; moved to ADR-265 in FLOW 02)
 
 `finish.ts:408-415` writes `it.design.name` into the applied and skipped lists, and `MaterialDialog.tsx:282-288` joins
 them as they are; the common and shared reasons do the same (`common.ts:120-131`, `shared.ts:124-140`). Built-in names

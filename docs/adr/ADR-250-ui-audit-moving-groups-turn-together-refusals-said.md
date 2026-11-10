@@ -1,4 +1,4 @@
-# ADR-249: UI audit — Moving: a group turns as one, fields fit every place, refusals are said where asked
+# ADR-250: UI audit — Moving: a group turns as one, fields fit every place, refusals are said where asked
 
 - Status: Pending
 - Date: 2026-11-10
@@ -79,7 +79,7 @@ a refusal is said where the user asked.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour an
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-248), for behaviour an
 implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                                                          | Proposer                                                                                                                                                                                                                                        | Verdict                    |
@@ -87,7 +87,7 @@ implemented ADR intends, for conflicts with the hard rules, for over-engineering
 | D03-F1 | ADR-169 built the handle for "the selected piece"; a second tap selects one grouped piece on purpose, so turning it alone may be meant.          | ADR-148 line 43-46 names turning among the paths that act on the whole group, and line 48-49 limits the second tap to "editing only (its boards, inside, size)". `turnItem` keeps it (`group-size.test.ts:164-171`). Reproduced in core and UI. | Accepted                   |
 | D03-F2 | The bounds are guidance; few walls are over 5 m.                                                                                                 | The field turns red on a value nobody typed, which ADR-008 forbids (never show a false error); a 6 m wall and a 3D drag to 3200 mm both reproduce it. No ADR sets 5000 or 3000 (none found in ADR-022, ADR-031, ADR-122).                       | Accepted                   |
 | D03-F3 | ADR-160 chose to show only working actions; a vanishing button is the design.                                                                    | The fold is kept; only focus moves. CLAUDE.md requires visible keyboard focus; focus on `<body>` is reproduced.                                                                                                                                 | Accepted                   |
-| D03-F4 | The plan's notice already says why (ADR-244 is implemented), so this is a duplicate.                                                             | ADR-244 put the reason in the notice; on the same card the gap tool also says it inline (`Project.tsx:505-509`) and From left does not. Reproduced: "in card: false". Not a duplicate of ADR-247 (creation paths only).                         | Accepted                   |
+| D03-F4 | The plan's notice already says why (ADR-244 is implemented), so this is a duplicate.                                                             | ADR-244 put the reason in the notice; on the same card the gap tool also says it inline (`Project.tsx:505-509`) and From left does not. Reproduced: "in card: false". Not a duplicate of ADR-248 (creation paths only).                         | Accepted                   |
 | D03-F5 | ADR-093 says pressing a piece selects it; ADR-159 brought Select to 3D for taps only (lines 30-34) and kept drag out. Changing Move mode is new. | ADR-097 line 29 says dragging any selected piece moves them all, but it predates multi-select in 3D. No implemented ADR decides the 3D case, so the user picks.                                                                                 | Accepted (user 2026-11-10) |
 
 No physical-fact question arose. Decided without asking: F1 refuses rather than turning a group to any degree; F2 uses

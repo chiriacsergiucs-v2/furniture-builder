@@ -1,4 +1,4 @@
-# ADR-259: UI audit — Output: every export blocked on errors, every failure said, one print language
+# ADR-260: UI audit — Output: every export blocked on errors, every failure said, one print language
 
 - Status: Pending
 - Date: 2026-11-10
@@ -38,7 +38,7 @@ list keep them; three exports, the Shopping list print and two prints do not, an
 | D13-F8  | Code-evident | minor    | Wrong Price and Seller units are only coloured; a wrong seller-item Quantity is dropped in silence, its label untranslated (`Shopping.tsx:407-570`).                                                                                                         |
 | D13-F9  | Code-evident | polish   | Client sheet prints "1 linii fără preț" / "1 lines without a price" (`PrintClient.tsx:86-90`).                                                                                                                                                               |
 | D13-F10 | Rejected     | —        | A failed sheet layout shows the validator's English details (`Sheets.tsx:124-125`); see Cross-examination.                                                                                                                                                   |
-| D19-F3  | Proven       | minor    | Moved here from [ADR-265](ADR-265-ui-audit-information-honest-pages-and-banners.md): the Results tab bar (`src/ui/Output.tsx:56-75`) has no arrow keys, a Tab stop per tab and no accessible name; the Research and Catalog tablists use the ADR-202 helper. |
+| D19-F3  | Proven       | minor    | Moved here from [ADR-266](ADR-266-ui-audit-information-honest-pages-and-banners.md): the Results tab bar (`src/ui/Output.tsx:56-75`) has no arrow keys, a Tab stop per tab and no accessible name; the Research and Catalog tablists use the ADR-202 helper. |
 
 ## Decision
 
@@ -107,14 +107,14 @@ conflicts with the hard rules, for over-engineering and for missing tests.
 | D13-F1  | ADR-021 and ADR-174 say nothing about errors; a user may want to finish an errored design in Fusion.       | ADR-008's rule is "errors block export" (CLAUDE.md hard rule) and ADR-020 line 23 blocks printing; no later ADR exempts these three. Reproduced: all three enabled with one error.    | Accepted                   |
 | D13-F2  | ADR-181 item 4 promised headers only; line items are English too.                                          | Units and the estimate are not line items; ADR-181 item 4's reason is "a print never mixes languages", and the CSV already prints `buc` where the print says `pcs`. Reproduced.       | Accepted                   |
 | D13-F3  | Browsers clean file names themselves.                                                                      | Not every browser does it the same way; the Parts CSV and every other file use `fileName()` (`Output.tsx:129`, `MoreMenu.tsx:129,163,186`). One call.                                 | Accepted                   |
-| D13-F4  | Duplicate of ADR-247's save rule?                                                                          | ADR-247 covers creation paths only. A typed price already says its failure (`Shopping.tsx:112-114`); the import does not. Reproduced: no message and an unhandled rejection.          | Accepted                   |
+| D13-F4  | Duplicate of ADR-248's save rule?                                                                          | ADR-248 covers creation paths only. A typed price already says its failure (`Shopping.tsx:112-114`); the import does not. Reproduced: no message and an unhandled rejection.          | Accepted                   |
 | D13-F5  | Rare: needs a broken IndexedDB.                                                                            | Rare, but the dialog is a dead end with no word; ADR-008 spirit and the storage rule say failures are named. Reproduced.                                                              | Accepted                   |
 | D13-F6  | `tests/find-it/prints-exports.test.tsx:79-81` expects the stored name, so ADR-206 intends it.              | ADR-206 came before ADR-212, whose reason is "prints speak one language" (ADR-212 line 82); the cutting sheet already contradicts itself between two tables. The test line changes.   | Accepted                   |
 | D13-F7  | ADR-206 item 1 says "the last PNG the Render dialog made this session": intended.                          | Intended as written, but the ADR did not consider a render of another piece; whether to change it is the user's call.                                                                 | Accepted (user 2026-11-10) |
 | D13-F8  | Polish.                                                                                                    | A value dropped with no word breaks ADR-008 ("never clamped silently"); the rest of the editor marks wrong fields `aria-invalid` (ADR-199 test `piece-editor-inputs.test.tsx:27-31`). | Accepted                   |
 | D13-F9  | Over-engineering for one word.                                                                             | One `pt()` key with plural forms that `format` already supports (`src/core/i18n/print.ts:43`); a printed sheet for a client should read right.                                        | Accepted                   |
 | D13-F10 | A translated lead sentence is already there; the details come from an internal check that should not fail. | Agreed: the details are for a bug report, the user-facing sentence is translated (`Sheets.tsx:124`).                                                                                  | Rejected                   |
-| D19-F3  | Belongs to Information, where it was found.                                                                | The tab bar is Output's own control (`Output.tsx:56-75`); ADR-265's round moved it here. Reproduced there: every tab has `tabIndex` 0 and ArrowRight changes nothing.                 | Accepted (moved in)        |
+| D19-F3  | Belongs to Information, where it was found.                                                                | The tab bar is Output's own control (`Output.tsx:56-75`); ADR-266's round moved it here. Reproduced there: every tab has `tabIndex` 0 and ArrowRight changes nothing.                 | Accepted (moved in)        |
 
 ## User decision (2026-11-10)
 

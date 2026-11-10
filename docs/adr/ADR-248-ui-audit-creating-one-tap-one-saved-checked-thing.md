@@ -1,4 +1,4 @@
-# ADR-247: UI audit — Creating: one tap makes one saved thing, checked against what is there
+# ADR-248: UI audit — Creating: one tap makes one saved thing, checked against what is there
 
 - Status: Pending
 - Date: 2026-11-10

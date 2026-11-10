@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Catalog and templates (`src/ui/info/features.ts:1269-1333`, 13 feature lines)
-- ADR: [ADR-261](../adr/ADR-261-ui-audit-catalog-keep-edits-name-every-button.md)
+- ADR: [ADR-262](../adr/ADR-262-ui-audit-catalog-keep-edits-name-every-button.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 and 390 px, `src/persist/db` mocked for
   storage failures as in `tests/find-it/catalog-brands.test.tsx:11-20`). No repo source was changed.

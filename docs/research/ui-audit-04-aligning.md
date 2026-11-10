@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Aligning and arranging (`src/ui/info/features.ts:302-397`, 20 feature lines)
-- ADR: [ADR-250](../adr/ADR-250-ui-audit-aligning-along-each-wall-alone-on-a-phone.md)
+- ADR: [ADR-251](../adr/ADR-251-ui-audit-aligning-along-each-wall-alone-on-a-phone.md)
 - Method: code reading with file:line citations; reproductions run as throwaway tests outside the repo (vitest with
   a scratch config, core and store in node). No repo source was changed.
 
@@ -80,7 +80,7 @@ is Select on → tap both pieces → **Connected** off (`Selection.tsx:190-192`)
 `D04-F4 align back on aligned row says: "" steps added 0`. Distribute does say "Gaps now 0 · 0 mm." in the same case.
 A tap with no visible change and no word reads as a dead button.
 
-### D04-F5 — Piece names in align and distribute messages stay English in Russian (Proven, minor; FLOW 02: moved to ADR-264)
+### D04-F5 — Piece names in align and distribute messages stay English in Russian (Proven, minor; FLOW 02: moved to ADR-265)
 
 The messages take `pieceName` (`align.ts:87,160-165,261`; `src/core/project.ts:791-797`), which returns the stored
 English name, while the card heading translates it with `tr()` (`Selection.tsx:138`). Reproduction with the Russian

@@ -1,4 +1,4 @@
-# ADR-254: UI audit — Boards and edges: every board change is told truly and every field names its board
+# ADR-255: UI audit — Boards and edges: every board change is told truly and every field names its board
 
 - Status: Pending
 - Date: 2026-11-10
@@ -35,7 +35,7 @@ board or their problem.
 | D08-F5  | Proven          | minor    | Why **Group** is unavailable is only in a `title` tooltip (`MaterialDialog.tsx:298-305,343`); reproduced at 390 px: no visible reason.               |
 | D08-F6  | Proven          | minor    | Every board row's Name, Thickness, Sheet length… share one accessible name; 5 "Name" fields for a chest of drawers (`Dialogs.tsx:612-701`).          |
 | D08-F7  | Code-evident    | minor    | The band list cannot be removed; the decor list can (`Dialogs.tsx:524-549` vs `:576-590`, `persist/db.ts:494,504-515`).                              |
-| D08-F8  | Moved           | minor    | Apply-material and common-panel messages name pieces untranslated (`finish.ts:408-415`, `common.ts:120-131`). Moved to ADR-264.                      |
+| D08-F8  | Moved           | minor    | Apply-material and common-panel messages name pieces untranslated (`finish.ts:408-415`, `common.ts:120-131`). Moved to ADR-265.                      |
 | D08-F9  | Rejected        | polish   | A repeated Apply material adds an undo step and says "Applied" (`finish.ts:283-293`); see Cross-examination.                                         |
 | D08-F10 | Rejected (user) | minor    | "Show seller pictures (online)" off still downloads the seller's picture on **Use this** (`SellerLinks.tsx:41-66`); see User decision.               |
 
@@ -73,7 +73,7 @@ every field and problem names its board.**
 ## Scope
 
 - In scope: F1–F7 as decided; tests for each.
-- Out of scope: translating piece names in core messages (moved to ADR-264); a no-op Apply (rejected); the seller
+- Out of scope: translating piece names in core messages (moved to ADR-265); a no-op Apply (rejected); the seller
   picture switch (open question).
 
 ## Consequences
@@ -94,7 +94,7 @@ every field and problem names its board.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-248), for behaviour
 an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id      | Skeptic                                                                                                            | Proposer                                                                                                                                                                                     | Verdict                             |
@@ -106,7 +106,7 @@ an implemented ADR intends, for conflicts with the hard rules, for over-engineer
 | D08-F5  | A tooltip is the usual place for a disabled reason.                                                                | No tooltip on touch, and a disabled button is skipped by the screen reader; the selection card shows its reasons as text (`Selection.tsx:294,315`). Reproduced at 390 px.                    | Accepted                            |
 | D08-F6  | Polish; sighted users see the colour swatch and the name beside each field.                                        | `tests/find-it/setup.tsx:7-9` (ADR-224) asks for an accessible name instead of class names; five identical "Name" fields fail it. A named group per row is one attribute.                    | Accepted                            |
 | D08-F7  | ADR-212 says a new import replaces the list; removal was not asked.                                                | ADR-212 item 8 says "parsed like" the decor list, which has Remove (ADR-049 lines 34-35). Without it the list stays forever. No schema change: the table exists.                             | Accepted                            |
-| D08-F8  | Piece names in core messages are raw everywhere (common, shared, finish); this is not a Boards problem.            | True: the pattern is cross-domain; the Language domain owns how core messages name pieces.                                                                                                   | Moved to ADR-264                    |
+| D08-F8  | Piece names in core messages are raw everywhere (common, shared, finish); this is not a Boards problem.            | True: the pattern is cross-domain; the Language domain owns how core messages name pieces.                                                                                                   | Moved to ADR-265                    |
 | D08-F9  | The board is on those parts, so "Applied" is true; a deep compare of designs to drop the step is over-engineering. | An extra undo step that changes nothing is harmless; no rule is broken.                                                                                                                      | Rejected                            |
 | D08-F10 | ADR-161 lines 32-36 intend the download on a pick; the switch is for lists (lines 50-52).                          | Intended today, but it touches the network boundary (ADR-126): whether "off" means no seller request at all is the user's call.                                                              | Rejected (user kept it, 2026-11-10) |
 

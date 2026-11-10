@@ -1,4 +1,4 @@
-# ADR-256: UI audit — Room and walls: name the field, one tap one corner, names in the user's language
+# ADR-257: UI audit — Room and walls: name the field, one tap one corner, names in the user's language
 
 - Status: Pending
 - Date: 2026-11-10
@@ -87,7 +87,7 @@ name in a message is in the user's language.**
 
 ## Cross-examination
 
-One round, 2026-11-10. The skeptic checked each finding for duplicates (of other findings and of ADR-247), for
+One round, 2026-11-10. The skeptic checked each finding for duplicates (of other findings and of ADR-248), for
 behaviour an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
 | Id     | Skeptic                                                                                                | Proposer                                                                                                                                                                                                                                             | Verdict  |

@@ -1,4 +1,4 @@
-# ADR-263: UI audit — Account: a failed account action is said, and uploads keep running
+# ADR-264: UI audit — Account: a failed account action is said, and uploads keep running
 
 - Status: Pending
 - Date: 2026-11-10
@@ -30,7 +30,7 @@ one failure silently stops the automatic upload that
 | ------ | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | D17-F1 | Proven       | major    | A failed Delete my account stops automatic upload for the visit (`client.ts:585-588`); reproduced: a new save not uploaded after 4 s, status still "idle".   |
 | D17-F2 | Proven       | major    | **Keep on this device only** fails without a word when the server cannot be reached (`Account.tsx:140`, `accountActions.ts:144-148`); unhandled rejection.   |
-| D17-F3 | Proven       | minor    | **Stop sharing** fails without a word and a failed list hides the section (`AccountDialog.tsx:458-483`). Moved to ADR-262.                                   |
+| D17-F3 | Proven       | minor    | **Stop sharing** fails without a word and a failed list hides the section (`AccountDialog.tsx:458-483`). Moved to ADR-263.                                   |
 | D17-F4 | Proven       | minor    | Reset password: the mismatch alert stays after the fix, and Confirm's `aria-describedby` points to an element not rendered (`AccountDialog.tsx:83,227-255`). |
 | D17-F5 | Rejected     | —        | Reset password offline has no offline line and an enabled button (`AccountDialog.tsx:221-271`); see Cross-examination.                                       |
 | D17-F6 | Code-evident | minor    | The conflict copy is named with a fixed English suffix "(from your account)" outside `t()` (`client.ts:278`).                                                |
@@ -47,7 +47,7 @@ automatic upload stopped while the user is still signed in.**
    line "It could not be taken out of your account. Check your connection and try again." (`t()` with its Russian
    entry), and the badge stays as it is. Same for **Save to account**, which does not fail today but shares the
    handler.
-3. **F3:** moved to ADR-262 (Saving, backup and sharing), which owns share links (`features.ts:1361`).
+3. **F3:** moved to ADR-263 (Saving, backup and sharing), which owns share links (`features.ts:1361`).
 4. **F4:** typing in New password or Confirm clears `mismatch`; the mismatch alert gets `id="acct-mismatch"` and
    Confirm's `aria-describedby` points to it (`Field` takes the id of its error).
 5. **F5:** no change (rejected in the cross-examination).
@@ -66,7 +66,7 @@ automatic upload stopped while the user is still signed in.**
 ## Scope
 
 - In scope: F1, F2, F4, F6 as decided; tests for each.
-- Out of scope: F3 (ADR-262); renaming conflict copies already stored; the exact match of the typed email in Delete
+- Out of scope: F3 (ADR-263); renaming conflict copies already stored; the exact match of the typed email in Delete
   my account (ADR-130 chose typing the email).
 
 ## Consequences
@@ -93,7 +93,7 @@ conflicts with the hard rules, for over-engineering and for missing tests.
 | ------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | D17-F1 | A failed delete is rare, and a reload starts the sync again.                                                                   | Rare, but the top bar then says "In your account" for pieces that are not (`Account.tsx:73`), and nothing tells the user to reload. Reproduced with a control: 0 records against 1 without the failed delete. One line moves.               | Accepted         |
 | D17-F2 | "Keep on this device only" is undoable and nothing is lost; the item is still in the account, which is the safe side.          | Nothing is lost, but the user asked to take it out of the account and was told nothing (ADR-008: problems are said); the rejection is unhandled. ADR-137 line 34 gives each item the choice, so it must say when the choice did not happen. | Accepted         |
-| D17-F3 | Share links are domain 16's feature line (`features.ts:1361`, ADR-138), not the account's.                                     | Agreed: the same fix shape, but it belongs with share links.                                                                                                                                                                                | Moved to ADR-262 |
+| D17-F3 | Share links are domain 16's feature line (`features.ts:1361`, ADR-138), not the account's.                                     | Agreed: the same fix shape, but it belongs with share links.                                                                                                                                                                                | Moved to ADR-263 |
 | D17-F4 | The mismatch is checked again on the next submit; the stale alert is cosmetic.                                                 | The submit with matching passwords still shows "The two passwords are not the same." while it saves, and the field's description points to nothing, against the label-and-invalid rule (brief, ADR-136). Two lines.                         | Accepted         |
 | D17-F5 | ADR-136 line 30 disables the **sign-in** buttons offline; the reset form is opened from an email link, so the user was online. | A failed save is not silent: `run()` says "Check your connection and try again." (`accountActions.ts:57-70`). Only consistency is at stake.                                                                                                 | Rejected         |
 | D17-F6 | It is a stored name, user data; translating it is the Language domain's job.                                                   | It is text written in code (`client.ts:278`); the translation rule (CLAUDE.md, ADR-153) asks for `t()` at the point it is written, and it is this domain's conflict policy (ADR-129). One key.                                              | Accepted         |

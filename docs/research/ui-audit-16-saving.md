@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Saving, backup and sharing (`src/ui/info/features.ts:1334-1369`, 11 feature lines)
-- ADR: [ADR-262](../adr/ADR-262-ui-audit-saving-every-failure-said-nothing-lost.md)
+- ADR: [ADR-263](../adr/ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px; storage failures by `vi.mock` of
   `src/persist/db` and `src/persist/models`; the online part `src/online/client` mocked, so no request leaves the

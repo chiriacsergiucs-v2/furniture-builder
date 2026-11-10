@@ -2,7 +2,7 @@
 
 - Date: 2026-11-10
 - Domain: Composition (`src/ui/info/features.ts:120-238`, 19 feature lines)
-- ADR: [ADR-248](../adr/ADR-248-ui-audit-composition-ask-before-dropping-contents.md)
+- ADR: [ADR-249](../adr/ADR-249-ui-audit-composition-ask-before-dropping-contents.md)
 - Method: code reading with file:line citations; reproductions run as throwaway jsdom tests outside the repo
   (vitest with a scratch config over `tests/find-it/setup.tsx`, at 1280 px unless noted). No repo source was changed.
 
