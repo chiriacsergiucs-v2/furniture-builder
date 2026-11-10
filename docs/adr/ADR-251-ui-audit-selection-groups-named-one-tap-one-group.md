@@ -26,14 +26,14 @@ in English whatever the app language.
 
 ## Findings
 
-| Id     | Class      | Severity | Finding                                                                                                                                     |
-| ------ | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| D05-F1 | Proven     | major    | New groups are named "Group N" in English and shown untranslated in the Russian UI (`selection.ts:196-201`, `Selection.tsx:48,52,392,400`). |
-| D05-F2 | Proven     | minor    | Group on one piece and a 3D model does nothing and says nothing; the card says "2 pieces selected" (`Selection.tsx:39,103-107`).            |
-| D05-F3 | Proven     | minor    | A double tap on Group groups and then ungroups: the buttons swap in place (`Selection.tsx:98-107`); reproduced: 0 groups, 2 undo steps.     |
-| D05-F4 | Proven     | minor    | The plan and front-view selection boxes never take a 3D model (`selection.ts:249-254,272-277`), though a tap and Ctrl+A do (ADR-246).       |
-| D05-F5 | Rejected   | polish   | The 3D view's Select has no About Select ⓘ (`Viewer3D.tsx:704-713`); see Cross-examination.                                                 |
-| D05-F6 | Needs user | minor    | No control renames a group (not found in the repo; `groupItems` takes a name no caller passes, `selection.ts:207-211`); see Open questions. |
+| Id     | Class           | Severity | Finding                                                                                                                                     |
+| ------ | --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| D05-F1 | Proven          | major    | New groups are named "Group N" in English and shown untranslated in the Russian UI (`selection.ts:196-201`, `Selection.tsx:48,52,392,400`). |
+| D05-F2 | Proven          | minor    | Group on one piece and a 3D model does nothing and says nothing; the card says "2 pieces selected" (`Selection.tsx:39,103-107`).            |
+| D05-F3 | Proven          | minor    | A double tap on Group groups and then ungroups: the buttons swap in place (`Selection.tsx:98-107`); reproduced: 0 groups, 2 undo steps.     |
+| D05-F4 | Proven          | minor    | The plan and front-view selection boxes never take a 3D model (`selection.ts:249-254,272-277`), though a tap and Ctrl+A do (ADR-246).       |
+| D05-F5 | Rejected        | polish   | The 3D view's Select has no About Select ⓘ (`Viewer3D.tsx:704-713`); see Cross-examination.                                                 |
+| D05-F6 | Accepted (user) | minor    | No control renames a group (not found in the repo; `groupItems` takes a name no caller passes, `selection.ts:207-211`); see User decision.  |
 
 ## Decision
 
@@ -53,6 +53,7 @@ the app writes is in the user's language.**
    footprint and front extent from the project model's `models[].box`), after the pieces. Core only; no
    `src/core/types.ts` change.
 5. **F5:** no change (rejected in the cross-examination).
+6. **F6 (D05-F6, user 2026-11-10):** the group's selection card gets a Name field (one undo step, empty name refused with a field error), with its Russian entry.
 
 ## Alternatives considered
 
@@ -82,6 +83,7 @@ the app writes is in the user's language.**
 - [ ] With one piece and a 3D model selected, Group is not offered; with two pieces and a model it groups the pieces and says so (test).
 - [ ] A double tap on Group leaves one group and one undo step; Enter on Group still groups (test).
 - [ ] A plan box and a front-view box over a 3D model select it (core test).
+- [ ] Renaming a group on its selection card shows the new name in the piece list, undoes in one step, and an empty name is refused with a field error (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
 
 ## Cross-examination
@@ -89,18 +91,17 @@ the app writes is in the user's language.**
 One round, 2026-11-10. The skeptic checked each finding for duplicates (of each other and of ADR-247), for behaviour
 an implemented ADR intends, for conflicts with the hard rules, for over-engineering and for missing tests.
 
-| Id     | Skeptic                                                                                        | Proposer                                                                                                                                                                                               | Verdict             |
-| ------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| D05-F1 | A group name is stored data, like a project name; the translation rule is for app text.        | The user never typed it: the app wrote it, and nothing lets the user change it. Other app-made names are written through `t()` (`Dialogs.tsx:732`). Reproduced: "Group 1" twice on a Russian screen.   | Accepted            |
-| D05-F2 | 3D models are display only (ADR-076); grouping them was never promised.                        | Agreed, so the fix does not group them; it stops offering a button that silently does nothing. Ctrl+A takes models since ADR-246 lines 33-34, so a mixed selection is the common case.                 | Accepted            |
-| D05-F3 | Undo brings the group back; polish.                                                            | Two undo steps and no group, with nothing on screen saying why; the one-tap rule of ADR-247 (F1, F4) covers it. Reproduced with `user.dblClick`.                                                       | Accepted            |
-| D05-F4 | ADR-097 and ADR-211 say the box takes "every piece"; models are not pieces.                    | ADR-246 brought models into the selection for a tap and Ctrl+A; the front view already hands the models' boxes to the box (`Project.tsx:2523-2530`). Reproduced in core: a box over a fridge is empty. | Accepted            |
-| D05-F5 | ADR-211 item 8 gave the tip to "the three Select toggles"; the 3D button has its own `title`.  | The feature line says "each Select", but the implemented ADR chose three; the feature tree changes only when the user asks (CLAUDE.md, user 2026-11-07).                                               | Rejected            |
-| D05-F6 | "Named groups" with a fixed number is still named; a rename field is a new feature, not a bug. | ADR-097 never specified renaming; whether to add one is the user's choice.                                                                                                                             | Needs user decision |
+| Id     | Skeptic                                                                                        | Proposer                                                                                                                                                                                               | Verdict                    |
+| ------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| D05-F1 | A group name is stored data, like a project name; the translation rule is for app text.        | The user never typed it: the app wrote it, and nothing lets the user change it. Other app-made names are written through `t()` (`Dialogs.tsx:732`). Reproduced: "Group 1" twice on a Russian screen.   | Accepted                   |
+| D05-F2 | 3D models are display only (ADR-076); grouping them was never promised.                        | Agreed, so the fix does not group them; it stops offering a button that silently does nothing. Ctrl+A takes models since ADR-246 lines 33-34, so a mixed selection is the common case.                 | Accepted                   |
+| D05-F3 | Undo brings the group back; polish.                                                            | Two undo steps and no group, with nothing on screen saying why; the one-tap rule of ADR-247 (F1, F4) covers it. Reproduced with `user.dblClick`.                                                       | Accepted                   |
+| D05-F4 | ADR-097 and ADR-211 say the box takes "every piece"; models are not pieces.                    | ADR-246 brought models into the selection for a tap and Ctrl+A; the front view already hands the models' boxes to the box (`Project.tsx:2523-2530`). Reproduced in core: a box over a fridge is empty. | Accepted                   |
+| D05-F5 | ADR-211 item 8 gave the tip to "the three Select toggles"; the 3D button has its own `title`.  | The feature line says "each Select", but the implemented ADR chose three; the feature tree changes only when the user asks (CLAUDE.md, user 2026-11-07).                                               | Rejected                   |
+| D05-F6 | "Named groups" with a fixed number is still named; a rename field is a new feature, not a bug. | ADR-097 never specified renaming; whether to add one is the user's choice.                                                                                                                             | Accepted (user 2026-11-10) |
 
 No physical-fact question arose. Decided without asking: models stay out of groups (ADR-097, ADR-076).
 
-## Open questions
+## User decision (2026-11-10)
 
-- **D05-F6:** Should a group be renameable? Options: (a) a Name field on the group's selection card; (b) the name is
-  asked when Group is tapped, "Group N" prefilled; (c) no rename, the number is enough. Suggested: (a), not applied.
+- **D05-F6:** A Name field on the group's selection card.

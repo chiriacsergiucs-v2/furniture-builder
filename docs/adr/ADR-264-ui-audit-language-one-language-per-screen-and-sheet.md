@@ -33,7 +33,7 @@ sheets, drawings' labels".
 | D18-F3 | Proven       | minor    | "Flap fitting: {name}" never translates; its Russian entry is unreachable (`cabinet.ts:719`, `index.ts:110-126`); reproduced in node.                                                                                                                                                                                 |
 | D18-F4 | Proven       | minor    | Problem messages put stored board and piece names in raw (`rules.ts:88-92`, `project.ts:1018,1533,1614`); reproduced: «PAL 18 white» in a Russian message.                                                                                                                                                            |
 | D18-F5 | Proven       | minor    | With storage blocked, Русский reloads the page in English and says nothing (`LanguageMenu.tsx:16-24`); reproduced: reload 1, stored null, no alert.                                                                                                                                                                   |
-| D18-F6 | Proven       | —        | The cut sheet's "De verificat" warnings are in the app's language (`PrintSheet.tsx:172-174`); needs a user answer, see Open questions.                                                                                                                                                                                |
+| D18-F6 | Proven       | —        | The cut sheet's "De verificat" warnings are in the app's language (`PrintSheet.tsx:172-174`); the user chose the print language (User decision).                                                                                                                                                                      |
 | D04-F5 | Proven       | minor    | Moved here from [ADR-250](ADR-250-ui-audit-aligning-along-each-wall-alone-on-a-phone.md), merged with F4: `pieceName` (`src/core/project.ts:791-797`) returns the stored English name, used by 37 core messages (align, distribute, locks, moves); in Russian: "Не сдвинуто: Base cabinet (изделие 2) закреплено…".   |
 | D08-F8 | Code-evident | minor    | Moved here from [ADR-254](ADR-254-ui-audit-boards-every-board-change-told-truly.md), merged with F4: Apply-material, common-panel and shared-sides messages name pieces untranslated (`src/core/finish.ts:408-415`, `src/ui/MaterialDialog.tsx:282-288`, `src/core/common.ts:120-131`, `src/core/shared.ts:124-140`). |
 
@@ -57,7 +57,8 @@ built-in names stay English and are translated where they are shown.**
    and the messages of `finish.ts`, `common.ts`, `shared.ts` and `MaterialDialog.tsx` name pieces through it.
 5. **F5:** when saving the language fails, `switchLang` does not reload and the menu says "The language could not be
    saved in this browser’s storage." (`role="alert"`, `t()` with its Russian entry).
-6. **F6:** waits for the user (Open questions).
+6. **F6:** decided by the user: see the last Decision item.
+7. **F6 (D18-F6, user 2026-11-10):** the cut sheet's "De verificat" list prints each warning through `pt()` in the print language; every warning text gets its Romanian, Russian and English entries.
 
 ## Alternatives considered
 
@@ -72,7 +73,7 @@ built-in names stay English and are translated where they are shown.**
 ## Scope
 
 - In scope: F1–F5 as decided; tests for each.
-- Out of scope: F6 until the user answers; translating names the user typed (G-304, user decision 2026-11-05);
+- Out of scope: translating names the user typed (G-304, user decision 2026-11-05);
   Romanian plural forms in `pt()`.
 
 ## Consequences
@@ -90,15 +91,8 @@ built-in names stay English and are translated where they are shown.**
 - [ ] In Russian, the shelf-span warning names the board «ЛДСП 18 белая» (core test).
 - [ ] With storage blocked, Русский does not reload and shows the alert, in English and Russian (test).
 - [ ] In Russian, an align or lock message and an Apply-material message name a built-in piece in Russian, e.g. «Нижний шкаф» (D04-F5, D08-F8; core test).
+- [ ] With print language Romanian, Russian and English, every warning on the cut sheet is in that language; a warning without an entry fails a test (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
-
-## Open questions
-
-1. **F6 — language of the cut sheet's warnings.** The "De verificat" list prints each warning in the app's language
-   under a heading in the print language. Which?
-   - Keep the app's language (today).
-   - Print each warning in the print language (a Romanian, Russian and English entry for every warning text).
-   - Print only the number of warnings and "see the Checks tab in the app", in the print language.
 
 ## Cross-examination
 
@@ -112,9 +106,13 @@ conflicts with the hard rules, for over-engineering and for missing tests.
 | D18-F3 | Rare: only a named flap fitting.                                                                                                             | A dictionary entry nobody can reach is a defect in the rule itself, and the same pattern sits in two more labels; the fix is in `tr()`, no model change.                                                                | Accepted                            |
 | D18-F4 | ADR-156 translated the message templates; names are data, and checks belong to domain 11.                                                    | ADR-155 shows built-in board names through `tr()`; the message is the one place the same board reads «PAL 18 white». The fix is one `tr()` per name, in the messages ADR-156 made.                                      | Accepted                            |
 | D18-F5 | Storage is rarely blocked; ADR-153 chose the reload.                                                                                         | The reload stays; it only waits for a saved choice. The code comment already admits the dead end (`LanguageMenu.tsx:21`).                                                                                               | Accepted                            |
-| D18-F6 | Every warning in three languages is a large table for a sheet section.                                                                       | Mixed languages on one sheet go against ADR-157, but the cost and the shop's need are the user's call.                                                                                                                  | Needs user decision                 |
+| D18-F6 | Every warning in three languages is a large table for a sheet section.                                                                       | Mixed languages on one sheet go against ADR-157, but the cost and the shop's need are the user's call.                                                                                                                  | Accepted (user 2026-11-10)          |
 | D04-F5 | Found while auditing Aligning; the messages are Aligning's.                                                                                  | The defect is the language of a stored name, the same cause as F4; one fix in `pieceName` covers every domain. Reproduced in ADR-250's round with the Russian dictionary loaded.                                        | Accepted (moved in, merged with F4) |
 | D08-F8 | Found while auditing Boards and edges.                                                                                                       | Same cause and fix as D04-F5; the selection card already shows `tr(pieceName(...))` (`src/ui/Selection.tsx:138`).                                                                                                       | Accepted (moved in, merged with F4) |
 
 No finding moved to another domain ADR. Decided without asking: F1 translates where names are shown and keeps the
 stored data English (ADR-155), not the other way round.
+
+## User decision (2026-11-10)
+
+- **D18-F6:** Print each warning in the print language: a Romanian, Russian and English entry for every warning text.

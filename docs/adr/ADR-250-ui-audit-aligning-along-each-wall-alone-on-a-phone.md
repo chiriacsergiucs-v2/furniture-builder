@@ -46,7 +46,7 @@ touch path.**
    A selected piece or group whose quarter turn is on the other axis stays and is named in `skipped`: "{name} stands
    along another wall." Distribute sorts and spaces along the same axis; the "Gaps now" message lists only gaps it
    measured along that axis. Core only, no `src/core/types.ts` change; whole mm (ADR-003).
-2. **F2:** no change until the user answers the open question below.
+2. **F2:** decided by the user: see the last Decision item.
 3. **F3:** a **Move alone** toggle beside **Snap** (inside Options on a phone, as Snap, ADR-144), off by default and
    kept for the session only. On, every plan drag and arrow-key move acts as Alt held for connections:
    `alone: e.altKey || moveAlone` (`Project.tsx:2141,2159`, `2074-2075`). The three hints
@@ -55,6 +55,7 @@ touch path.**
    entry); no undo step, as today.
 5. **F5:** moved to ADR-264 (Language): one fix in `pieceName` reaches every message that names a piece.
 6. **F6:** no change (rejected in the cross-examination).
+7. **F2 (D04-F2, user 2026-11-10):** on a side wall, Duplicate places the copy beside the piece along its own wall, and Mirror the run finds the run touching along that wall; on the back wall nothing changes. This supersedes ADR-069's room-x rule for turned pieces.
 
 ## Alternatives considered
 
@@ -84,28 +85,26 @@ touch path.**
 - [ ] Three base units on the left wall: Align Back puts their backs on the wall's line, Left/Right/Centre move them along z, Distribute spaces them along z and says the real gaps; a piece on another wall is named (core + store tests).
 - [ ] With Move alone on, a plan drag of one of two connected pieces moves it alone and disconnects it at drop; the three hints name Move alone in English and Russian (test).
 - [ ] An align that moves nothing says "Already in line." and adds no undo step (store test).
+- [ ] On a side wall, Duplicate puts the copy beside the piece on that wall with no overlap, and Mirror the run is offered for a run along it (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths: **Move alone** behind Options on a phone, **Already in line.** after a second Align.
-
-## Open questions
-
-1. **F2 — Duplicate and Mirror the run on a side wall.** ADR-069 places a copy "on its right in the room's x" and
-   finds a run "touching along x"; on a side wall the copy lands in the room and the run is not offered. Options:
-   (a) keep room x as ADR-069 says; (b) along the piece's own wall (copy beside it on the wall, run found along z);
-   (c) (b) for the run only, Duplicate unchanged.
 
 ## Cross-examination
 
 One round, 2026-11-10. The skeptic checked each finding for duplicates, for behaviour an implemented ADR intends, for
 conflicts with the hard rules, for over-engineering and for missing tests.
 
-| Id     | Skeptic                                                                                                                | Proposer                                                                                                                                                                                                                                         | Verdict             |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| D04-F1 | ADR-099 was written for the back wall; room x is what it built. The overlaps are shown, so ADR-008 holds.              | ADR-099's decision says "along the wall" and "depth", and the user answered "Along the wall only"; ADR-205 item 1 made side-wall runs. Reproduced: three overlap errors from one tap and a "Gaps now -563 · -563 mm." that is not true.          | Accepted            |
-| D04-F2 | ADR-069 lines 23-25 and 33 say room x and "touching along x" in so many words.                                         | True: it is intended by an implemented ADR, so it is not a bug here. It is also written before side-wall runs existed; whether to change it is the user's call.                                                                                  | Needs user decision |
-| D04-F3 | ADR-168 and ADR-207 chose Alt; a phone can still Select both and turn Connected off. A new toggle is over-engineering. | ADR-168 line 45 names Alt as "the free-drag key of ADR-070", a desktop key; neither ADR names a touch path, and no hint does. The app is phone-first (CLAUDE.md). One toggle beside Snap reuses ADR-144's Options; hint-only is the alternative. | Accepted            |
-| D04-F4 | Nothing changed, so nothing to say; Distribute already reports.                                                        | A tap with no visible change and no word reads as a dead button; Distribute says "Gaps now 0 · 0 mm." in the same case, so Align is the odd one out. One `t()` key.                                                                              | Accepted            |
-| D04-F5 | Not this domain's: `pieceName` serves 37 core messages across moving, sizing, checks and more.                         | Agreed; the fix is one place (`tr()` on the stored name in `pieceName`) and belongs to the Language domain.                                                                                                                                      | Moved to ADR-264    |
-| D04-F6 | No browser in the sandbox; jsdom has no layout, so the cut is a guess.                                                 | Could not be reproduced this round; the accessible names stay whole (the DOM text is complete), so screen readers are not affected.                                                                                                              | Rejected            |
+| Id     | Skeptic                                                                                                                | Proposer                                                                                                                                                                                                                                         | Verdict                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| D04-F1 | ADR-099 was written for the back wall; room x is what it built. The overlaps are shown, so ADR-008 holds.              | ADR-099's decision says "along the wall" and "depth", and the user answered "Along the wall only"; ADR-205 item 1 made side-wall runs. Reproduced: three overlap errors from one tap and a "Gaps now -563 · -563 mm." that is not true.          | Accepted                   |
+| D04-F2 | ADR-069 lines 23-25 and 33 say room x and "touching along x" in so many words.                                         | True: it is intended by an implemented ADR, so it is not a bug here. It is also written before side-wall runs existed; whether to change it is the user's call.                                                                                  | Accepted (user 2026-11-10) |
+| D04-F3 | ADR-168 and ADR-207 chose Alt; a phone can still Select both and turn Connected off. A new toggle is over-engineering. | ADR-168 line 45 names Alt as "the free-drag key of ADR-070", a desktop key; neither ADR names a touch path, and no hint does. The app is phone-first (CLAUDE.md). One toggle beside Snap reuses ADR-144's Options; hint-only is the alternative. | Accepted                   |
+| D04-F4 | Nothing changed, so nothing to say; Distribute already reports.                                                        | A tap with no visible change and no word reads as a dead button; Distribute says "Gaps now 0 · 0 mm." in the same case, so Align is the odd one out. One `t()` key.                                                                              | Accepted                   |
+| D04-F5 | Not this domain's: `pieceName` serves 37 core messages across moving, sizing, checks and more.                         | Agreed; the fix is one place (`tr()` on the stored name in `pieceName`) and belongs to the Language domain.                                                                                                                                      | Moved to ADR-264           |
+| D04-F6 | No browser in the sandbox; jsdom has no layout, so the cut is a guess.                                                 | Could not be reproduced this round; the accessible names stay whole (the DOM text is complete), so screen readers are not affected.                                                                                                              | Rejected                   |
 
 Decided without asking: F1 takes the first selected piece's quarter turn as the frame (ADR-099's "to the first
 selected piece"); F3 keeps Move alone for the session only, like a held key.
+
+## User decision (2026-11-10)
+
+- **D04-F2:** Along the piece's own wall: Duplicate puts the copy beside the piece on its wall, and Mirror the run finds the run along that wall.

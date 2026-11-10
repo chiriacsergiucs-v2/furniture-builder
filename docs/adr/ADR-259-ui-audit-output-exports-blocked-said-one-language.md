@@ -62,7 +62,8 @@ user tapped, and a print speaks only the print language.**
    seller item does the same instead of dropping the value, and its label goes through `tr()`.
 8. **F9:** `pt('{n|# linie fără preț|# linii fără preț}')` with its Russian and English plural forms.
 9. **D19-F3:** the Results tablist gets `onKeyDown={rovingKeys}`, `tabIndex={rovingTab(...)}` and `aria-label={t('Results')}` (Russian entry exists), as ADR-202.
-10. **F7:** not decided here (Open questions). **F10:** no change (rejected).
+10. **F7:** decided by the user: see the last Decision item. **F10:** no change (rejected).
+11. **F7 (D13-F7, user 2026-11-10):** the last render keeps the id of the piece or project it was made of; the Client sheet uses it only when that id is the one open, else the 3D still or front view, as before ADR-206.
 
 ## Alternatives considered
 
@@ -75,7 +76,7 @@ user tapped, and a print speaks only the print language.**
 ## Scope
 
 - In scope: F1–F6, F8, F9 as decided; tests for each.
-- Out of scope: F7 until the user answers; translating Shopping line items into the print language (not asked).
+- Out of scope: translating Shopping line items into the print language (not asked).
 
 ## Consequences
 
@@ -93,6 +94,7 @@ user tapped, and a print speaks only the print language.**
 - [ ] Wrong Price, Seller units and seller Quantity are `aria-invalid` with a hint, in English and Russian (test).
 - [ ] The Client sheet says "1 linie fără preț" for one line and "2 linii fără preț" for two (test).
 - [ ] On the Results tabs, ArrowRight on Parts selects Sheets and Tab reaches only the selected tab (D19-F3, find-it).
+- [ ] After a render of piece A, the Client sheet of piece B shows B's own picture, and A's sheet still shows the render (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
 
 ## Cross-examination
@@ -100,22 +102,20 @@ user tapped, and a print speaks only the print language.**
 One round, 2026-11-10. The skeptic checked each finding for duplicates, for behaviour an implemented ADR intends, for
 conflicts with the hard rules, for over-engineering and for missing tests.
 
-| Id      | Skeptic                                                                                                    | Proposer                                                                                                                                                                              | Verdict             |
-| ------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| D13-F1  | ADR-021 and ADR-174 say nothing about errors; a user may want to finish an errored design in Fusion.       | ADR-008's rule is "errors block export" (CLAUDE.md hard rule) and ADR-020 line 23 blocks printing; no later ADR exempts these three. Reproduced: all three enabled with one error.    | Accepted            |
-| D13-F2  | ADR-181 item 4 promised headers only; line items are English too.                                          | Units and the estimate are not line items; ADR-181 item 4's reason is "a print never mixes languages", and the CSV already prints `buc` where the print says `pcs`. Reproduced.       | Accepted            |
-| D13-F3  | Browsers clean file names themselves.                                                                      | Not every browser does it the same way; the Parts CSV and every other file use `fileName()` (`Output.tsx:129`, `MoreMenu.tsx:129,163,186`). One call.                                 | Accepted            |
-| D13-F4  | Duplicate of ADR-247's save rule?                                                                          | ADR-247 covers creation paths only. A typed price already says its failure (`Shopping.tsx:112-114`); the import does not. Reproduced: no message and an unhandled rejection.          | Accepted            |
-| D13-F5  | Rare: needs a broken IndexedDB.                                                                            | Rare, but the dialog is a dead end with no word; ADR-008 spirit and the storage rule say failures are named. Reproduced.                                                              | Accepted            |
-| D13-F6  | `tests/find-it/prints-exports.test.tsx:79-81` expects the stored name, so ADR-206 intends it.              | ADR-206 came before ADR-212, whose reason is "prints speak one language" (ADR-212 line 82); the cutting sheet already contradicts itself between two tables. The test line changes.   | Accepted            |
-| D13-F7  | ADR-206 item 1 says "the last PNG the Render dialog made this session": intended.                          | Intended as written, but the ADR did not consider a render of another piece; whether to change it is the user's call.                                                                 | Needs user decision |
-| D13-F8  | Polish.                                                                                                    | A value dropped with no word breaks ADR-008 ("never clamped silently"); the rest of the editor marks wrong fields `aria-invalid` (ADR-199 test `piece-editor-inputs.test.tsx:27-31`). | Accepted            |
-| D13-F9  | Over-engineering for one word.                                                                             | One `pt()` key with plural forms that `format` already supports (`src/core/i18n/print.ts:43`); a printed sheet for a client should read right.                                        | Accepted            |
-| D13-F10 | A translated lead sentence is already there; the details come from an internal check that should not fail. | Agreed: the details are for a bug report, the user-facing sentence is translated (`Sheets.tsx:124`).                                                                                  | Rejected            |
-| D19-F3  | Belongs to Information, where it was found.                                                                | The tab bar is Output's own control (`Output.tsx:56-75`); ADR-265's round moved it here. Reproduced there: every tab has `tabIndex` 0 and ArrowRight changes nothing.                 | Accepted (moved in) |
+| Id      | Skeptic                                                                                                    | Proposer                                                                                                                                                                              | Verdict                    |
+| ------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| D13-F1  | ADR-021 and ADR-174 say nothing about errors; a user may want to finish an errored design in Fusion.       | ADR-008's rule is "errors block export" (CLAUDE.md hard rule) and ADR-020 line 23 blocks printing; no later ADR exempts these three. Reproduced: all three enabled with one error.    | Accepted                   |
+| D13-F2  | ADR-181 item 4 promised headers only; line items are English too.                                          | Units and the estimate are not line items; ADR-181 item 4's reason is "a print never mixes languages", and the CSV already prints `buc` where the print says `pcs`. Reproduced.       | Accepted                   |
+| D13-F3  | Browsers clean file names themselves.                                                                      | Not every browser does it the same way; the Parts CSV and every other file use `fileName()` (`Output.tsx:129`, `MoreMenu.tsx:129,163,186`). One call.                                 | Accepted                   |
+| D13-F4  | Duplicate of ADR-247's save rule?                                                                          | ADR-247 covers creation paths only. A typed price already says its failure (`Shopping.tsx:112-114`); the import does not. Reproduced: no message and an unhandled rejection.          | Accepted                   |
+| D13-F5  | Rare: needs a broken IndexedDB.                                                                            | Rare, but the dialog is a dead end with no word; ADR-008 spirit and the storage rule say failures are named. Reproduced.                                                              | Accepted                   |
+| D13-F6  | `tests/find-it/prints-exports.test.tsx:79-81` expects the stored name, so ADR-206 intends it.              | ADR-206 came before ADR-212, whose reason is "prints speak one language" (ADR-212 line 82); the cutting sheet already contradicts itself between two tables. The test line changes.   | Accepted                   |
+| D13-F7  | ADR-206 item 1 says "the last PNG the Render dialog made this session": intended.                          | Intended as written, but the ADR did not consider a render of another piece; whether to change it is the user's call.                                                                 | Accepted (user 2026-11-10) |
+| D13-F8  | Polish.                                                                                                    | A value dropped with no word breaks ADR-008 ("never clamped silently"); the rest of the editor marks wrong fields `aria-invalid` (ADR-199 test `piece-editor-inputs.test.tsx:27-31`). | Accepted                   |
+| D13-F9  | Over-engineering for one word.                                                                             | One `pt()` key with plural forms that `format` already supports (`src/core/i18n/print.ts:43`); a printed sheet for a client should read right.                                        | Accepted                   |
+| D13-F10 | A translated lead sentence is already there; the details come from an internal check that should not fail. | Agreed: the details are for a bug report, the user-facing sentence is translated (`Sheets.tsx:124`).                                                                                  | Rejected                   |
+| D19-F3  | Belongs to Information, where it was found.                                                                | The tab bar is Output's own control (`Output.tsx:56-75`); ADR-265's round moved it here. Reproduced there: every tab has `tabIndex` 0 and ArrowRight changes nothing.                 | Accepted (moved in)        |
 
-## Open questions
+## User decision (2026-11-10)
 
-- **D13-F7:** Which picture should the Client sheet use after a render of another piece? (a) the last render of the
-  session, as now (ADR-206); (b) the last render only when it was made of the piece or project now open, else the 3D
-  still or front view; (c) forget the render whenever another piece or project opens. Suggested: (b).
+- **D13-F7:** Use the last render only when it was made of the piece or project now open; else the 3D still or the front view.

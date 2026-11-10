@@ -32,7 +32,7 @@ toggle does.
 | D02-F3 | Proven       | minor    | "Apply a layout from the catalog" replaces a space's contents with no question (`Editors.tsx:279-285`); reproduced: 3 drawers became a shelf, 0 dialogs.       |
 | D02-F4 | Proven       | minor    | Esc inside a drilled project piece clears the piece instead of going up one level (`App.tsx:541-545`); reproduced: drill and "Inside this piece" gone.         |
 | D02-F5 | Rejected     | —        | On a phone "Up one level" and "Select the divided space around this one" go to different levels (`Inspector.tsx:382-391,647-651`); see Cross-examination.      |
-| D02-F6 | Code-evident | —        | The sink-trap notch starts at 250 × 200 mm (`Inspector.tsx:559-565`); a physical-fact default, see Open questions.                                             |
+| D02-F6 | Code-evident | —        | The sink-trap notch starts at 250 × 200 mm (`Inspector.tsx:559-565`); a physical-fact default, kept by the user (User decision).                               |
 
 ## Decision
 
@@ -52,7 +52,7 @@ that the user did not type or the model did not measure.**
 4. **F4:** in a project with a drilled piece, Esc with a space selected inside it selects `parentOf` (as in the piece
    editor, ADR-203 item 8); only when the whole piece is the selection does Esc clear the project selection.
 5. **F5:** no change (rejected in the cross-examination).
-6. **F6:** waits for the user (Open questions).
+6. **F6:** no change; the user kept 250 × 200 (User decision).
 
 ## Alternatives considered
 
@@ -66,7 +66,7 @@ that the user did not type or the model did not measure.**
 ## Scope
 
 - In scope: F1–F4 as decided; tests for each.
-- Out of scope: F2's stored "not yet typed" flag (model change); F6 until the user answers.
+- Out of scope: F2's stored "not yet typed" flag (model change).
 
 ## Consequences
 
@@ -83,27 +83,23 @@ that the user did not type or the model did not measure.**
 - [ ] Esc with a space selected inside a drilled project piece selects the space around it and keeps the piece (test).
 - [ ] Find-it test passes from the bare app at phone and desktop widths.
 
-## Open questions
-
-1. **F6 — sink-trap notch default.** "Top drawer cut around a sink trap" starts the notch at 250 × 200 mm, the same
-   numbers as the kitchen catalog's sink base (`src/core/catalog/kitchen.ts:219`). Keep it?
-   - Keep 250 × 200 with the "Measure your trap and pipes" hint (today).
-   - Start at the drawer's own inside size and ask the user to measure.
-   - Keep it and add a warning until the notch is changed (needs a stored flag).
-
 ## Cross-examination
 
 One round, 2026-11-10. The skeptic checked each finding for duplicates, for behaviour an implemented ADR intends, for
 conflicts with the hard rules, for over-engineering and for missing tests.
 
-| Id     | Skeptic                                                                                                                | Proposer                                                                                                                                                                                                                      | Verdict             |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| D02-F1 | ADR-084/086 made the card one tap; ADR-246 cites the quick count only as the model for keeping the first bay.          | ADR-246 Decision covers "a lower part count"; the card removes a part like Parts −, which asks. The question comes only when something is lost, so the one-tap path stays for empty bays. Reproduced: 3 drawers, 0 dialogs.   | Accepted            |
-| D02-F2 | The user must check every size anyway (the guidance tip, `Editors.tsx:226-231`); a start value is convenience.         | ADR-036 lines 26-28 and 43 forbid default niche sizes as an ADR-010 breach; 590 matches neither the opening (684) nor any drawing, and the hardware line calls it "as entered". The opening's size is measured, not invented. | Accepted            |
-| D02-F3 | Applying a catalog layout is an explicit replace, and the tip says so.                                                 | The tip says undo restores it, the reason ADR-246 rejected; Bays and shelves asks for the same replace (`Inspector.tsx:1946-1953`). Asked only when the space holds something.                                                | Accepted            |
-| D02-F4 | ADR-097 says Esc clears in a project; ADR-203 scoped "up one level" to the piece editor.                               | ADR-241 moved piece editing into the project's drill; the same space editor and crumbs then answer Esc two ways. Esc still clears when the whole piece is selected, so ADR-097 holds. Reproduced.                             | Accepted            |
-| D02-F5 | ADR-211 made "Up one level" match Esc on purpose; the link names its target, and the crumbs show and reach "Interior". | The two sit in one panel and differ from a top part (reproduced).                                                                                                                                                             | Rejected            |
-| D02-F6 | 250 × 200 is the catalog's own sink-base value, and the field says to measure.                                         | Whether a notch size may start filled in is a physical-fact default (ADR-010); not ours to decide.                                                                                                                            | Needs user decision |
+| Id     | Skeptic                                                                                                                | Proposer                                                                                                                                                                                                                      | Verdict                             |
+| ------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| D02-F1 | ADR-084/086 made the card one tap; ADR-246 cites the quick count only as the model for keeping the first bay.          | ADR-246 Decision covers "a lower part count"; the card removes a part like Parts −, which asks. The question comes only when something is lost, so the one-tap path stays for empty bays. Reproduced: 3 drawers, 0 dialogs.   | Accepted                            |
+| D02-F2 | The user must check every size anyway (the guidance tip, `Editors.tsx:226-231`); a start value is convenience.         | ADR-036 lines 26-28 and 43 forbid default niche sizes as an ADR-010 breach; 590 matches neither the opening (684) nor any drawing, and the hardware line calls it "as entered". The opening's size is measured, not invented. | Accepted                            |
+| D02-F3 | Applying a catalog layout is an explicit replace, and the tip says so.                                                 | The tip says undo restores it, the reason ADR-246 rejected; Bays and shelves asks for the same replace (`Inspector.tsx:1946-1953`). Asked only when the space holds something.                                                | Accepted                            |
+| D02-F4 | ADR-097 says Esc clears in a project; ADR-203 scoped "up one level" to the piece editor.                               | ADR-241 moved piece editing into the project's drill; the same space editor and crumbs then answer Esc two ways. Esc still clears when the whole piece is selected, so ADR-097 holds. Reproduced.                             | Accepted                            |
+| D02-F5 | ADR-211 made "Up one level" match Esc on purpose; the link names its target, and the crumbs show and reach "Interior". | The two sit in one panel and differ from a top part (reproduced).                                                                                                                                                             | Rejected                            |
+| D02-F6 | 250 × 200 is the catalog's own sink-base value, and the field says to measure.                                         | Whether a notch size may start filled in is a physical-fact default (ADR-010); not ours to decide.                                                                                                                            | Rejected (user kept it, 2026-11-10) |
 
 No finding moved to another domain. Decided without asking: F2 starts at the opening's measured size and kind Other;
 the stored "not yet typed" flag is left for a model ADR.
+
+## User decision (2026-11-10)
+
+- **D02-F6:** Keep 250 × 200 with the "Measure your trap and pipes" hint (today). No change; the finding is closed.
