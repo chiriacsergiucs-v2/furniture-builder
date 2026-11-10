@@ -115,6 +115,7 @@ export function SelectionCard() {
               await askConfirm(t('Delete these {n} pieces from this project?', { n: ids.length }), {
                 confirmLabel: t('Delete'),
                 danger: true,
+                cancelFirst: true,
               })
             )
               del();

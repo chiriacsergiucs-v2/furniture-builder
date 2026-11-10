@@ -382,7 +382,9 @@ export function mirrorSet(
       .filter((i) => !inSet.has(i)),
   );
   // Every piece of the set and on it moves and is mirrored: refused when one is locked (ADR-095).
-  const refused = moveBlocked(project, [...set, ...stacked]);
+  // A mirror also turns each piece (θ → −θ): a turn lock refuses it too, as for one piece (ADR-171, ADR-243).
+  const refused =
+    moveBlocked(project, [...set, ...stacked]) ?? turnBlocked(project, [...set, ...stacked]);
   if (refused) return { project, reasons: [], refused };
   const x0 = Math.min(...set.map((r) => bounds.get(r)!.x)),
     x1 = Math.max(...set.map((r) => bounds.get(r)!.x + bounds.get(r)!.w));

@@ -14,6 +14,7 @@ import { data_research1 } from './data-research1';
 import { data_research2 } from './data-research2';
 import { data_wizard } from './data-wizard';
 import { ru_editors } from './editors';
+import { ru_flows } from './flows';
 import { ru_info } from './info';
 import { ru_inspector } from './inspector';
 import { ru_kitchen } from './kitchen';
@@ -49,6 +50,7 @@ export const ru = {
   ...ru_prints,
   ...ru_surfaces,
   ...ru_kitchen,
+  ...ru_flows,
 };
 
 export const ruData: Record<string, string> = {

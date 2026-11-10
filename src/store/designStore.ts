@@ -115,6 +115,7 @@ import {
   PROJECT_SCHEMA,
   refreshRunParts,
   requestKey,
+  removeBlocked,
   removeProjectItem,
   resolvePlacements,
   roomToPiece,
@@ -257,7 +258,13 @@ interface State {
   /** Corners tapped so far while drawing the room on the plan (ADR-059), or null. */
   drawingRoom: Pt[] | null;
   /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
-  templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null;
+  templateEdit: {
+    template: LocalTemplate;
+    variantId: string;
+    returnTo: Design;
+    /** The open project and its history, reopened when the edit ends (ADR-245). */
+    returnProject?: Partial<State>;
+  } | null;
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void;
   setKerf: (kerf: number) => void;
@@ -332,7 +339,8 @@ interface State {
   undo: () => void;
   redo: () => void;
   openProject: (p: Project) => void;
-  updateProject: (fn: (p: Project) => Project) => void;
+  /** Returns why the change was refused (a lock), or null (ADR-244). */
+  updateProject: (fn: (p: Project) => Project) => string | null;
   addPiece: (d: Design, libraryId?: string) => void;
   /**
    * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
@@ -605,6 +613,24 @@ interface State {
 
 const HISTORY = 100;
 
+/** "Change all copies" survives a reload on this device (ADR-245); on unless the user turned it off. */
+const LINK_ALL_KEY = 'fb:link-all-off';
+const readLinkAll = (): boolean => {
+  try {
+    return localStorage.getItem(LINK_ALL_KEY) !== '1';
+  } catch {
+    return true;
+  }
+};
+const writeLinkAll = (on: boolean) => {
+  try {
+    if (on) localStorage.removeItem(LINK_ALL_KEY);
+    else localStorage.setItem(LINK_ALL_KEY, '1');
+  } catch {
+    // A browser that keeps nothing: the choice lasts for this visit only.
+  }
+};
+
 export const useDesign = create<State>((rawSet, get) => {
   // Setting the main selected piece alone selects just that piece (ADR-097).
   const withIds = (p: Partial<State>): Partial<State> =>
@@ -614,9 +640,10 @@ export const useDesign = create<State>((rawSet, get) => {
   const set = (partial: Partial<State> | ((s: State) => Partial<State>)) =>
     typeof partial === 'function' ? rawSet((s) => withIds(partial(s))) : rawSet(withIds(partial));
   /** Every edit goes through here: history, timestamp, rebuild. */
-  const commit = (next: Design) => {
+  /** Returns why the edit was refused (a lock, ADR-122/211), or null (ADR-244: callers report it truthfully). */
+  const commit = (next: Design): string | null => {
     const { design, past } = get();
-    if (next === design) return;
+    if (next === design) return null;
     // A project piece whose size is locked keeps its size (ADR-122): the edit is refused and the reason shown.
     const open = get().editingItemId ?? get().drillItemId;
     const p0 = get().project;
@@ -625,7 +652,7 @@ export const useDesign = create<State>((rawSet, get) => {
       p0 && open ? (resizeBlocked(p0, open, next) ?? lockBlocked(p0, open, next)) : null;
     if (locked) {
       set({ notice: locked });
-      return;
+      return locked;
     }
     // The piece's own bindings take its own variables' values (ADR-210); inside a project, a project binding on the
     // same target wins, so it is left to the project's commit.
@@ -677,6 +704,46 @@ export const useDesign = create<State>((rawSet, get) => {
           }
         : partial,
     );
+    return null;
+  };
+  /**
+   * Group and project scopes leave a piece whose `keys` lock is on as it was and name it (ADR-244), instead of the
+   * whole change being refused by one locked piece.
+   */
+  const leaveLocked = (
+    base: Project,
+    next: Project,
+    keys: readonly ('boardsLocked' | 'constructionLocked')[],
+  ): { project: Project; kept: string[] } => {
+    const kept: string[] = [];
+    const items = next.items.map((it) => {
+      const was = base.items.find((b) => b.id === it.id);
+      if (!was || was.design === it.design || !keys.some((k) => was[k])) return it;
+      kept.push(was.design.name);
+      return { ...it, design: was.design };
+    });
+    return kept.length ? { project: { ...next, items }, kept } : { project: next, kept };
+  };
+  /** Commit an apply-to-many result (ADR-244): locked pieces kept, and a refusal reported, never a false "applied". */
+  const commitApplied = (
+    base: Project,
+    r: { project: Project; applied: string[]; skipped: string[] },
+    name: string,
+    keys: readonly ('boardsLocked' | 'constructionLocked')[],
+  ): { applied: string[]; skipped: string[] } => {
+    if (!r.applied.length) return { applied: [], skipped: r.skipped };
+    const { project, kept } = leaveLocked(base, r.project, keys);
+    // Names can repeat (two "Base cabinet"s): one applied name goes per piece kept as it was.
+    const applied = [...r.applied];
+    for (const k of kept) {
+      const n = applied.indexOf(k);
+      if (n >= 0) applied.splice(n, 1);
+    }
+    const skipped = [...r.skipped, ...kept.map((name) => t('{name}: locked', { name }))];
+    if (!applied.length || project.items.every((it, n) => it === base.items[n]))
+      return { applied: [], skipped };
+    const why = commitProject(project, name);
+    return why ? { applied: [], skipped: [...skipped, why] } : { applied, skipped };
   };
   /** Keep the project's embedded copy in step with the piece editor (undo/redo included). */
   const syncItem = () => {
@@ -858,7 +925,7 @@ export const useDesign = create<State>((rawSet, get) => {
     selectedId: undefined,
     highlight: [],
     showFronts: true,
-    linkAll: true,
+    linkAll: readLinkAll(),
     exploded: false,
     tab: 'parts',
     resultsOpen: false,
@@ -932,6 +999,8 @@ export const useDesign = create<State>((rawSet, get) => {
       set({ selectedId: next === undefined ? null : next });
     },
     openProject: (raw) => {
+      // A piece-editor session of another project never undoes into this one (ADR-245).
+      projectBeforeEdit = null;
       const p = resolvePlacements(raw);
       set({
         project: p,
@@ -955,7 +1024,7 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     updateProject: (fn) => {
       const p = get().project;
-      if (p) commitProject(fn(p));
+      return p ? commitProject(fn(p)) : null;
     },
     addPiece: (d, libraryId) => {
       const p = get().project;
@@ -1019,7 +1088,9 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return null;
       const set1 = trySetGap(p, id, gap, moveRight);
       const res = set1.reason ? set1 : carryGroups(p, set1.project, [id]);
-      if (res.project !== p) commitProject(res.project);
+      // Every refusal reaches the notice too, however the action was asked for (ADR-244).
+      if (res.reason) set({ notice: res.reason });
+      else if (res.project !== p) commitProject(settleConnections(res.project, [id], false));
       return res.reason ?? null;
     },
     moveItemTo: (id, action) => {
@@ -1057,19 +1128,25 @@ export const useDesign = create<State>((rawSet, get) => {
     linkTemplate: (id, origin) => projectAction((p) => linkItemOrigin(p, id, origin)),
     removeItem: (id) => {
       const p = get().project;
-      if (p) {
-        commitProject(removeProjectItem(p, id));
-        set({ selectedItemId: null });
-      }
+      if (!p) return;
+      // A placement-locked piece is not removed (ADR-243); the user unlocks it first.
+      const why = removeBlocked(p, [id]);
+      if (why) return set({ notice: why });
+      commitProject(removeProjectItem(p, id));
+      set({ selectedItemId: null });
     },
     mergeItems: (a, b) => {
       const p = get().project;
       if (!p) return [t('No project is open.')];
       const res = mergeItems(p, a, b);
-      if (res.mergedId) {
-        commitProject(res.project);
-        set({ selectedItemId: res.mergedId });
+      if (!res.mergedId) {
+        // A refused merge says why (ADR-244).
+        set({ notice: res.issues.join(' ') });
+        return res.issues;
       }
+      const why = commitProject(res.project);
+      if (why) return [why];
+      set({ selectedItemId: res.mergedId });
       return res.issues;
     },
     replaceItem: (id, design, opts) => {
@@ -1208,7 +1285,10 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project);
       set({ selectedItemId: res.id });
     },
-    setLinkAll: (v) => set({ linkAll: v }),
+    setLinkAll: (v) => {
+      writeLinkAll(v);
+      set({ linkAll: v });
+    },
     turnModel: (id, dir) => {
       const p = get().project;
       if (!p?.models?.some((m) => m.id === id)) return;
@@ -1262,14 +1342,21 @@ export const useDesign = create<State>((rawSet, get) => {
       const group = withGroups(p, [id]);
       if (group.length > 1) {
         const all = mirrorItems(p, group);
-        if (all.refused) return all.refused;
+        if (all.refused) {
+          set({ notice: all.refused });
+          return all.refused;
+        }
         if (all.project !== p) commitProject(all.project);
         return all.reasons.length
           ? t('Moved without mirroring: {reasons}', { reasons: all.reasons.join('; ') })
           : null;
       }
       const res = mirrorItem(p, id);
-      if (res.reason) return res.reason;
+      // A refused mirror says why wherever it was asked from (ADR-244).
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
       if (res.project !== p) commitProject(res.project);
       return null;
     },
@@ -1277,6 +1364,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { reasons: [] };
       const res = mirrorRun(p, id);
+      if (res.refused) set({ notice: res.refused });
       if (res.project !== p) commitProject(res.project, t('Mirror the run'));
       return { reasons: res.reasons, ...(res.refused ? { refused: res.refused } : {}) };
     },
@@ -1307,7 +1395,11 @@ export const useDesign = create<State>((rawSet, get) => {
       // Several pieces: none is loaded for space edits (that is one piece's, ADR-088).
       set({ selectedItemIds: keep, selectedItemId: keep[0], drillItemId: null, notice: null });
     },
-    selectAll: () => get().selectItems((get().project?.items ?? []).map((i) => i.id)),
+    // Every piece and placed 3D model (ADR-246); `selectItems` takes both.
+    selectAll: () => {
+      const p = get().project;
+      get().selectItems([...(p?.items ?? []), ...(p?.models ?? [])].map((i) => i.id));
+    },
     setMultiSelect: (on) => set({ multiSelect: on }),
     moveSelectionBy: (dx, dz, step, opts) => {
       const p = get().project;
@@ -1351,6 +1443,8 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       const ids = get().selectedItemIds;
       if (!p || !ids.length) return;
+      const why = removeBlocked(p, ids);
+      if (why) return set({ notice: why });
       let next = p;
       for (const id of ids) next = removeProjectItem(next, id);
       const models = next.models?.filter((m) => !ids.includes(m.id));
@@ -1372,7 +1466,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const res = alignItems(p, ids, how);
       // Grouped pieces take their groups along (ADR-148).
       const carried = carryGroups(p, res.project, ids);
-      if (carried.reason) return carried.reason;
+      if (carried.reason) {
+        set({ notice: carried.reason });
+        return carried.reason;
+      }
       if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))
         commitProject(carried.project, t('Align'));
       return skippedText(res);
@@ -1383,7 +1480,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const ids = get().selectedItemIds;
       const res = distributeItems(p, ids);
       const carried = carryGroups(p, res.project, ids);
-      if (carried.reason) return carried.reason;
+      if (carried.reason) {
+        set({ notice: carried.reason });
+        return carried.reason;
+      }
       if (carried.project.items.some((it, i) => it !== p.items[i]))
         commitProject(carried.project, t('Distribute'));
       // The gaps as they now are, also when a locked piece kept its place.
@@ -1517,8 +1617,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
       const r = applyStyle(p, id, style, scope, get().selectedItemIds);
-      if (r.applied.length) commitProject(r.project, t('Apply style {name}', { name: style.name }));
-      return { applied: r.applied, skipped: r.skipped };
+      return commitApplied(p, r, t('Apply style {name}', { name: style.name }), [
+        'boardsLocked',
+        'constructionLocked',
+      ]);
     },
     suggestRunParts: () => {
       const p = get().project;
@@ -1637,14 +1739,14 @@ export const useDesign = create<State>((rawSet, get) => {
         const d = get().design;
         if (scope === 'part') {
           if (!panelId) return { applied: [], skipped: [] };
-          commit(putPartBoard(d, panelId, board, band));
-          return { applied: [panelId], skipped: [] };
+          const why = commit(putPartBoard(d, panelId, board, band));
+          return why ? { applied: [], skipped: [why] } : { applied: [panelId], skipped: [] };
         }
         const r = putRoleBoards(d, roles, board, band);
-        if (r.applied.length) commit(r.design);
+        const why = r.applied.length ? commit(r.design) : null;
         return {
-          applied: r.applied.length ? [d.name] : [],
-          skipped: r.skipped.map(roleName),
+          applied: r.applied.length && !why ? [d.name] : [],
+          skipped: [...r.skipped.map(roleName), ...(why ? [why] : [])],
         };
       }
       if (scope === 'part') {
@@ -1653,12 +1755,12 @@ export const useDesign = create<State>((rawSet, get) => {
         // A run part (ADR-188): its own board copy.
         const rp = (p.runParts ?? []).find((x) => `run:${x.id}` === panelId);
         if (rp) {
-          commitProject(putRunBoard(p, [rp], board, band), t('Apply material'));
-          return { applied: [rp.label], skipped: [] };
+          const why = commitProject(putRunBoard(p, [rp], board, band), t('Apply material'));
+          return why ? { applied: [], skipped: [why] } : { applied: [rp.label], skipped: [] };
         }
         // Project part ids are `${item.id}:${panel.id}`; the piece stores the panel's own id.
         const own = panelId.startsWith(`${id}:`) ? panelId.slice(id.length + 1) : panelId;
-        commitProject(
+        const why = commitProject(
           {
             ...p,
             items: p.items.map((i) =>
@@ -1667,11 +1769,10 @@ export const useDesign = create<State>((rawSet, get) => {
           },
           t('Apply material'),
         );
-        return { applied: [own], skipped: [] };
+        return why ? { applied: [], skipped: [why] } : { applied: [own], skipped: [] };
       }
       const r = applyMaterial(p, id, allRoles, board, scope, get().selectedItemIds, band);
-      if (r.applied.length) commitProject(r.project, t('Apply material'));
-      return { applied: r.applied, skipped: r.skipped };
+      return commitApplied(p, r, t('Apply material'), ['boardsLocked']);
     },
     setCommon: (kind, on) => {
       const p = get().project;
@@ -1741,7 +1842,10 @@ export const useDesign = create<State>((rawSet, get) => {
       }
       if (wallsOf(p, id).length) return '';
       const { wall, reason } = wallAgainst(p, id, get().projectModel?.pieces);
-      if (wall === null) return reason ?? '';
+      if (wall === null) {
+        if (reason) set({ notice: reason });
+        return reason ?? '';
+      }
       commitProject(connectWall(p, id, wall), t('Against the wall'));
       return '';
     },
@@ -1768,8 +1872,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
       const r = applyFinish(p, id, role, board, scope, get().selectedItemIds);
-      if (r.applied.length) commitProject(r.project, t('Apply finish'));
-      return { applied: r.applied, skipped: r.skipped };
+      return commitApplied(p, r, t('Apply finish'), ['boardsLocked']);
     },
     placeAt: (x, z) => {
       const { project: p, placingItemId: id, placingIds } = get();
@@ -1965,8 +2068,29 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!v?.design) return;
       const d = upgradeDesign(structuredClone(v.design));
       const returnTo = get().templateEdit?.returnTo ?? get().design;
+      const st = get();
+      // The open project comes back, with its undo history, when the template edit ends (ADR-245).
+      const returnProject =
+        st.templateEdit?.returnProject ??
+        (st.project
+          ? {
+              project: st.project,
+              projectModel: st.projectModel,
+              projectPast: st.projectPast,
+              projectFuture: st.projectFuture,
+              projectPastNames: st.projectPastNames,
+              projectFutureNames: st.projectFutureNames,
+              sessionBase: st.sessionBase,
+              editingItemId: st.editingItemId,
+            }
+          : undefined);
       set({
-        templateEdit: { template, variantId, returnTo },
+        templateEdit: {
+          template,
+          variantId,
+          returnTo,
+          ...(returnProject ? { returnProject } : {}),
+        },
         design: d,
         model: buildModel(d),
         selectedId: undefined,
@@ -1997,6 +2121,7 @@ export const useDesign = create<State>((rawSet, get) => {
         future: [],
         dirtyAt: 0,
         pristine: true,
+        ...te.returnProject,
       });
       if (!keep) return null;
       const now = new Date().toISOString();

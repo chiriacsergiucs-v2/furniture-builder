@@ -574,9 +574,20 @@ export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
   };
 }
 
-/** Collapse a split back into a plain space (keeps id, doors). */
+/**
+ * Collapse a split back into one space (keeps id, doors). The first part's contents stay, as when the quick count
+ * removes the last divider (ADR-086, ADR-246): the reverse of `splitSpace`, which moved them there.
+ */
 export const unsplit = (s: Space): Space =>
-  s.kind === 'split' ? { id: s.id, kind: 'shelves', count: 2, front: s.front ?? null } : s;
+  s.kind === 'split'
+    ? { ...s.children[0], id: s.id, front: s.front ?? s.children[0].front ?? null }
+    : s;
+
+/** Whether a space holds anything a change would lose: contents, a front or a handle (ADR-246). */
+export const holdsSomething = (s: Space): boolean =>
+  s.kind === 'split'
+    ? s.children.some(holdsSomething) || !!s.front || !!s.handle
+    : s.kind !== 'empty' || !!s.appliance || !!s.front || !!s.handle;
 
 /**
  * A row of bays: vertical dividers, the same number of fixed shelves in every bay and the same doors on each.
