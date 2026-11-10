@@ -3,7 +3,15 @@
  * Pure: the stepper over the drawing and the 3D view only renders these rows and applies `stepCount`.
  */
 import { t } from './i18n';
-import { findInProduct, fr, makeSpace, productRoots, setDrawerCount, splitSpace } from './design';
+import {
+  findInProduct,
+  fr,
+  holdsSomething,
+  makeSpace,
+  productRoots,
+  setDrawerCount,
+  splitSpace,
+} from './design';
 import type { Selection } from './selectPath';
 import type { Product, Space } from './types';
 
@@ -139,4 +147,16 @@ export function stepCount(t: Space, key: CountKey, delta: 1 | -1): Space {
       return count === 2 || count === 3 || count === 4 ? { ...t, front: { ...t.front, count } } : t;
     }
   }
+}
+
+/**
+ * What one step on a divider count would drop (ADR-249, as ADR-246 asks): 'last' when "−" removes a last part that holds
+ * something, 'merge' when it removes the last divider and a part other than the first holds something, else null.
+ */
+export function stepDrops(t: Space, key: CountKey, delta: 1 | -1): 'last' | 'merge' | null {
+  if (delta > 0 || (key !== 'vdiv' && key !== 'hdiv')) return null;
+  const axis = key === 'vdiv' ? 'x' : 'y';
+  if (t.kind !== 'split' || t.axis !== axis) return null;
+  if (t.children.length > 2) return holdsSomething(t.children[t.children.length - 1]) ? 'last' : null;
+  return t.children.slice(1).some(holdsSomething) ? 'merge' : null;
 }

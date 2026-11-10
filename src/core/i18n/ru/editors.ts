@@ -41,8 +41,9 @@ export const ru_editors = {
   'Niche depth': 'Глубина ниши',
   'Apply a layout from the catalog': 'Применить планировку из каталога',
   'About applying a layout': 'О применении планировки',
-  'Replaces what is inside this space; the outer size stays. Undo brings it back.':
-    'Заменяет содержимое этого пространства; внешний размер сохраняется. «Отменить» всё вернёт.',
+  'Replaces what is inside this space; the outer size stays.':
+    'Заменяет содержимое этого пространства; внешний размер сохраняется.',
+  'Replace what is in this space with {name}?': 'Заменить содержимое этого пространства на «{name}»?',
   'Choose a layout…': 'Выберите планировку…',
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',

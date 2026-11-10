@@ -5,6 +5,8 @@ import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet'
 import { RULE_DEFAULTS } from '../core/rules';
 import { seatingDefaults } from '../core/frame';
 import { t, tr } from '../core/i18n';
+import { holdsSomething } from '../core/design';
+import { askConfirm } from './Confirm';
 import { boardLabel } from '../core/boards';
 import type {
   ApplianceNiche,
@@ -202,15 +204,13 @@ export function ApplianceEditor({
       <Toggle
         label={t('Niche for a built-in appliance')}
         checked={!!a}
+        // No appliance size is filled in (ADR-036, ADR-249): the niche starts at the opening the model measured, kind
+        // Other; with no opening the toggle stays off.
+        disabled={!a && !opening}
         onChange={(v) =>
           set(
-            v
-              ? {
-                  kind: 'oven',
-                  w: opening?.box.w ?? 560,
-                  h: Math.min(opening?.box.h ?? 590, 590),
-                  d: Math.min(opening?.box.d ?? 550, 550),
-                }
+            v && opening
+              ? { kind: 'other', w: opening.box.w, h: opening.box.h, d: opening.box.d }
               : undefined,
           )
         }
@@ -273,15 +273,27 @@ export function LayoutPicker({
       <div className="label-row">
         <label htmlFor={`preset-${space.id}`}>{t('Apply a layout from the catalog')}</label>
         <InfoTip label={t('About applying a layout')} align="start">
-          {t('Replaces what is inside this space; the outer size stays. Undo brings it back.')}
+          {t('Replaces what is inside this space; the outer size stays.')}
         </InfoTip>
       </div>
       <select
         id={`preset-${space.id}`}
         value=""
-        onChange={(e) => {
+        onChange={async (e) => {
           const p = presets.find((x) => x.id === e.target.value);
-          if (p) onChange((s) => applyLayout(s, p.space()));
+          if (!p) return;
+          // A space that holds something is replaced only after asking (ADR-246, ADR-249).
+          const name = `${tr(p.family)}: ${tr(p.name)}`;
+          if (
+            holdsSomething(space) &&
+            !(await askConfirm(t('Replace what is in this space with {name}?', { name }), {
+              confirmLabel: t('Replace'),
+              danger: true,
+              cancelFirst: true,
+            }))
+          )
+            return;
+          onChange((s) => applyLayout(s, p.space()));
         }}
       >
         <option value="">{t('Choose a layout…')}</option>

@@ -1,9 +1,11 @@
 import { forwardRef, useMemo, useState, type CSSProperties } from 'react';
-import { countRows, countSubject, type CountKey } from '../core/counts';
+import { countRows, countSubject, stepDrops, type CountKey } from '../core/counts';
+import { findInProduct } from '../core/design';
 import { t, tr } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
 import { selectionLabel } from './Inspector';
+import { askConfirm } from './Confirm';
 
 // Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.
 const FOLD_KEY = 'fb:counts3d';
@@ -50,6 +52,22 @@ export const CountStepper = forwardRef<
     const id = countSubject(product, selectedId);
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
+  // "−" on dividers that would drop a part holding something asks first, as the side panel does (ADR-246, ADR-249).
+  const fewer = async (key: CountKey, target: string) => {
+    const space = findInProduct(product, target)?.space;
+    const drops = space ? stepDrops(space, key, -1) : null;
+    if (
+      drops &&
+      !(await askConfirm(
+        drops === 'last'
+          ? t('Remove the last parts and what is in them?')
+          : t('Remove the dividers? Only the first part keeps what is in it.'),
+        { confirmLabel: t('Remove'), danger: true, cancelFirst: true },
+      ))
+    )
+      return;
+    step(key, -1);
+  };
   if (!rows.length) return null;
   // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069). Only in the editor
   // panel: the cards over the drawing and 3D show only the counts (user 2026-10-27, N121).
@@ -80,7 +98,7 @@ export const CountStepper = forwardRef<
               type="button"
               aria-label={t('Fewer {what}', { what: tr(r.label).toLowerCase() })}
               disabled={r.value <= r.min}
-              onClick={() => step(r.key, -1)}
+              onClick={() => void fewer(r.key, r.target)}
             >
               −
             </button>

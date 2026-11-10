@@ -540,7 +540,10 @@ export function App() {
       // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
-        if (st.project && !st.editingItemId) st.selectItem(null);
+        // Inside a drilled project piece Esc also goes up one level; only the whole piece clears the selection (ADR-249).
+        if (st.project && !st.editingItemId && st.drillItemId && st.selectedId !== null)
+          st.select(parentOf(st.model, st.selectedId));
+        else if (st.project && !st.editingItemId) st.selectItem(null);
         // In the piece editor Esc goes up one level: a space → the one around it → the whole piece → nothing (ADR-203).
         else st.select(parentOf(st.model, st.selectedId));
       }
