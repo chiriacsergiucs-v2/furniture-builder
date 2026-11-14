@@ -13,6 +13,7 @@
     "build": "tsc -b && vite build",
     "build:ci": "vite build",
     "preview": "vite preview --host 0.0.0.0",
+    "browser:capture": "node tools/capture/capture.mjs",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint . --cache --cache-strategy content",
     "format": "prettier --write .",

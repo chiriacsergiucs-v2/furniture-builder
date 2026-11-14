@@ -74,7 +74,9 @@ each check runs (_Verify before done_); the full table runs on request (`verify`
 
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
-`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible. On the user's request only (toggle
+`browser-on-demand`): `pnpm build:ci && pnpm preview &`, then `pnpm browser:capture [url] [out dir]` saves a screenshot and an
+element-box JSON per place and width (default out dir `docs/research/ui-capture`, may be committed).
 
 ## Verify before done
 
@@ -158,7 +160,8 @@ unknown, a check fails or the push is refused.
   (ADR-169).
 - Zustand selectors return stable references (no `.filter()`/`.map()` inside a selector).
 - Keyboard focus visible; no horizontal page scroll at 390 px.
-- No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016).
+- No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016). `pnpm browser:capture` is
+  not a suite: it asserts nothing and runs only on request (toggle `browser-on-demand`).
 - No dependency with an unknown licence or telemetry. Lockfile committed; base path `/furniture-builder/`.
 - Never renumber ADR or F/N/D ids.
 
@@ -185,11 +188,12 @@ on snapshot-before-tests"); the change updates this table with the date and the 
 skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
 on restores it unchanged.
 
-| Toggle                  | Rule                                                                                  | State | Changed                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
-| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
-| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
-| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
+| Toggle                  | Rule                                                                                                                                          | State | Changed                                                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                                                                           | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on"       |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR                                                         | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                                    |
+| `browser-on-demand`     | Process › Browser on demand: run `pnpm browser:capture` (Playwright screenshots and element boxes at 390 and 1280 px) only when the user asks | on    | 2026-11-14, user: "Create a new feature which will allow you to run playwright, update the docs to allow it on user demand" |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed                                                           | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                                    |
 
 ## Process (standing user rules)
 
