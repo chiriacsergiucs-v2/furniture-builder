@@ -316,6 +316,7 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N276 | Material: force update — replace parts that have their own board, per piece, group and project | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; toggle "Replace parts with their own board too" in the Material dialog (scopes other than Part); tests tests/role-boards.test.ts. typecheck, format:check, build, docs:check and related tests (171 files) pass in the sandbox. |
 | N277 | Piece Settings: step 4 Boards opens Boards, sheets and saw cut (it pointed at a missing group); "Choose a board for parts…" there opens Material with the force toggle | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; tests tests/find-it/boards-step.test.tsx; typecheck, format:check, build, docs:check pass in the sandbox. |
 | N278 | `auto` command: implement, check locally, push to main with no approval (user: "force quick: implement, test locally, push to main, full autopilot") | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; `.claude/skills/auto/SKILL.md`, `CLAUDE.md` skill list and flow. Not run end to end: it takes effect the next time the user says `auto`. |
+| N279 | Phone: choosing a piece or space opens the edit sheet to half | Done | `pnpm exec vitest run tests/find-it` 83 files, 363 tests passed; typecheck, format, build ran locally 2026-11-14. Replaces the 2026-11-09 peek-only rule. Not live-verified |
 
 ## Dropped
 

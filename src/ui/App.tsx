@@ -313,8 +313,8 @@ export function App() {
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  // Choosing a piece or a space never opens the sheet past its peek row on a phone (user 2026-11-09): the drawing
-  // stays in view so a further tap drills one level deeper (ADR-088); the peek row opens the editor.
+  // Choosing a piece or a space opens the phone sheet to half so its editor shows (user 2026-11-14, replaces the
+  // 2026-11-09 peek-only rule).
   const selKey = inProject ? selectedItemId : selectedId;
   const [lastTap, setLastTap] = useState(tapMode);
   const [lastSel, setLastSel] = useState(selKey);
@@ -328,8 +328,10 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    // Read so a one-time "keep closed" request does not linger; the sheet stays where it is either way.
-    takeKeepSheetClosed();
+    // Choosing something opens the edit sheet to half; a peek-row action (duplicate) asks to keep it closed once.
+    const keepClosed = takeKeepSheetClosed();
+    if (selKey !== null && selKey !== undefined && !keepClosed && !tapMode && sheetStop === 'peek')
+      setSheetStop('half');
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
