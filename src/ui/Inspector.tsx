@@ -1013,7 +1013,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       tone: inside === t('Empty') ? 'warn' : undefined,
     },
     { id: 'build', label: t('Build'), meta: FRONT_LABEL[p.frontStyle ?? 'overlay'], done: true },
-    { id: 'materials', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
+    { id: 'boards', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
   ];
   return (
     <div className="inspector">
@@ -1409,7 +1409,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       meta: blind ? t('Blind corner') : diagonal ? t('Diagonal') : t('L-shaped'),
       done: true,
     },
-    { id: 'materials', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
+    { id: 'boards', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
   ];
   return (
     <div className="inspector">
@@ -1908,7 +1908,7 @@ function DeskEditor({
       disabled: !ped,
     },
     { id: 'build', label: t('Build'), meta: SUPPORT_LABEL[p.support], done: true },
-    { id: 'materials', label: t('Boards'), meta: matName(materials, p.topMaterialId), done: true },
+    { id: 'boards', label: t('Boards'), meta: matName(materials, p.topMaterialId), done: true },
   ];
   return (
     <div className="inspector">

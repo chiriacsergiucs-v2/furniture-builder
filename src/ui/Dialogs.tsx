@@ -510,6 +510,8 @@ function RoomPresets({ open, onOpened }: { open: boolean; onOpened: () => void }
 export function MaterialsPanel() {
   const materials = useDesign((s) => s.design.materials);
   const boardsLock = usePieceLockHint('boards');
+  const setMaterialOpen = useUi((s) => s.setMaterialOpen);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const kerf = useDesign((s) => kerfOf(s.design));
   const setKerf = useDesign((s) => s.setKerf);
   const update = useDesign((s) => s.updateMaterial);
@@ -623,6 +625,18 @@ export function MaterialsPanel() {
         </InfoTip>
       }
     >
+      {/* Choosing a board for parts, with the force update, is the Material control. */}
+      <button
+        type="button"
+        className="btn outline"
+        onClick={() => {
+          setSettingsOpen(false);
+          setMaterialOpen(true);
+        }}
+      >
+        <Icon name="swatch" className="sm" />
+        {t('Choose a board for parts…')}
+      </button>
       <MmField
         label={t('Saw cut (kerf)')}
         value={kerf}
