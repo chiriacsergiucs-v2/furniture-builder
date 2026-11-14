@@ -261,6 +261,37 @@ function writeBands(d: Design, roles: readonly MaterialRole[], band: EdgeBand): 
 }
 
 /**
+ * The design without the own board and own band of every part the roles cover (force update). Part boards of parts
+ * the piece no longer builds are kept: they are not readable here, and nothing deletes what the app cannot read.
+ */
+function clearPartOverrides(d: Design, roles: readonly MaterialRole[]): Design {
+  if (!d.partMaterials && !d.partBands) return d;
+  const covered = new Set(roles.flatMap((r) => ROLE_PANELS[r]));
+  const ids = buildModel(d)
+    .panels.filter((p) => covered.has(p.role))
+    .map((p) => p.id);
+  const drop = (m?: Record<string, string>) => {
+    if (!m) return m;
+    const next = { ...m };
+    for (const id of ids) delete next[id];
+    return next;
+  };
+  const dropBand = (m?: Record<string, EdgeBand>) => {
+    if (!m) return m;
+    const next = { ...m };
+    for (const id of ids) delete next[id];
+    return next;
+  };
+  const pm = drop(d.partMaterials),
+    pb = dropBand(d.partBands);
+  return {
+    ...d,
+    partMaterials: pm && Object.keys(pm).length ? pm : undefined,
+    partBands: pb && Object.keys(pb).length ? pb : undefined,
+  };
+}
+
+/**
  * `board` (and `band`, when one is chosen, ADR-188) on every role of `roles` the design has parts for; the roles it
  * has none for are returned as skipped.
  */
@@ -269,6 +300,7 @@ export function putRoleBoards(
   roles: readonly MaterialRole[],
   board: Material,
   band?: EdgeBand,
+  force = false,
 ): { design: Design; applied: MaterialRole[]; skipped: MaterialRole[] } {
   const has = new Set(itemRoles(d));
   const applied: MaterialRole[] = [],
@@ -288,6 +320,7 @@ export function putRoleBoards(
     } else skipped.push(role);
   }
   if (applied.length && band) design = writeBands(design, applied, band);
+  if (applied.length && force) design = clearPartOverrides(design, applied);
   return {
     design: applied.length ? { ...design, schemaVersion: SCHEMA_VERSION } : d,
     applied,
@@ -386,6 +419,7 @@ export function applyMaterial(
   scope: Exclude<MaterialScope, 'part'>,
   selection?: readonly string[],
   band?: EdgeBand,
+  force = false,
 ): MaterialResult {
   const targetItems = materialTargets(project, id, scope, selection);
   if (!targetItems) return { project, applied: [], skipped: [t('not in a run')] };
@@ -402,7 +436,7 @@ export function applyMaterial(
       skipped.push(t('no {parts}', { parts: runRoleName(r) }));
   const items = project.items.map((it) => {
     if (!targets.has(it.id) || !roles.length) return it;
-    const r = putRoleBoards(it.design, roles, board, band);
+    const r = putRoleBoards(it.design, roles, board, band, force);
     if (!r.applied.length) {
       skipped.push(
         t('{name} has no {parts}', {

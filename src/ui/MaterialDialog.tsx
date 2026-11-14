@@ -130,6 +130,7 @@ function MaterialFields() {
   });
   const [boardKey, setBoardKey] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
+  const [force, setForce] = useState(false);
   const [decors, setDecors] = useState<Decor[]>([]);
   useEffect(() => {
     listDecors()
@@ -279,6 +280,7 @@ function MaterialFields() {
       scope,
       scope === 'part' ? part?.id : undefined,
       band ?? undefined,
+      scope !== 'part' && force,
     );
     setMsg(
       scope === 'part'
@@ -452,6 +454,19 @@ function MaterialFields() {
           </div>
           {!roles.length && <p className="hint">{t('Pick at least one part.')}</p>}
         </div>
+      )}
+      {scope !== 'part' && (
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={force}
+            onChange={(e) => {
+              setForce(e.target.checked);
+              setMsg(null);
+            }}
+          />{' '}
+          {t('Replace parts with their own board too')}
+        </label>
       )}
       <Select
         label={t('Board')}

@@ -436,6 +436,8 @@ export interface State {
     panelId?: string,
     /** An edge band for those parts (ADR-188); undefined keeps the board's band. */
     band?: EdgeBand,
+    /** Force update: also drop the own board and band of every part those roles cover (scopes other than Part). */
+    force?: boolean,
   ) => { applied: string[]; skipped: string[] };
   /**
    * A common top or bottom (ADR-165) over the selected items: on links them (replacing a common panel of the same

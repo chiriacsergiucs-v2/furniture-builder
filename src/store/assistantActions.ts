@@ -358,6 +358,7 @@ export const CATALOG: Record<string, Entry> = {
       one('scope', ['part', 'item', 'group', 'project']),
       str('panelId', undefined, { optional: true }),
       obj('band', undefined, true),
+      bool('force', 'true = also replace parts that have their own board.', true),
     ],
   },
   applyFinish: {
