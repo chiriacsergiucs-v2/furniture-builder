@@ -458,6 +458,11 @@ export interface State {
    * The reason when it cannot be done, else ''. One undo step.
    */
   setAgainstWall: (id: string, on: boolean) => string;
+  /**
+   * Mark `count` of the cut-list parts with this `ownedKey` as already owned (ADR-267); 0 clears the mark. The open
+   * project's marks in the project view, else the open piece's. Returns why it was refused, or null. One undo step.
+   */
+  setOwnedParts: (key: string, count: number) => string | null;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
   clearPartBoard: (id: string | null, panelId: string) => string | null;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */

@@ -1,4 +1,5 @@
-import { newId } from '../core/design';
+import { newId, SCHEMA_VERSION } from '../core/design';
+import { withOwned } from '../core/owned';
 import {
   applyFinish,
   applyMaterial,
@@ -51,6 +52,7 @@ type RunActions = Pick<
   | 'setConnected'
   | 'setAgainstWall'
   | 'clearPartBoard'
+  | 'setOwnedParts'
   | 'applyFinish'
 >;
 
@@ -293,6 +295,25 @@ export function runActions(h: StoreHelpers): RunActions {
       }
       commitProject(connectWall(p, id, wall), t('Against the wall'));
       return '';
+    },
+    setOwnedParts: (key, count) => {
+      const p = get().project;
+      // The project's marks in the project view; a piece open for editing, and a single piece, keep their own.
+      if (p && !get().editingItemId) {
+        const owned = withOwned(p.ownedParts, key, count);
+        const { ownedParts: _was, ...rest } = p;
+        void _was;
+        return commitProject(owned ? { ...rest, ownedParts: owned } : rest, t('Owned parts'));
+      }
+      const d = get().design;
+      const owned = withOwned(d.ownedParts, key, count);
+      const { ownedParts: _was, ...rest } = d;
+      void _was;
+      return commit({
+        ...rest,
+        schemaVersion: SCHEMA_VERSION,
+        ...(owned ? { ownedParts: owned } : {}),
+      });
     },
     clearPartBoard: (id, panelId) => {
       const p = get().project;

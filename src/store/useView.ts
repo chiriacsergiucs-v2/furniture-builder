@@ -4,6 +4,7 @@ import { kerfOf } from '../core/design';
 import { nestingJobs } from '../core/nesting/fromDesign';
 import type { NestJob } from '../core/nesting/types';
 import { projectCutlist, projectHardware, projectNestingJobs } from '../core/project';
+import { applyOwned, type OwnedSplit } from '../core/owned';
 import { projectSellerChoices } from '../core/sellers/choices';
 import type {
   Diagnostic,
@@ -28,6 +29,13 @@ export interface ViewData {
   pieces: Panel[][];
   materials: Material[];
   rows: CutRow[];
+  /**
+   * The rows still to cut (ADR-267): `rows` without the parts the user owns. The cut list, its CSV, the printed
+   * cutting sheet and the sheet layouts use these; the estimate and shopping list keep `rows`.
+   */
+  cutRows: CutRow[];
+  /** The owned parts of this view, and the marks that match no part now (ADR-267). */
+  owned: OwnedSplit;
   hardware: HardwareItem[];
   diagnostics: Diagnostic[];
   kerf: number;
@@ -78,7 +86,11 @@ export function useView(): ViewData {
           for (const [k, v] of f.parts) fixings.parts.set(k, v);
           fixings.tooShort += f.tooShort;
         }
-      const rows = withFixingNotes(projectCutlist(project, projectModel), fixings.parts);
+      // Owned parts are taken off before the drilling notes are added: a note must not change a part's key.
+      const base = projectCutlist(project, projectModel);
+      const split = applyOwned(base, project.ownedParts, projectModel.materials);
+      const rows = withFixingNotes(base, fixings.parts);
+      const cutRows = withFixingNotes(split.cut, fixings.parts);
       return {
         mode: 'project',
         title: project.name,
@@ -86,27 +98,33 @@ export function useView(): ViewData {
         pieces: projectModel.piecePanels,
         materials: projectModel.materials,
         rows,
+        cutRows,
+        owned: split,
         hardware: projectHardware(project, projectModel),
         diagnostics: projectModel.diagnostics,
         kerf: project.cutting?.kerf ?? 4,
-        jobs: () => projectNestingJobs(project, rows, projectModel.materials),
+        jobs: () => projectNestingJobs(project, cutRows, projectModel.materials),
         ...projectSellerChoices(project),
         fixings,
       };
     }
     const fixings = fixingPositions(model, carcass);
+    const base = cutlist(model, design.materials);
+    const split = applyOwned(base, design.ownedParts, design.materials);
     return {
       mode: 'design',
       title: design.name,
       model,
       pieces: [model.panels],
       materials: design.materials,
-      rows: withFixingNotes(cutlist(model, design.materials), fixings.parts),
+      rows: withFixingNotes(base, fixings.parts),
+      cutRows: withFixingNotes(split.cut, fixings.parts),
+      owned: split,
       fixings,
       hardware: hardwareSummary(model),
       diagnostics: model.diagnostics,
       kerf: kerfOf(design),
-      jobs: () => nestingJobs(design, model).jobs,
+      jobs: () => nestingJobs(design, model, split.cut).jobs,
       hardwareProducts: design.hardwareProducts,
       sellerItems: design.sellerItems,
     };

@@ -8,8 +8,10 @@ import type { NestJob } from './types';
 export function nestingJobs(
   design: Design,
   model: FurnitureModel,
+  /** The rows to cut when the user owns some parts (ADR-267); default: every part of the design. */
+  cutRows?: CutRow[],
 ): { jobs: NestJob[]; rows: CutRow[] } {
-  const rows = cutlist(model, design.materials);
+  const rows = cutRows ?? cutlist(model, design.materials);
   const kerf = kerfOf(design);
   const settings = new Map<string, SheetSettings>();
   for (const m of design.materials) {

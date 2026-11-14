@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import {
   areaM2,
   bandMetersFromRows,
@@ -13,7 +13,9 @@ import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { Assembly } from './Assembly';
-import { useView } from '../store/useView';
+import { useView, ViewOverride } from '../store/useView';
+import { ownedSize } from '../core/owned';
+import { askText } from './Confirm';
 import { GuidanceTip, InfoTip, rovingKeys, rovingTab } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
@@ -36,7 +38,7 @@ export function Output() {
   const view = useView();
   const errors = view.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = view.diagnostics.length - errors;
-  const parts = view.rows.reduce((n, r) => n + r.quantity, 0);
+  const parts = view.cutRows.reduce((n, r) => n + r.quantity, 0);
   // Short labels keep the five tabs in one row on a phone (ADR-114); `name` is the full accessible name.
   const tabs: { id: Tab; label: string; name?: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: t('Parts'), badge: parts || undefined, kind: 'neutral' },
@@ -104,7 +106,34 @@ function Parts() {
   const project = useDesign((s) => s.project);
   const setHighlight = useDesign((s) => s.setHighlight);
   const highlight = useDesign((s) => s.highlight);
-  const rows = view.rows;
+  // The rows still to cut: parts the user owns are left out of the list, the CSV, the print and the sheets (ADR-267).
+  const rows = view.cutRows;
+  const setOwned = useDesign((s) => s.setOwnedParts);
+  // A shared item's preview is read-only: it never marks the open design's parts.
+  const readOnly = useContext(ViewOverride) !== null;
+  const keyOf = useMemo(
+    () => new Map(view.cutRows.map((r, i) => [r, view.owned.cutKeys[i]])),
+    [view.cutRows, view.owned.cutKeys],
+  );
+  const ownedCount = view.owned.owned.reduce((n, e) => n + e.owned, 0);
+  // One part is marked at once; several ask how many (0 clears the mark).
+  const askOwned = async (key: string) => {
+    const total = view.owned.totals[key] ?? 0;
+    const have = Math.min(view.owned.marks[key] ?? 0, total);
+    if (total <= 1) return void setOwned(key, have ? 0 : 1);
+    const answer = await askText(
+      t('How many of these {n} parts do you own? 0 clears it.', { n: total }),
+      String(have || total),
+      t('Mark as owned'),
+    );
+    if (answer === null) return;
+    const n = /^\d+$/.test(answer.trim()) ? Number(answer.trim()) : -1;
+    if (n < 0 || n > total) {
+      useDesign.setState({ notice: t('Enter a whole number from 0 to {n}.', { n: total }) });
+      return;
+    }
+    setOwned(key, n);
+  };
   const bands = useMemo(() => bandMetersFromRows(rows), [rows]);
   const blocked = view.diagnostics.some((d) => d.severity === 'error');
   const byMat = useMemo(() => {
@@ -140,7 +169,7 @@ function Parts() {
             download(
               `${fileName(view.title)}-parts.csv`,
               cutlistCsvRo(
-                view.rows,
+                view.cutRows,
                 // Project labels start with the piece name, printed in the print language (ADR-212).
                 view.mode === 'project' && project
                   ? printPieceNames(project.items.map((i) => i.design))
@@ -192,6 +221,7 @@ function Parts() {
       )}
       <p className="summary">
         {t('{total} parts in {n|# material|# materials}.', { total, n: byMat.length })}
+        {ownedCount > 0 && ` ${t('{n} owned, not cut.', { n: ownedCount })}`}
         {allUnnamed && t(' Edge bands are not named yet.')}{' '}
         <InfoTip label={t('About the parts list')} align="start">
           {t('Sizes are finished sizes; edges marked for banding.')}
@@ -260,6 +290,15 @@ function Parts() {
                           .map((id) => view.fixings?.parts.get(id))
                           .find((x) => x !== undefined)}
                       />
+                      {!readOnly && keyOf.get(r) !== undefined && (
+                        <button
+                          type="button"
+                          className="btn sm ghost own-btn"
+                          onClick={() => void askOwned(keyOf.get(r)!)}
+                        >
+                          {view.owned.marks[keyOf.get(r)!] ? t('Change owned…') : t('I own this…')}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -268,6 +307,61 @@ function Parts() {
           </table>
         );
       })}
+      {(view.owned.owned.length > 0 || view.owned.unmatched.length > 0) && (
+        <section className="owned" aria-label={t('Already owned')}>
+          <h3 className="list-head">{t('Already owned')}</h3>
+          <ul>
+            {view.owned.owned.map((e, i) => (
+              <li key={`${e.key}:${i}`}>
+                <span>
+                  {t('{n} × {parts}, {size}, {board}', {
+                    n: e.owned,
+                    parts: e.row.labels.map((l) => tr(l)).join(', '),
+                    size: ownedSize(e.key),
+                    board: tr(e.row.materialName),
+                  })}
+                </span>
+                {!readOnly && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      onClick={() => void askOwned(e.key)}
+                    >
+                      {t('Change owned…')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      onClick={() => setOwned(e.key, 0)}
+                    >
+                      {t('Not owned')}
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+            {view.owned.unmatched.map((u) => (
+              <li key={u.key} className="hint warn">
+                <span>
+                  {t(
+                    '{n|# part marked as owned matches|# parts marked as owned match} nothing now: {size}',
+                    {
+                      n: u.count,
+                      size: ownedSize(u.key),
+                    },
+                  )}
+                </span>
+                {!readOnly && (
+                  <button type="button" className="btn sm ghost" onClick={() => setOwned(u.key, 0)}>
+                    {t('Clear')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <Lengths />
     </div>
   );
@@ -278,7 +372,7 @@ function Lengths() {
   const view = useView();
   const groups = useMemo(() => {
     const mats = new Map(view.materials.map((m) => [m.id, m]));
-    return lengthsList(view.rows, (id) => mats.get(id)?.lengths ?? [2400, 3000], view.kerf);
+    return lengthsList(view.cutRows, (id) => mats.get(id)?.lengths ?? [2400, 3000], view.kerf);
   }, [view]);
   if (!groups.length) return null;
   return (

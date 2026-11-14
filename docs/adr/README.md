@@ -328,3 +328,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-264](../adr-done/ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | ✅ Implemented |
 | [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
 | [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |
+| [ADR-267](../adr-done/ADR-267-mark-cut-list-parts-as-already-owned.md) | Mark cut-list parts as already owned | ADR-011, ADR-012 | ✅ Implemented |

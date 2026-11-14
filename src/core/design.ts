@@ -17,6 +17,7 @@ import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
+import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
 
@@ -826,6 +827,13 @@ function validateBands(d: Record<string, unknown>, errs: string[]) {
   }
 }
 
+/** Parts the user already owns (schemaVersion 9, ADR-267); checked when present, never throws. */
+function validateOwnedParts(d: Record<string, unknown>, errs: string[]) {
+  if (d.ownedParts === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Owned parts need schemaVersion 9'));
+  if (!validOwned(d.ownedParts)) errs.push(t('Invalid owned parts'));
+}
+
 /** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
 export const validPer = (v: unknown): v is number =>
   typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
@@ -1190,6 +1198,7 @@ export function validateDesign(d: unknown): string[] {
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
   validateBands(d, errs);
+  validateOwnedParts(d, errs);
   validateCatalog(d.catalog, d.schemaVersion, errs);
   validateDesignVariables(d, errs);
   validateSellerChoices(d, errs);

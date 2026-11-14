@@ -1,6 +1,22 @@
 /** Russian text for the Material dialog and role boards (ADR-163). Key: the English text; value: the Russian text. */
 export const ru_material = {
   'Invalid role boards': 'Недопустимые плиты по ролям',
+  'Owned parts': 'Свои детали',
+  'Already owned': 'Уже есть',
+  'I own this…': 'У меня это есть…',
+  'Change owned…': 'Изменить количество…',
+  'Not owned': 'Нет в наличии',
+  'Mark as owned': 'Отметить как имеющиеся',
+  'How many of these {n} parts do you own? 0 clears it.':
+    'Сколько из этих {n} деталей у вас есть? 0 снимает отметку.',
+  'Enter a whole number from 0 to {n}.': 'Введите целое число от 0 до {n}.',
+  '{n} owned, not cut.': '{n} уже есть, не пилятся.',
+  '{n} × {parts}, {size}, {board}': '{n} × {parts}, {size}, {board}',
+  '{n|# part marked as owned matches|# parts marked as owned match} nothing now: {size}':
+    '{n|# деталь, отмеченная как имеющаяся, ничему не соответствует|# детали, отмеченные как имеющиеся, ничему не соответствуют|# деталей, отмеченных как имеющиеся, ничему не соответствуют}: {size}',
+  'Owned parts need schemaVersion 9': 'Свои детали требуют schemaVersion 9',
+  'Owned parts need project schemaVersion {v}': 'Свои детали требуют schemaVersion проекта {v}',
+  'Invalid owned parts': 'Недопустимые свои детали',
   'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
   'Corner mount needs schemaVersion 7': 'Креплению углового модуля нужна schemaVersion 7',
   'Role board for {k} refers to an unknown role or material':
