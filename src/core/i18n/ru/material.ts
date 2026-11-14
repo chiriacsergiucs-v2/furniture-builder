@@ -43,6 +43,7 @@ export const ru_material = {
   'Drawer boxes': 'Короба ящиков',
   'Drawer bottoms': 'Днища ящиков',
   'Worktop@@role': 'Столешница',
+  'Replace parts with their own board too': 'Заменить и детали с собственной плитой',
   'Pick at least one part.': 'Выберите хотя бы одну деталь.',
   'No item is selected.': 'Изделие не выбрано.',
   'Applied to {n|# item|# items}': 'Применено к {n|# изделию|# изделиям|# изделиям}',

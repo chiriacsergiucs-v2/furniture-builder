@@ -141,3 +141,65 @@ describe('role boards (ADR-163)', () => {
     expect(st().project).toBe(before);
   });
 });
+
+describe('force update (override parts with their own board)', () => {
+  const withOwn = () => {
+    const d = t('bookcase');
+    const shelf = buildModel(d).panels.find((x) => x.role === 'shelf')!;
+    const side = buildModel(d).panels.find((x) => x.role === 'side')!;
+    const pm = { [shelf.id]: roleBoard(d, 'body')!, [side.id]: roleBoard(d, 'body')! };
+    return {
+      d: {
+        ...d,
+        partMaterials: pm,
+        partBands: { [shelf.id]: { kind: 'abs' as const, thickness: 8, width: 22 } },
+      },
+      shelf,
+      side,
+    };
+  };
+
+  it('without force a part board survives a role apply; with force it is dropped for the roles applied only', () => {
+    const { d, shelf, side } = withOwn();
+    const keep = putRoleBoards(d, ['shelf'], blue);
+    expect(keep.design.partMaterials?.[shelf.id]).toBeDefined();
+    const forced = putRoleBoards(d, ['shelf'], blue, undefined, true);
+    expect(forced.design.partMaterials?.[shelf.id]).toBeUndefined();
+    expect(forced.design.partBands).toBeUndefined();
+    expect(forced.design.partMaterials?.[side.id]).toBeDefined();
+    expect(new Set(byRole(forced.design, 'shelf'))).toEqual(new Set([blue.name]));
+  });
+
+  it('keeps part boards of parts the piece no longer builds', () => {
+    const { d } = withOwn();
+    const lost: Design = {
+      ...d,
+      partMaterials: { ...d.partMaterials, 'gone/part': roleBoard(d, 'body')! },
+    };
+    const r = putRoleBoards(lost, ['shelf', 'side'], blue, undefined, true);
+    expect(Object.keys(r.design.partMaterials ?? {})).toEqual(['gone/part']);
+  });
+
+  it('applies per piece and per project', () => {
+    const { d } = withOwn();
+    let p = newProject('Force');
+    p = { ...p, items: [makeItem(p, d), makeItem(p, d)] };
+    const id = p.items[0]!.id;
+    const one = applyMaterial(p, id, ['shelf'], blue, 'item', undefined, undefined, true);
+    expect(
+      one.project.items[0]!.design.partMaterials?.[Object.keys(d.partMaterials!)[0]!],
+    ).toBeUndefined();
+    expect(one.project.items[1]!.design.partMaterials).toEqual(d.partMaterials);
+    const all = applyMaterial(
+      p,
+      id,
+      ['shelf', 'side'],
+      blue,
+      'project',
+      undefined,
+      undefined,
+      true,
+    );
+    for (const it of all.project.items) expect(it.design.partMaterials).toBeUndefined();
+  });
+});

@@ -176,7 +176,7 @@ export function runActions(h: StoreHelpers): RunActions {
       if (!p) return;
       commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } });
     },
-    applyMaterial: (id, allRoles, board, scope, panelId, band) => {
+    applyMaterial: (id, allRoles, board, scope, panelId, band, force) => {
       const p = get().project;
       const roles = allRoles.filter((r): r is MaterialRole => !RUN_ROLES.includes(r as RunRole));
       if (!id || !p || get().editingItemId === id) {
@@ -187,7 +187,7 @@ export function runActions(h: StoreHelpers): RunActions {
           const why = commit(putPartBoard(d, panelId, board, band));
           return why ? { applied: [], skipped: [why] } : { applied: [panelId], skipped: [] };
         }
-        const r = putRoleBoards(d, roles, board, band);
+        const r = putRoleBoards(d, roles, board, band, force);
         const why = r.applied.length ? commit(r.design) : null;
         return {
           applied: r.applied.length && !why ? [d.name] : [],
@@ -216,7 +216,7 @@ export function runActions(h: StoreHelpers): RunActions {
         );
         return why ? { applied: [], skipped: [why] } : { applied: [own], skipped: [] };
       }
-      const r = applyMaterial(p, id, allRoles, board, scope, get().selectedItemIds, band);
+      const r = applyMaterial(p, id, allRoles, board, scope, get().selectedItemIds, band, force);
       return commitApplied(p, r, t('Apply material'), ['boardsLocked']);
     },
     setCommon: (kind, on) => {
