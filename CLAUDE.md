@@ -51,7 +51,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`, `babysit`, `skip-review`
+  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -126,6 +126,11 @@ schema (ADR-012) or the network boundary (ADR-002), or when the user asks for on
 
 Fast forward, `ff` (`ff` skill): on "ff" the request is built without a branch or pull request, only `pnpm typecheck`
 and `pnpm build`, and pushed straight to `main` after the user approves the list of changes.
+
+Full autopilot, `auto` (`auto` skill, user rule 2026-11-14): on "auto" the request is built without a branch, pull request or
+questions, checked locally (format, typecheck, related tests, build, docs check; fuzz after geometry) and pushed straight
+to `main` with no approval step. Stop conditions: an ADR is needed, saved data or the network is touched, a physical fact is
+unknown, a check fails or the push is refused.
 
 ## Engineering conventions (hard rules)
 
