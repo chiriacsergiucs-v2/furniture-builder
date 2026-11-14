@@ -6,7 +6,7 @@ import type { CutRow } from './cutlist';
 import type { Material } from './types';
 
 /** The most parts one key can own. */
-export const OWNED_MAX = 9999;
+const OWNED_MAX = 9999;
 
 /**
  * The identity of a cut-list row for ownership: size, banded edges, thickness, drilling and board (the board as
