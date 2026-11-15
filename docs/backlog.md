@@ -325,6 +325,7 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N286 | Structure tree in the drawer that follows the selection (ADR-268) | Not done | ADR-268 written 2026-11-16 |
 | N287 | Hover preview, Ctrl/Cmd-click deep select, Shift+Enter up, pin the drawer, empty tap keeps the selection (ADR-269) | Not done | ADR-269 written 2026-11-16 |
 | N288 | Enter a container to edit inside it; focus strength fade/strong/hide (ADR-270) | Not done | ADR-270 written 2026-11-16 |
+| N289 | General conduct rules in CLAUDE.md: request ledger, completion is a test, claims need evidence, stop honestly, one ADR one pull request (user: "Apply the rules proposed last", 2026-11-16) | Done | `pnpm format:check` and `pnpm docs:check` exit 0, ran 2026-11-16. Memory preferences carry the ambiguity gate, reply length and standing-rules rules. |
 
 ## Dropped
 
