@@ -25,18 +25,16 @@ const FILE_FAILED = () =>
 
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
- * the clean-up of unused pictures since G-059), Feature Research and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
+ * the clean-up of unused pictures since G-059), and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
  */
 export function MoreMenu({
   onNew,
   onOpened,
-  onResearch,
   onGaps,
   onInfo,
 }: {
   onNew: () => void;
   onOpened: () => void;
-  onResearch: () => void;
   onGaps: () => void;
   onInfo: () => void;
 }) {
@@ -114,7 +112,7 @@ export function MoreMenu({
   return (
     <>
       <details className="menu more" ref={ref}>
-        <summary aria-label={t('More')} title={t('New, files and Feature Research')}>
+        <summary aria-label={t('More')} title={t('New and files')}>
           <Icon name="more" />
         </summary>
         <div className="menu-items">
@@ -275,10 +273,6 @@ export function MoreMenu({
           <button type="button" onClick={run(onInfo)}>
             <Icon name="info" />
             {t('Information and guides')} <small>{t('every feature, by domain')}</small>
-          </button>
-          <button type="button" onClick={run(onResearch)}>
-            <Icon name="search" />
-            {t('Feature Research')} <small>{t('papers and decisions')}</small>
           </button>
           <button type="button" onClick={run(onGaps)}>
             <Icon name="alert-triangle" />

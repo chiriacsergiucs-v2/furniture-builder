@@ -51,7 +51,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`, `frontend-design`
+  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `frontend-design`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -188,11 +188,12 @@ on snapshot-before-tests"); the change updates this table with the date and the 
 skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
 on restores it unchanged.
 
-| Toggle                  | Rule                                                                                  | State | Changed                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
-| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
-| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
-| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
+| Toggle                  | Rule                                                                                       | State | Changed                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                        | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR      | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed        | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
+| `burst`                 | Process › Burst mode: skip the slow steps while pushing fast; every skip is logged as debt | off   | 2026-11-15, user: "Yes" (added, state off; say "burst on" to start, "burst off" or "catch up" to pay the debt)        |
 
 ## Process (standing user rules)
 
@@ -202,6 +203,20 @@ on restores it unchanged.
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
   screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
   questions if there are any (user rule 2026-10-29).
+- Burst mode (user rule 2026-11-15; toggle `burst`, see _Toggleable rules_ — applies only while that toggle is
+  **on**): for a period of fast pushes, use the `auto` path and skip the slow steps below. A skip is never silent
+  (R2): each one is logged as debt and listed under **Skipped this iteration**.
+  - Skipped, each logged: writing and running find-it tests (jsdom or browser); `skip-review` stage 03; pick cards and
+    the Picks list; live-verify after deploy; `ship-adr` (the ADR stays Pending); local `pnpm format:check`, lint and
+    the full suite (run `pnpm format`; CI runs the rest); the full _Read first_ (grep the backlog row and the last id
+    instead of reading `docs/backlog.md` whole).
+  - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
+    rule, every hard rule and stop condition, CI on `main`.
+  - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD)` to the gap text of the backlog row the work
+    touched, one per item; a find-it item names the visible text to find (as ADR-066 does). The row stays
+    **Partially done**.
+  - Paying the debt: the user says "burst off" or "catch up"; the `catch-up` skill runs every logged item and the row
+    turns **Done** only with evidence that ran. "Catch up acceptance" (ADR-066) still pays the find-it items alone.
 - Skips and proof (user rule 2026-11-10, from the cleanup-skip review in `docs/research/2026-11-09-cleanup-audit.md`):
   - Every skip states its blocker, what unblocks it, and its cost (S/M/L). "Not started" is not a reason; when the
     reason is scope, write "scope".
