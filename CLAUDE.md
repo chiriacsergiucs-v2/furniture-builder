@@ -77,7 +77,7 @@ Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test
 `tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
 `pnpm regress` (on request only, user 2026-11-15): builds, serves the production preview and runs every
 `tools/*/find-it*.mjs` in a real browser; `pnpm regress <word>` runs the scripts whose path has the word, `--no-build`
-reuses `dist/`, `--list` lists them; logs and `summary.json` go to `regress-report/`; exit 1 when any script fails.
+reuses `dist/`, `--list` lists them; each failing check prints as it is found; logs, `failures.txt` and `summary.json` go to `regress-report/`; exit 1 when any script fails.
 
 ## Verify before done
 
