@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for ADR-222 (N227), in jsdom (ADR-108): the pages loaded on demand — Feature Research, Gaps, Information and
+// Find-it for ADR-222 (N227), in jsdom (ADR-108): the pages loaded on demand — Gaps, Information and
 // guides, Catalog, the account dialog and a shared link's preview — are each reached from the bare app, through their
 // loading fallback, by role and visible text, at phone and desktop widths.
 import { screen, within } from '@testing-library/react';
@@ -14,17 +14,6 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe.each(WIDTHS)('pages loaded on demand at %ipx (find-it, ADR-222)', (width) => {
-  it('⋯ › Feature Research shows the page with its research data', async () => {
-    const { user } = await renderApp(width);
-    await openMore(user);
-    await user.click(await screen.findByRole('button', { name: /^Feature Research/ }));
-    const research = await screen.findByRole('main', { name: 'Feature Research & Catalog' });
-    expect(within(research).getByRole('heading', { level: 1 }).textContent).toBe(
-      'Feature Research & Catalog',
-    );
-    expect(within(research).getAllByText(/ADR-\d{3}/).length).toBeGreaterThan(0);
-  });
-
   it('⋯ › Gaps shows the Gaps page', async () => {
     const { user } = await renderApp(width);
     await openMore(user);

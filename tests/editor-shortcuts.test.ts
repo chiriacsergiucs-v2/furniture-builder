@@ -11,7 +11,7 @@ function key(target: Element, options: KeyboardEventInit = {}) {
 describe('editor shortcut guard (ADR-198)', () => {
   it('guards every non-editor page and handled events', () => {
     const e = key(document.body);
-    for (const page of ['projects', 'catalog', 'info', 'research', 'gaps']) {
+    for (const page of ['projects', 'catalog', 'info', 'gaps']) {
       const outside = key(document.body);
       expect(editorShortcutAllowed(outside, page)).toBe(false);
       expect(outside.defaultPrevented).toBe(true);

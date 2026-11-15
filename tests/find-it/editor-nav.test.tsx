@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Find-it for ADR-211 (N216), in jsdom (ADR-108): from the bare app, by role and visible text, at phone and desktop
 // widths. The sheet's "Resize the sheet" slider steps with arrow keys and a tap (phones only); "Up one level" selects
-// the parent space on a phone; Start something new rows each have their own glyph; Gaps and Research show Back to the
+// the parent space on a phone; Start something new rows each have their own glyph; Gaps shows Back to the
 // editor only with a design open; the three Select toggles have "About Select"; Lock boards and Lock construction
 // sit in More actions and turn off Boards with its hint; History lists "Versions of deleted projects" with Restore as a
 // new project and Delete. Drags (the sheet, the front-view box) need layout: `tools/editor-nav/find-it.mjs`.
@@ -40,7 +40,7 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
     expect(new Set(shapes).size).toBe(3);
   });
 
-  it('Gaps and Research: no Back to the editor with nothing open; Back once a design is open', async () => {
+  it('Gaps: no Back to the editor with nothing open; Back once a design is open', async () => {
     const { user } = await renderApp(width);
     const visit = async (button: RegExp, page: string) => {
       await openMore(user);
@@ -49,20 +49,14 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
     };
     let gaps = await visit(/^Gaps/, 'Gaps');
     expect(within(gaps).queryByRole('button', { name: 'Back to the editor' })).toBeNull();
-    let research = await visit(/^Feature Research/, 'Feature Research & Catalog');
-    expect(within(research).queryByRole('button', { name: 'Back to the editor' })).toBeNull();
-    // ADR ids stay on the Research page.
-    expect(within(research).getAllByText(/ADR-\d{3}/).length).toBeGreaterThan(0);
 
-    // Open a design: both pages now lead back to it.
+    // Open a design: the page now leads back to it.
     await user.click(screen.getByRole('link', { name: 'Furniture Builder, go to Projects' }));
     await user.click(await screen.findByRole('button', { name: 'New single piece' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getAllByRole('button', { name: /Sideboard/ })[0]);
     gaps = await visit(/^Gaps/, 'Gaps');
     await user.click(within(gaps).getByRole('button', { name: 'Back to the editor' }));
-    research = await visit(/^Feature Research/, 'Feature Research & Catalog');
-    expect(within(research).getByRole('button', { name: 'Back to the editor' })).toBeTruthy();
   });
 
   it('a space path on a phone has Up one level, which selects the parent space', async () => {

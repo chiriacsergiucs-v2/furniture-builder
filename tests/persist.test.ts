@@ -214,19 +214,6 @@ describe('every write reports its change (ADR-235)', () => {
     ],
     ['deleteTemplate', () => dbm.deleteTemplate('t1'), () => [['templates', 't1', true]]],
     [
-      'saveResearchBundle',
-      () => dbm.saveResearchBundle({ key: 'k1', docId: 'doc' } as never),
-      () => [['researchDocs', 'k1', false]],
-    ],
-    [
-      'saveResearchMarks',
-      () => dbm.saveResearchMarks([{ id: 'm1' }, { id: 'm2' }] as never),
-      () => [
-        ['researchMarks', 'm1', false],
-        ['researchMarks', 'm2', false],
-      ],
-    ],
-    [
       'saveGapMark',
       () => dbm.saveGapMark({ gapId: 'G-1', updatedAt: '2026' } as never),
       () => [['gapMarks', 'G-1', false]],

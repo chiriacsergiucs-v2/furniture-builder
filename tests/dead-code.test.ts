@@ -48,13 +48,10 @@ describe('dead code guards (cleanup audit 2026-11-09)', () => {
     const DYNAMIC = [
       ...new Set([...code.matchAll(/([a-z][a-z0-9]*(?:-[a-z0-9]+)*-)\$\{/g)].map((m) => m[1])),
     ];
-    // The research matrix's `v${band}` and `c${complexity}` (Research.tsx) have no dash.
-    const BUILT = /^(v\d+|c\d)$/;
     const classes = new Set([...css.matchAll(/\.([a-z][a-z0-9-]*)/g)].map((m) => m[1]));
     const dead = [...classes].filter(
       (c) =>
         !DYNAMIC.some((p) => c.startsWith(p)) &&
-        !BUILT.test(c) &&
         !new RegExp(`(?<![\\w-])${escape(c)}(?![\\w-])`).test(code),
     );
     expect(dead).toEqual([]);
