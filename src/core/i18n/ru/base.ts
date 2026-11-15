@@ -13,4 +13,7 @@ export const ru_base = {
   'Top@@table': 'Столешница',
   'Both@@view': 'Оба',
   'Parts@@split': 'Части',
+  'None.': 'Нет.',
+  none: 'нет',
+  Product: 'Продукт',
 } satisfies Record<string, string>;

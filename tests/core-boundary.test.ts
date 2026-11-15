@@ -43,9 +43,9 @@ const NESTING = ['place', 'validate', 'types'].map((m) => `src/core/nesting/${m}
 const CORE_PACKAGE = /^(react|react-dom|three|dexie|zustand)(\/|$)|^@react-three\/|^@supabase\//;
 const APP = /^src\/(store|ui|persist|viewer|online)(\/|$)/;
 const MODEL_UP =
-  /^src\/core\/(project|room|design|i18n\/print)$|^src\/core\/(catalog|nesting|wizard|research|sellers)(\/|$)/;
+  /^src\/core\/(project|room|design|i18n\/print)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)/;
 // Allowance: src/ui/Gaps.tsx reads the gaps ledger as text (G-503).
-const RAW_ALLOWED = /^src\/core\/(catalog\/brands|sellers|research)\/|^src\/ui\/Gaps\.tsx$/;
+const RAW_ALLOWED = /^src\/core\/(catalog\/brands|sellers)\/|^src\/ui\/Gaps\.tsx$/;
 const RAW = /\?raw$/;
 const GLOB = /\bimport\.meta\.glob\b/;
 
