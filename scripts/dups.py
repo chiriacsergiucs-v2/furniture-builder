@@ -5,7 +5,7 @@
 
 A block is `WINDOW` consecutive non-blank, non-comment lines, compared after collapsing whitespace. Blocks found in
 more than one place are grouped by the set of files they appear in; a group's size is how many such blocks it shares.
-The Russian dictionaries and the research data are left out (they repeat by design).
+The Russian dictionaries are left out (they repeat by design).
 """
 import collections
 import hashlib
@@ -15,7 +15,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 WINDOW = 10
-SKIP_DIRS = ("/i18n/ru", "/research")
+SKIP_DIRS = ("/i18n/ru",)
 TRIVIAL = {"}", ");", "});", "]", "],", "})", "{", ")}", "/>", ">", "</>", "<>"}
 
 

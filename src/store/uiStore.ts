@@ -13,7 +13,7 @@ export interface WizardDraft {
  * The two editor modes (ADR-080, was three in ADR-079): what goes where · what you get. What it is made of is in the
  * Settings dialog.
  */
-export type Mode = 'compose' | 'build';
+type Mode = 'compose' | 'build';
 export const MODES: Mode[] = ['compose', 'build'];
 export const MODE_LABEL: Record<Mode, string> = {
   compose: t('Compose'),

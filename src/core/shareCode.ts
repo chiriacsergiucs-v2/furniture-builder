@@ -61,7 +61,7 @@ export async function encodeCode(doc: unknown): Promise<string> {
 export const codeLink = (base: string, code: string) => `${base.split('#')[0]}${LINK_KEY}${code}`;
 
 /** The code inside a pasted text: the code itself or a link holding it, spaces and line breaks ignored. */
-export function codeIn(text: string): string | null {
+function codeIn(text: string): string | null {
   const t = text.replace(/\s+/g, '');
   const at = t.indexOf(LINK_KEY);
   const code = at >= 0 ? t.slice(at + LINK_KEY.length) : t;

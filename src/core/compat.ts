@@ -286,7 +286,7 @@ const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => st
   },
 };
 
-export interface Finding {
+interface Finding {
   rule: CompatRule;
   /** What the check found: "depth 560 vs 500". */
   reason: string;

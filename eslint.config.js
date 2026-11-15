@@ -19,7 +19,7 @@ const CORE = [
 // prettier-ignore
 const MODEL = ['geometry', 'cabinet', 'build', 'panel', 'panelset', 'frame', 'shape', 'corner', 'desk', 'rules', 'clearance', 'cutlist', 'materials'];
 const MODEL_UP = (design) => ({
-  regex: `^\\./(project|room|i18n/print${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|research|sellers)(/|$)`,
+  regex: `^\\./(project|room|i18n/print${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)`,
   message: 'The model files import only the document, i18n and each other (ADR-219).',
 });
 const NESTING = {
@@ -74,26 +74,21 @@ export default tseslint.config(
   // as text (G-503).
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: [
-      'src/core/catalog/brands/**',
-      'src/core/sellers/**',
-      'src/core/research/**',
-      'src/ui/Gaps.tsx',
-    ],
+    ignores: ['src/core/catalog/brands/**', 'src/core/sellers/**', 'src/ui/Gaps.tsx'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: "MemberExpression[object.type='MetaProperty'][property.name='glob']",
-          message: 'import.meta.glob only in catalog/brands, sellers and research (ADR-219).',
+          message: 'import.meta.glob only in catalog/brands and sellers (ADR-219).',
         },
         {
           selector: 'ImportDeclaration[source.value=/\\?raw$/]',
-          message: '?raw imports only in catalog/brands, sellers and research (ADR-219).',
+          message: '?raw imports only in catalog/brands and sellers (ADR-219).',
         },
         {
           selector: 'ImportExpression[source.value=/\\?raw$/]',
-          message: '?raw imports only in catalog/brands, sellers and research (ADR-219).',
+          message: '?raw imports only in catalog/brands and sellers (ADR-219).',
         },
       ],
     },
