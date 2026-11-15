@@ -1,7 +1,8 @@
 # ADR-267: Keep the drawer still: named path, fixed shell, change cue
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-16
+- Implemented: 2026-11-16
 - Depends on: ADR-083, ADR-087, ADR-203, ADR-211
 - Design: docs/ui-design.md (section 4, editor screen and phone bottom sheet)
 - Backlog: N285
@@ -25,13 +26,13 @@ No change to `src/core/types.ts`, the design document or the Dexie schema (ADR-0
 
 ## Decision
 
-1. **Named path.** New pure `src/core/spaceNames.ts`: `spaceName(root, id)` returns the place of a space among its
-   siblings and its kind. Place of a child of an `x` split: `Left`/`Right` for 2, `Left`/`Middle`/`Right` for 3, else
+1. **Named path.** New pure `src/core/spaceNames.ts`: `spacePlace(root, id)` returns the place of a space among its
+   siblings (or `null`) and `placed(place, what)` puts it in front of the kind. Place of a child of an `x` split: `Left`/`Right` for 2, `Left`/`Middle`/`Right` for 3, else
    `Bay {i} of {n}`; of a `y` split: `Top`/`Bottom` for 2, `Top`/`Middle`/`Bottom` for 3, else `Row {i} of {n}`; the
    first level keeps today's root label. Label text `t('{place}: {what}')`. `Crumbs`, the drawer title and
    `selectionLabel` (phone peek row) all use it, so every level on the path has its own name.
 2. **Fixed shell.** The drawer head (path, title, size line) stays at the top of `.side-body` while the body scrolls
-   (`position: sticky`), on desktop and in the phone sheet. Sections keep one fixed order whatever is selected. Open
+   (`position: sticky`), on desktop and in the phone sheet. Sections keep one fixed order whatever is selected (one component renders them in one order; unchanged by this ADR). Open
    or closed state of each `Group` is remembered per group id in `useUi` (memory only, never storage) and survives a
    change of selection, so a click on another space never refolds what the user opened.
 3. **Change cue.** A selection change flashes the drawer head once (300 ms, a background tint; none when
@@ -62,11 +63,11 @@ No change to `src/core/types.ts`, the design document or the Dexie schema (ADR-0
 
 ## Done when
 
-- [ ] `spaceName` gives Left/Middle/Right, Top/Bottom, `Bay i of n` and `Row i of n` for splits of 2, 3 and 4+
+- [x] `spacePlace` gives Left/Middle/Right, Top/Bottom, `Bay i of n` and `Row i of n` for splits of 2, 3 and 4+
       children on both axes (unit tests).
-- [ ] Two sibling drawer spaces show different crumb text and title; the phone peek row shows the same name (find-it).
-- [ ] The drawer head keeps its position on screen after the body scrolls, at 390 and 1280 px (browser find-it).
-- [ ] An opened group stays open after selecting another space and back (store test and find-it).
-- [ ] After a selection change the status region reads `Selection changed to …` once (find-it); the tint animation
+- [x] Two sibling drawer spaces show different crumb text and title; the phone peek row shows the same name (find-it).
+- [x] The drawer head keeps its position on screen after the body scrolls, at 390 and 1280 px (browser find-it).
+- [x] An opened group stays open after selecting another space and back (store test and find-it).
+- [x] After a selection change the status region reads `Selection changed to …` once (find-it); the tint animation
       is off under reduced motion (browser find-it, computed style).
-- [ ] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
+- [x] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
