@@ -183,21 +183,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: User confirms: keep preset thickness list, carry over banding prices, keep the allowance per band.
 - Conflicts: none
 
-### G-043: Duplicate backlog id D02
-
-- Status: Done (N284)
-- Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
-- Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
-- Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
-- Questions: Renumber the later row to D03? (Ids are never renumbered, so this needs your decision.)
-- Suggested pick: Give the later row (“Built in the app”) D03 and fix every reference. (estimate: effort +1%, value bookkeeping)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
-- Fix: With the user's approval, give the later row D03 and update every reference.
-- Conflicts: none
-
 ### G-047: Nothing live-verified
 
 - Status: Open
@@ -1750,23 +1735,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 
-### G-506: Duplicate backlog id D02
-
-- Status: Done (N284)
-- Origin: UI audit, 2026-11-15
-- Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
-- Request: Highlight full list of things out of place from claude.md or settings
-- Questions: Which row keeps D02 and which gets the next free D id, given the never-renumber rule?
-- Suggested pick: Give the Built in the app row the next free D id and update its citations (estimate: effort +5 %, value +5 %)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-507: Auto-merge not tried on this repo
 
 - Status: Open
 - Origin: Flow modes, 2026-11-15
-- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run; the repo setting and branch protection are unchecked
+- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run. Checked 2026-11-15 (enable_pr_auto_merge on PR #219): GitHub answered "Auto-merge is not enabled for this repository"; branch protection is unchecked
 - Request: Suggest best approach to include a auto-pilot fast forward and the normal flow.
 - Questions: Is Allow auto-merge enabled on the repository, and which checks are required?
 - Suggested pick: Enable Allow auto-merge, then test on one ready docs-only PR (estimate: effort +5 %, value +10 %)
