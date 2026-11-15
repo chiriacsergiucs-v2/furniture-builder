@@ -16,11 +16,11 @@ describe.each(WIDTHS)('doors and handles inside doors at %ipx (find-it, N109)', 
     // The drawing hit-tests taps by screen position, which jsdom has no layout for; Enter on a space runs the same
     // tap. Each further tap at the same spot selects one space smaller, so tap until the drawer bank is selected.
     const tapBank = async () => {
-      for (let i = 0; i < 4 && !screen.queryByText('Selected: Drawers'); i++) {
+      for (let i = 0; i < 4 && !screen.queryByText('Selected: Middle: Drawers'); i++) {
         screen.getByRole('button', { name: /^3 drawers space/ }).focus();
         await user.keyboard('{Enter}');
       }
-      expect(screen.getByText('Selected: Drawers')).toBeTruthy();
+      expect(screen.getByText('Selected: Middle: Drawers')).toBeTruthy();
     };
     const crumbs = () => screen.getByRole('navigation', { name: 'Where this space sits' });
 
