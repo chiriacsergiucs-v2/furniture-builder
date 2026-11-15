@@ -23,6 +23,7 @@
     "dups": "python3 -I scripts/dups.py",
     "docs:check": "python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q",
     "gaps": "python3 -I scripts/gaps.py",
+    "regress": "node tools/regress.mjs",
     "sync:pending": "node scripts/sync-pending.mjs"
   },
   "dependencies": {
