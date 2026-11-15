@@ -334,3 +334,4 @@ trim, full sheets only (ADR-018/019); A4 portrait, Romanian on paper and CSV (AD
 bar/knob/push-to-open handles (ADR-024); blind and L-shaped corners, bracket-and-rail wall mounting (ADR-025);
 independent pedestals (ADR-026); finished sizes, never band-subtracted (ADR-009); ball-bearing side runners and
 35 mm soft-close clip-on hinges (ADR-010); no orchestration runtime (ADR-017).
+| N280 | README: refreshed How it works and Layout; exhaustive Features section by area with ADR ids (user: "Update docs with the features we have, same structure as existing, exhaustive listing") | Done | Generated from `src/ui/info/features.ts` (274 features, 19 areas) plus assistant (ADR-239/240). `pnpm format:check` and `pnpm docs:check` passed locally 2026-11-15. Not live-verified |
