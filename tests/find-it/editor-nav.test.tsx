@@ -82,12 +82,12 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
         : null;
     };
     const seen: (string | null)[] = [];
-    for (let i = 0; i < 5 && seen.at(-1) !== 'Hanging'; i++) {
+    for (let i = 0; i < 5 && seen.at(-1) !== 'Bottom: Hanging'; i++) {
       screen.getByRole('button', { name: /^Hanging.* space/ }).focus();
       await user.keyboard('{Enter}');
       seen.push(current());
     }
-    expect(seen.at(-1)).toBe('Hanging');
+    expect(seen.at(-1)).toBe('Bottom: Hanging');
     // A nested space: the step before it is a space too.
     expect(seen.at(-2)).toBeTruthy();
     const up = within(

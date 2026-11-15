@@ -1,6 +1,6 @@
 import { axesText, isSizeLocked, lockedAxes } from '../core/sizeLock';
 import type { SizeAxis } from '../core/project';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   bayLayoutOf,
   changeKind,
@@ -23,6 +23,7 @@ import {
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
+import { placed, spacePlace } from '../core/spaceNames';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
@@ -260,11 +261,11 @@ export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Se
   if (id === null) return WHOLE[prod.kind];
   const found = id ? findInProduct(prod, id) : undefined;
   if (!found) return null;
-  return found.space.id === found.root.id
-    ? tr(found.label)
-    : found.space.kind === 'split'
-      ? t('Divided space')
-      : KIND_LABEL[found.space.kind];
+  if (found.space.id === found.root.id) return tr(found.label);
+  return placed(
+    spacePlace(found.root, found.space.id),
+    found.space.kind === 'split' ? t('Divided space') : KIND_LABEL[found.space.kind],
+  );
 }
 
 const WHOLE = {
@@ -356,6 +357,31 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
   );
 }
 
+/** A level of the path with its place among its siblings: "Left: Drawers" (ADR-267). */
+const crumbName = (root: Space, s: Space) => placed(spacePlace(root, s.id), KIND_LABEL[s.kind]);
+
+/**
+ * The drawer head (ADR-267): path, title and size stay at the top while the body scrolls. A change of `name` plays a
+ * one-off tint (CSS, off under reduced motion) and, 150 ms after the last change, a status line says what is now
+ * selected, so fast tapping announces only the last selection. It never moves focus.
+ */
+function DrawerHead({ name, children }: { name: string; children: ReactNode }) {
+  const [said, setSaid] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setSaid(t('Selection changed to {name}', { name })), 150);
+    return () => clearTimeout(id);
+  }, [name]);
+  return (
+    <div className="insp-sticky">
+      <span key={name} className="cue-bar" aria-hidden="true" />
+      {children}
+      <p className="sr-only" role="status" aria-atomic="true">
+        {said}
+      </p>
+    </div>
+  );
+}
+
 function Crumbs({
   root,
   id,
@@ -398,10 +424,10 @@ function Crumbs({
             /
           </span>
           {i === chain.length - 1 ? (
-            <span aria-current="true">{i === 0 ? rootLabel : KIND_LABEL[s.kind]}</span>
+            <span aria-current="true">{i === 0 ? rootLabel : crumbName(root, s)}</span>
           ) : (
             <button type="button" onClick={() => select(s.id)}>
-              {i === 0 ? rootLabel : KIND_LABEL[s.kind]}
+              {i === 0 ? rootLabel : crumbName(root, s)}
             </button>
           )}
         </span>
@@ -439,21 +465,27 @@ function SpaceEditor({
   const behindDoors = insideDoors(root, space.id);
 
   // The same order rule as the project panel (ADR-160): no card frames, Divide right under the title, Layouts folded.
+  const title = placed(
+    spacePlace(root, space.id),
+    space.kind === 'split' ? t('Divided space') : KIND_LABEL[space.kind],
+  );
   return (
     <div className="inspector space-editor">
-      <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
-      <header className="insp-head">
-        <h2>{space.kind === 'split' ? t('Divided space') : `${KIND_LABEL[space.kind]}`}</h2>
-        {opening && (
-          <p className="measure">
-            {tNode('{w} wide × {h} high × {d} deep inside', {
-              w: <span>{opening.box.w}</span>,
-              h: <span>{opening.box.h}</span>,
-              d: <span>{opening.box.d}</span>,
-            })}
-          </p>
-        )}
-      </header>
+      <DrawerHead name={title}>
+        <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
+        <header className="insp-head">
+          <h2>{title}</h2>
+          {opening && (
+            <p className="measure">
+              {tNode('{w} wide × {h} high × {d} deep inside', {
+                w: <span>{opening.box.w}</span>,
+                h: <span>{opening.box.h}</span>,
+                d: <span>{opening.box.d}</span>,
+              })}
+            </p>
+          )}
+        </header>
+      </DrawerHead>
 
       {diags.length > 0 && (
         <ul className="inline-diags">

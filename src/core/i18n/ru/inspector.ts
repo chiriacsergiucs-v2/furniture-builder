@@ -270,4 +270,13 @@ export const ru_inspector = {
   Pair: 'Пара',
   'Set by Handles for this run': 'Задано в «Ручки для этого ряда»',
   'Up one level': 'На уровень выше',
+  'Left@@place': 'Слева',
+  'Right@@place': 'Справа',
+  'Middle@@place': 'По центру',
+  'Top@@place': 'Сверху',
+  'Bottom@@place': 'Снизу',
+  'Bay {i} of {n}': 'Секция {i} из {n}',
+  'Row {i} of {n}': 'Ряд {i} из {n}',
+  '{place}: {what}': '{place}: {what}',
+  'Selection changed to {name}': 'Теперь выбрано: {name}',
 } satisfies Record<string, string>;

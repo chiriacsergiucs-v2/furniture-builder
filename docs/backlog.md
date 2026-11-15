@@ -318,6 +318,10 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N278 | `auto` command: implement, check locally, push to main with no approval (user: "force quick: implement, test locally, push to main, full autopilot") | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; `.claude/skills/auto/SKILL.md`, `CLAUDE.md` skill list and flow. Not run end to end: it takes effect the next time the user says `auto`. |
 | N279 | Phone: choosing a piece or space opens the edit sheet to half | Done | `pnpm exec vitest run tests/find-it` 83 files, 363 tests passed; typecheck, format, build ran locally 2026-11-14. Replaces the 2026-11-09 peek-only rule. Not live-verified |
 | N280 | README: refreshed How it works and Layout; exhaustive Features section by area with ADR ids (user: "Update docs with the features we have, same structure as existing, exhaustive listing") | Done | Generated from `src/ui/info/features.ts` (274 features, 19 areas) plus assistant (ADR-239/240). `pnpm format:check` and `pnpm docs:check` passed locally 2026-11-15. Not live-verified |
+| N281 | Keep the drawer still: named path (Left/Middle/Right, Top/Bottom, Bay i of n), fixed drawer head, remembered group state, change cue and status line (ADR-267; user: "drawer too dynamic ... hard to keep track what and where") | Not done | ADR-267 written 2026-11-16 |
+| N282 | Structure tree in the drawer that follows the selection (ADR-268) | Not done | ADR-268 written 2026-11-16 |
+| N283 | Hover preview, Ctrl/Cmd-click deep select, Shift+Enter up, pin the drawer, empty tap keeps the selection (ADR-269) | Not done | ADR-269 written 2026-11-16 |
+| N284 | Enter a container to edit inside it; focus strength fade/strong/hide (ADR-270) | Not done | ADR-270 written 2026-11-16 |
 
 ## Dropped
 
