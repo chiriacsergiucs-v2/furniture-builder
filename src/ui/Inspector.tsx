@@ -23,7 +23,8 @@ import {
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
-import { placed, spacePlace } from '../core/spaceNames';
+import { KIND_LABEL, WHOLE_LABEL as WHOLE, placed, spacePlace } from '../core/spaceNames';
+import { StructureTree } from './StructureTree';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
@@ -85,14 +86,6 @@ import {
   PanelEditor,
   PieceInfo,
 } from './Editors';
-
-const KIND_LABEL: Record<SpaceKind, string> = {
-  empty: t('Empty'),
-  shelves: t('Shelves'),
-  drawers: t('Drawers'),
-  hanging: t('Hanging'),
-  split: t('Divided'),
-};
 
 /**
  * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
@@ -178,6 +171,7 @@ export function InsideEditor() {
     );
   return (
     <>
+      <StructureTree />
       <p className="hint">
         {t('Selected: {name}.', { name: WHOLE[prod.kind] })}{' '}
         <InfoTip label={t('About picking a space')} align="start">
@@ -231,6 +225,7 @@ function ComposeStart() {
           </p>
         )}
       </header>
+      <StructureTree />
       {whole && (
         <PieceSize product={prod} onChange={resize} locked={sizeLocked} lockedKeys={lockedKeys} />
       )}
@@ -267,15 +262,6 @@ export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Se
     found.space.kind === 'split' ? t('Divided space') : KIND_LABEL[found.space.kind],
   );
 }
-
-const WHOLE = {
-  cabinet: t('Whole cabinet'),
-  desk: t('Whole desk'),
-  corner: t('Whole corner unit'),
-  panel: t('Whole panel'),
-  frame: t('Whole frame'),
-  panels: t('Whole panel set'),
-};
 
 const matName = (materials: Material[], id: string) =>
   tr(materials.find((m) => m.id === id)?.name ?? '—');
@@ -486,6 +472,8 @@ function SpaceEditor({
           )}
         </header>
       </DrawerHead>
+
+      <StructureTree />
 
       {diags.length > 0 && (
         <ul className="inline-diags">

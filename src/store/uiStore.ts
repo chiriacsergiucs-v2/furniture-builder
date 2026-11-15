@@ -83,6 +83,11 @@ interface Ui {
   /** Groups the user opened or closed in the drawer, by group id (ADR-267); memory only, never stored. */
   groupOpen: Record<string, boolean>;
   setGroupOpen: (key: string, open: boolean) => void;
+  /** Ids of the splits opened in the structure tree (ADR-268); memory only, never stored. */
+  treeOpen: string[];
+  setTreeOpen: (id: string, open: boolean) => void;
+  /** Open these splits too (the selection's ancestors); no change, no new array, when all are open already. */
+  openTree: (ids: string[]) => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -136,6 +141,18 @@ export const useUi = create<Ui>((set) => ({
   groupOpen: {},
   setGroupOpen: (key, open) =>
     set((s) => (s.groupOpen[key] === open ? s : { groupOpen: { ...s.groupOpen, [key]: open } })),
+  treeOpen: [],
+  setTreeOpen: (id, open) =>
+    set((s) =>
+      s.treeOpen.includes(id) === open
+        ? s
+        : { treeOpen: open ? [...s.treeOpen, id] : s.treeOpen.filter((x) => x !== id) },
+    ),
+  openTree: (ids) =>
+    set((s) => {
+      const add = ids.filter((id) => !s.treeOpen.includes(id));
+      return add.length ? { treeOpen: [...s.treeOpen, ...add] } : s;
+    }),
 }));
 
 /**

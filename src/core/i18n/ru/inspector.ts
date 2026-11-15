@@ -279,4 +279,7 @@ export const ru_inspector = {
   'Row {i} of {n}': 'Ряд {i} из {n}',
   '{place}: {what}': '{place}: {what}',
   'Selection changed to {name}': 'Теперь выбрано: {name}',
+  Structure: 'Структура',
+  'Whole piece tree': 'Дерево всего изделия',
+  '{name}, {size} mm': '{name}, {size} мм',
 } satisfies Record<string, string>;
