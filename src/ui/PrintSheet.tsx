@@ -24,7 +24,7 @@ export function PrintSheet() {
     () => (project ? printPieceNames(project.items.map((i) => i.design)) : undefined),
     [project],
   );
-  const rows = view.rows;
+  const rows = view.cutRows;
   const bands = useMemo(() => bandMetersFromRows(rows), [rows]);
   const hw = view.hardware;
   const layouts = useMemo(() => {

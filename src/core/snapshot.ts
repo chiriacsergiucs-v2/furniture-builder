@@ -268,8 +268,21 @@ function tint(c: string, f: number): string {
   return `#${ch((n >> 16) & 255)}${ch((n >> 8) & 255)}${ch(n & 255)}`;
 }
 
-/** SVG picture of a model, `size` px on its longer side. Empty models give an empty picture. */
-export function snapshotSvg(model: FurnitureModel, materials: Material[], size = 240): string {
+/** Panel roles drawn see-through when `clearFronts` is on: what hides the inside of a cabinet. */
+const FRONT_ROLES: ReadonlySet<string> = new Set(['door', 'drawer-front']);
+/** Fill opacity of a see-through front in a suggestion picture. */
+const CLEAR_FRONT = 0.28;
+
+/**
+ * SVG picture of a model, `size` px on its longer side. Empty models give an empty picture. `clearFronts`: doors and
+ * drawer fronts are drawn see-through so the shelves, dividers and drawers behind them show (suggestion cards).
+ */
+export function snapshotSvg(
+  model: FurnitureModel,
+  materials: Material[],
+  size = 240,
+  clearFronts = false,
+): string {
   const colour = new Map(materials.map((m) => [m.id, m.color]));
   const panels = model.panels;
   const pad = 6;
@@ -296,9 +309,10 @@ export function snapshotSvg(model: FurnitureModel, materials: Material[], size =
     const p = panels[i];
     const c = colour.get(p.materialId) ?? '#c8c4bb';
     const edge = tint(c, 0.55);
+    const clear = clearFronts && FRONT_ROLES.has(p.role);
     for (const fc of p.shape || p.box.yaw ? shapedFaces(p) : faces(p.box))
       out.push(
-        `<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}" stroke="${edge}"/>`,
+        `<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}"${clear ? ` fill-opacity="${CLEAR_FRONT}"` : ''} stroke="${edge}"/>`,
       );
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" stroke-width="0.5" stroke-linejoin="round">${out.join('')}</svg>\n`;

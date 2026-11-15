@@ -117,7 +117,7 @@ export interface WallFill {
 }
 
 /** Mixes shown first (ADR-103: "4 mixes"). */
-export const MIXES_FIRST = 4;
+export const MIXES_FIRST = 2;
 export const WALL_DEFAULTS = { minWidth: 400, maxWidth: 1200 } as const;
 /** The catalog's own sizes (ADR-036 defaults, typical values to confirm). */
 export const BASE_HEIGHT = KITCHEN_BASE.height!;
