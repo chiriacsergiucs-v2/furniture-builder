@@ -70,7 +70,7 @@ export const ru_shell = {
   'Pictures could not be read from this browser.':
     'Не удалось прочитать картинки из этого браузера.',
   More: 'Ещё',
-  'New, files and Feature Research': 'Создание, файлы и исследование функций',
+  'New and files': 'Создание и файлы',
   'New…': 'Создать…',
   'piece or project': 'изделие или проект',
   Files: 'Файлы',
@@ -95,8 +95,6 @@ export const ru_shell = {
   'keep, back up and restore': 'хранение, резервное копирование и восстановление',
   'Information and guides': 'Информация и руководства',
   'every feature, by domain': 'все функции по разделам',
-  'Feature Research': 'Исследование функций',
-  'papers and decisions': 'статьи и решения',
   Gaps: 'Пробелы',
   'what is not built yet': 'что ещё не сделано',
 

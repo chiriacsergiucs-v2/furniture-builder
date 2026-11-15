@@ -10,8 +10,6 @@ import { ru_core } from './core';
 import { ru_core2 } from './core2';
 import { data_catalog } from './data-catalog';
 import { data_parts } from './data-parts';
-import { data_research1 } from './data-research1';
-import { data_research2 } from './data-research2';
 import { data_wizard } from './data-wizard';
 import { ru_editors } from './editors';
 import { ru_flows } from './flows';
@@ -21,7 +19,6 @@ import { ru_kitchen } from './kitchen';
 import { ru_material } from './material';
 import { ru_project } from './project';
 import { ru_prints } from './prints';
-import { ru_research } from './research';
 import { ru_sellers } from './sellers';
 import { ru_variables } from './variables';
 import { ru_shell } from './shell';
@@ -34,7 +31,6 @@ export const ru = {
   ...ru_shell,
   ...ru_project,
   ...ru_inspector,
-  ...ru_research,
   ...ru_viewer,
   ...ru_catalog,
   ...ru_editors,
@@ -57,6 +53,4 @@ export const ruData: Record<string, string> = {
   ...data_parts,
   ...data_catalog,
   ...data_wizard,
-  ...data_research1,
-  ...data_research2,
 };
