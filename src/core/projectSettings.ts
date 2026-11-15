@@ -53,7 +53,7 @@ function handleHolders(v: unknown, out: Record<string, unknown>[] = []): Record<
 }
 
 /** The piece's value for a setting, or undefined when it has no such part (a bed has no fronts). */
-export function settingOf(d: Design, key: SettingKey): unknown {
+function settingOf(d: Design, key: SettingKey): unknown {
   const p = d.product;
   const boardOf = (id: string | null) => {
     const m = id ? d.materials.find((x) => x.id === id) : undefined;

@@ -12,6 +12,10 @@ nothing is merged; proposals wait for the user.
 Every claim carries its evidence and its kind: **ran** (a command or test you ran, with its output) or **read** (a
 file and line). Never accept a skip because a document says it was justified.
 
+While the `burst` toggle in `CLAUDE.md` is **on**, the automatic run before a reply (`build` step 8) is skipped and
+logged as `burst-skipped: skip-review (burst, YYYY-MM-DD)`; the `catch-up` skill runs stages 01–05 over the burst's
+**Skipped this iteration** lists.
+
 ## Stages
 
 The stages run in order by default ("run all"); any one can be run alone (`RUN FLOW NN`). Stop after the last stage

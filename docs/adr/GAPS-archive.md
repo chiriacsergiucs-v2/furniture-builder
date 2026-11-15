@@ -493,7 +493,7 @@ highest id in either file.
 
 ### G-043: Duplicate backlog id D02
 
-- Status: Done (N284)
+- Status: Done (N299)
 - Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
 - Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
 - Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
@@ -3448,7 +3448,7 @@ highest id in either file.
 
 ### G-506: Duplicate backlog id D02
 
-- Status: Done (N284)
+- Status: Done (N299)
 - Origin: UI audit, 2026-11-15
 - Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
 - Request: Highlight full list of things out of place from claude.md or settings
@@ -3460,7 +3460,7 @@ highest id in either file.
 
 ### G-508: UI flow audit report not written
 
-- Status: Done (N286)
+- Status: Done (N301)
 - Origin: UI audit prompt, 2026-11-14
 - Missing: The full UI/UX flow-mapping report (architecture, layout at 390 and 1280 px, component positions, flows, findings rated against WCAG 2.2 AA and Nielsen heuristics) was not produced; the capture tool is ready
 - Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report ... to be prepared for a professional architect and the leading auditor company to optimize existing flows.

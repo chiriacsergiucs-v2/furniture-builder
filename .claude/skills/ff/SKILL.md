@@ -9,3 +9,10 @@ Run the `build` skill in mode `ff` for this request only (user rule 2026-10-27, 
 only on low confidence; light checks (`pnpm format`, `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, no tests); the
 user approves the change list before landing. Steps, landing and stop conditions are in `build` and in _Flow modes_ in
 `CLAUDE.md`; every hard rule there still holds. End with **Decided** and **Skipped this iteration**.
+
+## Burst mode
+
+`ff` already skips tests and find-it. While the `burst` toggle in `CLAUDE.md` is **on**, also log each skipped item
+(related tests, lint, full suite, fuzz, find-it, live-verify) on the backlog row as
+`burst-skipped: <item> (burst, YYYY-MM-DD)`, so the `catch-up` skill can pay it. Prefer `auto`, which keeps related
+tests and fuzz.

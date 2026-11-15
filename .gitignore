@@ -10,3 +10,4 @@ playwright-report
 __pycache__
 .claude/worktrees/
 .eslintcache
+regress-report

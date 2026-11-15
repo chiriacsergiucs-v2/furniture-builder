@@ -55,3 +55,9 @@ only set the mode and point here.
 
 An ADR is needed; it deletes or rewrites saved designs or needs the network; a physical fact is unknown; a check fails
 and its cause is not yours to fix; the push is refused; low confidence on what to build (`auto`).
+
+## Burst mode
+
+While the `burst` toggle in `CLAUDE.md` is **on**, follow `CLAUDE.md` › Process › Burst mode in every mode: skip the find-it
+test, local `pnpm format:check`, lint and the full suite, and log each skip as `burst-skipped: <item> (burst, YYYY-MM-DD)`
+on the backlog row. `ff` and `auto` have their own short notes.

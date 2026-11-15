@@ -18,6 +18,7 @@ export const SYSTEM_CHROMIUM = [
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
   '/snap/bin/chromium',
+  '/usr/bin/google-chrome',
 ];
 
 /** The Chromium to launch: CHROMIUM_PATH, else a system Chromium, else undefined (Playwright's own install). */

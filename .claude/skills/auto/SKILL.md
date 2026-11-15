@@ -10,3 +10,12 @@ explicit instruction to land that request on `main` without asking again; it app
 2026-11-15). Run the `build` skill in mode `auto`. Gates: no questions (a stop condition instead); all checks;
 automatic landing. Steps, landing and stop conditions are in `build` and in _Flow modes_ in `CLAUDE.md`; every hard rule
 there still holds. End with **Decided** and **Skipped this iteration**.
+
+## Burst mode
+
+While the `burst` toggle in `CLAUDE.md` is **on** (user rule 2026-11-15), the Check step skips local `pnpm format:check`,
+lint and the full suite (run `pnpm format`), and the reply skips pick cards and the Picks list. Writing and running find-it
+tests, `skip-review` stage 03, live-verify and `ship-adr` are skipped too. Every skip is appended to the backlog row's
+gap text as `burst-skipped: <item> (burst, YYYY-MM-DD)` and listed under **Skipped this iteration**. typecheck, build,
+docs check, related tests, fuzz after geometry and every stop condition still run. "Burst off" or "catch up" runs the
+`catch-up` skill.

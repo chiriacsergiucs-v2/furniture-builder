@@ -1,4 +1,4 @@
-// On-demand browser capture (CLAUDE.md toggle `browser-on-demand`, backlog N280). Run only when the user asks.
+// On-demand browser capture (CLAUDE.md toggle `browser-on-demand`, backlog N295). Run only when the user asks.
 // Opens the production preview at each width, walks every link in the "Places" navigation and saves, per place:
 // a full-page screenshot, and a JSON map of landmarks, headings and interactive elements (role, text, rect, visible,
 // tab order). Per place it also captures the open More menu and the New… dialog. Meant for UI audits and visual
