@@ -1,7 +1,8 @@
 // On-demand browser capture (CLAUDE.md toggle `browser-on-demand`, backlog N280). Run only when the user asks.
 // Opens the production preview at each width, walks every link in the "Places" navigation and saves, per place:
 // a full-page screenshot, and a JSON map of landmarks, headings and interactive elements (role, text, rect, visible,
-// tab order). Meant for UI audits and visual checks; it asserts nothing and is not part of `pnpm test`.
+// tab order). Per place it also captures the open More menu and the New… dialog. Meant for UI audits and visual
+// checks; it asserts nothing and is not part of `pnpm test`.
 //   pnpm build && pnpm preview &  pnpm browser:capture [url] [out dir]
 import { launchBrowser, previewUrl, outDir, WIDTHS } from '../lib/harness.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -19,7 +20,7 @@ const slug = (s) =>
 /** Runs in the page: every landmark, heading and interactive element with its box. */
 function mapPage() {
   const sel =
-    'header,nav,main,aside,footer,dialog,[role="dialog"],h1,h2,h3,button,a[href],input,select,textarea,[role="radio"],[role="tab"],[role="switch"],[tabindex]';
+    'header,nav,main,aside,footer,dialog,[role="dialog"],h1,h2,h3,summary,details,button,a[href],input,select,textarea,[role="radio"],[role="tab"],[role="switch"],[tabindex]';
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const focusable = new Set(
@@ -62,6 +63,24 @@ function mapPage() {
   };
 }
 
+/** Save the screenshot and the element map of the current screen as `<out>/<name>-<width>`. */
+async function capture(page, width, place, state, name) {
+  const base = `${out}/${name}-${width}`;
+  await page.screenshot({ path: `${base}.png`, fullPage: true });
+  const map = await page.evaluate(mapPage);
+  writeFileSync(`${base}.json`, JSON.stringify({ place, state, ...map }, null, 2));
+  summary.push({
+    width,
+    place,
+    state,
+    elements: map.elements.length,
+    horizontalScroll: map.horizontalScroll,
+  });
+  console.log(
+    `${width}px ${place} [${state}]: ${map.elements.length} elements${map.horizontalScroll ? ' — HORIZONTAL SCROLL' : ''}`,
+  );
+}
+
 const browser = await launchBrowser();
 const summary = [];
 for (const width of WIDTHS) {
@@ -79,19 +98,26 @@ for (const width of WIDTHS) {
   for (const place of [...new Set(places)]) {
     await nav.getByRole('link', { name: place }).first().click();
     await page.waitForTimeout(400);
-    const base = `${out}/${slug(place)}-${width}`;
-    await page.screenshot({ path: `${base}.png`, fullPage: true });
-    const map = await page.evaluate(mapPage);
-    writeFileSync(`${base}.json`, JSON.stringify({ place, ...map }, null, 2));
-    summary.push({
-      width,
-      place,
-      elements: map.elements.length,
-      horizontalScroll: map.horizontalScroll,
-    });
-    console.log(
-      `${width}px ${place}: ${map.elements.length} elements${map.horizontalScroll ? ' — HORIZONTAL SCROLL' : ''}`,
-    );
+    const name = slug(place);
+    await capture(page, width, place, 'default', name);
+    // The More menu (a <details> menu), open: its items are listed but never clicked, so no file is downloaded.
+    const summaryEl = page.locator('summary[aria-label="More"]').first();
+    if (await summaryEl.isVisible().catch(() => false)) {
+      await summaryEl.click();
+      await page.waitForTimeout(200);
+      await capture(page, width, place, 'more-menu', `${name}-more-menu`);
+      // The New… dialog, when the menu has it.
+      const newBtn = page.getByRole('button', { name: /^New…/ }).first();
+      if (await newBtn.isVisible().catch(() => false)) {
+        await newBtn.click();
+        await page.waitForTimeout(400);
+        await capture(page, width, place, 'new-dialog', `${name}-new-dialog`);
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(200);
+      }
+      // Close the menu if Escape did not.
+      if (await page.locator('details.more[open]').count()) await summaryEl.click().catch(() => {});
+    }
   }
   if (errors.length) console.log(`${width}px console/page errors:`, errors);
   await ctx.close();

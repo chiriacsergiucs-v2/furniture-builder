@@ -40,18 +40,21 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `src/store` — Zustand store: design, derived model, selection, undo/redo
 - `src/persist` — IndexedDB (Dexie) storage
 - `src/ui` — React UI; `src/viewer` — lazy three.js preview
+- `src/online` — opt-in online features (ADR-126); `supabase/` — the backend: `functions/assistant`, `migrations/`
 - `tests/` — core, fuzz, storage and UI-logic tests (Vitest)
-- `tools/` — the catalog PDF extractor and the find-it acceptance scripts (`tools/*/find-it.mjs`)
-- `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`)
+- `tools/` — the catalog PDF extractor, the find-it acceptance scripts (`tools/*/find-it.mjs`), the shared browser
+  harness (`tools/lib`) and the on-demand capture (`tools/capture`)
+- `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`); `scripts/*_hook.py` — hooks
+  (see _Settings and hooks_)
 - `docs/adr/` — pending ADRs, `README.md` (index), `_template.md`
 - `docs/adr-done/` — implemented ADRs
 - `docs/backlog.md` — the single work ledger (F/N/D ids); `docs/adr/GAPS.md` — everything not built (G ids, ADR-082)
 - `docs/product/product-context.md` — the user's decisions and answers so far; `docs/architecture.md` — how
   the code fits together; `docs/ui-design.md` — tokens, components and screens; `docs/catalog.md` — generated
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
-- `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
+- `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`
+  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`, `caveman`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -91,9 +94,19 @@ where to click and whether it is live (R4).
 For status reviews, research, ADR context and extraction, cite file:line before each claim. If the repo doesn't show
 something, write "not found in the repo" instead of inferring it. An empty or missing value is a correct answer.
 
+## Settings and hooks (`.claude/settings.json`)
+
+- `SessionStart`: prints `.claude/skills/caveman/activate.md`, so every session starts in caveman style (terse replies).
+  Style applies to replies only; it never applies to anything written to the repo, and a report written for others
+  (audit, review) is written in full prose. "stop caveman" or "normal mode" ends it for the session.
+- `PreToolUse` on `Bash`: `scripts/retired_name_hook.py` blocks `git commit` and `git push` while a tracked or new file
+  names the retired third-party agent tool (user decision 2026-11-10).
+- No `permissions` block: commands prompt unless the user allows them in their own settings.
+- `scripts/gaps_hook.py` exists but is not wired in the settings.
+
 ## Model and effort
 
-In the Claude app, use Opus for work spanning several packages or an ADR and Sonnet for single-file fixes and
+Guidance only, nothing in the settings enforces it. In the Claude app, use Opus for work spanning several packages or an ADR and Sonnet for single-file fixes and
 reviews. Keep the default effort; raise it one level only for a hard task, then lower it again.
 
 ## How we build (user rule 2026-11-07, replaces the 2026-10-27/29 flow)
@@ -109,8 +122,9 @@ Default flow for every request (`build` skill):
 4. **Bookkeeping:** one row in `docs/backlog.md`, in the same change. Nothing else is mandatory: no ADR, no gap
    entry, no feature-tree line, no research-record update, no requirement ledger.
 5. **Push** the branch; opening the pull request and merging follow _Git_.
-6. **Reply:** where to click and whether it is live (R4); every implementation reply ends with **Decided** and
-   **Skipped this iteration** (no backlog status table, user 2026-11-07).
+6. **Reply:** one shape for every implementation reply: it opens with where to click and whether it is live (R4), then
+   **Decided** (with numbered picks) and **Skipped this iteration** (no backlog status table, user 2026-11-07; no
+   separate Picks list, 2026-11-15).
 
 ### ADRs — only for model, data and network changes
 
@@ -123,7 +137,7 @@ schema (ADR-012) or the network boundary (ADR-002), or when the user asks for on
   implemented in the same pull request (no separate ship pull request).
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one. Check `docs/adr/` and
   `docs/adr-done/` before proposing an alternative to a settled choice.
-- Exception (user decision 2026-11-10): implemented ADRs were edited once to remove the name of a retired third-party agent tool; `pnpm docs:check` blocks that name from returning.
+- `pnpm docs:check` blocks the name of a retired third-party agent tool in any tracked file (user decision 2026-11-10); implemented ADRs were edited once to remove it.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
 
 ### Flow modes: normal, `ff`, `auto` (user rule 2026-11-15)
@@ -206,12 +220,13 @@ request is `normal` again. Precedence: the user's mode word › _Always pick_ �
 A rule listed here applies only while its state is **on**. The user turns a rule off or back on by name (e.g. "turn
 on snapshot-before-tests"); the change updates this table with the date and the user's words. A rule that is off is
 skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
-on restores it unchanged.
+on restores it unchanged. A toggle can also be a permission: `browser-on-demand` **on** means the action is allowed when the user
+asks, never automatic.
 
 | Toggle                  | Rule                                                                                                                                          | State | Changed                                                                                                                     |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
 | `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                                                                           | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on"       |
-| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR                                                         | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                                    |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR                                                         | on    | 2026-11-05, user: "Do 2 and 3" (the list was not recorded; state unchanged)                                                 |
 | `browser-on-demand`     | Process › Browser on demand: run `pnpm browser:capture` (Playwright screenshots and element boxes at 390 and 1280 px) only when the user asks | on    | 2026-11-14, user: "Create a new feature which will allow you to run playwright, update the docs to allow it on user demand" |
 | `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed                                                           | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                                    |
 
@@ -232,11 +247,11 @@ on restores it unchanged.
   - A change that makes tests or scripts stale fixes them in the same pull request, or lists each one as a blocker.
   - Order work by dependency: prerequisites first; never cite a blocker that a later item of the same plan removes.
   - "Decide and go" means finishing every low-risk item; stop only for consent items (deleting, branch-wide moves).
-- Always pick (user rule 2026-11-10, "Always pick"): every decision point is shown as a pick card (options, the
-  recommended one marked, the one picked and why) and resolved without asking, from the user's earlier answers, a repo
-  rule, the stated goal, or else the recommendation. Ask only when none decides it and the options differ in something
-  hard to undo (deleting saved data or files, spending money, publishing, pushing or merging to `main`, access). Every
-  reply that made picks ends with a Picks list the user can override ("PICK 2 = B").
+- Always pick (user rule 2026-11-10, narrowed 2026-11-15): an obvious choice, one that the user's earlier answers, a repo rule
+  or the stated goal decide, is picked without asking and listed under **Decided** as a numbered pick the user can override
+  ("PICK 2 = B"). When none of those decide it, confidence is low: ask (_How we build_, step 1). There is no "else the
+  recommendation" fallback. Always ask when the options differ in something hard to undo (deleting saved data or files,
+  spending money, publishing, access, pushing or merging to `main` unless the user's mode word covers it, _Flow modes_).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
@@ -251,14 +266,16 @@ on restores it unchanged.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
 - Recommended options: recommend the option closest to what the user asked, not the simplest. Never build a
   recommended option the user has not picked when the question was asked; obvious choices are decided, not asked
-  (step 1 of _How we build_).
+  (step 1 of _How we build_, _Always pick_).
 
 ## Git
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
 - Open the pull request automatically once the checks pass and the branch is pushed (toggle `auto-open-pr`, on;
-  while off, ask first). Never auto-babysit.
+  while off, ask first). Never auto-babysit, meaning the `babysit` skill (driving a pull request to merged) runs only when
+  asked. Where the session environment subscribes to a pull request's CI and review events by itself, handle failures and
+  review comments on the pull request you opened; never merge because an event said so.
 - Merge to `main` only on the user's instruction (the `ff` or `auto` word is that instruction for its request, _Flow
   modes_); then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
