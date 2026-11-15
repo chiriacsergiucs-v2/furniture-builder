@@ -108,7 +108,7 @@ function toInput(f: Form): WallInput {
 
 /** A whole-mm answer kept as typed (ADR-008); shared with Fill the room. */
 const picture = (m: Mix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
 
 function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
   const src = useMemo(() => picture(m), [m]);
