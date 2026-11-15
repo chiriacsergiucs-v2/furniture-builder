@@ -34,8 +34,10 @@ MDF 2440 × 1220 (Materials). Hinge, pin and bracket counts are common guidance 
 
 ## Features
 
-Everything the app does, by area, with the ADRs that built it. Source: the Information and guides page
-(`src/ui/info/features.ts`, ADR-158) plus the assistant (ADR-239, ADR-240).
+Built features by area, with the ADRs that built them. Sources: the Information and guides page
+(`src/ui/info/features.ts`, ADR-158), which has no lines for the assistant or for the behaviour rules of ADR-241 to
+ADR-266, so those are added from the implemented ADRs. Not listed: pending or deferred ADRs (ADR-217, ADR-242,
+ADR-265) and rejected ones (ADR-063).
 
 ### Creating
 
@@ -53,6 +55,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Fill the room in L and U rooms** — A wall too short for a corner cabinet at both ends keeps one and leaves the other corner empty, both ends tried; runs stay out of the corner cabinets and of a narrow arm already filled. (ADR-216)
 - **Template descriptions in Start from** — New… → Start from shows each built-in template’s description under its row. (ADR-216)
 - **Room presets** — New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room. (ADR-210)
+- **One tap makes one saved thing** — Creating a project, room preset or wizard piece is guarded against a second tap, saved before it opens, and a failure is said where you tapped (ADR-248)
+- **Fill the room beside existing pieces** — In a project that already has pieces, each suggested mix is checked together with them; when none fits it says so and tells you to untick filled walls (ADR-248)
 
 ### Composition
 
@@ -86,6 +90,14 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Drill into a project piece** — Edit its spaces, size, boards and construction without leaving the project. (ADR-088, ADR-090)
 - **Esc selects one level up** — In the piece editor: a space, then the space around it, then the whole piece, then nothing. (ADR-203)
 - **Outline turns with an angled piece** — The 3D selection outline and the Move ghost are turned like its boards. (ADR-203)
+- **Ask before an edit drops contents** — Changing What goes here, lowering Parts, Remove dividers, the quick count − on dividers, applying a layout preset and choosing a diagonal corner ask first when something would be lost; an empty part goes in one tap (ADR-246, ADR-249, ADR-254)
+- **Esc inside a project piece** — Selects the space around the selected one; only the whole piece clears the selection (ADR-249)
+- **Appliance niche starts at the measured opening** — Kind Other; with no opening the toggle stays off (ADR-249)
+- **Edit this piece stays in the project** — The plan and the other pieces stay open; More actions › Open in the piece editor opens the full editor (ADR-241)
+- **Rename a project piece** — More actions › Rename… (ADR-245)
+- **Change all copies remembered** — The choice is kept on this device (ADR-245)
+- **Editing state kept** — Template edits, reloads and piece renames keep the open project and its undo history; edit history is off in the full piece editor, with a title saying to go back to the project (ADR-245)
+- **Delete and duplicate a multi-selection** — Delete asks, Ctrl+D duplicates it as a block, Ctrl+A takes 3D models too, and Enter no longer means Remove in a confirm (ADR-246)
 
 ### Moving
 
@@ -99,6 +111,11 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Place on the floor, on the wall or on another piece** — A piece on another piece follows it. (ADR-031)
 - **Lock a piece in place, its turn, or each of its sizes** — Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings. (ADR-095, ADR-122, ADR-171)
 - **A locked piece on a base keeps the base from being resized** — Unlock it to resize the piece under it; unlocked pieces on it follow. (ADR-203)
+- **Locks hold in every flow** — Remove (alone or in a selection), Merge and Mirror the run refuse a piece whose lock forbids it and name it (ADR-243)
+- **A grouped piece turns with its group** — Turning one piece of a group is refused with the reason and the turn handle is hidden for it (ADR-250)
+- **Position fields take every place the app makes** — Gap, underside and above-floor fields accept 0 to 20000 and show a refusal under the fields; after a Move to tap, focus moves to the Move to group (ADR-250)
+- **Move a multi-selection in 3D** — Pressing a selected piece in Move mode drags all of the selection as one undo step (ADR-250)
+- **Move alone** — A toggle beside Snap makes every plan drag and arrow-key move act as Alt held (ADR-251)
 
 ### Aligning and arranging
 
@@ -122,6 +139,7 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Linked copies** — Change one copy and every linked copy changes. (ADR-111)
 - **Link identical pieces** — Pieces that are exactly the same are linked in one tap from the card. (ADR-207)
 - **Mirror a lounger or a daybed** — The backrest and the side panel are built at the left or the right end. (ADR-207)
+- **Align and distribute along each piece's own wall** — Axes follow the first selected piece's turn; pieces standing along another wall are skipped and named; "Already in line." when nothing moves (ADR-251)
 
 ### Selection and groups
 
@@ -133,6 +151,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Up one level on a phone** — A button beside the path selects the space around the selected one. (ADR-211)
 - **Cycle through overlapping pieces** (ADR-097)
 - **Keep pieces as named groups** — Grouped pieces move together. (ADR-097, ADR-148)
+- **Group names in your language** — New groups are named "Group n" (Russian "Группа n"); Group shows only with two or more pieces selected, 3D models are left out and the card says so, and a double tap makes one group (ADR-252)
+- **Selection box takes 3D models** — The plan and front-view boxes also select placed models the rectangle touches (ADR-252)
 
 ### Sizing
 
@@ -143,6 +163,10 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Lock size** — Nothing changes the piece's width, height or depth until you unlock it. (ADR-122, ADR-199)
 - **Size a group as a whole** — Width split proportionally or equally; height and depth set on every piece. (ADR-148)
 - **Exact whole-millimetre splits** — Leftover millimetres go one each to the first parts. (ADR-003)
+- **A typed size stays until valid** — An invalid number stays on screen marked invalid with the allowed range until you fix it or press Escape; − / + step from the stored value (ADR-253)
+- **Locks name only sizes the piece has** — Lock offers only the piece's own sizes; a bed names its locked mattress fields (ADR-253)
+- **Group size reports what was kept** — A group resize says "Kept: …" for what it could not change (ADR-253)
+- **Refused edits are reported truthfully** — A change a lock refused is never counted as applied; applying a material, finish or style to a group or project skips locked pieces and lists them as "{name}: locked"; the lock chip and plan badge include boards and construction locks (ADR-244)
 
 ### Construction
 
@@ -198,6 +222,7 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Tables, benches, stools, chairs and beds** (ADR-038, ADR-196)
 - **Shaped parts** — Raked backs, splayed legs and profiled fronts, still in whole millimetres. (ADR-040)
 - **Loose panel sets** — Parts known only by their cut sizes. (ADR-041)
+- **Typed construction sizes kept exactly** — Decimals such as 2.5 are refused out loud, not rounded; runner lengths and loose-panel names stay on screen marked invalid until valid (ADR-254)
 
 ### Boards and edges
 
@@ -222,6 +247,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Own board for any single part** — In Material, scope Part; a part the piece no longer builds is listed to clear. (ADR-151, ADR-163)
 - **Style suggestions** — In the Material dialog: board and handle combinations, labelled as suggestions. (ADR-123, ADR-163)
 - **Project-wide settings** — Handle, front overlay and plinth height that pieces follow; Material with scope Project sets the carcass, front and back boards. (ADR-124, ADR-163)
+- **Board changes told truly** — A refused clear says "Nothing changed: {why}"; an empty board name goes back to the stored one; a removed part's board is named and cleared by number; band thickness shows its error (ADR-255)
+- **Back to the group's board** — In Material, scope Part: Use its group's board again (ADR-246)
 
 ### Hardware
 
@@ -230,6 +257,7 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Fastener counts** — Counted from the model as guidance; you name the fasteners you use. (ADR-074)
 - **Project fasteners and drilling positions** (ADR-209)
 - **Hardware you choose yourself** — Sliding tracks, flap stays and appliance fixings wait for your choice, never invented. (ADR-037, ADR-010)
+- **Typed counts and names kept as typed** — Decimals are refused with the reason; fastener rows show what is really saved; the handle hole centres field shows the value the model uses even if it is not in the list; names you give appear inside translated sentences (ADR-256)
 
 ### Room and walls
 
@@ -247,6 +275,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Chair, installation and service clearances** (ADR-073)
 - **Clearance zones in 3D** (ADR-205)
 - **Backs cut around pipes and outlets** (ADR-205)
+- **Room size errors at the field** — Each wrong value is named under the field where it was typed; the room outline is still set and the problems stay (ADR-257)
+- **Room features named in your language and numbered with the lowest free number** — A repeated corner adds no wall; a second scale tap on the same point asks for a different one; the floor picture input is named for replacing (ADR-257)
 
 ### Checks and problems
 
@@ -256,6 +286,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Select the problem** — Tapping a check selects the pieces and shows where it is. (ADR-071)
 - **Previewed repairs** — A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall. (ADR-071, ADR-176, ADR-204, ADR-210)
 - **Repair fillers kept by automatic refresh; the problem in 3D** (ADR-209)
+- **Piece warnings in the project checks** — Each piece's warnings are listed with the piece name wherever the project's checks are read; they never block (ADR-258)
+- **Honest repair banner** — A problem with no repair says "This problem has no automatic repair"; the Checks tab names its count and the banner takes focus when a check is tapped (ADR-258)
 
 ### Views
 
@@ -288,6 +320,10 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Width, height and depth of a model** (ADR-102)
 - **Move and turn a model in 3D** — Drag it in Move mode, with Snap, and turn it 90° about its centre. (ADR-203)
 - **Place and drag 3D models** — On the floor, on the wall or on a piece; dragged with snapping on the plan and in Move mode; kept in project templates. (ADR-208)
+- **Cut list place on phones** — The bottom bar reads Projects · Catalog · Editor · Cut list; its badge counts errors or warnings (ADR-241)
+- **Settings and Material inside the phone sheet** — The sheet goes to full height and the dialog takes its body; closing returns it to half (ADR-247)
+- **Render stops when closed** — Close, Cancel or a new Start disposes the job; without WebGL a hint explains and points the 3D and Both buttons to it (ADR-259)
+- **One 3D ⋯ menu** — Export scene (.glb), View in AR and Export for AR sit together; model side fields stay inside 1 to 10 000 mm with Keep proportions (ADR-259)
 
 ### Output
 
@@ -327,6 +363,9 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Fusion 360 script** — Rebuilds the model as named solid boxes; not verified inside Fusion. (ADR-021)
 - **Review pack for a professional** — Summary, parts CSV, drawings and the project file in one .zip. (ADR-121)
 - **Client sheet** — One A4 page to sell from: a picture, the pieces with their sizes and the estimated price, with the lines that have no price counted. (ADR-206)
+- **Exports blocked on errors** — Print assembly steps, Front view drawing and Fusion 360 script are disabled while the design has an error, with the reason "Fix the problems listed under Checks first" (ADR-260)
+- **Print speaks the print language only** — The shopping list print uses print-language units, a decimal comma and an estimate line; the shopping CSV is named after the design; the cutting sheet's piece names follow the CSV (ADR-260)
+- **Output failures said** — A failed price import says the prices could not be saved on this device; a failed review pack says why; the price chip says "Prices could not be read" (ADR-260)
 
 ### Projects
 
@@ -355,6 +394,7 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Value sets** — Duplicate every bound piece with other values, with the room; set 1’s run parts, run handles and sinks are copied onto each set and kept in step; save a set as a project. (ADR-167, ADR-175)
 - **Side panel ordered by use** — Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove. (ADR-117, ADR-160)
 - **Quick actions on the phone sheet** — Edit, duplicate and turn the selected piece with the sheet closed. (ADR-160)
+- **Failed writes said** — A failed delete says whether the project, the piece or its kept versions failed; Value sets save once per tap and retry the same project; "Updated from the saved piece" shows only when the update really happened (ADR-261)
 
 ### Catalog and templates
 
@@ -371,6 +411,8 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Brands** — A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards. (ADR-210)
 - **Family rule for your own templates** — A piece from your own template keeps its rooms, so pieces of rooms apart are warned about. (ADR-210)
 - **Reference entries for upholstered pieces** (ADR-039)
+- **An import never loses an edit** — Use the imported one saves first and removes your other edits of that family only when the save worked; unreadable files and saved-piece reads say so; card and variant controls name their item (ADR-262)
+- **Catalog page by category, brand and Saved on this device** — Browse furniture grouped by category or brand, or what is saved on this device (ADR-027)
 
 ### Saving, backup and sharing
 
@@ -385,6 +427,9 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Clean up unused pictures** (ADR-048, ADR-078)
 - **Share links** — Signed in, a link to a piece or template; anyone with it opens a copy until you stop sharing. (ADR-132, ADR-138)
 - **Preview a shared item** (ADR-143)
+- **Failures said, nothing lost** — A stopped restore says how many items were restored; a missing backup says so; Clean up unused pictures also checks kept project versions; opening a shared item makes one copy per tap; file exports say when pictures or models could not be read (ADR-263)
+- **Explicit autosave and changed-rows backup** — Every save emits its own change; a folder backup writes only changed rows and deletions (ADR-235)
+- **Offline before first use, with a size budget** — The precache lists the app, seller catalog and viewer chunks and a test holds it to a size budget (ADR-234)
 
 ### Account
 
@@ -396,12 +441,15 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Conflicts never lose work** (ADR-129)
 - **Several accounts on one device** (ADR-142)
 - **Privacy notice, data export and account deletion** (ADR-130)
+- **Account actions that fail say so** — Deleting the account stops automatic upload only after the server confirms; a failed Keep on this device only says it could not be taken out of your account; typing clears the password mismatch; a copy is named "{name} (from your account)" (ADR-264)
+- **Secure sessions and content security policy** — Online requests contact only the allowed origins (ADR-131, ADR-233)
 
 ### Assistant
 
 - **Chat assistant** — Signed in, in a build with a backend, you write what you want and the assistant asks back when something is unclear. It reaches an AI model only through the backend's `assistant` function, which holds the provider key and a daily cap (ADR-239)
 - **Every editor action as a previewed change** — Anything doable by hand (size, divide, contents, doors, materials, adding, moving and turning pieces) is a catalog action; a plan is checked whole, previewed, then applied as one undo step (ADR-240)
-- **Refusals and locks respected** — Locks stay in force, every refused edit is reported truthfully, and an edit that drops contents asks first (ADR-243, ADR-244, ADR-246)
+- **Field limits enforced** — The assistant is refused saw cuts outside 0–20 mm and variables with empty or duplicate names; a refusal fails the plan's preview with the reason; in a project its saw cut sets the project's saw cut (ADR-246)
+- **Refusals reach the assistant** — A refused merge, mirror, gap, Against the wall, Align or Distribute sets a notice, so a plan sees it (ADR-244)
 
 ### Language
 
@@ -420,6 +468,22 @@ Everything the app does, by area, with the ADRs that built it. Source: the Infor
 - **Info buttons** (ADR-080, ADR-113)
 - **Arrow keys in segmented controls** — Tab reaches the chosen option; the arrow keys, Home and End move and choose, in every segmented control. (ADR-202)
 - **Light and dark themes** (ADR-030)
+- **Honest information pages** — Back to the editor shows only with a design open; Import marks says how many marks were kept because yours are newer; Research and Gaps keep unsaved ids until they are saved (ADR-266)
+- **One control height and heading scale** — Controls share one height and button labels never wrap; headings and spacing follow shared tokens (ADR-114, ADR-115, ADR-116, ADR-120)
+
+### Under the hood
+
+No screen of their own; each line states its ADR's title.
+
+- **Stack and tooling** — React 19, TypeScript strict, Vite 7, Zustand, react-three-fiber, Dexie (ADR-013); pnpm, Prettier and Node 24 (ADR-053); the reserv ADR layout and skills (ADR-050) (ADR-013, ADR-050, ADR-053)
+- **Clean break** — Rebuilt from zero, no data from the previous app (ADR-001)
+- **Verification and process** — Core unit tests plus seeded fuzz; find-it acceptance in Vitest and jsdom, with a browser script as a flag; light acceptance; the gaps ledger; smallest-slice process (ADR-015, ADR-016, ADR-066, ADR-082, ADR-108, ADR-201, ADR-224)
+- **CI** — Parallel jobs, test shards, docs-only runs, caches, a deploy that waits on CI, incremental type-checking (ADR-197, ADR-220)
+- **Catalog feed** — A scheduled search-and-extract job with a local PDF extractor, gated by a pull request (ADR-029, ADR-052)
+- **Backend choice** — Backend, sign-in provider and database (ADR-127); secure sessions, content security policy and online requests (ADR-131, ADR-233)
+- **Architecture** — Lint-enforced layer boundaries (ADR-219); persistence behind the store (ADR-223); a viewer free of UI imports (ADR-230); room and seating sizing rules in core (ADR-232); a simpler design store (ADR-231); stable diagnostic codes (ADR-225); nesting as an internal module with golden layouts (ADR-228); saved rows validated before duplicating (ADR-227); one commit path for project changes (ADR-226)
+- **Performance** — Memoised placed pieces (ADR-221); split bundle with lazy pages and research data (ADR-222); shared viewer materials and merged panel edges (ADR-238); language dictionary loaded before the app, Russian lazy for English (ADR-229)
+- **Housekeeping** — Agent contracts stay runtime-neutral (ADR-017); research tests and dead code removed (ADR-150, ADR-236); browser test dependency declared (ADR-237); feature-tree details completed (ADR-183); layout bug fixes from the 2026-10-27 critique (ADR-115, ADR-120)
 
 ## Develop
 
