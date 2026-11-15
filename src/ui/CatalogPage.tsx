@@ -65,6 +65,9 @@ import {
   waitsFor,
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
+/** Families a group lists before "Show more", and how many each tap adds (N303): the catalog is 15 000 px tall without it. */
+const GROUP_PAGE = 12;
+
 /** Size, parts and checks of one item, from its built model (ADR-004). */
 function itemFacts(f: ViewFamily, v: CatalogVariant) {
   if (!insertable(v)) return null;
@@ -118,10 +121,23 @@ export function CatalogPage({
   const [savedFamily, setSavedFamily] = useState<{ id: string; name: string } | null>(null);
   // A new object per tap, so tapping the link again scrolls again; scrolled once the list has rendered.
   const [jump, setJump] = useState<{ id: string } | null>(null);
+  // Families revealed beyond the first page of each group. It belongs to one search and one grouping: a new query or a
+  // switch of grouping starts every group at its first page again.
+  const [moreState, setMoreState] = useState<{
+    q: string;
+    grouping: string;
+    extra: Record<string, number>;
+  }>({
+    q: '',
+    grouping,
+    extra: {},
+  });
   const jumpTo = (id: string) => {
     setSource('templates');
     setQuery('');
     setEditing(null);
+    // A family just saved lands on the first page of its groups; tests/find-it/catalog-pagination.test.tsx fails if it does not.
+    setMoreState({ q: '', grouping, extra: {} });
     setJump({ id });
   };
   useEffect(() => {
@@ -145,6 +161,14 @@ export function CatalogPage({
     [families, q],
   );
   const groups = useMemo(() => groupFamilies(shown, grouping), [shown, grouping]);
+  const extra = moreState.q === q && moreState.grouping === grouping ? moreState.extra : {};
+  // A new query or grouping drops the revealed families for good: clearing the search later does not bring them back.
+  useEffect(() => {
+    if (moreState.q !== q || moreState.grouping !== grouping)
+      setMoreState({ q, grouping, extra: {} });
+  }, [moreState, q, grouping]);
+  const showMore = (key: string, by: number) =>
+    setMoreState({ q, grouping, extra: { ...extra, [key]: (extra[key] ?? 0) + by } });
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
   const sources = (
@@ -453,7 +477,7 @@ export function CatalogPage({
               {g.label}{' '}
               <span className="count">{t('{n|# item|# items}', { n: itemCount(g, q) })}</span>
             </h2>
-            {g.items.map(({ family, also }) => (
+            {g.items.slice(0, GROUP_PAGE + (extra[g.key] ?? 0)).map(({ family, also }) => (
               <FamilyBlock
                 key={`${g.key}:${family.id}`}
                 f={family}
@@ -466,6 +490,11 @@ export function CatalogPage({
                 onEdit={() => startEdit(family)}
               />
             ))}
+            <GroupMore
+              shown={Math.min(g.items.length, GROUP_PAGE + (extra[g.key] ?? 0))}
+              total={g.items.length}
+              onMore={(n) => showMore(g.key, n)}
+            />
           </section>
         ))}
       {source === 'saved' && (
@@ -678,6 +707,42 @@ function ItemCard({
  * One family, then every item (variant) as its own compact card. Its default structure, configurations, rooms and
  * other names wait behind "About this family" (ADR-118 on a phone, ADR-119 at every width).
  */
+/** Under a group's families: how many are listed, and a button for the next page (N303). Nothing when all are shown. */
+function GroupMore({
+  shown,
+  total,
+  onMore,
+}: {
+  shown: number;
+  total: number;
+  onMore: (n: number) => void;
+}) {
+  const status = useRef<HTMLParagraphElement>(null);
+  if (total <= GROUP_PAGE) return null;
+  const left = total - shown;
+  return (
+    <div className="group-more">
+      <p className="hint" role="status" tabIndex={-1} ref={status}>
+        {t('Showing {shown} of {total} families', { shown, total })}
+      </p>
+      {left > 0 && (
+        <button
+          type="button"
+          className="btn outline"
+          onClick={() => {
+            const n = Math.min(GROUP_PAGE, left);
+            onMore(n);
+            // The button goes with the last page: focus moves to the count line instead of falling to the page.
+            if (n >= left) setTimeout(() => status.current?.focus(), 0);
+          }}
+        >
+          {t('Show {n|# more family|# more families}', { n: Math.min(GROUP_PAGE, left) })}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function FamilyBlock({
   f,
   also,

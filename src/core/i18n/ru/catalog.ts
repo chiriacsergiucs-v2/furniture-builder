@@ -244,6 +244,9 @@ export const ru_catalog = {
   'Saved pieces with a {brand} board': 'Сохранённые изделия с плитой {brand}',
   'No saved piece has a board of this maker yet.':
     'Пока ни одно сохранённое изделие не имеет плиты этого производителя.',
+  // N303: the catalog lists a group's first families, then "Show more".
+  'Showing {shown} of {total} families': 'Показано {shown} из {total} семейств',
+  'Show {n|# more family|# more families}': 'Показать ещё {n|# семейство|# семейства|# семейств}',
   // ADR-195: catalog and template flows.
   '{n|# item|# items}': '{n|# изделие|# изделия|# изделий}',
   'The template could not be removed from this browser’s storage.':
