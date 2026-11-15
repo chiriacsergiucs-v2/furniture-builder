@@ -491,6 +491,21 @@ highest id in either file.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: 2026-11-06: ADR-202 takes over only the fastener CSV and print text (pt()); the project-level fasteners panel and drilling positions moved to G-380.
 
+### G-043: Duplicate backlog id D02
+
+- Status: Done (N299)
+- Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
+- Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
+- Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
+- Questions: Renumber the later row to D03? (Ids are never renumbered, so this needs your decision.)
+- Suggested pick: Give the later row (“Built in the app”) D03 and fix every reference. (estimate: effort +1%, value bookkeeping)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
+- Fix: With the user's approval, give the later row D03 and update every reference.
+- Conflicts: none
+
 ### G-044: Catalog feed and brand filter
 
 - Status: Done (ADR-210)
@@ -3430,3 +3445,27 @@ highest id in either file.
 - Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
 - Work: Medium
 - Impact: Low
+
+### G-506: Duplicate backlog id D02
+
+- Status: Done (N299)
+- Origin: UI audit, 2026-11-15
+- Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
+- Request: Highlight full list of things out of place from claude.md or settings
+- Questions: Which row keeps D02 and which gets the next free D id, given the never-renumber rule?
+- Suggested pick: Give the Built in the app row the next free D id and update its citations (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-508: UI flow audit report not written
+
+- Status: Done (N301)
+- Origin: UI audit prompt, 2026-11-14
+- Missing: The full UI/UX flow-mapping report (architecture, layout at 390 and 1280 px, component positions, flows, findings rated against WCAG 2.2 AA and Nielsen heuristics) was not produced; the capture tool is ready
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report ... to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Report location: repo file, Doc, or Artifact for the auditors?
+- Suggested pick: Repo file under docs/research with the capture screenshots committed (estimate: effort +100 %, value +40 %)
+- Work: High
+- Impact: Medium
+- Necessity: Medium

@@ -56,7 +56,7 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Open questions** — ask only low-confidence choices that change what gets built, in one
      `AskUserQuestion` batch (at most ~4, short options, recommended one first, no estimates; user rule 2026-11-07).
      Decide the obvious ones and record them in the Decision as decided by Claude. Never invent hardware specs,
-     loads or supplier values (ADR-010). Gaps in `docs/adr/GAPS.md` are optional.
+     loads or supplier values (ADR-010). Unbuilt items are recorded in `docs/adr/GAPS.md` (required since 2026-11-15).
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
    - Size stays within ~110 lines, ~6.5 KB and 8 `Done when` items. If it would be bigger,
