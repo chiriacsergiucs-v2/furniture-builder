@@ -35,12 +35,24 @@ function mapPage() {
   const elements = [...document.querySelectorAll(sel)].map((e) => {
     const r = e.getBoundingClientRect();
     const cs = getComputedStyle(e);
+    // Content of a closed <details> (a closed menu) is laid out but not shown; only its summary is.
+    const closed = e.parentElement?.closest('details:not([open])');
+    const hiddenByDetails = closed && !(e.tagName === 'SUMMARY' && e.parentElement === closed);
     const shown =
-      r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none';
+      r.width > 0 &&
+      r.height > 0 &&
+      cs.visibility !== 'hidden' &&
+      cs.display !== 'none' &&
+      !hiddenByDetails;
     return {
       tag: e.tagName.toLowerCase(),
       role: e.getAttribute('role') || '',
-      name: (e.getAttribute('aria-label') || e.textContent || '')
+      name: (
+        e.getAttribute('aria-label') ||
+        [...(e.labels || [])].map((l) => l.textContent).join(' ') ||
+        e.textContent ||
+        ''
+      )
         .trim()
         .replace(/\s+/g, ' ')
         .slice(0, 60),
@@ -66,7 +78,8 @@ function mapPage() {
 /** Save the screenshot and the element map of the current screen as `<out>/<name>-<width>`. */
 async function capture(page, width, place, state, name) {
   const base = `${out}/${name}-${width}`;
-  await page.screenshot({ path: `${base}.png`, fullPage: true });
+  // Full page only for the default screen; menus and dialogs are fixed overlays, so the viewport shows them whole.
+  await page.screenshot({ path: `${base}.png`, fullPage: state === 'default' });
   const map = await page.evaluate(mapPage);
   writeFileSync(`${base}.json`, JSON.stringify({ place, state, ...map }, null, 2));
   summary.push({
@@ -85,7 +98,12 @@ const browser = await launchBrowser();
 const summary = [];
 for (const width of WIDTHS) {
   const phone = width < 500;
-  const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
+  // A phone gets touch and the mobile flag, as in the find-it scripts, so `pointer: coarse` rules (44 px targets) apply.
+  const ctx = await browser.newContext({
+    viewport: { width, height: phone ? 812 : 900 },
+    hasTouch: phone,
+    isMobile: phone,
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

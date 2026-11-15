@@ -1,0 +1,128 @@
+[
+  {
+    "width": 1280,
+    "place": "Projects",
+    "state": "default",
+    "elements": 116,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Projects",
+    "state": "more-menu",
+    "elements": 116,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Projects",
+    "state": "new-dialog",
+    "elements": 287,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Catalog 118",
+    "state": "default",
+    "elements": 641,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Catalog 118",
+    "state": "more-menu",
+    "elements": 641,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Catalog 118",
+    "state": "new-dialog",
+    "elements": 812,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Editor",
+    "state": "default",
+    "elements": 115,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Editor",
+    "state": "more-menu",
+    "elements": 115,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "place": "Editor",
+    "state": "new-dialog",
+    "elements": 286,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Projects",
+    "state": "default",
+    "elements": 106,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Projects",
+    "state": "more-menu",
+    "elements": 106,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Projects",
+    "state": "new-dialog",
+    "elements": 277,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Catalog",
+    "state": "default",
+    "elements": 724,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Catalog",
+    "state": "more-menu",
+    "elements": 724,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Catalog",
+    "state": "new-dialog",
+    "elements": 895,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Editor",
+    "state": "default",
+    "elements": 104,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Editor",
+    "state": "more-menu",
+    "elements": 104,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "place": "Editor",
+    "state": "new-dialog",
+    "elements": 265,
+    "horizontalScroll": false
+  }
+]

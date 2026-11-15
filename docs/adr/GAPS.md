@@ -1747,14 +1747,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-508: UI flow audit report not written
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
 
 - Status: Open
-- Origin: UI audit prompt, 2026-11-14
-- Missing: The full UI/UX flow-mapping report (architecture, layout at 390 and 1280 px, component positions, flows, findings rated against WCAG 2.2 AA and Nielsen heuristics) was not produced; the capture tool is ready
-- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report ... to be prepared for a professional architect and the leading auditor company to optimize existing flows.
-- Questions: Report location: repo file, Doc, or Artifact for the auditors?
-- Suggested pick: Repo file under docs/research with the capture screenshots committed (estimate: effort +100 %, value +40 %)
-- Work: High
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: docs/research/2026-11-15-ui-flow-audit.md covers Projects, Catalog and Editor at 390 and 1280 px in the light theme with no saved data. Not covered: the 3D view, the wizard steps, Settings and Material dialogs, Gaps, Research, Information, Account, Share, Assistant, dark theme, and states that need saved data. Findings F-06 to F-14 and F-17 to F-19 are Reported from code mapping, citations not yet checked.
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
 - Impact: Medium
 - Necessity: Medium
