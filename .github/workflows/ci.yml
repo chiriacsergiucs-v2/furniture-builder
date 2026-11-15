@@ -39,7 +39,7 @@ jobs:
           echo "skip=$skip" >> "$GITHUB_OUTPUT"
 
       # ADR-197: a pull request that touches only these docs runs format:check and docs:check, not lint, typecheck,
-      # tests or the build. The app bundles docs/adr/GAPS.md and docs/research, and tests read docs/catalog.md,
+      # tests or the build. The app bundles docs/adr/GAPS.md, and tests read docs/catalog.md,
       # docs/samples and the names in docs/adr, so those (docs/adr-done too) and any deleted or renamed file
       # ("deleted:" below) always get the full run; so do 300 or more files and an API error. Pushes to main always
       # get the full run: the deploy builds the whole tree, which may hold commits whose own CI is still running.
@@ -225,7 +225,7 @@ jobs:
 
       - run: pnpm build:ci
 
-      # ADR-222: the first-paint `index` chunk stays free of three.js, the account backend and the research data, under
+      # ADR-222: the first-paint `index` chunk stays free of three.js and the account backend, under
       # its byte budget. ADR-234: the precache lists the shell, the seller catalog and the 3D chunks, under its budget.
       # ADR-229: the Russian UI dictionary stays a lazy chunk; the entry chunk's Cyrillic stays under its budget.
       # They read the build above; REQUIRE_DIST turns a missing `dist` into a failure, not a skip.

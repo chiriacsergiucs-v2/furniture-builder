@@ -8,8 +8,6 @@ import type { ModelFormat, ModelSize } from '../core/model3d';
 import { validatePrice, type PriceEntry } from '../core/prices';
 import { validFastenerChoice, type FastenerChoice, type JointType } from '../core/fasteners';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
-import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog';
-import type { ResearchMark } from '../core/research/types';
 import { validateGapMark, type GapMark } from '../core/gaps';
 import { validateVersion, type ProjectVersion } from '../core/projectVersion';
 import type { BackupTable } from '../core/backup';
@@ -79,8 +77,9 @@ class FurnitureDb extends Dexie {
   designs!: Table<StoredDesign, string>;
   projects!: Table<StoredProject, string>;
   templates!: Table<StoredTemplate, string>;
-  researchDocs!: Table<StoredBundle, string>;
-  researchMarks!: Table<ResearchMark, string>;
+  /** Rows of the retired Feature Research page: kept in the shipped schema and in backups, no longer read or written. */
+  researchDocs!: Table<Record<string, unknown>, string>;
+  researchMarks!: Table<Record<string, unknown>, string>;
   images!: Table<StoredImage, string>;
   decors!: Table<Decor, string>;
   projectTemplates!: Table<StoredProjectTemplate, string>;
@@ -412,28 +411,6 @@ export async function listTemplates(database = db): Promise<LocalTemplate[]> {
 }
 export const deleteTemplate = (id: string, database = db) =>
   database.templates.delete(id).then(saved('templates', [id], true));
-
-export async function saveResearchBundle(s: StoredBundle, database = db): Promise<void> {
-  await database.researchDocs.put(s);
-  savedRows('researchDocs', [s.key]);
-}
-/** Stored editions that still validate; unreadable rows are skipped and kept (ADR-012). */
-export async function listResearchBundles(database = db): Promise<StoredBundle[]> {
-  const rows = await database.researchDocs.toArray();
-  return rows.filter((r) => !validateBundle(r.bundle).length);
-}
-export async function saveResearchMarks(marks: ResearchMark[], database = db): Promise<void> {
-  await database.researchMarks.bulkPut(marks);
-  savedRows(
-    'researchMarks',
-    marks.map((m) => m.id),
-  );
-}
-/** Decisions that still validate; unreadable rows are skipped and kept (ADR-012). */
-export async function listResearchMarks(database = db): Promise<ResearchMark[]> {
-  const rows = await database.researchMarks.toArray();
-  return rows.filter((r) => !validateMark(r).length);
-}
 
 export async function saveGapMark(mark: GapMark, database = db): Promise<void> {
   await database.gapMarks.put(mark);

@@ -4,7 +4,7 @@
 - Date: 2026-11-16
 - Depends on: ADR-267
 - Design: docs/ui-design.md (section 4, editor screen and phone bottom sheet)
-- Backlog: N282
+- Backlog: N286
 
 ## Context
 

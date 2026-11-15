@@ -4,7 +4,7 @@
 - Date: 2026-11-16
 - Depends on: ADR-267, ADR-269
 - Design: docs/ui-design.md (section 4, editor screen; 3D view)
-- Backlog: N284
+- Backlog: N288
 - Acceptance: browser
 
 ## Context

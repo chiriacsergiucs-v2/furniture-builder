@@ -31,7 +31,7 @@ highest id in either file.
 FIELDS = ("Status", "Origin", "Missing", "Request", "Questions", "Suggested pick")
 STATUS = re.compile(r"Open|Acknowledged \(\d{4}-\d{2}-\d{2}\)|ADR-\d{3}|Done \(.+\)")
 HEAD = re.compile(r"^### (G-\d{3}): (.+)$", re.M)
-# The rating scale of the gaps (ADR-187); the same five levels as CONFIDENCE_SCALE in src/core/research/types.ts.
+# The rating scale of the gaps (ADR-187).
 SCALE = ("Low", "Low-medium", "Medium", "Medium-high", "High")
 RATINGS = ("Work", "Impact", "Necessity")
 EXTRA = RATINGS + ("Issue", "Fix", "Conflicts")

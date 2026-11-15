@@ -4,7 +4,7 @@
 - Date: 2026-11-16
 - Depends on: ADR-083, ADR-087, ADR-203, ADR-211
 - Design: docs/ui-design.md (section 4, editor screen and phone bottom sheet)
-- Backlog: N281
+- Backlog: N285
 - Acceptance: browser
 
 ## Context

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for ADR-267 (N281), in jsdom (ADR-108): from the bare app, by role and visible text, at phone and desktop
+// Find-it for ADR-267 (N285), in jsdom (ADR-108): from the bare app, by role and visible text, at phone and desktop
 // widths. Sibling spaces of one kind get different names in the path, the title and the phone peek row; a selection
 // change is announced once; a group the user opened stays open when the selection changes. The sticky head and the
 // tint animation need layout and CSS: `tools/drawer-shell/find-it.mjs`.
