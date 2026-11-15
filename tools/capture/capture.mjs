@@ -66,12 +66,19 @@ function mapPage() {
       tabOrder: focusable.has(e) ? Number(e.dataset.captureTab) : null,
     };
   });
+  // A long page (the Catalog is 15,000 to 27,000 px tall) would give a JSON of hundreds of KB. Keep the elements in the
+  // first two screens and record the totals, so the page size and element count stay known.
+  const scrollHeight = document.documentElement.scrollHeight;
+  const longPage = scrollHeight > vh * 3;
+  const kept = longPage ? elements.filter((e) => e.y < vh * 2) : elements;
   return {
     viewport: { w: vw, h: vh },
     scrollWidth: document.documentElement.scrollWidth,
-    scrollHeight: document.documentElement.scrollHeight,
+    scrollHeight,
     horizontalScroll: document.documentElement.scrollWidth > vw + 1,
-    elements,
+    totalElements: elements.length,
+    truncatedBelowY: longPage ? vh * 2 : null,
+    elements: kept,
   };
 }
 
@@ -86,11 +93,11 @@ async function capture(page, width, place, state, name) {
     width,
     place,
     state,
-    elements: map.elements.length,
+    elements: map.totalElements,
     horizontalScroll: map.horizontalScroll,
   });
   console.log(
-    `${width}px ${place} [${state}]: ${map.elements.length} elements${map.horizontalScroll ? ' — HORIZONTAL SCROLL' : ''}`,
+    `${width}px ${place} [${state}]: ${map.totalElements} elements${map.horizontalScroll ? ' — HORIZONTAL SCROLL' : ''}`,
   );
 }
 
