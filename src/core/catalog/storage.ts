@@ -15,6 +15,7 @@ import {
   splitY,
 } from './helpers';
 import type { CatalogFamily } from './types';
+import { zigzagBookcase } from './zigzagBookcase';
 
 const ROOM_DIMS = {
   min: [300, 300, 200] as [number, number, number],
@@ -48,6 +49,31 @@ export const storage: CatalogFamily[] = [
         kind: 'interior',
         requires: [],
         create: legacy('bookcase'),
+      },
+    ],
+  },
+  {
+    id: 'zigzag-bookcase',
+    name: 'Zigzag bookcase',
+    nameRo: 'Bibliotecă în zigzag',
+    aliases: ['room divider', 'open shelving', 'despărțitor', 'etajeră'],
+    function: 'storage',
+    rooms: ['living', 'office'],
+    root: 'panels',
+    support: 'ready',
+    structure:
+      'Six full shelves and short panels that alternate left and right in each of five tiers; no back panel.',
+    configurations: ['Part sizes and places edited as panels'],
+    dims: { min: [300, 300, 200], max: [3000, 2700, 800] },
+    catalogVersion: 1,
+    variants: [
+      {
+        id: 'zigzag-5',
+        name: 'Five tiers, alternating panels',
+        summary: '600 × 1696 × 240, 16 mm board',
+        kind: 'construction',
+        requires: [],
+        create: zigzagBookcase,
       },
     ],
   },

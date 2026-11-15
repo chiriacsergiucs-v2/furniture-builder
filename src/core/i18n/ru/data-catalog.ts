@@ -4,6 +4,20 @@
  * to choose, the built-in templates, the Mobila sample projects and the compatibility rules.
  */
 export const data_catalog: Record<string, string> = {
+  'room divider': 'перегородка-стеллаж',
+  'open shelving': 'открытые полки',
+  despărțitor: 'перегородка',
+  etajeră: 'этажерка',
+  'Five tiers on six shelves. Odd tiers: right side, two 180 mm panels on the left (back and front). Even tiers: left side and one 180 mm front panel 120 mm from the right. No back panel. Edge banding and screws are not set.':
+    'Пять ярусов на шести полках. Нечётные ярусы: правая боковина и два щита по 180 мм слева (сзади и спереди). Чётные ярусы: левая боковина и один передний щит 180 мм на расстоянии 120 мм от правого края. Задней стенки нет. Кромка и крепёж не заданы.',
+  'Zigzag bookcase': 'Зигзагообразный стеллаж',
+  'Five tiers, alternating panels': 'Пять ярусов, чередующиеся щиты',
+  'Zigzag bookcase — Five tiers, alternating panels':
+    'Зигзагообразный стеллаж — Пять ярусов, чередующиеся щиты',
+  '600 × 1696 × 240, 16 mm board': '600 × 1696 × 240, плита 16 мм',
+  'Six full shelves and short panels that alternate left and right in each of five tiers; no back panel.':
+    'Шесть полных полок и короткие щиты, которые в каждом из пяти ярусов чередуются слева и справа; задней стенки нет.',
+  'Part sizes and places edited as panels': 'Размеры и положение деталей правятся как у щитов',
   '1 door (600)': '1 дверца (600)',
   '1 door + 2 shelves': '1 дверца + 2 полки',
   '1 door + shelf': '1 дверца + полка',

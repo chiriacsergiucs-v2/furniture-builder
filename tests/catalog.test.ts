@@ -52,7 +52,7 @@ describe('template catalog (ADR-032, ADR-033, ADR-039)', () => {
       expect(f.structure.length).toBeGreaterThan(10);
       expect(f.configurations.length).toBeGreaterThan(0);
     }
-    expect(catalogFamilies).toHaveLength(43);
+    expect(catalogFamilies).toHaveLength(44);
   });
   it('kitchen cabinets carry the most variants, simple open storage the fewest', () => {
     const avg = (fn: string) => {

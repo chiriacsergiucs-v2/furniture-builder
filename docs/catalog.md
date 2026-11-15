@@ -35,11 +35,12 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Blind corner | kitchen | corner · ✅ ready | 1000 × 820 × 578 | A blind section covered by the neighbouring cabinet, joined to a normal cabinet with a door. | Corner on the left or right; Blind width; Base or wall height | Blind left + shelf **I** · Blind right + shelf **I** · Wall blind corner **I** [hardware:user] |
 | L corner | kitchen | corner · ✅ ready | 900 × 820 × 900 | Two wings open to each other at the corner with a folding door pair. | Wing lengths; Corner side; Base or wall height | Base L, folding doors **I** · Wall L 600 × 600 **I** [hardware:user] · Diagonal front **C** [shape] |
 
-### Storage and display (10 families, 29 variants)
+### Storage and display (11 families, 30 variants)
 
 | Family | Rooms | Root · support | Default size | Structure | Configurations | Variants (≤ 5) |
 |---|---|---|---|---|---|---|
 | Bookcase (with back) | living, office, kids | cabinet · ✅ ready | 800 × 1800 × 300 | Two sides, top, bottom, back panel and plinth; shelves between the sides. | Width (bays via "Bays and shelves"); Shelves fixed or adjustable; Back nailed on or set in; Plinth height | Open, back panel, shelves **I** |
+| Zigzag bookcase | living, office | panels · ✅ ready | 600 × 1696 × 240 | Six full shelves and short panels that alternate left and right in each of five tiers; no back panel. | Part sizes and places edited as panels | Five tiers, alternating panels **C** |
 | Wardrobe | bedroom, hallway | cabinet · ✅ ready | 1200 × 2100 × 618 | Tall carcass on a plinth divided into sections; hanging rails, shelves and drawers behind hinged or sliding doors. | Sections 1–6; Per section: hanging, shelves, drawers; Hinged or sliding doors; Plinth | 2 doors, hanging + shelves **I** · 3 sections + drawers **I** · Double hanging **I** · 4 doors, 2 sections **I** · Sliding 2 doors **C** [front:sliding] |
 | Armoire | bedroom | cabinet · ✅ ready | 1100 × 1950 × 618 | Freestanding wardrobe with a pair of doors over hanging space, often a drawer below. | 1–2 sections; Pair of doors; Bottom drawer | Hanging + bottom drawer **I** · Hanging + shelves **I** |
 | Dresser | bedroom | cabinet · ✅ ready | 1400 × 800 × 518 | Low wide carcass with drawer columns side by side on a plinth. | Columns 1–3 × drawers 2–5; Equal or graduated heights | 2 × 3 drawers **I** · 2 × 4 drawers **I** · 3 graduated wide **I** |
@@ -88,5 +89,5 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Bunk bed | kids, bedroom | frame · 🛡 waits for safety values | — | Two decks between tall ends, guard rails all round the top deck, a ladder. | Tier gap; Ladder side; Guard rail height; Trundle | Standard **C** [root:frame, safety:user-confirmed] ⏳ · With trundle **C** [root:frame, frame:under-storage, safety:user-confirmed] ⏳ |
 | Cradle | bedroom, kids | frame · 🛡 waits for safety values | — | Small bed with tall ends and closed sides on a fixed stand. | Mattress size; Side height | Fixed stand **C** [root:frame, safety:user-confirmed] ⏳ |
 
-**Totals:** 43 families, 118 variants; 57 interior-only, 108 can be inserted today, 10 wait (⏳) for a construction or for safety values.
+**Totals:** 44 families, 119 variants; 57 interior-only, 109 can be inserted today, 10 wait (⏳) for a construction or for safety values.
 <!-- catalog:end -->

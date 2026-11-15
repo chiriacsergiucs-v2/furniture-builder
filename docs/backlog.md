@@ -317,6 +317,7 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N277 | Piece Settings: step 4 Boards opens Boards, sheets and saw cut (it pointed at a missing group); "Choose a board for parts…" there opens Material with the force toggle | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; tests tests/find-it/boards-step.test.tsx; typecheck, format:check, build, docs:check pass in the sandbox. |
 | N278 | `auto` command: implement, check locally, push to main with no approval (user: "force quick: implement, test locally, push to main, full autopilot") | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; `.claude/skills/auto/SKILL.md`, `CLAUDE.md` skill list and flow. Not run end to end: it takes effect the next time the user says `auto`. |
 | N279 | Phone: choosing a piece or space opens the edit sheet to half | Done | `pnpm exec vitest run tests/find-it` 83 files, 363 tests passed; typecheck, format, build ran locally 2026-11-14. Replaces the 2026-11-09 peek-only rule. Not live-verified |
+| N280 | Zigzag bookcase template: five tiers of alternating partial panels (room divider), built as a placed panel set | Partially done | User request 2026-11-15 (Fusion 360 script). `src/core/catalog/zigzagBookcase.ts`, family `zigzag-bookcase` in `storage.ts`: 19 placed parts, 600 × 1696 × 240, 16 mm board; `tests/zigzag-bookcase.test.ts`. Gap: parts are fixed panels (no width / depth / tier parameters), no edge banding, no screws. Not live-verified |
 
 ## Dropped
 

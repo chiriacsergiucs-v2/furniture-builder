@@ -39,6 +39,7 @@ export const VARIANT_RO: Record<string, string> = {
   'corner-l-wall': 'L suspendat 600 × 600',
   'corner-diagonal': 'Front diagonal',
   bookcase: 'Deschisă, cu spate, rafturi',
+  'zigzag-5': 'Cinci etaje, panouri alternante',
   panels: 'Un panou',
   wardrobe: '2 uși, bară + rafturi',
   'wardrobe-3': '3 secțiuni + sertare',
