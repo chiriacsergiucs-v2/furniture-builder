@@ -25,6 +25,11 @@ const ALLOW: { selector: string; prop: string; why: string }[] = [
     prop: 'margin-block',
     why: 'a negative offset: the 44 px info button does not make its title row taller',
   },
+  {
+    selector: '.sr-only',
+    prop: 'margin',
+    why: 'the standard visually-hidden pattern: a -1 px margin pulls the 1 px box out of the layout',
+  },
 ];
 
 type Decl = { line: number; selector: string; prop: string; value: string; atRules: string[] };
