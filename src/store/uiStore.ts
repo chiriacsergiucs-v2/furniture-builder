@@ -80,6 +80,9 @@ interface Ui {
    */
   sheetAsk: { stop: 'peek' | 'half' | 'full'; n: number } | null;
   askSheet: (stop: 'peek' | 'half' | 'full') => void;
+  /** Groups the user opened or closed in the drawer, by group id (ADR-267); memory only, never stored. */
+  groupOpen: Record<string, boolean>;
+  setGroupOpen: (key: string, open: boolean) => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -130,6 +133,9 @@ export const useUi = create<Ui>((set) => ({
   setWizardDraft: (wizardDraft) => set({ wizardDraft }),
   sheetAsk: null,
   askSheet: (stop) => set((s) => ({ sheetAsk: { stop, n: (s.sheetAsk?.n ?? 0) + 1 } })),
+  groupOpen: {},
+  setGroupOpen: (key, open) =>
+    set((s) => (s.groupOpen[key] === open ? s : { groupOpen: { ...s.groupOpen, [key]: open } })),
 }));
 
 /**
