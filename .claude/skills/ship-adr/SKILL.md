@@ -65,6 +65,11 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    Never push to `main` directly or force-push it; merge only on the user's instruction, then cite the
    `Deploy GitHub Pages` run id.
 
+## Burst mode
+
+While the `burst` toggle in `CLAUDE.md` is **on**, this skill is skipped: the ADR stays Pending and the backlog row gets
+`burst-skipped: ship ADR-NNN (burst, YYYY-MM-DD)`. The `catch-up` skill ships it after the burst.
+
 ## Notes
 
 - If the ADR is already in `adr-done/` the script exits without changes.

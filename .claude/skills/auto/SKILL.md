@@ -34,6 +34,15 @@ conventions, the translation rule) still holds.
 9. **After the push**, watch `CI` on main once. If it is red, fix forward with the same flow, or say it is red and
    what blocks you. Never leave main red silently.
 
+## Burst mode
+
+While the `burst` toggle in `CLAUDE.md` is **on** (user rule 2026-11-15), step 5 skips local `pnpm format:check`, lint and
+the full suite (run `pnpm format`), and the reply skips pick cards and the Picks list. Writing and running find-it
+tests, `skip-review` stage 03, live-verify and `ship-adr` are skipped too. Every skip is appended to the backlog row's
+gap text as `burst-skipped: <item> (burst, YYYY-MM-DD)` and listed under **Skipped this iteration**. typecheck, build,
+docs check, related tests, fuzz after geometry and every stop condition still run. "Burst off" or "catch up" runs the
+`catch-up` skill.
+
 ## Stop conditions (stop and tell the user; do not push)
 
 - The change needs an ADR: `src/core/types.ts`, the design document or model shape, the Dexie schema, or the
