@@ -36,7 +36,7 @@ MDF 2440 × 1220 (Materials). Hinge, pin and bracket counts are common guidance 
 
 Built features by area, with the ADRs that built them. Sources: the Information and guides page
 (`src/ui/info/features.ts`, ADR-158), which has no lines for the assistant or for the behaviour rules of ADR-241 to
-ADR-266, so those are added from the implemented ADRs. Not listed: pending or deferred ADRs (ADR-217, ADR-242,
+ADR-266, so those are added from the implemented ADRs. Lines for ADR-241 to ADR-266 are written from the decision text of the implemented ADRs; they were not re-checked in the code or the app. Not listed: pending or deferred ADRs (ADR-217, ADR-242,
 ADR-265) and rejected ones (ADR-063).
 
 ### Creating
@@ -97,7 +97,7 @@ ADR-265) and rejected ones (ADR-063).
 - **Rename a project piece** — More actions › Rename… (ADR-245)
 - **Change all copies remembered** — The choice is kept on this device (ADR-245)
 - **Editing state kept** — Template edits, reloads and piece renames keep the open project and its undo history; edit history is off in the full piece editor, with a title saying to go back to the project (ADR-245)
-- **Delete and duplicate a multi-selection** — Delete asks, Ctrl+D duplicates it as a block, Ctrl+A takes 3D models too, and Enter no longer means Remove in a confirm (ADR-246)
+- **Delete and duplicate a multi-selection** — Delete asks, Ctrl+D duplicates it as a block and Ctrl+A takes 3D models too; danger confirms focus Cancel first, since Remove and Delete used to take Enter as remove (ADR-246)
 
 ### Moving
 
@@ -140,6 +140,7 @@ ADR-265) and rejected ones (ADR-063).
 - **Link identical pieces** — Pieces that are exactly the same are linked in one tap from the card. (ADR-207)
 - **Mirror a lounger or a daybed** — The backrest and the side panel are built at the left or the right end. (ADR-207)
 - **Align and distribute along each piece's own wall** — Axes follow the first selected piece's turn; pieces standing along another wall are skipped and named; "Already in line." when nothing moves (ADR-251)
+- **Duplicate and Mirror the run on a side wall** — On a side wall, Duplicate places the copy beside the piece along its own wall and Mirror the run finds the run touching along that wall; the back wall is unchanged (ADR-251)
 
 ### Selection and groups
 
@@ -223,6 +224,7 @@ ADR-265) and rejected ones (ADR-063).
 - **Shaped parts** — Raked backs, splayed legs and profiled fronts, still in whole millimetres. (ADR-040)
 - **Loose panel sets** — Parts known only by their cut sizes. (ADR-041)
 - **Typed construction sizes kept exactly** — Decimals such as 2.5 are refused out loud, not rounded; runner lengths and loose-panel names stay on screen marked invalid until valid (ADR-254)
+- **Two rails with a doubled top** — Choosing Two rails when Top layers is Doubled sets it to Single in the same undo step, so no warning names a hidden control (ADR-254)
 
 ### Boards and edges
 
@@ -324,6 +326,7 @@ ADR-265) and rejected ones (ADR-063).
 - **Settings and Material inside the phone sheet** — The sheet goes to full height and the dialog takes its body; closing returns it to half (ADR-247)
 - **Render stops when closed** — Close, Cancel or a new Start disposes the job; without WebGL a hint explains and points the 3D and Both buttons to it (ADR-259)
 - **One 3D ⋯ menu** — Export scene (.glb), View in AR and Export for AR sit together; model side fields stay inside 1 to 10 000 mm with Keep proportions (ADR-259)
+- **Arrow keys move a 3D model** — One undo step per press, the same path as a drag; a model on a piece lifts off as in a drag (ADR-259)
 
 ### Output
 
@@ -365,7 +368,9 @@ ADR-265) and rejected ones (ADR-063).
 - **Client sheet** — One A4 page to sell from: a picture, the pieces with their sizes and the estimated price, with the lines that have no price counted. (ADR-206)
 - **Exports blocked on errors** — Print assembly steps, Front view drawing and Fusion 360 script are disabled while the design has an error, with the reason "Fix the problems listed under Checks first" (ADR-260)
 - **Print speaks the print language only** — The shopping list print uses print-language units, a decimal comma and an estimate line; the shopping CSV is named after the design; the cutting sheet's piece names follow the CSV (ADR-260)
+- **Shopping list fields and Results tabs** — Price and Seller units per item mark an invalid value with a hint naming the expected one; the missing-price count has plural forms in each print language; the Results tabs take arrow keys and are labelled Results (ADR-260)
 - **Output failures said** — A failed price import says the prices could not be saved on this device; a failed review pack says why; the price chip says "Prices could not be read" (ADR-260)
+- **Client sheet picture** — The last render keeps the id of the piece or project it was made of; the Client sheet uses it only when that is the one open, otherwise the 3D still or front view (ADR-260)
 
 ### Projects
 
@@ -449,7 +454,7 @@ ADR-265) and rejected ones (ADR-063).
 - **Chat assistant** — Signed in, in a build with a backend, you write what you want and the assistant asks back when something is unclear. It reaches an AI model only through the backend's `assistant` function, which holds the provider key and a daily cap (ADR-239)
 - **Every editor action as a previewed change** — Anything doable by hand (size, divide, contents, doors, materials, adding, moving and turning pieces) is a catalog action; a plan is checked whole, previewed, then applied as one undo step (ADR-240)
 - **Field limits enforced** — The assistant is refused saw cuts outside 0–20 mm and variables with empty or duplicate names; a refusal fails the plan's preview with the reason; in a project its saw cut sets the project's saw cut (ADR-246)
-- **Refusals reach the assistant** — A refused merge, mirror, gap, Against the wall, Align or Distribute sets a notice, so a plan sees it (ADR-244)
+- **Refused edits set a notice** — A refused merge, mirror, Mirror the run, gap, Against the wall, Align or Distribute sets a notice; before, only the calling card knew, so an assistant plan never saw it (ADR-244)
 
 ### Language
 
