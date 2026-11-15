@@ -1,12 +1,13 @@
 ---
 name: auto
-description: Full-autopilot workflow — implement the request, check it locally (typecheck, format, related tests, build, docs), and push straight to main with no approval step. No ADR, no branch, no pull request, no questions unless a stop condition applies. Use only when the user says "auto", "autopilot" or "/auto" for a request. Do not use when the user did not say it (use build), when they said "ff" (use ff, which asks before pushing), or when the work is a pending ADR (use next-adr).
+description: Full-autopilot workflow — implement the request, check it locally (typecheck, format, related tests, build, docs), and land on main with no approval step (push where allowed, else pull request with auto-merge). No ADR, no questions unless a stop condition applies. Use only when the user says "auto", "autopilot" or "/auto" for a request. Do not use when the user did not say it (use build), when they said "ff" (use ff, which asks before pushing), or when the work is a pending ADR (use next-adr).
 ---
 
 # auto — implement, check locally, push to main
 
 User rule 2026-11-14: "force quick: implement, test locally, push to main, full autopilot". Saying `auto` for a
-request is the user's explicit instruction to push that request to `main` without asking again. It is the faster
+request is the user's explicit instruction to land that request on `main` without asking again; it applies to that
+request only (_Flow modes_ in `CLAUDE.md`). It is the faster
 sibling of `ff`: same path, plus related tests, and no approval step. Every hard rule in `CLAUDE.md` (Engineering
 conventions, the translation rule) still holds.
 
@@ -26,10 +27,12 @@ conventions, the translation rule) still holds.
    For anything visible, add or update the jsdom find-it test when it is cheap (`tests/find-it/<area>.test.tsx`).
    The full suite and lint run in CI. Fix the cause of a failure; never skip or weaken a check.
 6. **Commit** with a clear message and the attribution lines the session gives.
-7. **Push:** `git push origin HEAD:main`, fast-forward only. If main moved, rebase the local commit on
-   `origin/main`, re-run step 5, and push again. Never force-push main. If the push is refused, stop (below).
+7. **Land**, as in _Flow modes_ in `CLAUDE.md`. Where pushing to main is allowed: `git push origin HEAD:main`,
+   fast-forward only; if main moved, rebase the local commit on `origin/main`, re-run step 5, and push again. Where only
+   the session branch is allowed (cloud): push the branch, open the pull request, mark it ready, enable auto-merge. Never
+   force-push main. If landing is refused or auto-merge is unavailable, stop (below).
 8. **Report:** the commit sha on main and the `CI` and `Deploy GitHub Pages` run ids once they appear. Pushed ≠
-   deployed ≠ live-verified; say which is true. Open with where to click and whether it is live (R4). End with
+   merged ≠ deployed ≠ live-verified; say which is true. Open with where to click and whether it is live (R4). End with
    **Decided** and **Skipped this iteration**.
 9. **After the push**, watch `CI` on main once. If it is red, fix forward with the same flow, or say it is red and
    what blocks you. Never leave main red silently.

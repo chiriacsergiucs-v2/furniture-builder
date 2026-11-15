@@ -126,13 +126,33 @@ schema (ADR-012) or the network boundary (ADR-002), or when the user asks for on
 - Exception (user decision 2026-11-10): implemented ADRs were edited once to remove the name of a retired third-party agent tool; `pnpm docs:check` blocks that name from returning.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
 
-Fast forward, `ff` (`ff` skill): on "ff" the request is built without a branch or pull request, only `pnpm typecheck`
-and `pnpm build`, and pushed straight to `main` after the user approves the list of changes.
+### Flow modes: normal, `ff`, `auto` (user rule 2026-11-15)
 
-Full autopilot, `auto` (`auto` skill, user rule 2026-11-14): on "auto" the request is built without a branch, pull request or
-questions, checked locally (format, typecheck, related tests, build, docs check; fuzz after geometry) and pushed straight
-to `main` with no approval step. Stop conditions: an ADR is needed, saved data or the network is touched, a physical fact is
-unknown, a check fails or the push is refused.
+One flow (the `build` skill), three modes. The modes differ only in their gates, never in the hard rules below. The user
+picks a mode by writing its word in the request (`ff`, `auto`); the word applies to that one request only and the next
+request is `normal` again. Precedence: the user's mode word › _Always pick_ › the default.
+
+|                     | normal (default)                            | `ff` (`ff` skill)                                                | `auto` (`auto` skill)                     |
+| ------------------- | ------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- |
+| Questions           | only when confidence is low                 | only when confidence is low                                      | none; a stop condition instead            |
+| Checks              | _Verify before done_                        | `pnpm typecheck`, `pnpm build`, `pnpm format`, `pnpm docs:check` | _Verify before done_, fuzz after geometry |
+| Branch              | session branch                              | session branch                                                   | session branch                            |
+| Gate before landing | draft pull request                          | the user approves the list of changes                            | none                                      |
+| Landing on `main`   | on the user's instruction                   | after that approval                                              | automatic                                 |
+| Reply               | R4, **Decided**, **Skipped this iteration** | same                                                             | same                                      |
+
+- **Landing** (`ff` and `auto`): where the session may push to `main`, fast-forward only (`git push origin HEAD:main`),
+  never force-push. Where it may push only to the session branch (cloud sessions), push the branch, open the pull
+  request, mark it ready (auto-merge cannot be enabled on a draft) and enable auto-merge, so it merges once CI is green.
+  If auto-merge is unavailable or the push is refused, stop and say so; the pull request stays open. Never work around a
+  refusal.
+- **Stop conditions** (`ff` and `auto`; stop, tell the user, do not land): the change needs an ADR (model, design
+  document, Dexie schema, network boundary); it deletes or rewrites saved designs or needs the network; a physical fact
+  is unknown (ADR-010); a check fails and the cause is not yours to fix; low confidence on what to build (`auto`).
+- The mode word is the user's instruction to land that request on `main` (_Git_), so the merge rule and the _Always
+  pick_ consent list do not ask again for it.
+- After landing, cite the commit sha and the `CI` and `Deploy GitHub Pages` run ids; pushed ≠ merged ≠ deployed ≠
+  live-verified.
 
 ## Engineering conventions (hard rules)
 
@@ -239,7 +259,8 @@ on restores it unchanged.
 - Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
 - Open the pull request automatically once the checks pass and the branch is pushed (toggle `auto-open-pr`, on;
   while off, ask first). Never auto-babysit.
-- Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
+- Merge to `main` only on the user's instruction (the `ff` or `auto` word is that instruction for its request, _Flow
+  modes_); then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.
 

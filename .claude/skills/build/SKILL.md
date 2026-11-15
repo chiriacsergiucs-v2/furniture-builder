@@ -5,6 +5,9 @@ description: Default implementation flow — ask only low-confidence questions i
 
 # Build (user rule 2026-11-07)
 
+This is the `normal` mode. `ff` and `auto` are the same flow with other gates (_Flow modes_ in `CLAUDE.md`); the word applies to
+one request only.
+
 1. **Read the request** in the user's words. Read only the code it touches.
 2. **ADR needed?** Only for `src/core/types.ts`, the design document or model shape, the Dexie schema or the network
    boundary, or when the user asks. If so, use `new-adr` instead.
