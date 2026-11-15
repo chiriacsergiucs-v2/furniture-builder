@@ -231,6 +231,10 @@ on restores it unchanged.
     instead of reading `docs/backlog.md` whole).
   - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
     rule, every hard rule and stop condition, CI on `main`.
+  - Automerge (user 2026-11-16: "Burst also must include automerge"): while `burst` is on, merge the pull request as soon
+    as every CI check on its head is green and it has no conflict, with no further instruction; cite the
+    `Deploy GitHub Pages` run id. A red check blocks the merge, also one that is red on `main`: report it and merge
+    after it is fixed or the user says so. Every `auto` stop condition still applies. Never force-push `main`.
   - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD)` to the gap text of the backlog row the work
     touched, one per item; a find-it item names the visible text to find (as ADR-066 does). The row stays
     **Partially done**.
@@ -272,7 +276,8 @@ on restores it unchanged.
 - Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
 - Open the pull request automatically once the checks pass and the branch is pushed (toggle `auto-open-pr`, on;
   while off, ask first). Never auto-babysit.
-- Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
+- Merge to `main` only on the user's instruction (while `burst` is on, that instruction is standing: see Automerge under
+  _Burst mode_); then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.
 
