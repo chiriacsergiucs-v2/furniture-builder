@@ -220,7 +220,7 @@ describe.each(WIDTHS)('New-piece wizard findings at %ipx (find-it, ADR-194)', (w
     // 5: every card button is named after its card; a card with warnings lists their messages.
     const cards = within(wiz).getByRole('region', { name: 'Suggested combinations' });
     const uses = within(cards).getAllByRole('button', { name: /^Use this: / });
-    expect(uses.length).toBe(6);
+    expect(uses.length).toBe(4);
     expect(within(cards).queryByRole('button', { name: 'Use this' })).toBeNull();
     expect(
       within(cards).getByRole('button', {

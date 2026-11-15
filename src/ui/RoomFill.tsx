@@ -218,7 +218,7 @@ function toInput(f: Form, room: Room, walls: number[], extras?: Extras): RoomInp
 }
 
 const picture = (m: RoomMix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
 
 function MixCard({
   m,

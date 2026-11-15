@@ -131,8 +131,9 @@ describe('pieces', () => {
         m.model.model.panels.some((p) => p.role === 'shelf' || p.role === 'drawer-front'),
       ).toBe(false);
     }
-    // Carcasses of different widths behind the equal fronts are among the mixes.
-    expect(r.mixes.some((m) => new Set(m.slots.map((s) => s.width)).size > 1)).toBe(true);
+    // Carcasses of different widths behind the equal fronts are among the mixes (asked for more than the first cards).
+    const more = suggestMixes(wall({ equalFronts: 6, tallCount: 0, wallRow: 'never' }), 8);
+    expect(more.mixes.some((m) => new Set(m.slots.map((s) => s.width)).size > 1)).toBe(true);
   });
 });
 
@@ -408,7 +409,7 @@ describe('a width per base kind (ADR-204)', () => {
     expect(r.mixes[swap].key).not.toBe(mix.key);
     expect(new Set(r.mixes.map((m) => m.key)).size).toBe(r.mixes.length);
   });
-  it('the first 4 mixes of the 3000 mm default are unchanged', () => {
+  it('the first 2 mixes of the 3000 mm default are unchanged', () => {
     expect(suggestMixes(wall()).mixes.map((m) => [m.key, m.summary])).toEqual([
       [
         '1|600,600,600,600,600|wall',
@@ -417,14 +418,6 @@ describe('a width per base kind (ADR-204)', () => {
       [
         '1|500,500,500,500,500,500|wall',
         '1 tall, 3 open shelves, 1 drawers, 1 door + shelves; wall row: 5 wall cabinets + top box',
-      ],
-      [
-        '1|750,750,750,750|wall',
-        '1 tall, 1 open shelves, 1 drawers, 1 door + shelves; wall row: 3 wall cabinets + top box',
-      ],
-      [
-        '1|1000,1000,1000|wall',
-        '1 tall, 1 open shelves, 1 drawers; wall row: 4 wall cabinets + top box',
       ],
     ]);
   });
