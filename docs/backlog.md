@@ -317,6 +317,7 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N277 | Piece Settings: step 4 Boards opens Boards, sheets and saw cut (it pointed at a missing group); "Choose a board for parts…" there opens Material with the force toggle | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; tests tests/find-it/boards-step.test.tsx; typecheck, format:check, build, docs:check pass in the sandbox. |
 | N278 | `auto` command: implement, check locally, push to main with no approval (user: "force quick: implement, test locally, push to main, full autopilot") | Done | Built 2026-11-14 on branch `ccr-fbfc1d9f-ayaw6q`; `.claude/skills/auto/SKILL.md`, `CLAUDE.md` skill list and flow. Not run end to end: it takes effect the next time the user says `auto`. |
 | N279 | Phone: choosing a piece or space opens the edit sheet to half | Done | `pnpm exec vitest run tests/find-it` 83 files, 363 tests passed; typecheck, format, build ran locally 2026-11-14. Replaces the 2026-11-09 peek-only rule. Not live-verified |
+| N280 | README: refreshed How it works and Layout; exhaustive Features section by area with ADR ids (user: "Update docs with the features we have, same structure as existing, exhaustive listing") | Done | Generated from `src/ui/info/features.ts` (274 features, 19 areas) plus assistant (ADR-239/240). `pnpm format:check` and `pnpm docs:check` passed locally 2026-11-15. Not live-verified |
 
 ## Dropped
 
@@ -334,4 +335,3 @@ trim, full sheets only (ADR-018/019); A4 portrait, Romanian on paper and CSV (AD
 bar/knob/push-to-open handles (ADR-024); blind and L-shaped corners, bracket-and-rail wall mounting (ADR-025);
 independent pedestals (ADR-026); finished sizes, never band-subtracted (ADR-009); ball-bearing side runners and
 35 mm soft-close clip-on hinges (ADR-010); no orchestration runtime (ADR-017).
-| N280 | README: refreshed How it works and Layout; exhaustive Features section by area with ADR ids (user: "Update docs with the features we have, same structure as existing, exhaustive listing") | Done | Generated from `src/ui/info/features.ts` (274 features, 19 areas) plus assistant (ADR-239/240). `pnpm format:check` and `pnpm docs:check` passed locally 2026-11-15. Not live-verified |
