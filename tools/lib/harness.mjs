@@ -14,6 +14,7 @@ export const PREVIEW_URL = 'http://localhost:4173/furniture-builder/';
 export const WIDTHS = [1280, 390];
 /** Where a system Chromium usually lives on Linux. */
 export const SYSTEM_CHROMIUM = [
+  '/opt/pw-browsers/chromium',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
   '/snap/bin/chromium',

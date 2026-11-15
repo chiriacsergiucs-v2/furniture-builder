@@ -5,7 +5,7 @@
 - Implemented: 2026-11-14 (Built 2026-11-14; tests/owned.test.ts, tests/owned-view.test.tsx, tests/find-it/owned-parts.test.tsx)
 - Depends on: ADR-011, ADR-012
 - Design: n/a
-- Backlog: N295
+- Backlog: N302
 
 ## Context
 

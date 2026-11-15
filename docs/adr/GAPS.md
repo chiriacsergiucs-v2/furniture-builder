@@ -183,21 +183,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: User confirms: keep preset thickness list, carry over banding prices, keep the allowance per band.
 - Conflicts: none
 
-### G-043: Duplicate backlog id D02
-
-- Status: Open
-- Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
-- Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
-- Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
-- Questions: Renumber the later row to D03? (Ids are never renumbered, so this needs your decision.)
-- Suggested pick: Give the later row (“Built in the app”) D03 and fix every reference. (estimate: effort +1%, value bookkeeping)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
-- Fix: With the user's approval, give the later row D03 and update every reference.
-- Conflicts: none
-
 ### G-047: Nothing live-verified
 
 - Status: Open
@@ -1749,3 +1734,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split outside-room into outside-room and taller-than-room with repairs keyed on both, and room-island's rectangle and too-small cases, in a follow-up ADR (estimate: effort +10 %, value +3 %)
 - Work: Low
 - Impact: Low
+
+### G-507: Auto-merge not tried on this repo
+
+- Status: Open
+- Origin: Flow modes, 2026-11-15
+- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run. Checked 2026-11-15 (enable_pr_auto_merge on PR #219): GitHub answered "Auto-merge is not enabled for this repository"; branch protection is unchecked
+- Request: Suggest best approach to include a auto-pilot fast forward and the normal flow.
+- Questions: Is Allow auto-merge enabled on the repository, and which checks are required?
+- Suggested pick: Enable Allow auto-merge, then test on one ready docs-only PR (estimate: effort +5 %, value +10 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
+
+- Status: Open
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: docs/research/2026-11-15-ui-flow-audit.md covers Projects, Catalog and Editor at 390 and 1280 px in the light theme with no saved data. Not covered: the 3D view, the wizard steps, Settings and Material dialogs, Gaps, Research, Information, Account, Share, Assistant, dark theme, and states that need saved data. Findings F-06 to F-14 and F-17 to F-19 are Reported from code mapping, citations not yet checked.
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium

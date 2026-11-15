@@ -28,7 +28,7 @@ stay the shopping-list file, ADR-064).
   rejected.
 - `scripts/check-docs.py` accepts `Rejected (<reason>)` in `docs/adr-done/`; `scripts/sync-pending.mjs` counts only
   `Implemented` ADRs; `next-adr.sh` treats only an `Implemented` dependency as done.
-- Backlog: N16 and N58 become Dropped, N14 becomes Done (its remaining brand facet is rejected), D02 (ADR-029) says
+- Backlog: N16 and N58 become Dropped, N14 becomes Done (its remaining brand facet is rejected), D03 (ADR-029) says
   Rejected. Gap G-009 (ADR-063's gap) becomes Done (rejected); G-312's text names ADR-063 as Rejected.
 
 ## Alternatives considered
