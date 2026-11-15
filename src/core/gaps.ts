@@ -5,10 +5,8 @@
  * line per gap; a gap without them still parses.
  */
 
-import { CONFIDENCE_SCALE } from './research/types';
-
-/** The rating scale of the gaps (ADR-187), the same five levels as the Research page. */
-export const RATING_SCALE = CONFIDENCE_SCALE;
+/** The rating scale of the gaps (ADR-187). */
+export const RATING_SCALE = ['Low', 'Low-medium', 'Medium', 'Medium-high', 'High'] as const;
 export type GapRating = (typeof RATING_SCALE)[number];
 export type RatingKey = 'work' | 'impact' | 'necessity';
 export const RATING_KEYS: RatingKey[] = ['work', 'impact', 'necessity'];

@@ -106,7 +106,7 @@ function Parts() {
   const project = useDesign((s) => s.project);
   const setHighlight = useDesign((s) => s.setHighlight);
   const highlight = useDesign((s) => s.highlight);
-  // The rows still to cut: parts the user owns are left out of the list, the CSV, the print and the sheets (ADR-267).
+  // The rows still to cut: parts the user owns are left out of the list, the CSV, the print and the sheets (ADR-271).
   const rows = view.cutRows;
   const setOwned = useDesign((s) => s.setOwnedParts);
   // A shared item's preview is read-only: it never marks the open design's parts.

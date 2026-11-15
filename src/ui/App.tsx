@@ -70,7 +70,6 @@ import {
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 // Pages opened on demand load on first use (ADR-222).
 const CatalogPage = lazy(() => import('./CatalogPage').then((m) => ({ default: m.CatalogPage })));
-const ResearchPage = lazy(() => import('./Research').then((m) => ({ default: m.ResearchPage })));
 const GapsPage = lazy(() => import('./Gaps').then((m) => ({ default: m.GapsPage })));
 const InfoPage = lazy(() => import('./Info').then((m) => ({ default: m.InfoPage })));
 const PageLoading = () => (
@@ -157,16 +156,15 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: t('Not saved — browser storage unavailable'),
 };
 
-type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps' | 'info';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps', 'info'];
+type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'gaps', 'info'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
     : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
- * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043) and #gaps the gaps ledger (ADR-101),
- * both reached from the ⋯ menu, and #info Information and guides (ADR-158).
+ * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, and #info Information and guides (ADR-158).
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -313,8 +311,8 @@ export function App() {
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  // Choosing a piece or a space never opens the sheet past its peek row on a phone (user 2026-11-09): the drawing
-  // stays in view so a further tap drills one level deeper (ADR-088); the peek row opens the editor.
+  // Choosing a piece or a space opens the phone sheet to half so its editor shows (user 2026-11-14, replaces the
+  // 2026-11-09 peek-only rule).
   const selKey = inProject ? selectedItemId : selectedId;
   const [lastTap, setLastTap] = useState(tapMode);
   const [lastSel, setLastSel] = useState(selKey);
@@ -328,8 +326,10 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    // Read so a one-time "keep closed" request does not linger; the sheet stays where it is either way.
-    takeKeepSheetClosed();
+    // Choosing something opens the edit sheet to half; a peek-row action (duplicate) asks to keep it closed once.
+    const keepClosed = takeKeepSheetClosed();
+    if (selKey !== null && selKey !== undefined && !keepClosed && !tapMode && sheetStop === 'peek')
+      setSheetStop('half');
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -836,7 +836,6 @@ export function App() {
             <MoreMenu
               onNew={() => setDialog('new')}
               onOpened={() => setPage('editor')}
-              onResearch={() => setPage('research')}
               onGaps={() => setPage('gaps')}
               onInfo={() => setPage('info')}
             />
@@ -900,9 +899,6 @@ export function App() {
               designOpen={designOpen}
               onNewPiece={() => openWizard(null)}
             />
-          )}
-          {page === 'research' && (
-            <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
           )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
           {page === 'info' && <InfoPage onDone={() => setPage('editor')} designOpen={designOpen} />}

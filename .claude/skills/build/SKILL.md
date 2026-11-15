@@ -20,6 +20,8 @@ description: Default implementation flow — ask only low-confidence questions i
 6. **Backlog:** one row in `docs/backlog.md` (next free `N` id) with the evidence you ran.
 7. **Commit and push** the branch (`git push -u origin <branch>`), then open the pull request (toggle `auto-open-pr`;
    while off, ask first). No babysit or merge unless asked.
+   While the `burst` toggle is on, follow `CLAUDE.md` › Process › Burst mode: skip the find-it test, local lint and
+   full suite, and log each skip as `burst-skipped: <item> (burst, YYYY-MM-DD)` on the backlog row.
 8. **Reply:** where to click and whether it is live (pushed ≠ merged ≠ deployed), **Decided**, **Skipped this
    iteration**.
    When **Skipped this iteration** is not empty, run the `skip-review` skill's stage 03 on it first: each skip

@@ -459,7 +459,7 @@ export interface State {
    */
   setAgainstWall: (id: string, on: boolean) => string;
   /**
-   * Mark `count` of the cut-list parts with this `ownedKey` as already owned (ADR-267); 0 clears the mark. The open
+   * Mark `count` of the cut-list parts with this `ownedKey` as already owned (ADR-271); 0 clears the mark. The open
    * project's marks in the project view, else the open piece's. Returns why it was refused, or null. One undo step.
    */
   setOwnedParts: (key: string, count: number) => string | null;

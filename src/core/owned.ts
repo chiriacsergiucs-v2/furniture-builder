@@ -1,5 +1,5 @@
 /**
- * Parts the user already owns (ADR-267): marked on a cut-list row, kept as `ownedParts` (key → count) on the design and
+ * Parts the user already owns (ADR-271): marked on a cut-list row, kept as `ownedParts` (key → count) on the design and
  * on the project, and taken off the cut list and the sheet layouts only. Pure: nothing here builds geometry.
  */
 import type { CutRow } from './cutlist';

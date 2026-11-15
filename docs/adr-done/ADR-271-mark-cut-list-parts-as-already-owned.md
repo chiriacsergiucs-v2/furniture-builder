@@ -1,11 +1,11 @@
-# ADR-267: Mark cut-list parts as already owned
+# ADR-271: Mark cut-list parts as already owned
 
 - Status: Implemented
 - Date: 2026-11-14
 - Implemented: 2026-11-14 (Built 2026-11-14; tests/owned.test.ts, tests/owned-view.test.tsx, tests/find-it/owned-parts.test.tsx)
 - Depends on: ADR-011, ADR-012
 - Design: n/a
-- Backlog: N279
+- Backlog: N295
 
 ## Context
 

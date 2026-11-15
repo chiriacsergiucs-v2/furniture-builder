@@ -137,7 +137,7 @@ export interface RestorePlan {
   identical: number;
 }
 
-export interface Existing {
+interface Existing {
   designs: Design[];
   projects: Project[];
   templates: LocalTemplate[];

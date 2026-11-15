@@ -24,7 +24,7 @@ import { rovingKeys, rovingTab } from './controls';
 import { t, tr } from '../core/i18n';
 import { Icon } from './icons';
 
-export type Grouping = 'room' | 'type';
+type Grouping = 'room' | 'type';
 const GROUP_KEY = 'furniture-builder:catalog-group';
 export const SAFETY_KEY = 'furniture-builder:safety-confirmed';
 const readGrouping = (): Grouping => {

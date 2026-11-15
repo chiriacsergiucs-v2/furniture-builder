@@ -30,6 +30,13 @@ and the pull request for that one request. Every hard rule in `CLAUDE.md` (Engin
 9. **Report:** the commit sha on main and the `CI` and `Deploy GitHub Pages` run ids once they appear. Pushed ≠
    deployed ≠ live-verified; say which is true. End with **Decided** and **Skipped this iteration**.
 
+## Burst mode
+
+`ff` already skips tests and find-it. While the `burst` toggle in `CLAUDE.md` is **on**, also log each skipped item
+(related tests, lint, full suite, fuzz, find-it, live-verify) on the backlog row as
+`burst-skipped: <item> (burst, YYYY-MM-DD)`, so the `catch-up` skill can pay it. Prefer `auto`, which keeps related
+tests and fuzz.
+
 ## Not in ff
 
 - Changes to `src/core/types.ts`, the design document, the model shape, the Dexie schema or the network

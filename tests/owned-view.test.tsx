@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Owned parts in the view (ADR-267): the cut list, its CSV and the sheet jobs leave them out; the estimate rows keep them.
+// Owned parts in the view (ADR-271): the cut list, its CSV and the sheet jobs leave them out; the estimate rows keep them.
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cutlistCsvRo } from '../src/core/ro';
@@ -9,7 +9,7 @@ import { useView } from '../src/store/useView';
 
 const count = (rows: { quantity: number }[]) => rows.reduce((n, r) => n + r.quantity, 0);
 
-describe('owned parts in the view (ADR-267)', () => {
+describe('owned parts in the view (ADR-271)', () => {
   it('cutRows, the CSV and the sheet jobs drop the owned parts; rows keep them', () => {
     const d = templates.find((x) => x.id === 'bookcase')!.create();
     useDesign.getState().replaceDesign(d);

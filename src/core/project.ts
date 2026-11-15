@@ -492,7 +492,7 @@ export interface Project {
    */
   runProducts?: Record<string, HardwareProduct>;
   /**
-   * Parts the user already owns (ADR-267, schemaVersion 21): cut-list row key (`ownedKey`) → how many, over all pieces.
+   * Parts the user already owns (ADR-271, schemaVersion 21): cut-list row key (`ownedKey`) → how many, over all pieces.
    * They leave the project's cut list and sheet layouts only. Absent = none.
    */
   ownedParts?: Record<string, number>;

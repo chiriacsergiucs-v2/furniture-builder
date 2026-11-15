@@ -827,7 +827,7 @@ function validateBands(d: Record<string, unknown>, errs: string[]) {
   }
 }
 
-/** Parts the user already owns (schemaVersion 9, ADR-267); checked when present, never throws. */
+/** Parts the user already owns (schemaVersion 9, ADR-271); checked when present, never throws. */
 function validateOwnedParts(d: Record<string, unknown>, errs: string[]) {
   if (d.ownedParts === undefined) return;
   if ((d.schemaVersion as number) < 9) errs.push(t('Owned parts need schemaVersion 9'));

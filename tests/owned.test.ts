@@ -1,4 +1,4 @@
-// Parts the user already owns (ADR-267): taken off the cut list and the sheets only, across a project.
+// Parts the user already owns (ADR-271): taken off the cut list and the sheets only, across a project.
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { cutlist } from '../src/core/cutlist';
@@ -22,7 +22,7 @@ const keyOf = (d: Design, rows = cutlist(buildModel(d), d.materials), i = 0) =>
     d.materials.find((m) => m.id === rows[i]!.materialId)!,
   );
 
-describe('owned parts (ADR-267)', () => {
+describe('owned parts (ADR-271)', () => {
   it('takes the owned count off the row, keeps the rest, and leaves the estimate rows alone', () => {
     const d = make('bookcase');
     const rows = cutlist(buildModel(d), d.materials);

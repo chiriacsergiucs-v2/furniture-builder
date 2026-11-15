@@ -51,7 +51,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`
+  counterpart), `security-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `frontend-design`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -75,6 +75,9 @@ each check runs (_Verify before done_); the full table runs on request (`verify`
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
 `tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+`pnpm regress` (on request only, user 2026-11-15): builds, serves the production preview and runs every
+`tools/*/find-it*.mjs` in a real browser; `pnpm regress <word>` runs the scripts whose path has the word, `--no-build`
+reuses `dist/`, `--list` lists them; each failing check prints as it is found; logs, `failures.txt` and `summary.json` go to `regress-report/`; exit 1 when any script fails.
 
 ## Verify before done
 
@@ -178,6 +181,25 @@ unknown, a check fails or the push is refused.
   tests (jsdom, or the browser script for layout/CSS or 3D work, on the production build of `main` or the live URL).
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
+## General conduct (user rule 2026-11-16, from a behavior audit of the drawer-stability session)
+
+These rules apply to every task, whatever it is. Rules for asking, reply length and rereading standing rules live in
+the user's memory preferences, since they apply across projects.
+
+1. **Request ledger.** For each request, list every distinct ask, including promises made mid-task ("I will save it as
+   an artifact"). Before the final reply, mark each one done, skipped (with the reason, R2) or asked. No ask leaves
+   unmarked.
+2. **Completion is a test.** "Done" means every stated acceptance item is met and shown by a tool result, and for an
+   ADR that `ship-adr` has run. Otherwise the reply opens with `PARTIAL: X of Y built, blocked by Z` and never reads as
+   complete.
+3. **Claims need evidence.** A fact about behavior, status or results comes from a tool result in this session, or
+   carries the word "unverified". A guess, an inference from code, or a subagent's report is never stated as checked.
+4. **Stop honestly.** When work stops early, for any reason including an interrupt or an unclear instruction, say what
+   is built, what is not and why. Never read an interrupt or an unclear word ("as is", "stop") as permission to drop
+   scope; ask one question instead.
+5. **One ADR, one pull request.** A request for N ADRs means N ADRs, each built and shipped in its own pull request.
+   Splitting into more ADRs than asked needs the user's explicit approval. Dependent ADRs are stacked, never bundled.
+
 ## Toggleable rules
 
 A rule listed here applies only while its state is **on**. The user turns a rule off or back on by name (e.g. "turn
@@ -185,11 +207,12 @@ on snapshot-before-tests"); the change updates this table with the date and the 
 skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
 on restores it unchanged.
 
-| Toggle                  | Rule                                                                                  | State | Changed                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
-| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
-| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
-| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
+| Toggle                  | Rule                                                                                       | State | Changed                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                        | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR      | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed        | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
+| `burst`                 | Process › Burst mode: skip the slow steps while pushing fast; every skip is logged as debt | on    | 2026-11-16, user: "Burst on" (turned on; say "burst off" or "catch up" to pay the debt)                               |
 
 ## Process (standing user rules)
 
@@ -199,6 +222,24 @@ on restores it unchanged.
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
   screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
   questions if there are any (user rule 2026-10-29).
+- Burst mode (user rule 2026-11-15; toggle `burst`, see _Toggleable rules_ — applies only while that toggle is
+  **on**): for a period of fast pushes, use the `auto` path and skip the slow steps below. A skip is never silent
+  (R2): each one is logged as debt and listed under **Skipped this iteration**.
+  - Skipped, each logged: writing and running find-it tests (jsdom or browser); `skip-review` stage 03; pick cards and
+    the Picks list; live-verify after deploy; `ship-adr` (the ADR stays Pending); local `pnpm format:check`, lint and
+    the full suite (run `pnpm format`; CI runs the rest); the full _Read first_ (grep the backlog row and the last id
+    instead of reading `docs/backlog.md` whole).
+  - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
+    rule, every hard rule and stop condition, CI on `main`.
+  - Automerge (user 2026-11-16: "Burst also must include automerge"): while `burst` is on, merge the pull request as soon
+    as every CI check on its head is green and it has no conflict, with no further instruction; cite the
+    `Deploy GitHub Pages` run id. A red check blocks the merge, also one that is red on `main`: report it and merge
+    after it is fixed or the user says so. Every `auto` stop condition still applies. Never force-push `main`.
+  - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD)` to the gap text of the backlog row the work
+    touched, one per item; a find-it item names the visible text to find (as ADR-066 does). The row stays
+    **Partially done**.
+  - Paying the debt: the user says "burst off" or "catch up"; the `catch-up` skill runs every logged item and the row
+    turns **Done** only with evidence that ran. "Catch up acceptance" (ADR-066) still pays the find-it items alone.
 - Skips and proof (user rule 2026-11-10, from the cleanup-skip review in `docs/research/2026-11-09-cleanup-audit.md`):
   - Every skip states its blocker, what unblocks it, and its cost (S/M/L). "Not started" is not a reason; when the
     reason is scope, write "scope".
@@ -235,7 +276,8 @@ on restores it unchanged.
 - Work on the session branch (or `<short-title>`); an ADR shares the branch and pull request of its build.
 - Open the pull request automatically once the checks pass and the branch is pushed (toggle `auto-open-pr`, on;
   while off, ask first). Never auto-babysit.
-- Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
+- Merge to `main` only on the user's instruction (while `burst` is on, that instruction is standing: see Automerge under
+  _Burst mode_); then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message (ADRs only): `Ship ADR-NNN: <short title> — mark implemented`.
 

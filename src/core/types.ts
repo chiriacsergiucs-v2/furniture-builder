@@ -791,7 +791,7 @@ export interface Design {
   /** An edge band for one part (schemaVersion 8, ADR-188): panel id → band; wins over `roleBands`. Kept when lost. */
   partBands?: Record<string, EdgeBand>;
   /**
-   * Parts the user already owns (ADR-267, schemaVersion 9): cut-list row key (`ownedKey`) → how many. They leave the
+   * Parts the user already owns (ADR-271, schemaVersion 9): cut-list row key (`ownedKey`) → how many. They leave the
    * cut list and the sheet layouts only. A mark that matches no part now is kept and shown, never dropped. Absent = none.
    */
   ownedParts?: Record<string, number>;

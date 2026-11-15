@@ -30,11 +30,11 @@ export interface ViewData {
   materials: Material[];
   rows: CutRow[];
   /**
-   * The rows still to cut (ADR-267): `rows` without the parts the user owns. The cut list, its CSV, the printed
+   * The rows still to cut (ADR-271): `rows` without the parts the user owns. The cut list, its CSV, the printed
    * cutting sheet and the sheet layouts use these; the estimate and shopping list keep `rows`.
    */
   cutRows: CutRow[];
-  /** The owned parts of this view, and the marks that match no part now (ADR-267). */
+  /** The owned parts of this view, and the marks that match no part now (ADR-271). */
   owned: OwnedSplit;
   hardware: HardwareItem[];
   diagnostics: Diagnostic[];

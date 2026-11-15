@@ -65,7 +65,7 @@ interface CornerConnector {
   z: Mm;
 }
 
-export interface Connectors {
+interface Connectors {
   faces: FaceConnector[];
   walls: WallConnector[];
   corners: CornerConnector[];
