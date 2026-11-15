@@ -101,8 +101,12 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
   (audit, review) is written in full prose. "stop caveman" or "normal mode" ends it for the session.
 - `PreToolUse` on `Bash`: `scripts/retired_name_hook.py` blocks `git commit` and `git push` while a tracked or new file
   names the retired third-party agent tool (user decision 2026-11-10).
-- No `permissions` block: commands prompt unless the user allows them in their own settings.
-- `scripts/gaps_hook.py` exists but is not wired in the settings.
+- `Stop`: `scripts/gaps_hook.py` blocks a reply once when it names unbuilt items (skipped, deferred, out of scope, open
+  questions), cites no G id and `docs/adr/GAPS.md` did not change on the branch (ADR-082; wired again 2026-11-15, user:
+  "Wire as is"). Record each with `pnpm gaps add`, cite the G ids, then finish.
+- `permissions.allow`: only the checks in _Commands_ (`pnpm format`, `format:check`, `typecheck`, `lint`, `test`, `build`,
+  `build:ci`, `docs:check`, `pnpm exec vitest`) run without a prompt (user 2026-11-15). `pnpm browser:capture` is not
+  listed (toggle `browser-on-demand`). Editing this file needs the user's request.
 
 ## Model and effort
 
@@ -119,8 +123,7 @@ Default flow for every request (`build` skill):
 2. **Build** on the session branch (or `<short-title>`), smallest slice that does what was asked.
 3. **Check locally:** the sandbox checks in _Verify before done_ (`pnpm format` fixes formatting); fuzz after
    geometry changes. CI runs the full suite.
-4. **Bookkeeping:** one row in `docs/backlog.md`, in the same change. Nothing else is mandatory: no ADR, no gap
-   entry, no feature-tree line, no research-record update, no requirement ledger.
+4. **Bookkeeping:** one row in `docs/backlog.md`, in the same change. Nothing else is mandatory: no ADR, no feature-tree line, no research-record update, no requirement ledger.
 5. **Push** the branch; opening the pull request and merging follow _Git_.
 6. **Reply:** one shape for every implementation reply: it opens with where to click and whether it is live (R4), then
    **Decided** (with numbered picks) and **Skipped this iteration** (no backlog status table, user 2026-11-07; no
@@ -261,8 +264,8 @@ asks, never automatic.
 - Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
   sets `checked` (the date) on the feature lines it verifies (`src/ui/info/features.ts`); Done gaps live in
   `docs/adr/GAPS-archive.md` and are never re-checked.
-- Gaps ledger (ADR-082): optional since 2026-11-07. Record a gap with `pnpm gaps add` only when the user asks;
-  skipped items are listed in the reply.
+- Gaps ledger (ADR-082): required again since 2026-11-15 (user: "Wire as is"; it was optional 2026-11-07 to 2026-11-14). Every
+  unbuilt item is recorded with `pnpm gaps add` and its G id cited in the reply; the Stop hook reminds (_Settings and hooks_).
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
 - Recommended options: recommend the option closest to what the user asked, not the simplest. Never build a
   recommended option the user has not picked when the question was asked; obvious choices are decided, not asked

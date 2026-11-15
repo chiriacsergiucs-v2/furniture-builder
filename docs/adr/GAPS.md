@@ -1749,3 +1749,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split outside-room into outside-room and taller-than-room with repairs keyed on both, and room-island's rectangle and too-small cases, in a follow-up ADR (estimate: effort +10 %, value +3 %)
 - Work: Low
 - Impact: Low
+
+### G-506: Duplicate backlog id D02
+
+- Status: Open
+- Origin: UI audit, 2026-11-15
+- Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
+- Request: Highlight full list of things out of place from claude.md or settings
+- Questions: Which row keeps D02 and which gets the next free D id, given the never-renumber rule?
+- Suggested pick: Give the Built in the app row the next free D id and update its citations (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-507: Auto-merge not tried on this repo
+
+- Status: Open
+- Origin: Flow modes, 2026-11-15
+- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run; the repo setting and branch protection are unchecked
+- Request: Suggest best approach to include a auto-pilot fast forward and the normal flow.
+- Questions: Is Allow auto-merge enabled on the repository, and which checks are required?
+- Suggested pick: Enable Allow auto-merge, then test on one ready docs-only PR (estimate: effort +5 %, value +10 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-508: UI flow audit report not written
+
+- Status: Open
+- Origin: UI audit prompt, 2026-11-14
+- Missing: The full UI/UX flow-mapping report (architecture, layout at 390 and 1280 px, component positions, flows, findings rated against WCAG 2.2 AA and Nielsen heuristics) was not produced; the capture tool is ready
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report ... to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Report location: repo file, Doc, or Artifact for the auditors?
+- Suggested pick: Repo file under docs/research with the capture screenshots committed (estimate: effort +100 %, value +40 %)
+- Work: High
+- Impact: Medium
+- Necessity: Medium
