@@ -185,7 +185,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-043: Duplicate backlog id D02
 
-- Status: Open
+- Status: Done (N284)
 - Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
 - Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
 - Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
@@ -1752,7 +1752,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-506: Duplicate backlog id D02
 
-- Status: Open
+- Status: Done (N284)
 - Origin: UI audit, 2026-11-15
 - Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
 - Request: Highlight full list of things out of place from claude.md or settings
