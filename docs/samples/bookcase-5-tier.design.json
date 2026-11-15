@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 2,
+  "id": "bookcase-5-tier",
+  "name": "5-tier geometric bookcase",
+  "createdAt": "2026-11-15T00:00:00.000Z",
+  "updatedAt": "2026-11-15T00:00:00.000Z",
+  "materials": [
+    {
+      "id": "pal16",
+      "name": "PAL 16 mm",
+      "thickness": 16,
+      "grain": false,
+      "color": "#e7e3db",
+      "sheet": {
+        "length": 2800,
+        "width": 2070,
+        "trim": 10,
+        "count": null
+      }
+    }
+  ],
+  "product": {
+    "kind": "panels",
+    "id": "bookcase-5-tier-p",
+    "params": {
+      "panels": [
+        {
+          "id": "bottom",
+          "name": "Bottom panel",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "shelf-1",
+          "name": "Shelf 1",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 336,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "shelf-2",
+          "name": "Shelf 2",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 672,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "shelf-3",
+          "name": "Shelf 3",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1008,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "shelf-4",
+          "name": "Shelf 4",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1344,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "top",
+          "name": "Top panel",
+          "length": 600,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1680,
+            "z": 0,
+            "lie": "flat-x"
+          }
+        },
+        {
+          "id": "t1-right",
+          "name": "T1 right side",
+          "length": 320,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 584,
+            "y": 16,
+            "z": 0,
+            "lie": "up-z"
+          }
+        },
+        {
+          "id": "t1-back-left",
+          "name": "T1 back left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 16,
+            "z": 0,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t1-front-left",
+          "name": "T1 front left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 16,
+            "z": 224,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t2-left",
+          "name": "T2 left side",
+          "length": 320,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 352,
+            "z": 0,
+            "lie": "up-z"
+          }
+        },
+        {
+          "id": "t2-inset-front",
+          "name": "T2 inset front",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 300,
+            "y": 352,
+            "z": 224,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t3-right",
+          "name": "T3 right side",
+          "length": 320,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 584,
+            "y": 688,
+            "z": 0,
+            "lie": "up-z"
+          }
+        },
+        {
+          "id": "t3-back-left",
+          "name": "T3 back left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 688,
+            "z": 0,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t3-front-left",
+          "name": "T3 front left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 688,
+            "z": 224,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t4-left",
+          "name": "T4 left side",
+          "length": 320,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1024,
+            "z": 0,
+            "lie": "up-z"
+          }
+        },
+        {
+          "id": "t4-inset-front",
+          "name": "T4 inset front",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 300,
+            "y": 1024,
+            "z": 224,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t5-right",
+          "name": "T5 right side",
+          "length": 320,
+          "width": 240,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 584,
+            "y": 1360,
+            "z": 0,
+            "lie": "up-z"
+          }
+        },
+        {
+          "id": "t5-back-left",
+          "name": "T5 back left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1360,
+            "z": 0,
+            "lie": "up-x"
+          }
+        },
+        {
+          "id": "t5-front-left",
+          "name": "T5 front left",
+          "length": 320,
+          "width": 180,
+          "materialId": "pal16",
+          "quantity": 1,
+          "place": {
+            "x": 0,
+            "y": 1360,
+            "z": 224,
+            "lie": "up-x"
+          }
+        }
+      ],
+      "note": "Converted from a Fusion script. Board 16 mm; sheet size is a placeholder, set your own."
+    }
+  },
+  "cutting": {
+    "kerf": 4
+  }
+}
