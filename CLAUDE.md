@@ -193,7 +193,7 @@ on restores it unchanged.
 | `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                        | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
 | `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR      | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
 | `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed        | on    | 2026-11-07, user: "Autocreate autopush" (turned back on)                                                              |
-| `burst`                 | Process › Burst mode: skip the slow steps while pushing fast; every skip is logged as debt | off   | 2026-11-15, user: "Yes" (added, state off; say "burst on" to start, "burst off" or "catch up" to pay the debt)        |
+| `burst`                 | Process › Burst mode: skip the slow steps while pushing fast; every skip is logged as debt | on    | 2026-11-16, user: "Burst on" (turned on; say "burst off" or "catch up" to pay the debt)                               |
 
 ## Process (standing user rules)
 
