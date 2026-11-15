@@ -27,7 +27,7 @@ export function useNesting(active: boolean): NestState & { blocked: boolean } {
     if (!active || blocked) return;
     const timer = setTimeout(() => {
       const jobs = view.jobs(),
-        rows = view.rows;
+        rows = view.cutRows;
       const id = ++req.current;
       setState({ status: 'running' });
       const finish = (msg: NestResponse) => {

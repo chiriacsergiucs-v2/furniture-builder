@@ -5,6 +5,7 @@ import { t } from '../core/i18n';
 import type { LocalTable } from '../core/sync';
 import { buildModel } from '../core/build';
 import { cutlist, hardwareSummary } from '../core/cutlist';
+import { applyOwned } from '../core/owned';
 import { kerfOf, newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import { frontSvg } from '../core/snapshot';
@@ -180,13 +181,16 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
   const view = useMemo((): ViewData | null => {
     if (!design) return null;
     const model = buildModel(design);
+    const rows = cutlist(model, design.materials);
     return {
       mode: 'design',
       title: `shared:${design.id}`,
       model,
       pieces: [model.panels],
       materials: design.materials,
-      rows: cutlist(model, design.materials),
+      rows,
+      cutRows: rows,
+      owned: applyOwned(rows, undefined, design.materials),
       hardware: hardwareSummary(model),
       diagnostics: model.diagnostics,
       kerf: kerfOf(design),
