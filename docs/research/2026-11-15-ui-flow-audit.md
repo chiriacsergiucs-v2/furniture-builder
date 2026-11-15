@@ -124,7 +124,7 @@ A global handler runs only on the Editor page, never inside inputs, dialogs or a
 
 ## 5. Component position tables (measured)
 
-The tables below come from the element-box JSON in `docs/research/ui-capture/` (the full JSON also lists every heading and interactive element, with visibility and in-viewport flags). Coordinates are CSS pixels from the page's top-left. Names are accessible names, cut to 42 characters. "tab" is the position in document tab order. The Catalog tables show only the top of a page that is 15,128 px (1280) or 27,606 px (390) tall.
+The tables below come from the element-box JSON in `docs/research/ui-capture/` (the full JSON also lists every heading and interactive element, with visibility and in-viewport flags; on pages taller than three screens, such as the Catalog, it keeps only the first two screens and records `totalElements` and `truncatedBelowY`). Coordinates are CSS pixels from the page's top-left. Names are accessible names, cut to 42 characters. "tab" is the position in document tab order. The Catalog tables show only the top of a page that is 15,128 px (1280) or 27,606 px (390) tall.
 
 
 **Editor, 1280 px** (viewport 1280×900; page 1280×900; horizontal scroll: no; screenshot `editor-1280.png`)
@@ -310,7 +310,7 @@ The tables below come from the element-box JSON in `docs/research/ui-capture/` (
 | button | Tap a space to edit it | 48,697 | 330×56 |
 
 
-**Reading the Catalog numbers:** the 390 px Catalog page is 27,606 px tall with 724 mapped elements; at 1280 px it is 15,128 px with 641 [M]. I found no pagination or virtualization in `src/ui/CatalogPage.tsx` (a grep for `virtual`, `slice(0` and `limit` returned nothing) [C], so every template card is in the page at once (F-09).
+**Reading the Catalog numbers:** the 390 px Catalog page is 27,606 px tall with 723 mapped elements; at 1280 px it is 15,128 px with 640 [M]. I found no pagination or virtualization in `src/ui/CatalogPage.tsx` (a grep for `virtual`, `slice(0` and `limit` returned nothing) [C], so every template card is in the page at once (F-09).
 
 ## 6. Flow maps
 
@@ -398,7 +398,7 @@ Severity: High = blocks a task or breaks a standard; Medium = a real obstacle wi
 | F-06 | One action, several entry points: Import (More and Projects), Shopping (tab and header chip), New piece (Projects, More, Catalog), Materials (header swatch and Settings, linked by a button). | [R] `MoreMenu.tsx:235`, `ProjectsPage.tsx:301`, `App.tsx:769`, `Dialogs.tsx:626-638` | F2, F16 | H4, H8 | Low | Reported |
 | F-07 | One action, several labels: "Edit this piece" (button), "Open in the piece editor" (menu) and "Edit {name}" (peek); "Delete" (multi-select) against "Remove from project" (single). | [R] `Project.tsx:380-382, 544, 796-806, 1015-1017`; `Selection.tsx:140-149` | F8, F9 | H4 | Low | Reported |
 | F-08 | The Replace dialog closes before its "edited after it was added" confirm, so cancelling leaves no dialog and the user must start again. | [C ✔] `Replace.tsx:37-50` | F9 | H3, H9 | Low | Proven |
-| F-09 | The Catalog renders every card at once: 27,606 px tall at 390 px and 724 mapped elements; no pagination or virtualization found. Performance on low-end phones is untested. | [M] page size; [C] grep of `CatalogPage.tsx` | F22 | H7 (efficiency) | Medium | Proven (size); impact Suspected |
+| F-09 | The Catalog renders every card at once: 27,606 px tall at 390 px and 723 mapped elements; no pagination or virtualization found. Performance on low-end phones is untested. | [M] page size; [C] grep of `CatalogPage.tsx` | F22 | H7 (efficiency) | Medium | Proven (size); impact Suspected |
 | F-10 | Dead and conflicting CSS. 17 selectors that start with `.actions` (for example `styles.css:1460-1526, 2712-2718, 2767-2769`) have no matching element: no `className="actions"` was found in `src/ui`; `.work.mode-compose.sheet-open .side` sets `max-height` twice (52 dvh at 5420 and 40 dvh at 6107, the later wins); 27 `@media (max-width: 760px)` blocks repeat across one 7,682-line file; some comments still describe the retired action bar. | [C ✔] `styles.css:5420, 6107`; grep for `className="actions"`; [R] `styles.css:2712-2718`; [C ✔] `.actions` selectors at `styles.css:1460, 1507, 2767` | Architecture | Maintainability | Medium | Proven |
 | F-11 | Design documents drift from the code: `docs/ui-design.md` still describes a three-row phone top bar and a mode row on phones, and says a space does not open the sheet past peek (code opens it to half); `docs/architecture.md` is 34 lines and omits the shell, pages, modes and the sheet. | [R] `docs/ui-design.md:156-157, 183-185, 301`; [C] `docs/architecture.md` length | Architecture | — | Medium | Reported |
 | F-12 | Discovery of tap-to-drill: the visible hint is "Tap a space to edit it"; how repeated taps go one level deeper is behind an info tip. | [R] `Inspector.tsx:182-184, 217-221`, `App.tsx:588` | F5 | H6, H10 | Low | Reported |
