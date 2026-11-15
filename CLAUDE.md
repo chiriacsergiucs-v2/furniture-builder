@@ -181,6 +181,25 @@ unknown, a check fails or the push is refused.
   tests (jsdom, or the browser script for layout/CSS or 3D work, on the production build of `main` or the live URL).
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
+## General conduct (user rule 2026-11-16, from a behavior audit of the drawer-stability session)
+
+These rules apply to every task, whatever it is. Rules for asking, reply length and rereading standing rules live in
+the user's memory preferences, since they apply across projects.
+
+1. **Request ledger.** For each request, list every distinct ask, including promises made mid-task ("I will save it as
+   an artifact"). Before the final reply, mark each one done, skipped (with the reason, R2) or asked. No ask leaves
+   unmarked.
+2. **Completion is a test.** "Done" means every stated acceptance item is met and shown by a tool result, and for an
+   ADR that `ship-adr` has run. Otherwise the reply opens with `PARTIAL: X of Y built, blocked by Z` and never reads as
+   complete.
+3. **Claims need evidence.** A fact about behavior, status or results comes from a tool result in this session, or
+   carries the word "unverified". A guess, an inference from code, or a subagent's report is never stated as checked.
+4. **Stop honestly.** When work stops early, for any reason including an interrupt or an unclear instruction, say what
+   is built, what is not and why. Never read an interrupt or an unclear word ("as is", "stop") as permission to drop
+   scope; ask one question instead.
+5. **One ADR, one pull request.** A request for N ADRs means N ADRs, each built and shipped in its own pull request.
+   Splitting into more ADRs than asked needs the user's explicit approval. Dependent ADRs are stacked, never bundled.
+
 ## Toggleable rules
 
 A rule listed here applies only while its state is **on**. The user turns a rule off or back on by name (e.g. "turn
