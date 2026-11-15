@@ -503,7 +503,7 @@ pnpm docs:check # ADRs, their index and every ADR / backlog id
 `FUZZ_N=50000 pnpm exec vitest run tests/fuzz.test.ts` runs a deep geometry fuzz.
 
 `pnpm regress` runs every browser acceptance script (`tools/*/find-it*.mjs`) against a production build in a real
-browser and prints one pass/fail report (`pnpm regress move-to` for one area, `--list` to see them all). It is run on
+browser and prints each failing check as it is found, then one pass/fail report (`pnpm regress move-to` for one area, `--list` to see them all). It is run on
 request and is not part of CI.
 
 ## Layout
