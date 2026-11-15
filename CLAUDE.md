@@ -75,6 +75,9 @@ each check runs (_Verify before done_); the full table runs on request (`verify`
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
 `tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+`pnpm regress` (on request only, user 2026-11-15): builds, serves the production preview and runs every
+`tools/*/find-it*.mjs` in a real browser; `pnpm regress <word>` runs the scripts whose path has the word, `--no-build`
+reuses `dist/`, `--list` lists them; logs and `summary.json` go to `regress-report/`; exit 1 when any script fails.
 
 ## Verify before done
 

@@ -325,6 +325,7 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N286 | Structure tree in the drawer that follows the selection (ADR-268) | Not done | ADR-268 written 2026-11-16 |
 | N287 | Hover preview, Ctrl/Cmd-click deep select, Shift+Enter up, pin the drawer, empty tap keeps the selection (ADR-269) | Not done | ADR-269 written 2026-11-16 |
 | N288 | Enter a container to edit inside it; focus strength fade/strong/hide (ADR-270) | Not done | ADR-270 written 2026-11-16 |
+| N289 | `pnpm regress`: one command runs every browser find-it script in a real browser on the production preview, with a pass/fail report (user 2026-11-15: "I need a way to test regressions"; real-browser suite, local on request only) | Partially done | First run 2026-11-16: 45 of 77 scripts pass, 32 fail or time out (30 fail, 2 time out); causes not triaged, some scripts are probably stale since ADR-108 moved checks to jsdom. Gap: triage the 32 and fix or retire each. Not in CI by user choice |
 
 ## Dropped
 
