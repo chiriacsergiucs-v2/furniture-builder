@@ -251,7 +251,10 @@ for (const width of widths) {
       width,
       'Esc: one level up, the divided bay around it',
       (await hanging.getAttribute('aria-pressed')) !== 'true' &&
-        (phone ? t.includes('Selected: Divided space') : /Interior\s*\/?\s*Divided/.test(t)),
+        // A space's name carries its side now ("Left: Divided space").
+        (phone
+          ? /Selected: (\w+: )?Divided space/.test(t)
+          : /Interior\s*\/?\s*(\w+: )?Divided/.test(t)),
       t.replace(/\s+/g, ' ').slice(0, 80),
     );
     await page.keyboard.press('Escape');
@@ -463,8 +466,12 @@ for (const width of widths) {
       await page.waitForTimeout(800);
     }
     // Nothing selected, then the turned piece tapped in 3D (the plan selection carries over): the outline appears.
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(800);
+    // One Esc goes up one level and the last clears the selection (ADR-269): press until nothing is selected.
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(150);
+    }
+    await page.waitForTimeout(650);
     const before = await canvasPixels();
     await shot('angled-unselected');
     // Select the turned piece (one tap on the plan: the whole piece), then back to 3D.
