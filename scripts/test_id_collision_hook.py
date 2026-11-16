@@ -77,6 +77,24 @@ class GitTest(unittest.TestCase):
             f.write("| N2 | mine, not committed |\n")
         self.assertEqual(hook.find(self.mine)[0], ["N2"])
 
+    def test_offline_falls_back_to_the_last_fetched_main(self):
+        self.add(self.other, "| N2 | theirs |\n", "", "theirs")
+        git(self.other, "push", "-q", "origin", "main")
+        git(self.mine, "fetch", "-q", "origin", "main")
+        git(self.mine, "remote", "set-url", "origin", str(self.remote) + "-gone")
+        self.add(self.mine, "| N2 | mine |\n", "", "mine")
+        self.assertEqual(hook.find(self.mine)[0], ["N2"])
+
+    def test_ci_fails_on_a_clash_and_when_git_cannot_tell(self):
+        self.add(self.mine, "| N2 | mine |\n", "", "mine")
+        self.assertEqual(hook.ci(self.mine), 0)
+        self.add(self.other, "| N2 | theirs |\n", "", "theirs")
+        git(self.other, "push", "-q", "origin", "main")
+        git(self.mine, "fetch", "-q", "origin", "main")
+        self.assertEqual(hook.ci(self.mine), 1)
+        git(self.mine, "update-ref", "-d", "refs/remotes/origin/main")
+        self.assertEqual(hook.ci(self.mine), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

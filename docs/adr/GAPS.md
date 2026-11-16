@@ -1809,7 +1809,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Behavior audit findings 1 and 2, 2026-11-16 (N315)
-- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes; the id-collision hook runs only on a git push made through the Bash tool and is silent when the fetch fails (offline). Neither was observed firing in a live session.
+- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes (kept as is, the suggested pick, 2026-11-16). The id check is now hard: the CI job `id-check` runs it on every pull request and the hook falls back to the last fetched origin/main offline (N316). Neither hook nor the CI job was observed catching a real collision.
 - Request: Enforce #1 and #2 now
 - Questions: Should the length hook also check the reply against the user's last message (a report was asked), and should the id check also run in CI against the merge ref?
 - Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)

@@ -208,6 +208,20 @@ jobs:
         if: env.CORE_ONLY != 'true'
         run: pnpm test --shard=${{ matrix.shard }}/3
 
+  # G-517: the hard id-collision check. The PreToolUse hook (scripts/id_collision_hook.py) warns only on a push made
+  # through Claude's Bash tool; this runs the same comparison on every pull request: an id the branch head added (backlog
+  # F/N/D row, G-NNN gap, ADR number) that main already holds fails the run.
+  id-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - run: git fetch -q origin main:refs/remotes/origin/main
+      - run: python3 -I scripts/id_collision_hook.py --ci
+
   # Type errors are caught by `pnpm typecheck` in `checks`, so the build here is `vite build` alone (ADR-197).
   build:
     needs: ship-check
@@ -236,7 +250,7 @@ jobs:
   # The one check that merge rules and the babysit skill wait on (ADR-197): green only when every job above passed,
   # or, for a docs-only change, when `checks` passed and the tests and build were skipped.
   verify:
-    needs: [ship-check, checks, test, build]
+    needs: [ship-check, checks, test, build, id-check]
     if: always() && needs.ship-check.outputs.skip != 'true'
     runs-on: ubuntu-latest
 
@@ -246,8 +260,10 @@ jobs:
           CHECKS: ${{ needs.checks.result }}
           TEST: ${{ needs.test.result }}
           BUILD: ${{ needs.build.result }}
+          IDS: ${{ needs.id-check.result }}
           DOCS_ONLY: ${{ needs.ship-check.outputs.docs_only }}
         run: |
-          echo "ship-check=$SHIP_CHECK checks=$CHECKS test=$TEST build=$BUILD docs_only=$DOCS_ONLY"
+          echo "ship-check=$SHIP_CHECK checks=$CHECKS test=$TEST build=$BUILD ids=$IDS docs_only=$DOCS_ONLY"
           ok() { [ "$1" = success ] || { [ "$DOCS_ONLY" = true ] && [ "$1" = skipped ]; }; }
-          [ "$SHIP_CHECK" = success ] && [ "$CHECKS" = success ] && ok "$TEST" && ok "$BUILD"
+          [ "$SHIP_CHECK" = success ] && [ "$CHECKS" = success ] && ok "$TEST" && ok "$BUILD" &&
+            { [ "$IDS" = success ] || { [ "$GITHUB_EVENT_NAME" = push ] && [ "$IDS" = skipped ]; }; }

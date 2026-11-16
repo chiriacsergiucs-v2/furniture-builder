@@ -108,6 +108,8 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
 - `PreToolUse` on `Bash`: `scripts/id_collision_hook.py` blocks `git push` while an id the branch added (backlog F/N/D, G-NNN,
   ADR number) is already taken on `origin/main`, and names the next free ids (N315, from the audit finding "stale ids").
   Before writing a row, a gap or an ADR number, run `pnpm next-id`: it fetches `origin/main` and prints the next free ids.
+  Offline it compares with the last fetched `origin/main`. The hard check is the CI job `id-check` (same script, `--ci`) on
+  every pull request; `verify` fails with it (N316, G-517).
 - `Stop`: `scripts/gaps_hook.py` blocks a reply once when it names unbuilt items (skipped, deferred, out of scope, open
   questions), cites no G id (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
   silences it, N312). Record each with `pnpm gaps add`, cite the G ids, then finish.
