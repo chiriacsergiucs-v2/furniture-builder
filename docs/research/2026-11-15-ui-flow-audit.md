@@ -440,6 +440,94 @@ Findings added: F-20 (fixed), F-21, F-22, F-23 (section 8).
 
 Limits of this pass: the contrast check reads text only, not icons, borders or focus rings, and skips a text over a gradient or an image (none were met). The empty project has no pieces, so the project plan, the 3D view and populated Settings were not captured. Still not covered: the 3D view, Gaps, Research, Information, Account, Share, the Assistant, and screens that need saved pieces (G-509 keeps these).
 
+## 12. Coverage pass 3 (2026-11-16, G-509)
+
+**Tool.** `pnpm browser:capture-flows3` (`tools/capture/flows3.mjs`), run against the production preview
+(`pnpm build:ci`, `pnpm preview`, port 4173). The online screens exist only in a build with a backend URL, so a second
+build was made with a placeholder origin (`VITE_SUPABASE_URL=https://backend.invalid`, port 4174). In every browser
+context, each request to an origin other than localhost was aborted and logged. Each state was captured at 390 and
+1280 px, in light and dark, with a screenshot, an element map and a text-contrast reading. The contrast measure now
+lives in `tools/lib/contrast-measure.mjs` and is shared with `tools/capture/contrast.mjs`. The pieces were added
+through the UI: Create a new project, then Add a piece, Base cabinet, twice.
+
+**Captured.** 96 screens, 24 per width and theme (390 light, 390 dark, 1280 light, 1280 dark), with 1 skipped in each.
+They are in `docs/research/ui-capture/flows3/` (96 PNG, 13 MB; `summary.json`, `contrast.json`,
+`blocked-requests.json`). The 24 states:
+
+- A project with two pieces: `project-plan`, `piece-list`, `piece-selected`, `settings-populated`, `results-parts`.
+- The room tools: `room-empty`, `room-added` (the room fold open), `room-draw` (Draw the room again), `room-fill-dialog`.
+- The 3D view: `3d-view`, `3d-more-menu`.
+- Pages: `info`, `info-domain-open`, `gaps`.
+- Share and Copy code: `copy-code`, `share-link-invalid` (a malformed `#share=` id), `share-link-unreachable` (a
+  well-formed id whose fetch was blocked).
+- Account, signed out: `account-sign-in`, `account-create`, `account-forgot`, `account-privacy`.
+- Assistant, signed out: `assistant-off`, `assistant-consent`, `assistant-signed-out`.
+
+No screen has a horizontal scroll and no page errors were logged.
+
+**Network.** 4 requests were blocked in all: one `POST https://backend.invalid/rest/v1/rpc/open_share` per width and
+theme, sent only after a share link was opened (`blocked-requests.json`). Loading the backend-configured build signed
+out sent no request, and neither did the Account, Assistant (off, consent, accepted) and Copy code screens.
+
+**Contrast.** 12,560 texts were read in the 96 states, and none was left unread. 2 texts are below AA, both the same
+Gaps-page chip in dark (F-24).
+
+**New findings** (they continue the register in section 8):
+
+| ID | Finding | Evidence | Flow | WCAG 2.2 / Heur. | Severity | Status |
+|---|---|---|---|---|---|---|
+| F-24 | In the dark theme the Gaps page's pressed status filter ("Open (124)", pressed by default) is 2.01:1 against the 4.5:1 minimum, at both widths. Cause: `.gaps-page .chip.filter[aria-pressed='true']` sets `color: var(--primary)` on `var(--primary-soft)`, the pairing F-20 fixed for `.chip`. | [M] `flows3/contrast.json` (gaps, dark, 1280 and 390: "Open", 2.01, 13 px); [C ✔] `src/styles.css:6217-6221` | Gaps | 1.4.3 (AA) | Medium | Proven |
+| F-25 | On a phone in 2D, the project plan shows two "Options" menus. The top one (beside 2D · 3D · Both, y 61) opens an empty panel, because every item in it needs 3D (Exploded 3D, Reset view, Look, Render). The plan's own Options (y 170) holds Snap, Move alone and Clear. | [M] a browser probe at 390 px: the top `details.view-options` panel has 0 children, the second has 3; `flows3/project-plan-390-light.png`; [C ✔] `App.tsx:1002-1053` (every child gated by `shows3d(shown)` or `mount3d`), `ViewOptions.tsx:34-46` (the menu renders with no children) | F5, F8 | H4, H8 | Medium | Proven |
+| F-26 | At 390 px the plan's labels are 5 to 6 px tall: the piece names, "Back wall", and the dimension labels "600", "578" and "1200". At 1280 px they are 8 to 10 px. Whether a pinch zoom on the plan makes up for it was not tested. | [M] a browser probe (the boxes of `.view.front svg text`, 11 texts): smallest 5 px at 390 and 8 px at 1280; `flows3/project-plan-390-light.png` | F8 | 1.4.4 does not strictly apply to a drawing; H1, H2 | Medium | Proven (size); impact Suspected |
+| F-27 | Signed out, the Assistant says that sign-in is needed only after the switch and the consent step. Then it shows "Sign in to use the assistant." as a hint, with no sign-in button. The request box takes text while Send stays disabled. | [M] `flows3/assistant-off-*`, `assistant-consent-*`, `assistant-signed-out-*`; [C ✔] `Assistant.tsx:119` (the hint), `:122` (the textarea, never disabled), `:135` (Send disabled while signed out), `:165` (consent before chat) | Assistant | H5, H7 | Low | Proven |
+| F-28 | A share link whose fetch fails shows "Check your connection and try again." with Cancel as the only action. There is no Retry: the user has to open the link again. | [M] `flows3/share-link-unreachable-*` (the request was blocked); [C ✔] `ShareDialogs.tsx:236-245` (footer: Cancel, and Open a copy only when an item loaded) | Share | H9 | Low | Proven |
+| F-29 | On the Information and Gaps pages, no place in the bottom navigation is marked current, and both pages are reached only from ⋯. On a phone, nothing on screen says where the user is apart from the page heading. | [M] `flows3/info-390-light.png`, `gaps-390-dark.png`; [C ✔] `App.tsx:159-160` (pages `gaps` and `info`), `App.tsx:642-643` and `:664` (`aria-current` only for the four places) | F19 | H1; 2.4.8 (AAA) | Low | Proven |
+| F-30 | On a phone, the 3D view's tool row (⋯, Move, Select, Section, Solid walls, Clearances) wraps to two rows over the scene. Clearances sits alone on the second row (y 170), so the overlay covers about 92 px of the 3D view's top. | [M] `flows3/3d-view-390-light.json` (Clearances 8,170 94×44; the others at y 122) and `3d-view-390-light.png` | 3D | H8 | Low | Proven |
+
+Pass 3 also noted these points without making them findings:
+- F-23: with two pieces, "Suggest run parts" is enabled (`flows3/settings-populated-390-light.png`; it was disabled
+  in the empty project). Whether the five run-part actions work without a run is still not tried.
+- The plan's Clearances toggle reads "Clear." on screen (`Clearances.tsx:168-172`, named "Clearances" for assistive
+  technology, ADR-112). This is a recorded choice, so it is not listed.
+
+**Citation check of F-11 and F-18:**
+
+- **F-11, Partly.**
+  - Three-row phone top bar: **Proven.** `docs/ui-design.md:115` ("Phone: same three rows as before") and `:301`
+    ("Phone top bar still takes three rows") still say so. `:151` ("App bar, one row") and the measured 390 px
+    header (one `header`, 52 px tall, `flows3/project-plan-390-light.json`) contradict them, so the document also
+    disagrees with itself.
+  - Mode row on phones: **Contradicted.** `:157-158` describes the mode row without naming a width, but
+    `:271-273` (ADR-241) says "the Compose · Build & Preview row is not shown on phones", which matches the
+    captures (no mode row at 390 px).
+  - Sheet stays at peek when a space is tapped: **Proven.** `:176-178` says "a space of a single piece does not"
+    open the sheet (N82). The code opens it to half for any selection, space or piece:
+    `src/ui/App.tsx:314-315` (comment, user 2026-11-14, replaces the 2026-11-09 peek-only rule) and `:329-332`.
+    The cited `:156-157` and `:183-185` hold nothing that the drift depends on.
+  - `docs/architecture.md` is 34 lines: **Contradicted.** It is 67 lines now (`wc -l`). It still has no description
+    of the shell, the pages, the modes or the sheet, which is **Proven**: `:62` only lists `shell/`, `Settings`,
+    `Info`, `Dialogs` and `Confirm` as a file grouping.
+- **F-18, Proven, with one citation corrected.**
+  - The repair banner is used only on the project plan: `ProblemBanner` is imported at `Project.tsx:88` and
+    rendered only at `Project.tsx:1553`. No other `<ProblemBanner` was found in `src/ui`. Its repairs are offered
+    from Checks only for project problems: `Output.tsx:561-565` and `:575-579` ("Show on the plan and see repairs").
+  - A single piece shows a space's problems inline: `Inspector.tsx:571-584` (`ul.inline-diags`). The cited
+    `Inspector.tsx:459` is the breadcrumb, not the problems.
+  - A design with an error was not seeded, so neither pattern was seen in the browser.
+
+**Still not covered, and why:**
+- **Research page: SKIPPED (4 of 4).** The script found no Research entry. The page and its data were removed in
+  #227 (commit `009f4daa`), and `docs/architecture.md:63-64` says "The research domain was removed (N281)". It does
+  not exist to audit.
+- **Signed-in Account, Share link (make, copy, stop) and the Assistant chat with replies.** These need a real
+  account and backend requests. The task allowed signed-out screens only and no remote requests, so they were not
+  run.
+- **Error and repair states (F-18 in the browser), placing and dragging, Move mode in 3D, Render and AR export.**
+  They need a design with errors or pointer gestures that this capture does not script. Some are covered by the
+  `tools/*/find-it.mjs` acceptance scripts, which this audit did not run.
+- **The online screens come from a build with a placeholder backend origin, not the published build.** Their
+  layout is the same code, but anything that depends on the real backend's answers is not shown.
+
 ## 10. Appendix: file index
 
 - Captures: `docs/research/ui-capture/*.png` and `*.json`, `summary.json` (18 screens: Projects, Catalog, Editor × 390 and 1280 px × default, More menu, New dialog).
@@ -449,3 +537,4 @@ Limits of this pass: the contrast check reads text only, not icons, borders or f
 - Results, projects, catalog: `src/ui/Output.tsx`, `Sheets.tsx`, `Shopping.tsx`, `Assembly.tsx`, `Project.tsx`, `ProjectSettings.tsx`, `History.tsx`, `CatalogPage.tsx`, `ReviewPack.tsx`, `src/ui/shell/ProjectsPage.tsx`, `MoreMenu.tsx`, `LanguageMenu.tsx`, `importFile.ts`.
 - Design documents: `docs/ui-design.md`, `docs/architecture.md`, `docs/backlog.md`, `docs/product/product-context.md`.
 - Pass 2 (section 11): `docs/research/ui-capture/flows/` (44 screens), `docs/research/ui-capture/contrast.json`, `tools/capture/flows.mjs`, `tools/capture/contrast.mjs`, `tools/lib/pagemap.mjs`.
+- Pass 3 (section 12): `docs/research/ui-capture/flows3/` (96 screens, `contrast.json`, `blocked-requests.json`), `tools/capture/flows3.mjs`, `tools/lib/contrast-measure.mjs`.

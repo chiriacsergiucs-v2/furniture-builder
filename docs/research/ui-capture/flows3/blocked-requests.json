@@ -1,0 +1,26 @@
+[
+  {
+    "width": 1280,
+    "scheme": "light",
+    "url": "https://backend.invalid/rest/v1/rpc/open_share",
+    "method": "POST"
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "url": "https://backend.invalid/rest/v1/rpc/open_share",
+    "method": "POST"
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "url": "https://backend.invalid/rest/v1/rpc/open_share",
+    "method": "POST"
+  },
+  {
+    "width": 390,
+    "scheme": "dark",
+    "url": "https://backend.invalid/rest/v1/rpc/open_share",
+    "method": "POST"
+  }
+]

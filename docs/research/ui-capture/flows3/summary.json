@@ -1,0 +1,798 @@
+{
+  "captured": [
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "project-plan",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "piece-list",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "piece-selected",
+      "elements": 233,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "settings-populated",
+      "elements": 196,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "room-empty",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "room-added",
+      "elements": 187,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "room-draw",
+      "elements": 189,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "room-fill-dialog",
+      "elements": 204,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "3d-view",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "3d-more-menu",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "results-parts",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "copy-code",
+      "elements": 212,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "info",
+      "elements": 258,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "info-domain-open",
+      "elements": 258,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "gaps",
+      "elements": 829,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "account-sign-in",
+      "elements": 142,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "account-create",
+      "elements": 141,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "account-forgot",
+      "elements": 138,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "account-privacy",
+      "elements": 143,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "share-link-invalid",
+      "elements": 136,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "share-link-unreachable",
+      "elements": 136,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "assistant-off",
+      "elements": 131,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "assistant-consent",
+      "elements": 133,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "assistant-signed-out",
+      "elements": 133,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "project-plan",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "piece-list",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "piece-selected",
+      "elements": 210,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "settings-populated",
+      "elements": 182,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "room-empty",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "room-added",
+      "elements": 167,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "room-draw",
+      "elements": 169,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "room-fill-dialog",
+      "elements": 184,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "3d-view",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "3d-more-menu",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "results-parts",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "copy-code",
+      "elements": 208,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "info",
+      "elements": 266,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "info-domain-open",
+      "elements": 266,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "gaps",
+      "elements": 837,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "account-sign-in",
+      "elements": 122,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "account-create",
+      "elements": 121,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "account-forgot",
+      "elements": 118,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "account-privacy",
+      "elements": 123,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "share-link-invalid",
+      "elements": 116,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "share-link-unreachable",
+      "elements": 116,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "assistant-off",
+      "elements": 112,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "assistant-consent",
+      "elements": 114,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "assistant-signed-out",
+      "elements": 114,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "project-plan",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "piece-list",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "piece-selected",
+      "elements": 233,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "settings-populated",
+      "elements": 196,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "room-empty",
+      "elements": 148,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "room-added",
+      "elements": 187,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "room-draw",
+      "elements": 189,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "room-fill-dialog",
+      "elements": 204,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "3d-view",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "3d-more-menu",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "results-parts",
+      "elements": 202,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "copy-code",
+      "elements": 212,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "info",
+      "elements": 258,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "info-domain-open",
+      "elements": 258,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "gaps",
+      "elements": 829,
+      "horizontalScroll": false,
+      "contrastFail": 1
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "account-sign-in",
+      "elements": 142,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "account-create",
+      "elements": 141,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "account-forgot",
+      "elements": 138,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "account-privacy",
+      "elements": 143,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "share-link-invalid",
+      "elements": 136,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "share-link-unreachable",
+      "elements": 136,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "assistant-off",
+      "elements": 131,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "assistant-consent",
+      "elements": 133,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "assistant-signed-out",
+      "elements": 133,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "project-plan",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "piece-list",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "piece-selected",
+      "elements": 210,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "settings-populated",
+      "elements": 182,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "room-empty",
+      "elements": 128,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "room-added",
+      "elements": 167,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "room-draw",
+      "elements": 169,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "room-fill-dialog",
+      "elements": 184,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "3d-view",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "3d-more-menu",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "results-parts",
+      "elements": 209,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "copy-code",
+      "elements": 208,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "info",
+      "elements": 266,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "info-domain-open",
+      "elements": 266,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "gaps",
+      "elements": 837,
+      "horizontalScroll": false,
+      "contrastFail": 1
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "account-sign-in",
+      "elements": 122,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "account-create",
+      "elements": 121,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "account-forgot",
+      "elements": 118,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "account-privacy",
+      "elements": 123,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "share-link-invalid",
+      "elements": 116,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "share-link-unreachable",
+      "elements": 116,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "assistant-off",
+      "elements": 112,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "assistant-consent",
+      "elements": 114,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "assistant-signed-out",
+      "elements": 114,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    }
+  ],
+  "skipped": [
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "research",
+      "why": "no Research entry in the More menu or anywhere on the page"
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "name": "research",
+      "why": "no Research entry in the More menu or anywhere on the page"
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "research",
+      "why": "no Research entry in the More menu or anywhere on the page"
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "name": "research",
+      "why": "no Research entry in the More menu or anywhere on the page"
+    }
+  ]
+}
