@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-online
 dev-dist
 *.local
 .DS_Store

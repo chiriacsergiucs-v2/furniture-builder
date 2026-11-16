@@ -8,12 +8,15 @@
 // Every failing check is printed the moment its script reports it (`  x <script>: <check>`) and appended to
 // `regress-report/failures.txt`, so you can start fixing while the run goes on. Logs, `failures.txt` and `summary.json`
 // go to `regress-report/` (ignored by git). Exit code 1 when any script fails or times out.
+// A script whose header gives `VITE_SUPABASE_URL=<url> VITE_SUPABASE_ANON_KEY=<key>` needs a build with a test backend:
+// it is built into `dist-online/` with those values and served on its own port; every other script uses the plain build.
 // The browser: see `tools/lib/harness.mjs` (CHROMIUM_PATH, a system Chromium, or Playwright's own install).
 import { spawn, spawnSync } from 'node:child_process';
 import {
   appendFileSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
   createWriteStream,
@@ -22,7 +25,9 @@ import {
 import { join } from 'node:path';
 
 const PORT = 4173;
+const ONLINE_PORT = 4174;
 const URL = `http://localhost:${PORT}/furniture-builder/`;
+const ONLINE_URL = `http://localhost:${ONLINE_PORT}/furniture-builder/`;
 const REPORT = 'regress-report';
 const SCRIPT_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -43,7 +48,16 @@ function scripts() {
   return found.sort().filter((p) => words.length === 0 || words.some((w) => p.includes(w)));
 }
 
+/** The test backend a script's header asks for (`VITE_SUPABASE_URL=… VITE_SUPABASE_ANON_KEY=…`), or null. */
+function backendOf(script) {
+  const head = readFileSync(script, 'utf8').split('\n').slice(0, 25).join('\n');
+  const m = head.match(/VITE_SUPABASE_URL=(\S+)\s+VITE_SUPABASE_ANON_KEY=(\S+)/);
+  return m ? { VITE_SUPABASE_URL: m[1], VITE_SUPABASE_ANON_KEY: m[2] } : null;
+}
+
 const list = scripts();
+const onlineScripts = list.filter((p) => backendOf(p));
+const ONLINE_ENV = onlineScripts.length ? backendOf(onlineScripts[0]) : null;
 if (flags.has('--list')) {
   console.log(list.join('\n'));
   process.exit(0);
@@ -60,22 +74,55 @@ if (!flags.has('--no-build')) {
     console.error('Build failed; nothing was run.');
     process.exit(2);
   }
-} else if (!existsSync('dist/index.html')) {
-  console.error('No dist/ found; run without --no-build.');
+  if (ONLINE_ENV) {
+    console.log('Building the test-backend build into dist-online/ (vite build)…');
+    const o = spawnSync('pnpm', ['exec', 'vite', 'build', '--outDir', 'dist-online'], {
+      stdio: 'inherit',
+      env: { ...process.env, ...ONLINE_ENV },
+    });
+    if (o.status !== 0) {
+      console.error('Test-backend build failed; nothing was run.');
+      process.exit(2);
+    }
+  }
+} else if (
+  !existsSync('dist/index.html') ||
+  (ONLINE_ENV && !existsSync('dist-online/index.html'))
+) {
+  console.error('No dist/ (or dist-online/) found; run without --no-build.');
   process.exit(2);
 }
 
 const server = spawn('pnpm', ['exec', 'vite', 'preview', '--port', String(PORT), '--strictPort'], {
   stdio: 'ignore',
 });
-const stopServer = () => server.kill();
+const onlineServer = ONLINE_ENV
+  ? spawn(
+      'pnpm',
+      [
+        'exec',
+        'vite',
+        'preview',
+        '--outDir',
+        'dist-online',
+        '--port',
+        String(ONLINE_PORT),
+        '--strictPort',
+      ],
+      { stdio: 'ignore' },
+    )
+  : null;
+const stopServer = () => {
+  server.kill();
+  onlineServer?.kill();
+};
 process.on('exit', stopServer);
 process.on('SIGINT', () => process.exit(130));
 
-async function waitForServer() {
+async function waitForServer(url) {
   for (let i = 0; i < 60; i++) {
     try {
-      if ((await fetch(URL)).ok) return true;
+      if ((await fetch(url)).ok) return true;
     } catch {
       // not up yet
     }
@@ -83,8 +130,12 @@ async function waitForServer() {
   }
   return false;
 }
-if (!(await waitForServer())) {
+if (!(await waitForServer(URL))) {
   console.error(`The preview did not answer at ${URL}.`);
+  process.exit(2);
+}
+if (onlineServer && !(await waitForServer(ONLINE_URL))) {
+  console.error(`The test-backend preview did not answer at ${ONLINE_URL}.`);
   process.exit(2);
 }
 
@@ -120,9 +171,13 @@ function run(script) {
     const log = join(REPORT, `${name}.log`);
     const out = createWriteStream(log);
     const started = Date.now();
-    const child = spawn('node', [script, URL, join(REPORT, name)], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    const child = spawn(
+      'node',
+      [script, backendOf(script) ? ONLINE_URL : URL, join(REPORT, name)],
+      {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
     child.stdout.pipe(out, { end: false });
     child.stderr.pipe(out, { end: false });
     let named = 0;

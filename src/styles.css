@@ -5108,6 +5108,10 @@ button.tile:hover {
   .work.mode-compose .side .insp-head {
     display: none;
   }
+  /* The Settings dialog sits inside the sheet: it keeps its own head ("Whole cabinet"), as on a desktop. */
+  .work.mode-compose .side dialog .insp-head {
+    display: grid;
+  }
   .work.mode-compose .peek-actions {
     display: inline-flex;
     gap: var(--s-1);
