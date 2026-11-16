@@ -3470,6 +3470,19 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
+
+- Status: Done (N321)
+- Origin: ADR-272 to ADR-278, user 2026-11-16: "create a fixing plan of batches of adrs"
+- Missing: The 38 browser find-it scripts that fail in pnpm regress are not fixed; the seven ADRs only plan the fixes.
+- Request: For all failures, no skipping, all, create a fixing plan of batches of adrs; 6 per adr, all adrs in 1 pr, merged.
+- Questions: none
+- Suggested pick: Build ADR-272 to ADR-278 one after another with next-adr, each verified with pnpm regress at --jobs=1
+- Work: High
+- Impact: Medium
+- Necessity: Medium
+- Note: 2026-11-16: found already built. ADR-272 to ADR-278 shipped with PRs #257 to #264, each run `--jobs=1` (backlog N304 to N310, evidence from documents, not re-run in full today). Re-run today on a fresh `pnpm build:ci`: `pnpm regress tools/arrange/ tools/catalog-compact/ tools/count-stepper/ tools/critique-bugs/` 4/4 scripts passed.
+
 ### G-511: Catalog Brands and Saved lists are not paginated
 
 - Status: Done (N311)
