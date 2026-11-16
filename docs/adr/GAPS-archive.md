@@ -3391,6 +3391,15 @@ highest id in either file.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
 
+### G-474: Settings dialog scrolls sideways at 375 and 390 px
+
+- Status: Done (N322)
+- Origin: ADR-202 tests, 2026-11-06; agent found it
+- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
+- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
+- Questions: None; it is a bug.
+- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
+
 ### G-471: Catalog page is taller than the 15000 px script limit
 
 - Status: Done (N322)
