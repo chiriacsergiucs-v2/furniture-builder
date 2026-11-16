@@ -7354,3 +7354,40 @@ fieldset.group-locked {
   flex: none;
   color: var(--ink-3);
 }
+
+/* Hover preview and pinned space on the front view (ADR-269). */
+.el-hover,
+.el-pinned {
+  fill: none;
+  stroke-dasharray: 6 4;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.el-hover {
+  stroke: var(--link);
+}
+.el-pinned {
+  stroke: var(--accent);
+}
+.elevation {
+  position: relative;
+}
+.el-chip {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+.pinned-note {
+  margin: 0;
+  font-size: 0.875rem;
+}
+.pin-btn.on {
+  border-color: var(--accent);
+}

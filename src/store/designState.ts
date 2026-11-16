@@ -188,8 +188,11 @@ export interface State {
   /** Removes a board no part uses; returns why not otherwise (nothing changes). */
   removeMaterial: (id: string) => string | null;
   select: (id: Selection) => void;
-  /** Tap on the piece at (x, y) mm, front view or 3D: whole piece first, then one level smaller per tap (ADR-083). */
-  tapPiece: (x: number, y: number) => void;
+  /**
+   * Tap on the piece at (x, y) mm, front view or 3D: whole piece first, then one level smaller per tap (ADR-083). A tap
+   * outside the piece keeps the selection (ADR-269); `deep` (Ctrl or Cmd click) selects the innermost space there.
+   */
+  tapPiece: (x: number, y: number, deep?: boolean) => void;
   /**
    * Tap on a project piece (ADR-083, ADR-088): the first tap selects the whole piece; each further tap selects one
    * level smaller under the tap (room mm), and the project editor stays open. With no point (the plan) a further tap

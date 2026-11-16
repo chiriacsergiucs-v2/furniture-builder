@@ -32,6 +32,9 @@ function Tree() {
   const open = useUi((s) => s.treeOpen);
   const setTreeOpen = useUi((s) => s.setTreeOpen);
   const openTree = useUi((s) => s.openTree);
+  const setHover = useUi((s) => s.setHover);
+  // A row previews its space on the drawing like a hover there (ADR-269); touch has no hover.
+  const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const rows = useMemo(() => structureRows(prod, new Set(open)), [prod, open]);
   const sizes = useMemo(() => {
     const m = new Map<string, string>();
@@ -142,6 +145,8 @@ function Tree() {
                 select(r.id);
               }}
               onFocus={() => setFocusKey(k)}
+              onMouseEnter={canHover ? () => setHover(r.id) : undefined}
+              onMouseLeave={canHover ? () => setHover(undefined) : undefined}
               onKeyDown={(e) => {
                 if (e.target === e.currentTarget) onKey(e, i);
               }}

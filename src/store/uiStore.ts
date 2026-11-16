@@ -88,6 +88,17 @@ interface Ui {
   setTreeOpen: (id: string, open: boolean) => void;
   /** Open these splits too (the selection's ancestors); no change, no new array, when all are open already. */
   openTree: (ids: string[]) => void;
+  /**
+   * What a tap would select where the pointer rests (ADR-269): a space id, `null` for the whole piece, `undefined`
+   * for nothing. Memory only; never changes the selection or the drawer.
+   */
+  hoverId: string | null | undefined;
+  setHover: (id: string | null | undefined) => void;
+  /** The space the drawer is pinned to, and the piece it belongs to (ADR-269); memory only. */
+  pinnedId: string | null;
+  pinnedDesignId: string | null;
+  pin: (id: string, designId: string) => void;
+  unpin: () => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -153,6 +164,12 @@ export const useUi = create<Ui>((set) => ({
       const add = ids.filter((id) => !s.treeOpen.includes(id));
       return add.length ? { treeOpen: [...s.treeOpen, ...add] } : s;
     }),
+  hoverId: undefined,
+  setHover: (id) => set((s) => (s.hoverId === id ? s : { hoverId: id })),
+  pinnedId: null,
+  pinnedDesignId: null,
+  pin: (id, designId) => set({ pinnedId: id, pinnedDesignId: designId }),
+  unpin: () => set((s) => (s.pinnedId === null ? s : { pinnedId: null, pinnedDesignId: null })),
 }));
 
 /**

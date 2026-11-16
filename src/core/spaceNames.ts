@@ -1,5 +1,5 @@
-import { t } from './i18n';
-import { parentOf } from './design';
+import { t, tr } from './i18n';
+import { findInProduct, parentOf } from './design';
 import type { Product, Space, SpaceKind } from './types';
 
 /**
@@ -54,3 +54,10 @@ export const WHOLE_LABEL: Record<Product['kind'], string> = {
 /** The name of a space on the path and in the tree: its place and kind ("Left: Drawers"). */
 export const spaceName = (root: Space, s: Space) =>
   placed(spacePlace(root, s.id), KIND_LABEL[s.kind]);
+
+/** The name of a space of a piece by id (ADR-267 names), or null when it is not in the piece. */
+export function nameOfSpace(prod: Product, id: string): string | null {
+  const f = findInProduct(prod, id);
+  if (!f) return null;
+  return f.space.id === f.root.id ? tr(f.label) : spaceName(f.root, f.space);
+}
