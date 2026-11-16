@@ -1739,7 +1739,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Flow modes, 2026-11-15
-- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run. Checked 2026-11-15 (enable_pr_auto_merge on PR #219): GitHub answered "Auto-merge is not enabled for this repository"; branch protection is unchecked
+- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run. Checked 2026-11-15 (enable_pr_auto_merge on PR #219): GitHub answered "Auto-merge is not enabled for this repository"; branch protection is unchecked. Checked again 2026-11-16 on PR #248 (ready, CI green): same answer; the user must turn on Settings → General → Pull Requests → Allow auto-merge. Burst automerge merged #248 by hand instead
 - Request: Suggest best approach to include a auto-pilot fast forward and the normal flow.
 - Questions: Is Allow auto-merge enabled on the repository, and which checks are required?
 - Suggested pick: Enable Allow auto-merge, then test on one ready docs-only PR (estimate: effort +5 %, value +10 %)
@@ -1751,7 +1751,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: UI flow audit, 2026-11-15 (G-508)
-- Missing: Pass 2 (N314) covered the wizard steps, Settings, Material, the dark theme and an empty project (44 screens, 32 contrast states). Still not covered: the 3D view, the Gaps, Research and Information pages, Account, Share, the Assistant, and every screen that needs saved pieces (the project plan with pieces, populated Settings, the room tools). Findings F-11 and F-18 of docs/research/2026-11-15-ui-flow-audit.md are not checked line by line.
+- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
 - Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
 - Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
 - Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
@@ -1816,3 +1816,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Low
+
+### G-518: Audit pass 3 findings F-24 to F-30 not fixed
+
+- Status: Open
+- Origin: UI audit pass 3, 2026-11-16 (G-509, N317)
+- Missing: Findings F-24 to F-30 of docs/research/2026-11-15-ui-flow-audit.md section 12 are reported, not fixed: F-24 dark Gaps-page pressed chip 2.01:1 (src/styles.css:6217-6221), F-25 empty phone Options menu in 2D, F-26 5-6 px plan labels at 390 px, F-27 signed-out Assistant flow, F-28 no Retry on a failed share link, F-29 no current place on Information and Gaps, F-30 3D tool row wraps over the scene
+- Request: Parallel execution of G-517, G-509, G-507
+- Questions: Which findings to fix, and in what order?
+- Suggested pick: Fix F-24 first (same fix as F-20), then F-25 and F-29
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
