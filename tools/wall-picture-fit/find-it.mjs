@@ -7,6 +7,7 @@
 // Wall 1 › dragging the wall changes "From left", a handle changes "W … × H …", Undo restores it, "Fill wall" fills the
 // wall again; the front view follows; with Adjust off the 3D view behaves as before. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -66,10 +67,12 @@ for (const width of [1280, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (loc) => {
     await loc.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
-    await loc.click({ timeout: 5000 });
+    await loc.click({ timeout: 30000 });
   };
   const sheet = async (open) => {
     const peek = page.locator('.sheet-peek');
+    // The peek bar mounts a moment after the project opens; wait for it before reading its state.
+    if (phone) await peek.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
     if (phone && (await peek.isVisible().catch(() => false)))
       if ((await peek.getAttribute('aria-expanded')) === String(!open)) await peek.click();
     await page.waitForTimeout(200);
@@ -77,9 +80,9 @@ for (const width of [1280, 390]) {
   const noSideScroll = () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   const view = async (name) => {
-    // On a phone the 3D view is under Build & Preview and the room editor under Compose.
-    const mode = page.getByRole('radio', { name: name === '3D' ? /Build & Preview/ : /Compose/ });
-    if (await mode.isVisible().catch(() => false)) await mode.click();
+    // ADR-241: Build & Preview and Compose are places; the shared steps reach them at every width.
+    if (name === '3D') await goBuild(page);
+    else await goCompose(page);
     await page.getByRole('radio', { name, exact: true }).click();
     await page.waitForTimeout(name === '3D' ? 2500 : 500);
   };
@@ -127,6 +130,10 @@ for (const width of [1280, 390]) {
     ).split(',')[1],
     'base64',
   );
+  // ADR-160: the room's fields sit in a closed "Room" fold; open it by its summary.
+  const roomFold = page.locator('details.room-fold');
+  if ((await roomFold.count()) && !(await roomFold.evaluate((el) => el.open)))
+    await roomFold.locator('> summary').click();
   const bg1 = page.getByLabel('Wall 1 background', { exact: true });
   await bg1.scrollIntoViewIfNeeded();
   await bg1.selectOption({ label: 'Picture' });
@@ -154,6 +161,8 @@ for (const width of [1280, 390]) {
   check(width, 'the front view draws the picture on the back wall', !!raw);
   await view('3D');
   const canvas = page.locator('canvas').first();
+  // The 3D toolbar mounts with the lazy-loaded viewer.
+  await btn('Solid walls').waitFor({ timeout: 30000 });
   await click(btn('Solid walls'));
   await page.waitForTimeout(1200);
   const shot0 = await canvas.screenshot({ path: `${out}/wall-picture-3d-before-${width}.png` });
@@ -251,8 +260,10 @@ for (const width of [1280, 390]) {
     /Tap a wall with a picture/.test((await note.textContent()) ?? ''),
   );
   const cb = await canvas.boundingBox();
-  const tx = cb.x + cb.width / 2,
-    ty = cb.y + cb.height * 0.25;
+  // On a phone the 3D toolbar covers the upper middle of the short canvas: tap the back wall in its top right corner,
+  // above the buttons.
+  const tx = cb.x + cb.width * (phone ? 0.92 : 0.5),
+    ty = cb.y + cb.height * (phone ? 0.1 : 0.25);
   if (phone) await page.touchscreen.tap(tx, ty);
   else await page.mouse.click(tx, ty);
   await page.waitForTimeout(600);

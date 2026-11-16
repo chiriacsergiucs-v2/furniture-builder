@@ -83,7 +83,8 @@ try {
     await uses.first().scrollIntoViewIfNeeded();
     check(
       'card buttons are named "Use this: <label>"',
-      (await uses.count()) === 6 &&
+      // The first page holds 4 cards (CARDS_FIRST); "Show more (n)" adds the rest.
+      (await uses.count()) === 4 &&
         (await cards.getByRole('button', { name: 'Use this', exact: true }).count()) === 0,
       await uses.first().getAttribute('aria-label'),
     );
