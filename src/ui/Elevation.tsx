@@ -1,12 +1,22 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import {
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from 'react';
 import { findInProduct, productRoots } from '../core/design';
 import { pt } from '../core/i18n/print';
 import { t } from '../core/i18n';
 import {
+  FOCUS_OPACITY,
   deepestAt,
   drill,
   inSelection,
   parentOf as parentSel,
+  pathAt,
   selectionBox,
 } from '../core/selectPath';
 import { WHOLE_LABEL, nameOfSpace } from '../core/spaceNames';
@@ -14,6 +24,7 @@ import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { useDesign } from '../store/designStore';
 import { useUi } from '../store/uiStore';
+import { useEntered } from '../store/useEntered';
 import { useMediaQuery } from '../store/useMediaQuery';
 import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
@@ -79,6 +90,9 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   const hoverId = useUi((s) => s.hoverId);
   const setHover = useUi((s) => s.setHover);
   const pinnedId = useUi((s) => s.pinnedId);
+  const enteredId = useEntered();
+  const enter = useUi((s) => s.enter);
+  const focusLook = useUi((s) => s.focusLook);
   const showFronts = useDesign((s) => s.showFronts);
   const mats = useMemo(() => new Map(design.materials.map((m) => [m.id, m])), [design.materials]);
   // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
@@ -122,7 +136,11 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   // The whole piece selected (ADR-083) is outlined round its bounds; everything outside the outline is faded (ADR-087).
   const selBox = selectionBox(model, selectedId);
   const selectedSpace = selBox ? { box: selBox } : undefined;
-  const fade = (box: Panel['box']) => (selBox && !inSelection(selBox, box) ? ' faded' : '');
+  // What stays solid: the entered space (ADR-270), else the selection; everything outside fades or, under Hide, goes.
+  const enteredBox = enteredId ? selectionBox(model, enteredId) : undefined;
+  const keepBox = enteredBox ?? selBox;
+  const fade = (box: Panel['box']) => (keepBox && !inSelection(keepBox, box) ? ' faded' : '');
+  const shown = (box: Panel['box']) => !(focusLook === 'hide' && fade(box));
   const fontSize = Math.max(b.w, b.h) / 26;
   // The previewed space (ADR-269) and the pinned one, each in its own dashed outline.
   const hoverBox = canHover && hoverId !== undefined ? selectionBox(model, hoverId) : undefined;
@@ -188,7 +206,19 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   // Ctrl or Cmd click jumps to the innermost space (ADR-269).
   const onTap = (e: MouseEvent<SVGSVGElement>) => {
     const at = pointAt(e);
-    if (at) tapPiece(at.x, at.y, e.ctrlKey || e.metaKey);
+    if (at) tapPiece(at.x, at.y, e.ctrlKey || e.metaKey, enteredId);
+  };
+  // A double click with a mouse enters the divided space under the pointer (ADR-270); a button does it on touch.
+  const onDouble = (e: MouseEvent<SVGSVGElement>) => {
+    if (!canHover) return;
+    const at = pointAt(e);
+    if (!at) return;
+    const split = pathAt(model, at.x, at.y)
+      .filter((id) => findInProduct(design.product, id)?.space.kind === 'split')
+      .at(-1);
+    if (!split) return;
+    enter(split, design.id);
+    select(split);
   };
   // What the next tap would select, outlined and named; nothing outside the piece.
   const onHover = (e: MouseEvent<SVGSVGElement>) => {
@@ -211,6 +241,8 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         preserveAspectRatio="xMidYMid meet"
         role="group"
         onClick={onTap}
+        onDoubleClick={onDouble}
+        style={{ '--focus-opacity': FOCUS_OPACITY[focusLook] } as CSSProperties}
         onMouseMove={canHover ? onHover : undefined}
         onMouseLeave={canHover ? () => setHover(undefined) : undefined}
       >
@@ -237,9 +269,11 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         {/* A piece opened from a project with a room shows the wall behind it (ADR-208). */}
         <WallBehind b={b} />
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
-        {backs.map((p) => (
-          <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
-        ))}
+        {backs
+          .filter((p) => shown(p.box))
+          .map((p) => (
+            <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
+          ))}
         {leaves.map((s) => (
           <g
             key={s.nodeId}
@@ -259,39 +293,48 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
                 select(parentSel(model, s.nodeId));
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                tapPiece(Math.round(s.box.x + s.box.w / 2), Math.round(s.box.y + s.box.h / 2));
+                tapPiece(
+                  Math.round(s.box.x + s.box.w / 2),
+                  Math.round(s.box.y + s.box.h / 2),
+                  false,
+                  enteredId,
+                );
               }
             }}
           >
             <rect x={s.box.x} y={Y(s.box.y, s.box.h)} width={s.box.w} height={s.box.h} />
           </g>
         ))}
-        {structure.map((p) => (
-          <polygon
-            key={p.id}
-            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
-            points={outlinePoints(p)}
-            style={{ fill: fillOf(p) }}
-            data-plain={mats.get(p.materialId)?.color}
-          />
-        ))}
+        {structure
+          .filter((p) => shown(p.box))
+          .map((p) => (
+            <polygon
+              key={p.id}
+              className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
+              points={outlinePoints(p)}
+              style={{ fill: fillOf(p) }}
+              data-plain={mats.get(p.materialId)?.color}
+            />
+          ))}
         {/* Fronts fill with their board's picture as carcass panels do, dashed outline kept (ADR-206). */}
         {showFronts &&
-          fronts.map((p) => {
-            const pic = pictureOf(p);
-            return (
-              <polygon
-                key={p.id}
-                className={`el-front${fade(p.box)}`}
-                points={outlinePoints(p)}
-                style={pic ? { fill: pic } : undefined}
-                data-plain={pic ? mats.get(p.materialId)?.color : undefined}
-              />
-            );
-          })}
+          fronts
+            .filter((p) => shown(p.box))
+            .map((p) => {
+              const pic = pictureOf(p);
+              return (
+                <polygon
+                  key={p.id}
+                  className={`el-front${fade(p.box)}`}
+                  points={outlinePoints(p)}
+                  style={pic ? { fill: pic } : undefined}
+                  data-plain={pic ? mats.get(p.materialId)?.color : undefined}
+                />
+              );
+            })}
         {showFronts &&
           fronts
-            .filter((p) => p.handleHoles)
+            .filter((p) => p.handleHoles && shown(p.box))
             .map((p) => {
               const pts = p.handleHoles!.at.map(([u, v]) => [p.box.x + u, -(p.box.y + v)] as const);
               return pts.length === 2 ? (
@@ -313,19 +356,21 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
                 />
               );
             })}
-        {leaves.map((s) => (
-          <text
-            key={`l-${s.nodeId}`}
-            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
-            x={s.box.x + s.box.w / 2}
-            y={Y(s.box.y, s.box.h) + s.box.h / 2}
-            fontSize={Math.min(fontSize, s.box.w / 6)}
-            dominantBaseline="middle"
-            textAnchor="middle"
-          >
-            {describe(s, counts.get(s.nodeId), print)}
-          </text>
-        ))}
+        {leaves
+          .filter((s) => shown(s.box))
+          .map((s) => (
+            <text
+              key={`l-${s.nodeId}`}
+              className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
+              x={s.box.x + s.box.w / 2}
+              y={Y(s.box.y, s.box.h) + s.box.h / 2}
+              fontSize={Math.min(fontSize, s.box.w / 6)}
+              dominantBaseline="middle"
+              textAnchor="middle"
+            >
+              {describe(s, counts.get(s.nodeId), print)}
+            </text>
+          ))}
         {hoverBox && (
           <rect
             className="el-hover"

@@ -543,6 +543,11 @@ export function App() {
       // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
+        // An entered space (ADR-270) is left first; the selection stays.
+        if (useUi.getState().enteredId) {
+          useUi.getState().exitEntered();
+          return;
+        }
         // Inside a drilled project piece Esc also goes up one level; only the whole piece clears the selection (ADR-249).
         if (st.project && !st.editingItemId && st.drillItemId && st.selectedId !== null)
           st.select(parentOf(st.model, st.selectedId));

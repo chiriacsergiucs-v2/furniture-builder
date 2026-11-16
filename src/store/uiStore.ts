@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { t } from '../core/i18n';
+import { nextFocusLook, type FocusLook } from '../core/selectPath';
 import type { Answers } from '../core/wizard/types';
 
 /** A closed new-piece wizard's answers, kept in memory for the session only, never stored (ADR-211, G-356). */
@@ -99,6 +100,14 @@ interface Ui {
   pinnedDesignId: string | null;
   pin: (id: string, designId: string) => void;
   unpin: () => void;
+  /** The divided space edited from inside (ADR-270), and the piece it belongs to; memory only. */
+  enteredId: string | null;
+  enteredDesignId: string | null;
+  enter: (id: string, designId: string) => void;
+  exitEntered: () => void;
+  /** How strongly everything outside the selection fades (ADR-270); memory only, never stored. */
+  focusLook: FocusLook;
+  cycleFocus: () => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -170,6 +179,13 @@ export const useUi = create<Ui>((set) => ({
   pinnedDesignId: null,
   pin: (id, designId) => set({ pinnedId: id, pinnedDesignId: designId }),
   unpin: () => set((s) => (s.pinnedId === null ? s : { pinnedId: null, pinnedDesignId: null })),
+  enteredId: null,
+  enteredDesignId: null,
+  enter: (id, designId) => set({ enteredId: id, enteredDesignId: designId }),
+  exitEntered: () =>
+    set((s) => (s.enteredId === null ? s : { enteredId: null, enteredDesignId: null })),
+  focusLook: 'fade',
+  cycleFocus: () => set((s) => ({ focusLook: nextFocusLook(s.focusLook) })),
 }));
 
 /**

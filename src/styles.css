@@ -1704,9 +1704,12 @@ td.note {
   font-weight: 600;
 }
 /* Outside the selected space or piece (ADR-087; the room front view, G-071). */
-.elevation .faded,
 .plan .faded {
   opacity: 0.3;
+}
+/* The drawing's fade follows the focus look (FOCUS_OPACITY, ADR-270); 30 % when the variable is not set. */
+.elevation .faded {
+  opacity: var(--focus-opacity, 0.3);
 }
 .el-selection {
   fill: none;
@@ -7390,4 +7393,16 @@ fieldset.group-locked {
 }
 .pin-btn.on {
   border-color: var(--accent);
+}
+
+/* Edit inside and focus strength in the drawer head (ADR-270). */
+.enter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.entered-note {
+  margin: 0;
+  font-weight: 600;
 }

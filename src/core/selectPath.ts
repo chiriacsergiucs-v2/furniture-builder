@@ -54,6 +54,43 @@ export function deepestAt(model: FurnitureModel, x: Mm, y: Mm): string | undefin
 }
 
 /**
+ * The selection after a tap inside an entered space (ADR-270): taps cycle its children down to the innermost space at
+ * the point, then return to the entered space itself, never to the whole piece. A tap outside the entered space's box
+ * changes nothing.
+ */
+export function drillIn(
+  model: FurnitureModel,
+  x: Mm,
+  y: Mm,
+  current: Selection,
+  enteredId: string,
+): Selection {
+  const path = pathAt(model, x, y);
+  const at = path.indexOf(enteredId);
+  if (at < 0) return current;
+  const full = path.slice(at);
+  const sel = typeof current === 'string' ? current : undefined;
+  if (sel === undefined || sel === enteredId) return full[1] ?? full[0];
+  const i = full.indexOf(sel);
+  if (i >= 0) return full[i + 1] ?? full[0];
+  // A tap elsewhere in the entered space: go to where the two paths part, then one level down.
+  const o = model.spaces.find((s) => s.nodeId === sel && s.view !== 'side');
+  const op = o ? pathAt(model, o.box.x + o.box.w / 2, o.box.y + o.box.h / 2) : [];
+  const own = op.includes(enteredId) ? op.slice(op.indexOf(enteredId)) : [];
+  let k = 0;
+  while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
+  return full[k + 1] ?? full[0];
+}
+
+/** How strongly the rest fades round the selection (ADR-270): the look, and the opacity of what is outside. */
+export type FocusLook = 'fade' | 'strong' | 'hide';
+export const FOCUS_LOOKS: FocusLook[] = ['fade', 'strong', 'hide'];
+/** Fade is ADR-087's look (28 %); strong is fainter; hide draws nothing. One map feeds the drawing and 3D. */
+export const FOCUS_OPACITY: Record<FocusLook, number> = { fade: 0.28, strong: 0.1, hide: 0 };
+export const nextFocusLook = (l: FocusLook): FocusLook =>
+  FOCUS_LOOKS[(FOCUS_LOOKS.indexOf(l) + 1) % FOCUS_LOOKS.length];
+
+/**
  * One level up from `sel` (ADR-203, G-053): a space → the space around it, a top space → the whole piece (`null`), the
  * whole piece → nothing (`undefined`). Levels are those a tap drills through (`pathAt`); a space not on that path (an
  * L-corner's side wing) goes up to the whole piece.
