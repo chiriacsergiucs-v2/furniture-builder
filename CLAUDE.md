@@ -283,11 +283,12 @@ asks, never automatic.
   - `ship-adr` is not skipped (user 2026-11-16): it runs whenever every `Done when` item is met with evidence. It is
     skipped, and logged, only when shipping needs the user's input or decision (an unmet item, an open question).
   - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
-    rule, every hard rule and stop condition, CI on `main`.
+    rule, every hard rule and stop condition.
+  - Not checked in burst (user 2026-11-16: "remove checking main build and ci"): the `CI` and `Deploy GitHub Pages` runs on
+    `main` after the merge. Do not wait for, poll or cite them; the reply says they were not checked.
   - Automerge (user 2026-11-16: "Burst also must include automerge"): while `burst` is on, merge the pull request as soon
-    as every CI check on its head is green and it has no conflict, with no further instruction; cite the
-    `Deploy GitHub Pages` run id. A red check blocks the merge, also one that is red on `main`: report it and merge
-    after it is fixed or the user says so. Every `auto` stop condition still applies. Never force-push `main`.
+    as every CI check on its head is green and it has no conflict, with no further instruction. A red check on the
+    pull request head blocks the merge: report it and merge after it is fixed or the user says so. Every `auto` stop condition still applies. Never force-push `main`.
   - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD)` to the gap text of the backlog row the work
     touched, one per item; a find-it item names the visible text to find (as ADR-066 does). The row stays
     **Partially done**.
