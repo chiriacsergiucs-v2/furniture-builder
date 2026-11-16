@@ -112,7 +112,7 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
   questions), cites no G id (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
   silences it, N312). Record each with `pnpm gaps add`, cite the G ids, then finish.
 - `Stop`: `scripts/reply_length_hook.py` blocks a reply once when it is longer than 150 words (fenced code does not count),
-  so replies stay short (N315, user: "Lower your verbosity" (typed with a typo), "Keep is short, concise"). A reply that the user asked for as a
+  so replies stay short (N315, user: "Lower your verbosity", "Keep it short, concise"). A reply that the user asked for as a
   deliverable (a report, an audit, an explanation) starts with `[long]` and passes.
 - `permissions.allow`: only the checks in _Commands_ (`pnpm format`, `format:check`, `typecheck`, `lint`, `test`, `build`,
   `build:ci`, `docs:check`, `pnpm exec vitest`) run without a prompt (user 2026-11-15). `pnpm browser:capture` is not
