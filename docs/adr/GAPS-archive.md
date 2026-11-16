@@ -3621,7 +3621,7 @@ highest id in either file.
 
 ### G-522: F-04 Move and Adjust reasons not proved in a real browser
 
-- Status: Done (N327)
+- Status: Done (N329)
 - Origin: N326 (audit F-04), burst
 - Missing: The 3D toolbar lines 'Turn off Exploded 3D to move pieces' and '...to adjust a wall picture' are proved only on src/viewer/ExplodedWhy.tsx in jsdom (the viewer is stubbed); not found in the real 3D view at 390 and 1280 px.
 - Request: Prove each with a jsdom find-it test that fails before the fix (the reason is found by visible text at 390 and 1280 px).
