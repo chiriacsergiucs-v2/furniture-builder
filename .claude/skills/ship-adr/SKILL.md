@@ -55,11 +55,6 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 
 ## Burst mode
 
-While the `burst` toggle in `CLAUDE.md` is **on**, this skill is skipped: the ADR stays Pending and the backlog row gets
-`burst-skipped: ship ADR-NNN (burst, YYYY-MM-DD)`. The `catch-up` skill ships it after the burst.
-
-## Notes
-
-- If the ADR is already in `adr-done/` the script exits without changes.
-- It does **not** commit or push — you do that.
-- If the user ships several ADRs at once, run the script per number, then make one commit.
+`burst` does not skip this skill (user 2026-11-16). Ship whenever every `Done when` item is met with evidence. Skip only
+when shipping needs the user's input or decision (an unmet item, an open question); then the backlog row gets
+`burst-skipped: ship ADR-NNN (burst, YYYY-MM-DD)` and the `catch-up` skill ships it after the burst.

@@ -278,7 +278,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-214](../adr-done/ADR-214-place-ar-furniture-by-a-corner-or-into-a-room-corner.md) | Place AR furniture by a corner or into a room corner | ADR-208, ADR-213 | ✅ Implemented |
 | [ADR-215](../adr-done/ADR-215-fine-tune-ar-placement-and-show-its-dimensions.md) | Fine-tune AR placement and show its dimensions | ADR-208, ADR-213 | ✅ Implemented |
 | [ADR-216](../adr-done/ADR-216-fill-l-and-u-room-corners-and-show-template-descriptions-in.md) | Fill L and U room corners and show template descriptions in Start from | ADR-032, ADR-173, ADR-177, ADR-193, ADR-196 | ✅ Implemented |
-| [ADR-217](ADR-217-add-a-rejected-status-and-close-the-four-won-t-do-adrs.md) | Add a Rejected status and close the four won't-do ADRs | ADR-050, ADR-082 | Pending |
+| [ADR-217](../adr-done/ADR-217-add-a-rejected-status-and-close-the-four-won-t-do-adrs.md) | Add a Rejected status and close the four won't-do ADRs | ADR-050, ADR-082 | ✅ Implemented |
 | [ADR-218](../adr-done/ADR-218-ar-walls-wall-gap-occlusion-light-finger-drag-and-per-piece.md) | AR walls, wall gap, occlusion, light, finger drag and per-piece sizes | ADR-213, ADR-214, ADR-215 | ✅ Implemented |
 | [ADR-219](../adr-done/ADR-219-enforce-layer-boundaries-with-lint-rules-and-a-source-scan-t.md) | Enforce layer boundaries with lint rules and a source-scan test | — | ✅ Implemented |
 | [ADR-220](../adr-done/ADR-220-turn-on-incremental-type-checking-and-cache-its-state-in-ci.md) | Turn on incremental type-checking and cache its state in CI | ADR-197 | ✅ Implemented |
