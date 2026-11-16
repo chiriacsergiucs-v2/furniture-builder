@@ -1771,8 +1771,17 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-<<<<<<< HEAD
-### G-514: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+### G-514: The gaps Stop hook can still be passed by citing any G id
+
+- Status: Open
+- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
+- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
+- Request: Fix the gaps force skip vector
+- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
+- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
+- Work: Low
+
+### G-516: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
 
 - Status: Open
 - Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
@@ -1784,7 +1793,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-515: Warnings on the cut sheet: free-text data words stay in the app language
+### G-516: Warnings on the cut sheet: free-text data words stay in the app language
 
 - Status: Open
 - Origin: ADR-265 D18-F6 build 2026-11-16
@@ -1793,16 +1802,5 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should hardware and family names get print-language entries?
 - Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
 - Work: Medium
-=======
-### G-514: The gaps Stop hook can still be passed by citing any G id
-
-- Status: Open
-- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
-- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
-- Request: Fix the gaps force skip vector
-- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
-- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
-- Work: Low
->>>>>>> origin/main
 - Impact: Low
 - Necessity: Low
