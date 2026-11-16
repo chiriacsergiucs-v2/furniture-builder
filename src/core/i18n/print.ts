@@ -4,8 +4,9 @@
  * `pt(ro)` takes the Romanian text as its key and gives it in the print language; `PRINT_RU` and `PRINT_EN` hold the
  * other two. Pure TypeScript, no UI imports.
  */
-import { format, type Params } from './index';
+import { format, recordedMessage, type Params } from './index';
 import { PRINT_EN, PRINT_RU } from './print-text';
+import { WARNING_RO } from './warning-text';
 
 export type PrintLang = 'ro' | 'ru' | 'en';
 export const PRINT_LANGS: PrintLang[] = ['ro', 'ru', 'en'];
@@ -41,4 +42,34 @@ export type PrintKey = keyof typeof PRINT_RU;
 export function pt(ro: PrintKey, params?: Params): string {
   const text = printLang === 'ru' ? PRINT_RU[ro] : printLang === 'en' ? PRINT_EN[ro] : ro;
   return format(text, params, printLang === 'ru' ? 'ru' : 'en');
+}
+
+/**
+ * The params that hold a message of the core, not a name the user typed: a reason, a kind, a word, a rule text, a face
+ * of a piece (and the two sides of the "cannot join" messages). Names are never looked up, so a piece called "top"
+ * stays "top".
+ */
+const MESSAGE_PARAMS = new Set(['reason', 'kind', 'what', 'text', 'face']);
+const JOIN_KEYS = new Set(['a {a} cannot join a {b}; only sides join', 'a {a} cannot join a {b}']);
+const isMessageParam = (key: string, name: string): boolean =>
+  MESSAGE_PARAMS.has(name) || (JOIN_KEYS.has(key) && (name === 'a' || name === 'b'));
+
+/**
+ * A warning's message in the print language (ADR-265, D18-F6). The message was made by `t()` from a key in
+ * `WARNING_RO`; its key and params are looked up and the Romanian text for that key is printed with the params, a
+ * param that is itself such a message (a reason) the same way. A message with no entry is printed as it is, in the
+ * app language; `tests/warning-print.test.ts` keeps that from happening for the warnings the core makes.
+ */
+export function warningText(message: string): string {
+  const rec = recordedMessage(message);
+  if (!rec || !Object.hasOwn(WARNING_RO, rec.key)) return message;
+  const params = rec.params
+    ? Object.fromEntries(
+        Object.entries(rec.params).map(([k, v]) => [
+          k,
+          typeof v === 'string' && isMessageParam(rec.key, k) ? warningText(v) : v,
+        ]),
+      )
+    : undefined;
+  return pt(WARNING_RO[rec.key as keyof typeof WARNING_RO], params);
 }

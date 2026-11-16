@@ -3470,7 +3470,7 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
-### G-510: Catalog pagination at 12 families per group does not shorten the page
+### G-513: Catalog pagination at 12 families per group does not shorten the page
 
 - Status: Done (N304)
 - Origin: Catalog pagination, 2026-11-15 (F-09)

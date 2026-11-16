@@ -316,6 +316,229 @@ export const PRINT_RU = {
   'Dimensiuni L × Î × A, mm': 'Размеры Ш × В × Г, мм',
   'Prețuri de vânzător: {sellers}': 'Цены продавца: {sellers}',
   'Imaginile pașilor cer vizualizarea 3D': 'Для картинок шагов нужен 3D-вид',
+  // Warnings on the cut sheet (ADR-265, src/core/i18n/warning-text.ts)
+  '{n|O piesă cu cant propriu nu mai există|# piese cu cant propriu nu mai există} (piesa s-a schimbat); cantul nu este folosit. Ștergeți-l la „Material” → „Part”.':
+    '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
+  'O piesă cu placă proprie nu mai există (piesa s-a schimbat); placa aleasă nu este folosită. Ștergeți alegerea la „Material” → „Part”.':
+    'Деталь со своей плитой больше не существует (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
+  '{n} piese cu placă proprie nu mai există (piesa s-a schimbat); placa aleasă nu este folosită. Ștergeți alegerea la „Material” → „Part”.':
+    'Детали со своей плитой ({n} шт.) больше не существуют (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
+  '{part} are doar {w} mm lățime.': '«{part}» шириной всего {w} мм.',
+  '{board} este marcată ca blat de bucătărie, dar este folosită pentru {part} (orientativ).':
+    '«{board}» отмечена как кухонная столешница, но используется для детали «{part}» (ориентир).',
+  '{board} este marcată ca blat de bucătărie, dar este folosită pentru {n} piese care nu sunt blaturi (orientativ).':
+    '«{board}» отмечена как кухонная столешница, но используется для деталей, которые не столешницы: {n} (ориентир).',
+  'Mânerul de {s} mm nu încape pe {part} ({along} mm).':
+    'Ручка {s} мм не помещается на детали «{part}» ({along} мм).',
+  'Un blat dublat se aplică unui panou de blat întreg; cele două traverse de sus rămân simple.':
+    'Двойная крышка применяется только к сплошной крышке; две верхние планки остаются одинарными.',
+  'Un corp de podea fără fund nu are pe ce să sprijine conținutul; este gândit pentru corpurile de deasupra unei hote.':
+    'У напольного шкафа без дна содержимому не на что опираться; так делают только шкафы над вытяжкой.',
+  'Suporturile de agățare cer de obicei spatele retras cu aproximativ 15–20 mm; verificați fișa tehnică a suportului.':
+    'Для навесов задняя стенка обычно утоплена примерно на 15–20 мм; сверьтесь с техпаспортом навеса.',
+  'Ușile glisante merg în fața corpului; stilul de front încastrat nu li se aplică.':
+    'Раздвижные дверцы идут перед корпусом; вкладной фасад к ним не применяется.',
+  'Alegeți sistemul de ridicare pentru acest front de {w}×{h} mm din fișa lui tehnică și denumiți-l aici.':
+    'Подберите подъёмный механизм для этого фасада {w}×{h} мм по его техпаспорту и укажите его здесь.',
+  'Alegeți brațul pentru clapă pentru acest front de {w}×{h} mm din fișa lui tehnică și denumiți-l aici.':
+    'Подберите стай для этого откидного фасада {w}×{h} мм по его техпаспорту и укажите его здесь.',
+  'Doar {h} mm de înălțime pentru agățare.': 'Для вешалок всего {h} мм высоты.',
+  'Înălțimile sertarelor însumează {asked} mm, dar sunt disponibili {room} mm; sertarul de jos a fost ajustat. Faceți un sertar „Share” ca să preia diferența.':
+    'Высоты ящиков в сумме {asked} мм, а места {room} мм; нижний ящик подогнан. Сделайте один ящик «Доля», чтобы он забирал разницу.',
+  'Un front fix cere un front de sertar propriu; sertarele din spatele ușilor nu au, deci setarea este ignorată.':
+    'Ложному фасаду нужен собственный фасад ящика; у ящиков за дверцами его нет, поэтому настройка не учитывается.',
+  'Sertarul de sus este front fix, deci nu are cutie de decupat în jurul sifonului; decupajul în U este ignorat.':
+    'Верхний ящик — ложный фасад, у него нет короба для выреза под сифон; U-вырез не учитывается.',
+  'Sertarele din spatele ușilor nu au front propriu, deci își păstrează frontul interior.':
+    'У ящиков за дверцами нет собственного фасада, поэтому внутренняя передняя стенка остаётся.',
+  'Sertarul 1 este decupat în jurul sifonului (decupaj de {w} × {d} mm în spate): verificați sifonul și țevile înainte de tăiere.':
+    'Ящик 1 вырезан под сифон (вырез {w} × {d} мм сзади): проверьте сифон и трубы перед раскроем.',
+  'Sertare în spatele ușilor: verificați jocul balamalelor și al ușii față de cutiile sertarelor.':
+    'Ящики за дверцами: проверьте зазор петель и дверец относительно коробов ящиков.',
+  'Dimensiunile fixe însumează {asked} mm, dar sunt disponibili {room} mm; prima parte a fost ajustată la {first} mm. Faceți o parte „Share” ca să preia diferența.':
+    'Фиксированные размеры дают в сумме {asked} мм, а места {room} мм; первая часть изменена до {first} мм. Сделайте одну часть «Доля», чтобы поглотить разницу.',
+  'Dimensiunile fixe însumează {asked} mm, dar sunt disponibili {room} mm; ultima parte a fost ajustată la {last} mm. Faceți o parte „Share” ca să preia diferența.':
+    'Фиксированные размеры в сумме {asked} мм, а места {room} мм; последняя часть подогнана до {last} мм. Сделайте одну часть «Доля», чтобы она забирала разницу.',
+  'Rafturile de {d} mm adâncime sunt prea puțin adânci pentru două rânduri de găuri pentru bolțuri, la {s} mm de margini.':
+    'Полки глубиной {d} мм слишком мелкие для двух рядов полкодержателей в {s} мм от краёв.',
+  'Panoul comun {kind} nu este construit: {reason} Elementele își păstrează panoul propriu.':
+    'Общая панель ({kind}) не построена: {reason} Изделия сохраняют свои.',
+  'de sus': 'крышки',
+  'de jos': 'дна',
+  'Panoul comun {kind} acoperă un gol de {n} mm fără nimic dedesubt.':
+    'Общая панель ({kind}) перекрывает проём {n} мм, под которым ничего нет.',
+  'Unele elemente de sub blatul comun au blat dublat și altele nu; blatul comun este simplu.':
+    'Под общей крышкой у части изделий двойная крышка, у части — нет; общая крышка одинарная.',
+  '{a} și {b} stau alăturate cu adâncimi diferite ({reason} mm); {text}.':
+    '«{a}» и «{b}» стоят рядом с разной глубиной ({reason} мм); {text}.',
+  '{a} și {b} sunt sub același blat cu înălțimi diferite ({reason} mm); {text}.':
+    '«{a}» и «{b}» под одной столешницей с разной высотой ({reason} мм); {text}.',
+  '{a} este conectat de peretele {n}, dar nu mai este îmbinat: {reason}':
+    '{a} соединено со стеной {n}, но больше не прилегает: {reason}',
+  '{a} și {b} sunt conectate, dar nu mai sunt îmbinate: {reason}':
+    '{a} и {b} соединены, но больше не стыкуются: {reason}',
+  'Secțiunea oarbă are {blind} mm; aproximativ adâncimea corpului vecin + 50 mm ({d} mm) ține ușa și mânerul acestuia libere față de această ușă.':
+    'Глухая часть {blind} мм; примерно глубина соседнего шкафа + 50 мм ({d} мм) не даёт его дверце и ручке задевать эту дверцу.',
+  'Spațiul pentru genunchi are {knee} mm lățime; de obicei se folosesc aproximativ 600 mm sau mai mult.':
+    'Место для ног шириной {knee} мм; обычно около 600 мм или больше.',
+  'Frontul sertarelor iese cu {out} mm peste marginea blatului; setați surplombul la cel puțin {min} mm.':
+    'Фасады ящиков выступают на {out} мм за край столешницы; задайте свес не меньше {min} мм.',
+  'Înălțimea liberă sub blat este de {h} mm.': 'Свободная высота под столешницей {h} мм.',
+  'Raftul de jos stă între picioare: fixați-l cu suporți sau cepuri (nu sunt incluse în listă).':
+    'Нижняя полка стоит между ножками: закрепите её брусками или шкантами (не в списке).',
+  'Plăci de șezut și spătar pe o bază cumpărată: baza, ridicătorul cu gaz, mecanismul și suportul spătarului se cumpără și nu sunt desenate.':
+    'Щиты сиденья и спинки на покупном основании: основание, газлифт, механизм и опора спинки покупные и не рисуются.',
+  'Balustradele aflate la {h} mm deasupra platformei de sus sunt prea joase ca să fie adăugate peste lonjeroanele laterale.':
+    'Бортики {h} мм над верхним ложем слишком низкие, чтобы ставить их поверх боковых царг.',
+  'Mânerul de {s} mm nu încape pe frontul de {w} mm.':
+    'Ручка {s} мм не помещается на фасаде {w} мм.',
+  '{n} piese nu au un loc cunoscut și sunt arătate într-o grămadă lângă ansamblu. Cantul nu este stabilit.':
+    'У деталей ({n} шт.) нет известного места, они показаны стопкой рядом со сборкой. Кромка не задана.',
+  'Panouri libere, arătate într-o grămadă: modul în care se îmbină nu este în proiect. Cantul nu este stabilit.':
+    'Отдельные щиты, показаны одной стопкой: как они собираются, в проекте не указано. Кромка не задана.',
+  'Îmbinări cu șuruburi: alegeți tipul, lungimea și numărul de șuruburi pentru placă (orientativ, nu sunt în listă).':
+    'Винтовые соединения: подберите тип, длину и количество шурупов для плиты (ориентир, не в списке).',
+  '{name} a fost așezat pe o piesă care nu mai este în proiect; rămâne unde este.':
+    '{name} было поставлено на изделие, которого больше нет в проекте; оно остаётся на месте.',
+  '{name} este ridicat de la podea fără nimic dedesubt; setați-l să se agațe pe suporți de perete („Whole cabinet” → „Stands on”).':
+    '{name} поднято над полом, и под ним ничего нет; повесьте его на настенные кронштейны (Весь шкаф → Опора).',
+  '{name} este făcut să se agațe pe perete, dar este așezat pe podea.':
+    '{name} сделано для подвеса на стену, но стоит на полу.',
+  '{board} are setări de placă diferite în {name}; placa primei piese ({l} × {w}) este folosită pentru tot proiectul.':
+    '{board} имеет другие настройки листа в {name}; для всего проекта используется лист первого изделия ({l} × {w}).',
+  '{front} de la {name} nu se poate deschide complet: lovește {other} (are nevoie de {need} mm, sunt {free} mm liberi).':
+    '{front} изделия {name} не открывается полностью: упирается в {other} (нужно {need} мм, свободно {free} мм).',
+  '{front} de la {a} și {other} de la {b} se deschid în același spațiu.':
+    '{front} изделия {a} и {other} изделия {b} открываются в одно и то же место.',
+  'Blatul de peste {name} are o margine {what}, dar fără dimensiune; introduceți dimensiunea marginii. Până atunci este desenat drept.':
+    'У столешницы над {name} {what} кромка, но без размера; введите размер кромки. До тех пор она рисуется прямой.',
+  'Marginea {what} a blatului de peste {name} are {size} mm, nu mai mică decât blatul de {t} mm; este desenat drept.':
+    '{what} кромка столешницы над {name} — {size} мм, не меньше толщины столешницы {t} мм; она рисуется прямой.',
+  '{name} stă în calea {door} (are nevoie de {mm} mm ca să se deschidă).':
+    '{name} мешает {door} (ей нужно {mm} мм для открывания).',
+  '{name} acoperă fereastra {window}: stă lângă peretele ei și este cu {mm} mm mai înalt decât pervazul.':
+    '{name} закрывает окно {window}: стоит у его стены и на {mm} мм выше подоконника.',
+  '{front} de la {name} nu se poate deschide complet: lovește un perete (are nevoie de {need} mm).':
+    '{front} изделия {name} не открывается полностью: упирается в стену (нужно {need} мм).',
+  '{outlet} este ascunsă în spatele {name}: mutați priza sau piesa.':
+    '{outlet} скрыта за {name}: перенесите розетку или изделие.',
+  'Țeavă în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
+    'Труба за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
+  'Priză în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
+    'Розетка за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
+  'Deschiderea raftului de {span} mm este mare pentru {name} de {t} mm și se poate îndoi (limită obișnuită {limit} mm — confirmați pentru placa și sarcina dvs.).':
+    'Пролёт полки {span} мм велик для «{name}» {t} мм, полка может прогнуться (типичный предел {limit} мм — уточните для своей плиты и нагрузки).',
+  'Ușă de {w} mm lățime; peste ~{max} mm (obișnuit) luați în calcul două uși.':
+    'Дверца шириной {w} мм; при ширине больше ~{max} мм (типично) лучше две дверцы.',
+  'Adâncimea deschiderii este {depth} mm; umerașele cer de obicei aproximativ {need} mm (obișnuit).':
+    'Глубина проёма {depth} мм; вешалкам обычно нужно около {need} мм (типично).',
+  'Asamblată culcat, piesa are nevoie de {diag} mm ca să fie ridicată, dar camera are {room} mm înălțime. Construiți-o la locul ei sau împărțiți-o.':
+    'Чтобы поднять изделие, собранное лёжа, нужно {diag} мм, а высота комнаты {room} мм. Соберите его на месте или разделите.',
+  'Alegeți {what} din fișa tehnică a producătorului și verificați dimensiunile de montaj față de această piesă.':
+    'Выберите по техпаспорту производителя: {what} — и сверьте установочные размеры с этим изделием.',
+  'Distanța dintre lamele este {gap} mm; producătorii de saltele și de scaune cer de obicei 70 mm sau mai puțin (verificați la ai dvs.).':
+    'Зазор между ламелями {gap} мм; производители матрасов и сидений обычно требуют 70 мм или меньше (проверьте свои).',
+  'Paturile suprapuse sunt reglementate de standarde de siguranță (EN 747 și altele). Mobila nu verifică balustradele, deschiderile sau scara în raport cu ele; aceasta nu este o verificare de conformitate.':
+    'Двухъярусные кровати подпадают под стандарты безопасности (EN 747 и другие). Mobila не проверяет по ним бортики, проёмы и лестницу; это не проверка соответствия.',
+  'Pătuțurile și leagănele sunt reglementate de standarde de siguranță (EN 716 și altele). Mobila nu verifică distanța dintre bare sau înălțimea laterală; aceasta nu este o verificare de conformitate.':
+    'Детские кроватки и колыбели подпадают под стандарты безопасности (EN 716 и другие). Mobila не проверяет шаг прутьев и высоту бортов; это не проверка соответствия.',
+  'Traversele au o deschidere de {span} mm între picioare; mesele lungi primesc de obicei un picior sau o traversă la mijloc (obișnuit).':
+    'Царги перекрывают {span} мм между ножками; длинным столам обычно добавляют среднюю ножку или царгу (типично).',
+  'Laturile comune nu sunt construite: {reason} Elementele își păstrează ambele laturi.':
+    'Общие боковины не построены: {reason} Изделия сохраняют обе свои боковины.',
+  '{set} este incomplet; piesele lui își păstrează ultimele valori.':
+    '{set} не завершён; его изделия сохраняют последние значения.',
+  '{name}: {field} își păstrează valoarea — urmează „{expr}”, dar acea dimensiune este blocată.':
+    '{name}: {field} сохраняет значение — поле следует «{expr}», но этот размер закреплён.',
+  'Selectați două sau mai multe elemente care stau alăturate.':
+    'Выберите два и более изделий, стоящих рядом.',
+  'Un element al acestui panou comun a fost șters.': 'Изделие этой общей панели удалено.',
+  '{name} nu este corp, corp de colț sau birou.': '{name} — не шкаф, не угловой модуль и не стол.',
+  '{name} nu are fund.': 'У {name} нет дна.',
+  '{name} este numărat de mai multe ori.': '{name} учтено больше одного раза.',
+  'Elementele nu sunt întoarse în același sens.': 'Изделия повёрнуты по-разному.',
+  '{name} are altă înălțime a soclului.': 'У {name} другая высота цоколя.',
+  '{name} are alt spate.': 'У {name} другая задняя стенка.',
+  '{name} nu are {part}.': 'У {name} нет: {part}.',
+  '{name} nu are aceeași înălțime sau același nivel de la podea.':
+    '{name} другой высоты или стоит на другом уровне.',
+  '{part} de la {name} are altă grosime.': 'У {name} другая толщина ({part}).',
+  'Aceste elemente nu fac un singur blat fără goluri.':
+    'Эти изделия не образуют одну панель без отверстий.',
+  '{name} nu are aceeași adâncime sau nu este aliniat.':
+    '{name} другой глубины или не на одной линии.',
+  '{name} nu atinge celelalte și nu este aliniat cu ele.':
+    '{name} не касается остальных и не стоит с ними в линию.',
+  '{name} este un corp de colț în L sau diagonal; doar un colț orb împarte o latură.':
+    '{name} — Г-образный или диагональный угловой модуль; общую боковину может иметь только глухой угол.',
+  '{name} nu este corp, colț orb sau birou.':
+    '{name} — не шкаф, не глухой угловой модуль и не стол.',
+  'Un element al acestor laturi comune a fost șters.': 'Изделие с общими боковинами удалено.',
+  '{name} are laturi de altă grosime.': 'У {name} боковины другой толщины.',
+  '{a} și {b} nu se ating.': '{a} и {b} не касаются друг друга.',
+  '{a} și {b} sunt ambele birouri; un birou împarte o latură doar cu un corp.':
+    '{a} и {b} — оба столы; стол делит боковину только со шкафом.',
+  '{name} se întâlnește cu vecinul la capătul orb; doar capătul drept împarte o latură.':
+    '{name} примыкает к соседу глухим концом; общую боковину может иметь только прямой конец.',
+  '{name} are un bloc de sertare la acel capăt; doar un capăt cu perete lateral împarte o latură.':
+    'У {name} с этой стороны тумба; общую боковину может иметь только конец с опорной стенкой.',
+  'în colț': 'в углу',
+  suprapuse: 'друг над другом',
+  'lângă peretele {n}': 'у стены {n}',
+  alăturate: 'рядом',
+  '{a} și {b} nu se întâlnesc în colț.': '{a} и {b} не сходятся в углу.',
+  '{a} și {b} nu sunt una peste alta.': '{a} и {b} не стоят друг над другом.',
+  '{a} și {b} nu stau alăturate.': '{a} и {b} не стоят вплотную рядом.',
+  'O piesă nu poate fi conectată cu ea însăși.': 'Изделие нельзя соединить с самим собой.',
+  'O piesă conectată a fost ștearsă.': 'Соединённое изделие удалено.',
+  'O conexiune la perete leagă o singură piesă.':
+    'Соединение со стеной относится к одному изделию.',
+  '{a} și {b} nu sunt alăturate, în colț sau una peste alta.':
+    '{a} и {b} не стоят рядом, в углу или друг над другом.',
+  'Camera nu are peretele {n}.': 'В комнате нет стены {n}.',
+  '{name} este întors în unghi.': '{name} повёрнуто под углом.',
+  'Spatele lui {name} nu este orientat spre peretele {n}.':
+    'Задняя сторона {name} не обращена к стене {n}.',
+  'Spatele lui {name} nu este lipit de peretele {n}.':
+    'Задняя сторона {name} не прилегает к стене {n}.',
+  '{name} depășește capătul peretelui {n}.': '{name} выходит за конец стены {n}.',
+  'Desenați mai întâi camera: o piesă se pune lângă pereții ei.':
+    'Сначала нарисуйте комнату: изделие ставится к её стенам.',
+  'Spatele lui {name} nu este lipit de un perete.': 'Задняя сторона {name} не прилегает к стене.',
+  '{reason}; {text}': '{reason}; {text}',
+  '{reason}; {text}.': '{reason}; {text}.',
+  'corp de podea': 'напольный модуль',
+  'corp suspendat': 'навесной модуль',
+  'piesă așezată peste altă piesă': 'изделие, стоящее на другом изделии',
+  latură: 'бок',
+  spate: 'задняя стенка',
+  față: 'фасад',
+  '{what} {a} față de {b}': '{what} {a} и {b}',
+  'îmbinarea „{a}” cu „{b}” nu este posibilă; se îmbină doar laturile':
+    'нельзя соединить: {a} и {b}; примыкают только боками',
+  'îmbinarea „{a}” cu „{b}” nu este posibilă': 'нельзя соединить {a} и {b}',
+  'doar spatele unei piese se pune lângă un perete (aici: {face}); o latură se pune lângă un perete doar într-un colț':
+    'к стене ставится только задняя сторона изделия (а это его {face}); бок ставится к стене только в углу',
+  adâncime: 'глубина',
+  înălțime: 'высота',
+  '{a} ({fa}: {ra}) și {b} ({fb}: {rb}) nu au nicio cameră în comun':
+    'у «{a}» ({fa}: {ra}) и «{b}» ({fb}: {rb}) нет общей комнаты',
+  'Chiuveta de peste {name} nu are blat din care să fie decupată; adăugați blatul șirului.':
+    'У мойки над {name} нет столешницы для выреза; добавьте столешницу ряда.',
+  'Plita de peste {name} nu are blat din care să fie decupată; adăugați blatul șirului.':
+    'Для варочной панели над {name} нет столешницы, в которой делать вырез; добавьте столешницу ряда.',
+  'Decupajul chiuvetei de {w} mm este mai lat decât {name} de sub el ({width} mm).':
+    'Вырез под мойку {w} мм шире, чем {name} под ним ({width} мм).',
+  'Decupajul plitei de {w} mm este mai lat decât {name} de sub el ({width} mm).':
+    'Вырез под варочную панель {w} мм шире, чем {name} под ним ({width} мм).',
+  'Decupajul chiuvetei de {w} mm lățime, la {x} mm de la stânga, depășește {name} de sub el ({width} mm).':
+    'Вырез под мойку шириной {w} мм в {x} мм слева выходит за {name} под ним ({width} мм).',
+  'Decupajul plitei de {w} mm lățime, la {x} mm de la stânga, depășește {name} de sub el ({width} mm).':
+    'Вырез под варочную панель шириной {w} мм в {x} мм слева выходит за {name} под ним ({width} мм).',
+  'potrivire adâncime: corpurile de podea alăturate trebuie să aibă aceeași adâncime':
+    'одинаковая глубина: напольные модули бок о бок должны быть одной глубины',
+  'potrivire înălțime: corpurile de bază sub același blat trebuie să aibă aceeași înălțime':
+    'одинаковая высота: нижние модули под одной столешницей должны быть одной высоты',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -606,4 +829,226 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Dimensiuni L × Î × A, mm': 'Size W × H × D, mm',
   'Prețuri de vânzător: {sellers}': 'Seller prices: {sellers}',
   'Imaginile pașilor cer vizualizarea 3D': 'Step pictures need the 3D view',
+  // Warnings on the cut sheet (ADR-265)
+  '{n|O piesă cu cant propriu nu mai există|# piese cu cant propriu nu mai există} (piesa s-a schimbat); cantul nu este folosit. Ștergeți-l la „Material” → „Part”.':
+    '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.',
+  'O piesă cu placă proprie nu mai există (piesa s-a schimbat); placa aleasă nu este folosită. Ștergeți alegerea la „Material” → „Part”.':
+    'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Material → Part.',
+  '{n} piese cu placă proprie nu mai există (piesa s-a schimbat); placa aleasă nu este folosită. Ștergeți alegerea la „Material” → „Part”.':
+    '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Material → Part.',
+  '{part} are doar {w} mm lățime.': '{part} is only {w} mm wide.',
+  '{board} este marcată ca blat de bucătărie, dar este folosită pentru {part} (orientativ).':
+    '{board} is labelled kitchen worktop but is used for {part} (guidance).',
+  '{board} este marcată ca blat de bucătărie, dar este folosită pentru {n} piese care nu sunt blaturi (orientativ).':
+    '{board} is labelled kitchen worktop but is used for {n} parts that are not worktops (guidance).',
+  'Mânerul de {s} mm nu încape pe {part} ({along} mm).':
+    '{s} mm handle does not fit on {part} ({along} mm).',
+  'Un blat dublat se aplică unui panou de blat întreg; cele două traverse de sus rămân simple.':
+    'A doubled top applies to a full top panel; the two top rails stay single.',
+  'Un corp de podea fără fund nu are pe ce să sprijine conținutul; este gândit pentru corpurile de deasupra unei hote.':
+    'A floor cabinet without a bottom has nothing to stand its contents on; this is meant for units over a cooker hood.',
+  'Suporturile de agățare cer de obicei spatele retras cu aproximativ 15–20 mm; verificați fișa tehnică a suportului.':
+    'Hanging brackets usually need the back set in about 15–20 mm; check the bracket datasheet.',
+  'Ușile glisante merg în fața corpului; stilul de front încastrat nu li se aplică.':
+    'Sliding doors run in front of the carcass; the inset front style does not apply to them.',
+  'Alegeți sistemul de ridicare pentru acest front de {w}×{h} mm din fișa lui tehnică și denumiți-l aici.':
+    'Choose the lift-up system for this {w}×{h} mm front from its datasheet and name it here.',
+  'Alegeți brațul pentru clapă pentru acest front de {w}×{h} mm din fișa lui tehnică și denumiți-l aici.':
+    'Choose the flap stay for this {w}×{h} mm front from its datasheet and name it here.',
+  'Doar {h} mm de înălțime pentru agățare.': 'Only {h} mm of height for hanging.',
+  'Înălțimile sertarelor însumează {asked} mm, dar sunt disponibili {room} mm; sertarul de jos a fost ajustat. Faceți un sertar „Share” ca să preia diferența.':
+    'Drawer heights add up to {asked} mm but there is {room} mm; the bottom drawer was adjusted. Make one drawer "Share" to absorb the difference.',
+  'Un front fix cere un front de sertar propriu; sertarele din spatele ușilor nu au, deci setarea este ignorată.':
+    'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.',
+  'Sertarul de sus este front fix, deci nu are cutie de decupat în jurul sifonului; decupajul în U este ignorat.':
+    'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.',
+  'Sertarele din spatele ușilor nu au front propriu, deci își păstrează frontul interior.':
+    'Drawers behind doors have no front of their own, so they keep their inner front.',
+  'Sertarul 1 este decupat în jurul sifonului (decupaj de {w} × {d} mm în spate): verificați sifonul și țevile înainte de tăiere.':
+    'Drawer 1 is cut around the trap ({w} × {d} mm notch at the back): check the trap and pipes before cutting.',
+  'Sertare în spatele ușilor: verificați jocul balamalelor și al ușii față de cutiile sertarelor.':
+    'Drawers behind doors: check hinge and door clearance against the drawer boxes.',
+  'Dimensiunile fixe însumează {asked} mm, dar sunt disponibili {room} mm; prima parte a fost ajustată la {first} mm. Faceți o parte „Share” ca să preia diferența.':
+    'Fixed sizes add up to {asked} mm but there is {room} mm; the first part was adjusted to {first} mm. Make one part "Share" to absorb the difference.',
+  'Dimensiunile fixe însumează {asked} mm, dar sunt disponibili {room} mm; ultima parte a fost ajustată la {last} mm. Faceți o parte „Share” ca să preia diferența.':
+    'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
+  'Rafturile de {d} mm adâncime sunt prea puțin adânci pentru două rânduri de găuri pentru bolțuri, la {s} mm de margini.':
+    'Shelves {d} mm deep are too shallow for two pin rows {s} mm from their edges.',
+  'Panoul comun {kind} nu este construit: {reason} Elementele își păstrează panoul propriu.':
+    'The common {kind} is not built: {reason} The items keep their own.',
+  'de sus': 'top',
+  'de jos': 'bottom',
+  'Panoul comun {kind} acoperă un gol de {n} mm fără nimic dedesubt.':
+    'The common {kind} spans a {n} mm gap with nothing under it.',
+  'Unele elemente de sub blatul comun au blat dublat și altele nu; blatul comun este simplu.':
+    'Some items under the common top have a doubled top and some do not; the common top is single.',
+  '{a} și {b} stau alăturate cu adâncimi diferite ({reason} mm); {text}.':
+    '{a} and {b} stand side by side with different depths ({reason} mm); {text}.',
+  '{a} și {b} sunt sub același blat cu înălțimi diferite ({reason} mm); {text}.':
+    '{a} and {b} are under one worktop with different heights ({reason} mm); {text}.',
+  '{a} este conectat de peretele {n}, dar nu mai este îmbinat: {reason}':
+    '{a} is connected against wall {n} but no longer joined: {reason}',
+  '{a} și {b} sunt conectate, dar nu mai sunt îmbinate: {reason}':
+    '{a} and {b} are connected but no longer joined: {reason}',
+  'Secțiunea oarbă are {blind} mm; aproximativ adâncimea corpului vecin + 50 mm ({d} mm) ține ușa și mânerul acestuia libere față de această ușă.':
+    "Blind section is {blind} mm; about the neighbouring cabinet's depth + 50 mm ({d} mm) keeps its door and handle clear of this door.",
+  'Spațiul pentru genunchi are {knee} mm lățime; de obicei se folosesc aproximativ 600 mm sau mai mult.':
+    'Knee space is {knee} mm wide; about 600 mm or more is usual.',
+  'Frontul sertarelor iese cu {out} mm peste marginea blatului; setați surplombul la cel puțin {min} mm.':
+    'Drawer fronts stick out {out} mm past the worktop edge; set the overhang to at least {min} mm.',
+  'Înălțimea liberă sub blat este de {h} mm.': 'Clear height under the worktop is {h} mm.',
+  'Raftul de jos stă între picioare: fixați-l cu suporți sau cepuri (nu sunt incluse în listă).':
+    'The lower shelf sits between the legs: fix it with cleats or dowels (not listed).',
+  'Plăci de șezut și spătar pe o bază cumpărată: baza, ridicătorul cu gaz, mecanismul și suportul spătarului se cumpără și nu sunt desenate.':
+    'Seat and back boards on a bought base: the base, gas lift, mechanism and back support are bought and not drawn.',
+  'Balustradele aflate la {h} mm deasupra platformei de sus sunt prea joase ca să fie adăugate peste lonjeroanele laterale.':
+    'Guard rails {h} mm above the top deck are too low to add over the side rails.',
+  'Mânerul de {s} mm nu încape pe frontul de {w} mm.':
+    '{s} mm handle does not fit on the {w} mm front.',
+  '{n} piese nu au un loc cunoscut și sunt arătate într-o grămadă lângă ansamblu. Cantul nu este stabilit.':
+    '{n} parts have no known place and are shown in a pile beside the assembly. Edge banding is not set.',
+  'Panouri libere, arătate într-o grămadă: modul în care se îmbină nu este în proiect. Cantul nu este stabilit.':
+    'Loose panels, shown in one pile: how they go together is not in the design. Edge banding is not set.',
+  'Îmbinări cu șuruburi: alegeți tipul, lungimea și numărul de șuruburi pentru placă (orientativ, nu sunt în listă).':
+    'Screwed joints: choose the screw type, length and number for the board (guidance, not listed).',
+  '{name} a fost așezat pe o piesă care nu mai este în proiect; rămâne unde este.':
+    '{name} was placed on a piece that is no longer in the project; it stays where it is.',
+  '{name} este ridicat de la podea fără nimic dedesubt; setați-l să se agațe pe suporți de perete („Whole cabinet” → „Stands on”).':
+    '{name} is off the floor with nothing under it; set it to hang on wall brackets (Whole cabinet → Stands on).',
+  '{name} este făcut să se agațe pe perete, dar este așezat pe podea.':
+    '{name} is built to hang on the wall but is placed on the floor.',
+  '{board} are setări de placă diferite în {name}; placa primei piese ({l} × {w}) este folosită pentru tot proiectul.':
+    "{board} has different sheet settings in {name}; the first piece's sheet ({l} × {w}) is used for the whole project.",
+  '{front} de la {name} nu se poate deschide complet: lovește {other} (are nevoie de {need} mm, sunt {free} mm liberi).':
+    '{front} of {name} cannot open fully: it hits {other} (needs {need} mm, {free} mm free).',
+  '{front} de la {a} și {other} de la {b} se deschid în același spațiu.':
+    '{front} of {a} and {other} of {b} open into the same space.',
+  'Blatul de peste {name} are o margine {what}, dar fără dimensiune; introduceți dimensiunea marginii. Până atunci este desenat drept.':
+    'The worktop over {name} has a {what} edge but no size; enter the edge size. It is drawn square until then.',
+  'Marginea {what} a blatului de peste {name} are {size} mm, nu mai mică decât blatul de {t} mm; este desenat drept.':
+    'The {what} edge of the worktop over {name} is {size} mm, not less than the {t} mm worktop; it is drawn square.',
+  '{name} stă în calea {door} (are nevoie de {mm} mm ca să se deschidă).':
+    '{name} is in the way of {door} (it needs {mm} mm to swing).',
+  '{name} acoperă fereastra {window}: stă lângă peretele ei și este cu {mm} mm mai înalt decât pervazul.':
+    '{name} covers the window {window}: it stands against its wall and is {mm} mm higher than its sill.',
+  '{front} de la {name} nu se poate deschide complet: lovește un perete (are nevoie de {need} mm).':
+    '{front} of {name} cannot open fully: it hits a wall (needs {need} mm).',
+  '{outlet} este ascunsă în spatele {name}: mutați priza sau piesa.':
+    '{outlet} is hidden behind {name}: move the outlet or the piece.',
+  'Țeavă în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
+    'Pipe behind {name} ({label}): cut the {part} or move the piece.',
+  'Priză în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
+    'Outlet behind {name} ({label}): cut the {part} or move the piece.',
+  'Deschiderea raftului de {span} mm este mare pentru {name} de {t} mm și se poate îndoi (limită obișnuită {limit} mm — confirmați pentru placa și sarcina dvs.).':
+    'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).',
+  'Ușă de {w} mm lățime; peste ~{max} mm (obișnuit) luați în calcul două uși.':
+    'Door {w} mm wide; over ~{max} mm (typical) consider two doors.',
+  'Adâncimea deschiderii este {depth} mm; umerașele cer de obicei aproximativ {need} mm (obișnuit).':
+    'Opening depth {depth} mm; hangers usually need about {need} mm (typical).',
+  'Asamblată culcat, piesa are nevoie de {diag} mm ca să fie ridicată, dar camera are {room} mm înălțime. Construiți-o la locul ei sau împărțiți-o.':
+    'Assembled lying down, the piece needs {diag} mm to stand up, but the room is {room} mm high. Build it in place or split it.',
+  'Alegeți {what} din fișa tehnică a producătorului și verificați dimensiunile de montaj față de această piesă.':
+    "Choose the {what} from the maker's datasheet and check its fitting sizes against this piece.",
+  'Distanța dintre lamele este {gap} mm; producătorii de saltele și de scaune cer de obicei 70 mm sau mai puțin (verificați la ai dvs.).':
+    'Slat gap {gap} mm; mattress and seat makers usually ask for 70 mm or less (check yours).',
+  'Paturile suprapuse sunt reglementate de standarde de siguranță (EN 747 și altele). Mobila nu verifică balustradele, deschiderile sau scara în raport cu ele; aceasta nu este o verificare de conformitate.':
+    'Bunk beds are covered by safety standards (EN 747 and others). Mobila does not check guard rails, openings or ladder against them; this is not a compliance check.',
+  'Pătuțurile și leagănele sunt reglementate de standarde de siguranță (EN 716 și altele). Mobila nu verifică distanța dintre bare sau înălțimea laterală; aceasta nu este o verificare de conformitate.':
+    'Cots and cradles are covered by safety standards (EN 716 and others). Mobila does not check bar spacing or side height; this is not a compliance check.',
+  'Traversele au o deschidere de {span} mm între picioare; mesele lungi primesc de obicei un picior sau o traversă la mijloc (obișnuit).':
+    'Rails span {span} mm between legs; long tables usually get a centre leg or rail (typical).',
+  'Laturile comune nu sunt construite: {reason} Elementele își păstrează ambele laturi.':
+    'The shared sides are not built: {reason} The items keep both their sides.',
+  '{set} este incomplet; piesele lui își păstrează ultimele valori.':
+    '{set} is incomplete; its pieces keep their last values.',
+  '{name}: {field} își păstrează valoarea — urmează „{expr}”, dar acea dimensiune este blocată.':
+    '{name}: {field} keeps its value — it follows “{expr}”, but that size is locked.',
+  'Selectați două sau mai multe elemente care stau alăturate.':
+    'Select two or more items standing side by side.',
+  'Un element al acestui panou comun a fost șters.': 'An item of this common panel was removed.',
+  '{name} nu este corp, corp de colț sau birou.': '{name} is not a cabinet, corner unit or desk.',
+  '{name} nu are fund.': '{name} has no bottom.',
+  '{name} este numărat de mai multe ori.': '{name} is counted more than once.',
+  'Elementele nu sunt întoarse în același sens.': 'The items are not turned the same way.',
+  '{name} are altă înălțime a soclului.': '{name} has another plinth height.',
+  '{name} are alt spate.': '{name} has another back.',
+  '{name} nu are {part}.': '{name} has no {part}.',
+  '{name} nu are aceeași înălțime sau același nivel de la podea.':
+    '{name} is not the same height or floor level.',
+  '{part} de la {name} are altă grosime.': 'The {part} of {name} is another thickness.',
+  'Aceste elemente nu fac un singur blat fără goluri.':
+    'These items do not make one top without holes.',
+  '{name} nu are aceeași adâncime sau nu este aliniat.':
+    '{name} is not the same depth or not in line.',
+  '{name} nu atinge celelalte și nu este aliniat cu ele.':
+    '{name} does not touch the others and is not in line with them.',
+  '{name} este un corp de colț în L sau diagonal; doar un colț orb împarte o latură.':
+    '{name} is an L-shape or diagonal corner unit; only a blind corner shares a side.',
+  '{name} nu este corp, colț orb sau birou.':
+    '{name} is not a cabinet, a blind corner unit or a desk.',
+  'Un element al acestor laturi comune a fost șters.': 'An item of these shared sides was removed.',
+  '{name} are laturi de altă grosime.': '{name} has sides of another thickness.',
+  '{a} și {b} nu se ating.': '{a} and {b} do not touch.',
+  '{a} și {b} sunt ambele birouri; un birou împarte o latură doar cu un corp.':
+    '{a} and {b} are both desks; a desk shares a side only with a cabinet.',
+  '{name} se întâlnește cu vecinul la capătul orb; doar capătul drept împarte o latură.':
+    '{name} meets its neighbour at its blind end; only its straight end shares a side.',
+  '{name} are un bloc de sertare la acel capăt; doar un capăt cu perete lateral împarte o latură.':
+    '{name} has a pedestal at that end; only a gable end shares a side.',
+  'în colț': 'in the corner',
+  suprapuse: 'stacked',
+  'lângă peretele {n}': 'against wall {n}',
+  alăturate: 'side by side',
+  '{a} și {b} nu se întâlnesc în colț.': '{a} and {b} do not meet in a corner.',
+  '{a} și {b} nu sunt una peste alta.': '{a} and {b} are not one over the other.',
+  '{a} și {b} nu stau alăturate.': '{a} and {b} do not stand side by side.',
+  'O piesă nu poate fi conectată cu ea însăși.': 'A piece cannot be connected to itself.',
+  'O piesă conectată a fost ștearsă.': 'A connected piece was removed.',
+  'O conexiune la perete leagă o singură piesă.': 'A wall connection holds one piece.',
+  '{a} și {b} nu sunt alăturate, în colț sau una peste alta.':
+    '{a} and {b} are not side by side, in a corner or one over the other.',
+  'Camera nu are peretele {n}.': 'The room has no wall {n}.',
+  '{name} este întors în unghi.': '{name} is turned at an angle.',
+  'Spatele lui {name} nu este orientat spre peretele {n}.':
+    'The back of {name} does not face wall {n}.',
+  'Spatele lui {name} nu este lipit de peretele {n}.':
+    'The back of {name} is not against wall {n}.',
+  '{name} depășește capătul peretelui {n}.': '{name} reaches past the end of wall {n}.',
+  'Desenați mai întâi camera: o piesă se pune lângă pereții ei.':
+    'Draw the room first: a piece goes against its walls.',
+  'Spatele lui {name} nu este lipit de un perete.': 'The back of {name} is not against a wall.',
+  '{reason}; {text}': '{reason}; {text}',
+  '{reason}; {text}.': '{reason}; {text}.',
+  'corp de podea': 'floor unit',
+  'corp suspendat': 'wall unit',
+  'piesă așezată peste altă piesă': 'piece placed on another piece',
+  latură: 'side',
+  spate: 'back',
+  față: 'front',
+  '{what} {a} față de {b}': '{what} {a} vs {b}',
+  'îmbinarea „{a}” cu „{b}” nu este posibilă; se îmbină doar laturile':
+    'a {a} cannot join a {b}; only sides join',
+  'îmbinarea „{a}” cu „{b}” nu este posibilă': 'a {a} cannot join a {b}',
+  'doar spatele unei piese se pune lângă un perete (aici: {face}); o latură se pune lângă un perete doar într-un colț':
+    'only the back of a piece goes against a wall (this is its {face}); a side goes against a wall only in a corner',
+  adâncime: 'depth',
+  înălțime: 'height',
+  '{a} ({fa}: {ra}) și {b} ({fb}: {rb}) nu au nicio cameră în comun':
+    '{a} ({fa}: {ra}) and {b} ({fb}: {rb}) share no room',
+  'Chiuveta de peste {name} nu are blat din care să fie decupată; adăugați blatul șirului.':
+    'The sink over {name} has no worktop to be cut out of; add the run worktop.',
+  'Plita de peste {name} nu are blat din care să fie decupată; adăugați blatul șirului.':
+    'The hob over {name} has no worktop to be cut out of; add the run worktop.',
+  'Decupajul chiuvetei de {w} mm este mai lat decât {name} de sub el ({width} mm).':
+    'Sink cut-out {w} mm is wider than {name} under it ({width} mm).',
+  'Decupajul plitei de {w} mm este mai lat decât {name} de sub el ({width} mm).':
+    'Hob cut-out {w} mm is wider than {name} under it ({width} mm).',
+  'Decupajul chiuvetei de {w} mm lățime, la {x} mm de la stânga, depășește {name} de sub el ({width} mm).':
+    'Sink cut-out {w} mm wide at {x} mm from the left goes past {name} under it ({width} mm).',
+  'Decupajul plitei de {w} mm lățime, la {x} mm de la stânga, depășește {name} de sub el ({width} mm).':
+    'Hob cut-out {w} mm wide at {x} mm from the left goes past {name} under it ({width} mm).',
+  'potrivire adâncime: corpurile de podea alăturate trebuie să aibă aceeași adâncime':
+    'depth match: floor units side by side should be equally deep',
+  'potrivire înălțime: corpurile de bază sub același blat trebuie să aibă aceeași înălțime':
+    'height match: base units under one worktop should be equally high',
 };

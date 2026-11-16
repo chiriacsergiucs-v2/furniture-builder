@@ -1770,3 +1770,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low-medium
 - Impact: Low
 - Necessity: Low
+
+### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
+
+- Status: Open
+- Origin: ADR-272 to ADR-278, user 2026-11-16: "create a fixing plan of batches of adrs"
+- Missing: The 38 browser find-it scripts that fail in pnpm regress are not fixed; the seven ADRs only plan the fixes.
+- Request: For all failures, no skipping, all, create a fixing plan of batches of adrs; 6 per adr, all adrs in 1 pr, merged.
+- Questions: none
+- Suggested pick: Build ADR-272 to ADR-278 one after another with next-adr, each verified with pnpm regress at --jobs=1
+- Work: High
+- Impact: Medium
+- Necessity: Medium

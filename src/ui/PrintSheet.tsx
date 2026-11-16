@@ -4,7 +4,7 @@ import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
 import { t } from '../core/i18n';
-import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
+import { getPrintLang, PRINT_DATE_LOCALE, pt, warningText } from '../core/i18n/print';
 import { boardBandRo, drillingRo, hardwareRo, partRo, printedPartLabel } from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
@@ -179,7 +179,7 @@ export function PrintSheet() {
           <h2>{pt('De verificat')}</h2>
           <ul className="pr-warn">
             {warnings.map((w, i) => (
-              <li key={i}>{w.message}</li>
+              <li key={i}>{warningText(w.message)}</li>
             ))}
           </ul>
         </section>
