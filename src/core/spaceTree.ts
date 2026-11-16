@@ -4,7 +4,7 @@ import { tr } from './i18n';
 import type { Product, SpaceKind } from './types';
 
 /** One row of the structure tree (ADR-268). `id` is `null` for the whole piece. */
-export interface StructureRow {
+interface StructureRow {
   id: string | null;
   /** 1 for the whole piece, 2 for a product root, one more per level inside. */
   depth: number;
