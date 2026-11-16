@@ -112,7 +112,8 @@ line. Acceptance: `tools/control-rule/find-it.mjs`.
 **Top bar.** Before: name, text status, nine text buttons wrapping into two rows on phones; "Saved" ambiguous. After:
 name + status dot (A1), undo/redo as icon buttons, New / Library / Materials with icons, Export menu with icons and
 sub-labels, Print, Parts CSV (the only yellow), theme toggle on the title row. Labels collapse to icons under 1320 px
-(A3). Phone: same three rows as before, nothing hidden (F18).
+(A3). Phone: this layout was replaced by the shell below (ADR-078, ADR-241): a one-row app bar and a bottom nav, with
+no separate row for the modes.
 
 **Whole-piece inspector.** Before: title, three sizes, link, segmented, then groups with + / −. After: the steps rail
 on top (A5) — _1 Size 800×900×450 · 2 Inside 4 drawers · 3 Build Overlay · 4 Boards PAL 18 white · 5 Cut Ready_ — each
@@ -151,10 +152,14 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
 - _App bar, one row._ It shows the path to what is open: the name; `‹ Project › piece` for a piece in a project;
   or the variant plus **Save to template** / **Cancel** for a template variant. The template's family name is
   hidden on phones. It also holds the status dot, Undo, Redo, **Settings** (ADR-080), the theme toggle and ⋯ **More**.
+  On a phone the bar wraps to a second row only while a project piece or a template variant is open: the path takes
+  the full width under the tools (`src/styles.css:4943-4954`, `App.tsx:618`).
 - _⋯ More._ New…, **Files** (Design or Project file, Front view drawing, Fusion 360 script, Import a file) and
   Feature Research. Catalog template import/export sits in its own _Template files_ menu. The banners are gone.
 - _Modes._ A segmented control under the bar: **Compose · Build & Preview** (ADR-080; remembered per device in
-  `fb:mode`, an old `configure` opens Compose). Build & Preview carries the Checks count.
+  `fb:mode`, an old `configure` opens Compose). Build & Preview carries the Checks count. On a phone the row is
+  not shown (`.modes { display: none }`, `src/styles.css:5063-5065`); the bottom nav's Editor and Cut list places
+  switch the mode instead (`App.tsx:637-680`, ADR-241).
   - Compose: the space or piece editor.
   - Build & Preview: 3D plus the outputs.
 - _Settings (ADR-080)._ The sliders button in the app bar, and _Settings for <name>_ on each Projects and Single
@@ -180,9 +185,14 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
 - _Phone._
   - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
     _Tap a space to edit it_; the sheet steps aside while placing or drawing. A piece chosen in a project opens
-    the sheet; a space of a single piece does not (N82, user 2026-10-26): the drawing keeps its height with the
-    quick counts above the selection, and the peek row opens the editor. Open, the sheet takes at most 40 dvh
-    and the quick-counts card hides (the editor has the same counters).
+    the sheet, and so does a space of a single piece: choosing either opens the sheet from peek to half (user
+    2026-11-14; `App.tsx:314-332`, replaces the 2026-10-26 rule that a space did not). A peek-row action such as
+    Duplicate asks to keep it closed once (`App.tsx:329-330`). The sheet has three stops: the 56 px peek row, half
+    (40 % of the window height) and full (down from the bar to the bottom nav), set by the handle on the peek row
+    (drag to the nearest stop, tap toggles peek and half, arrow keys, Home and End step through them;
+    `SheetHandle.tsx:6-20, 86, 93-104`). At half the sheet takes at most 40 dvh, because the later rule wins over
+    the 52 dvh one (`src/styles.css:5123, 5822`), and the quick-counts card hides (the editor has the same
+    counters).
   - Both modes (ADR-144): the View switch, **Doors and fronts** and an **Options** menu in one row (Exploded 3D,
     Reset view, Look, Render; on the plan, Snap and Clearances), Fronts and Select on the plan. 3D mounts only
     while 3D or Both is shown; Both stacks the drawing over 3D.
@@ -263,9 +273,10 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   then the chat: lines _You:_ / _Assistant:_, _Thinking…_ while waiting, **Your request** with **Send**, and the
   **Proposed change** card: the summary, one line per change (`path before → after`), new problems as error or warning
   alerts, **Apply** and **Discard**. Signed out it says _Sign in to use the assistant._
-- _Phone sheet and size fields (user 2026-11-09)._ Choosing a piece or a space no longer opens the Compose sheet past
-  its peek row, so the drawing stays in view and a further tap drills one level deeper; in a project the peek row names
-  the level reached, _Selected: Wardrobe › Hanging_. Three size fields with a binding button (ƒ) give the number the
+- _Phone sheet and size fields (user 2026-11-09, sheet part replaced 2026-11-14)._ Choosing a piece or a space opens
+  the Compose sheet to half, not only the peek row (`App.tsx:314-332`); the 2026-11-09 peek-only rule is gone. A further
+  tap drills one level deeper; in a project the peek row names the level reached, _Selected: Wardrobe › Hanging_.
+  Three size fields with a binding button (ƒ) give the number the
   whole first column (1200 was cut to "120").
 
 - _Phone editor (ADR-241)._ With a piece or project open, a phone's bottom nav reads **Projects · Catalog · Editor ·
