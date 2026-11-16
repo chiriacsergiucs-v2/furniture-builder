@@ -27,10 +27,10 @@ describe.each(WIDTHS)('drawing labels stay legible at %ipx (find-it, F-26)', (wi
       within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
     );
     const fig = await screen.findByLabelText('Front view. Select a space to edit it.');
-    const svg = fig.querySelector('svg')!;
+    const svg = within(fig).getByRole('group');
     const vb = svg.getAttribute('viewBox')!.split(' ').map(Number);
     const px = Math.min(SZ / vb[2], SZ / vb[3]);
-    const texts = [...svg.querySelectorAll('text')];
+    const texts = within(fig).getAllByText(/./, { selector: 'text' });
     expect(texts.length).toBeGreaterThan(0);
     for (const tx of texts) {
       expect(Number(tx.getAttribute('font-size')) * px).toBeGreaterThanOrEqual(7.99);

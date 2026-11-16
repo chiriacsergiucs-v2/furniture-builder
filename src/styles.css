@@ -6068,7 +6068,7 @@ p > .info-tip {
   .three-tools:not(:has(.three-move-to, .section-tools)) {
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding-block: 2px;
+    padding-block: var(--s-1);
     scrollbar-width: none;
   }
   .three-tools:not(:has(.three-move-to, .section-tools)) > * {
