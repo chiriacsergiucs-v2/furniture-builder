@@ -37,6 +37,9 @@ export const outlinePoints = (p: Panel) =>
     .map(([x, y]) => `${x},${-y}`)
     .join(' ');
 
+/** The smallest a drawing label is drawn on screen, in CSS pixels (audit F-26). */
+const MIN_LABEL_PX = 8;
+
 const FRONTS = new Set<Panel['role']>(['door', 'drawer-front']);
 const DRAWER_BOX = new Set<Panel['role']>([
   'drawer-side',
@@ -141,7 +144,11 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   const keepBox = enteredBox ?? selBox;
   const fade = (box: Panel['box']) => (keepBox && !inSelection(keepBox, box) ? ' faded' : '');
   const shown = (box: Panel['box']) => !(focusLook === 'hide' && fade(box));
-  const fontSize = Math.max(b.w, b.h) / 26;
+  // Labels never draw smaller than MIN_LABEL_PX on screen (audit F-26): the viewBox shrinks to the phone's width, so a
+  // size set in drawing units alone came out 5 to 6 px tall at 390 px.
+  const [pxScale, setPxScale] = useState(0);
+  const floorUnits = !print && pxScale > 0 ? MIN_LABEL_PX / pxScale : 0;
+  const fontSize = Math.max(Math.max(b.w, b.h) / 26, floorUnits);
   // The previewed space (ADR-269) and the pinned one, each in its own dashed outline.
   const hoverBox = canHover && hoverId !== undefined ? selectionBox(model, hoverId) : undefined;
   const hoverName =
@@ -158,6 +165,7 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   // Quick counts (ADR-084) lie inside the drawing in the corner farthest from the selection and its size label
   // (ADR-112). Placed from the outline's screen box, so it follows zoom and resizes; it never changes the drawing.
   const figRef = useRef<HTMLElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const selRef = useRef<SVGRectElement>(null);
   const selDimRef = useRef<SVGGElement>(null);
   const stepRef = useRef<HTMLDivElement>(null);
@@ -181,6 +189,12 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
     return () => ro.disconnect();
   }, [hasCard]);
   const sb = selectedSpace?.box;
+  useLayoutEffect(() => {
+    const r = svgRef.current?.getBoundingClientRect();
+    if (!r || !r.width || !r.height) return;
+    const next = Math.min(r.width / (b.w + 2 * pad), r.height / (b.h + 2 * pad * 1.4));
+    setPxScale((p) => (Math.abs(p - next) < 0.001 ? p : next));
+  }, [b.w, b.h, pad, tick]);
   useLayoutEffect(() => {
     const fig = figRef.current,
       sel = selRef.current,
@@ -237,6 +251,7 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
       aria-label={t('Front view. Select a space to edit it.')}
     >
       <svg
+        ref={svgRef}
         viewBox={vb}
         preserveAspectRatio="xMidYMid meet"
         role="group"
@@ -364,7 +379,7 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
               x={s.box.x + s.box.w / 2}
               y={Y(s.box.y, s.box.h) + s.box.h / 2}
-              fontSize={Math.min(fontSize, s.box.w / 6)}
+              fontSize={Math.max(Math.min(fontSize, s.box.w / 6), floorUnits)}
               dominantBaseline="middle"
               textAnchor="middle"
             >

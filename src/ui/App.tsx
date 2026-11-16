@@ -843,6 +843,7 @@ export function App() {
               onOpened={() => setPage('editor')}
               onGaps={() => setPage('gaps')}
               onInfo={() => setPage('info')}
+              current={page === 'gaps' || page === 'info' ? page : undefined}
             />
           </div>
         </header>
