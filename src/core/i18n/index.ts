@@ -108,6 +108,16 @@ export function recordedMessage(text: string): { key: string; params?: Params } 
   return recorded.get(text);
 }
 
+/**
+ * The English text of each data text `tr` translated, by the translated text (ADR-265, G-516): the printed sheet takes
+ * the words inside a warning (part names) back to English and prints them in the print language. Bounded like
+ * `recorded`.
+ */
+const dataOriginal = new Map<string, string>();
+export function dataSource(text: string): string {
+  return dataOriginal.get(text) ?? text;
+}
+
 /** The text in the current language. */
 export function t(key: Key, params?: Params): string {
   const text = format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
@@ -185,7 +195,15 @@ function trLoose(text: string): string | undefined {
 export function tr(text: string, params?: Params): string {
   if (lang === 'ru') {
     const v = RU_ALL[text] ?? (params ? undefined : trLoose(text));
-    if (v !== undefined) return format(v, params);
+    if (v !== undefined) {
+      const out = format(v, params);
+      if (!params && out !== text) {
+        dataOriginal.set(out, text);
+        if (dataOriginal.size > RECORDED_MAX)
+          dataOriginal.delete(dataOriginal.keys().next().value as string);
+      }
+      return out;
+    }
   }
   return format(text, params);
 }
