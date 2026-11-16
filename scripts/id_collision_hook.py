@@ -5,7 +5,9 @@ The ids are the backlog rows (F, N, D), the gaps (G-NNN, in the ledger and the a
 branch added (not in the merge base) that origin/main also holds, from other work merged meanwhile, is a collision: it
 cost a renumbering three times (N280-N286, G-510, N304). The hook fetches origin/main, lists the collisions with the next
 free id of each kind, and exits 2 so the push does not run. `--next` prints the next free ids instead (`pnpm next-id`).
-Silent when git or the fetch fails: CI and the merge conflict are the hard checks, this is the early warning."""
+When the fetch fails (offline) the hook compares against the last fetched origin/main; it is silent only when git cannot
+tell at all. `--ci` is the hard check (G-517): CI runs it on every pull request after fetching main, and it exits 1 on a
+collision or when git cannot tell."""
 import json, pathlib, re, subprocess, sys
 
 PUSH = re.compile(r"\bgit\b[^;&|\n]*?\bpush\b")
@@ -68,8 +70,8 @@ def ids_at(root, rev):
 
 def find(root, fetch=True):
     """(collisions, next free ids) of the branch in `root` against origin/main; None when git cannot tell."""
-    if fetch and git(root, "fetch", "-q", "origin", "main").returncode != 0:
-        return None
+    if fetch:  # offline, a failed fetch leaves the last fetched origin/main; merge-base fails when there is none
+        git(root, "fetch", "-q", "origin", "main")
     base = git(root, "merge-base", "HEAD", "origin/main")
     if base.returncode != 0:
         return None
@@ -77,8 +79,32 @@ def find(root, fetch=True):
     return collisions(base_ids, head_ids, main_ids), next_free(head_ids | main_ids)
 
 
+def message(bad, free, verb):
+    prefixes = {re.match(r"[A-Za-z]+-?", i).group(0) for i in bad}
+    return (f"{verb}: this branch added ids that origin/main already holds: " + ", ".join(bad) + ". "
+            "Merge origin/main, give each of your rows, gaps or ADRs the next free id (" +
+            ", ".join(free[p] for p in sorted(prefixes) if p in free) + "), update every reference to it, then push. "
+            "`pnpm next-id` lists the next free ids.")
+
+
+def ci(root):
+    """The CI check: no fetch (the workflow fetches main), exit 1 on a collision or when git cannot tell."""
+    res = find(root, fetch=False)
+    if res is None:
+        print("id check: git could not compare this branch with origin/main (fetch main with history first)",
+              file=sys.stderr)
+        return 1
+    if res[0]:
+        print(message(*res, "id check failed"), file=sys.stderr)
+        return 1
+    print("id check: no id this branch added is already on origin/main")
+    return 0
+
+
 def main(argv):
     root = "."
+    if "--ci" in argv:
+        return ci(root)
     if "--next" in argv:
         res = find(root)
         print("\n".join(f"{k}: {v}" for k, v in sorted(res[1].items())) if res else "git could not tell")
@@ -96,12 +122,7 @@ def main(argv):
         return 0
     if not res or not res[0]:
         return 0
-    bad, free = res
-    prefixes = {re.match(r"[A-Za-z]+-?", i).group(0) for i in bad}
-    print("git push blocked: this branch added ids that origin/main already holds: " + ", ".join(bad) + ". "
-          "Merge origin/main, give each of your rows, gaps or ADRs the next free id (" +
-          ", ".join(free[p] for p in sorted(prefixes) if p in free) + "), update every reference to it, then push. "
-          "`pnpm next-id` lists the next free ids.", file=sys.stderr)
+    print(message(*res, "git push blocked"), file=sys.stderr)
     return 2
 
 
