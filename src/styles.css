@@ -7368,7 +7368,7 @@ fieldset.group-locked {
   position: absolute;
   top: var(--s-2);
   left: var(--s-2);
-  padding: 2px var(--s-2);
+  padding: var(--s-1) var(--s-2);
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--ink);
