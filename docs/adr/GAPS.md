@@ -1759,6 +1759,18 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
+### G-512: tools/catalog-compact has 6 failing checks on main
+
+- Status: Open
+- Origin: Catalog paging baseline run, 2026-11-16 (N311)
+- Missing: tools/catalog-compact/find-it.mjs fails 6 checks on main and on the paged catalog alike: item card tags on one meta line, unclipped (183 cards, 64 off on main), and cards whose More/Less text no longer matches after a resize and whose cut lines do not read in full after More, at 390 and 1280 px. ADR-272 (Pending), batch 1 of 7, also repairs this script; check it before building a second fix.
+- Request: Implement f9 fulkly, you pick numbers
+- Questions: Are these three checks still the intended rule, or did a later card layout change make them stale?
+- Suggested pick: Check each against the current card layout and fix the cards or the script (estimate: effort +15 %, value +10 %)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
 ### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
 
 - Status: Open
