@@ -22,6 +22,7 @@ import type {} from './nesting';
 import {} from './nesting';
 import type {} from './nesting/types';
 import { t } from './i18n';
+import { validOwned } from './owned';
 
 import {
   ANGLE_SINCE,
@@ -31,6 +32,7 @@ import {
   CONNECTIONS_SINCE,
   FITTED_WALLS_SINCE,
   FOLLOW_UPS_SINCE,
+  OWNED_SINCE,
   GROUPS_SINCE,
   KITCHEN_SINCE,
   LINKS_SINCE,
@@ -659,6 +661,11 @@ export function validateProject(p: unknown): string[] {
               t('Cut-out positions need project schemaVersion {v}', { v: FOLLOW_UPS_SINCE }),
             );
     }
+  }
+  if (p.ownedParts !== undefined) {
+    if ((p.schemaVersion as number) < OWNED_SINCE)
+      errs.push(t('Owned parts need project schemaVersion {v}', { v: OWNED_SINCE }));
+    if (!validOwned(p.ownedParts)) errs.push(t('Invalid owned parts'));
   }
   if (p.runProducts !== undefined) {
     if ((p.schemaVersion as number) < RUN_PRODUCTS_SINCE)

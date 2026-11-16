@@ -5,10 +5,13 @@
 //   pnpm regress --no-build           reuse the existing dist/
 //   pnpm regress --jobs=2             run two scripts at a time (default 1; timing-sensitive scripts are safest alone)
 //   pnpm regress --list               print the scripts and stop
-// Logs and `summary.json` go to `regress-report/` (ignored by git). Exit code 1 when any script fails or times out.
+// Every failing check is printed the moment its script reports it (`  x <script>: <check>`) and appended to
+// `regress-report/failures.txt`, so you can start fixing while the run goes on. Logs, `failures.txt` and `summary.json`
+// go to `regress-report/` (ignored by git). Exit code 1 when any script fails or times out.
 // The browser: see `tools/lib/harness.mjs` (CHROMIUM_PATH, a system Chromium, or Playwright's own install).
 import { spawn, spawnSync } from 'node:child_process';
 import {
+  appendFileSync,
   mkdirSync,
   readdirSync,
   rmSync,
@@ -88,6 +91,25 @@ if (!(await waitForServer())) {
 rmSync(REPORT, { recursive: true, force: true });
 mkdirSync(REPORT, { recursive: true });
 
+const failuresFile = join(REPORT, 'failures.txt');
+/** Print and record one failing item the moment it is found. */
+function found(script, text) {
+  const line = `  x ${script}: ${text}`;
+  console.log(line);
+  appendFileSync(failuresFile, line + '\n');
+}
+/** Call `onLine` for every complete line of a stream. */
+function lines(stream, onLine) {
+  let rest = '';
+  stream.on('data', (chunk) => {
+    rest += chunk.toString();
+    const parts = rest.split('\n');
+    rest = parts.pop() ?? '';
+    for (const l of parts) onLine(l);
+  });
+  stream.on('end', () => rest && onLine(rest));
+}
+
 /** Run one script; resolves with its status, time and log path. */
 function run(script) {
   return new Promise((resolve) => {
@@ -103,6 +125,17 @@ function run(script) {
     });
     child.stdout.pipe(out, { end: false });
     child.stderr.pipe(out, { end: false });
+    let named = 0;
+    let firstError = '';
+    lines(child.stdout, (l) => {
+      if (l.startsWith('FAIL')) {
+        named++;
+        found(script, l.slice(4).trim());
+      }
+    });
+    lines(child.stderr, (l) => {
+      if (!firstError && /Error|Timeout|timeout/.test(l)) firstError = l.trim();
+    });
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
@@ -112,6 +145,14 @@ function run(script) {
       clearTimeout(timer);
       out.end();
       const status = timedOut ? 'timeout' : code === 0 ? 'pass' : 'fail';
+      if (status !== 'pass' && (named === 0 || firstError)) {
+        found(
+          script,
+          status === 'timeout'
+            ? `no result in ${SCRIPT_TIMEOUT_MS / 1000} s`
+            : firstError || `exited with code ${code}`,
+        );
+      }
       resolve({ script, status, seconds: Math.round((Date.now() - started) / 100) / 10, log });
     });
   });

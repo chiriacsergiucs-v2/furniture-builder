@@ -60,7 +60,7 @@ ADRs are all in `docs/adr-done/`.
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
-   _Skipped this iteration_ in the reply (gaps optional, user 2026-11-07).
+   _Skipped this iteration_ in the reply (record each unbuilt item with `pnpm gaps add`, user 2026-11-15).
 6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
    add a test for every new rule. Use the matching skill:
    - saved data or a new Dexie table → `add-storage-version`

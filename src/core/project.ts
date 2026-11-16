@@ -440,6 +440,7 @@ export const KITCHEN_SINCE = 21;
 export const PIECE_LOCKS_SINCE = 21;
 export const SELLER_ITEMS_SINCE = 21;
 export const FOLLOW_UPS_SINCE = 21;
+export const OWNED_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -490,6 +491,11 @@ export interface Project {
    * product when its unit fits (piece or m), else by the board. Absent = none.
    */
   runProducts?: Record<string, HardwareProduct>;
+  /**
+   * Parts the user already owns (ADR-271, schemaVersion 21): cut-list row key (`ownedKey`) → how many, over all pieces.
+   * They leave the project's cut list and sheet layouts only. Absent = none.
+   */
+  ownedParts?: Record<string, number>;
   /** A picture of the floor plan to trace over (ADR-208, schemaVersion 21). Absent = none. */
   planPicture?: PlanPicture;
   /** Joints where worktops meet at a corner (ADR-205, schemaVersion 21). Absent = none chosen. */
