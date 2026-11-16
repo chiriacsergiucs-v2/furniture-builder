@@ -27,8 +27,7 @@ export function pathAt(model: FurnitureModel, x: Mm, y: Mm): string[] {
 
 /** The selection after a tap at (x, y): whole piece first, then one level smaller per tap, then the whole piece again. */
 export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): Selection {
-  const b = model.bounds;
-  if (x < b.x || x > b.x + b.w || y < b.y || y > b.y + b.h) return undefined;
+  if (!insidePiece(model, x, y)) return undefined;
   if (current === undefined) return null;
   const full: (string | null)[] = [null, ...pathAt(model, x, y)];
   const at = full.indexOf(current);
@@ -41,6 +40,55 @@ export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): 
   while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
   return full[k + 1] ?? null;
 }
+
+/** Whether a point (piece mm) lies inside the piece's bounds. */
+export function insidePiece(model: FurnitureModel, x: Mm, y: Mm): boolean {
+  const b = model.bounds;
+  return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+}
+
+/** The innermost front-view space at a point (ADR-269: Ctrl or Cmd click); `undefined` outside the piece or on no space. */
+export function deepestAt(model: FurnitureModel, x: Mm, y: Mm): string | undefined {
+  if (!insidePiece(model, x, y)) return undefined;
+  return pathAt(model, x, y).at(-1);
+}
+
+/**
+ * The selection after a tap inside an entered space (ADR-270): taps cycle its children down to the innermost space at
+ * the point, then return to the entered space itself, never to the whole piece. A tap outside the entered space's box
+ * changes nothing.
+ */
+export function drillIn(
+  model: FurnitureModel,
+  x: Mm,
+  y: Mm,
+  current: Selection,
+  enteredId: string,
+): Selection {
+  const path = pathAt(model, x, y);
+  const at = path.indexOf(enteredId);
+  if (at < 0) return current;
+  const full = path.slice(at);
+  const sel = typeof current === 'string' ? current : undefined;
+  if (sel === undefined || sel === enteredId) return full[1] ?? full[0];
+  const i = full.indexOf(sel);
+  if (i >= 0) return full[i + 1] ?? full[0];
+  // A tap elsewhere in the entered space: go to where the two paths part, then one level down.
+  const o = model.spaces.find((s) => s.nodeId === sel && s.view !== 'side');
+  const op = o ? pathAt(model, o.box.x + o.box.w / 2, o.box.y + o.box.h / 2) : [];
+  const own = op.includes(enteredId) ? op.slice(op.indexOf(enteredId)) : [];
+  let k = 0;
+  while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
+  return full[k + 1] ?? full[0];
+}
+
+/** How strongly the rest fades round the selection (ADR-270): the look, and the opacity of what is outside. */
+export type FocusLook = 'fade' | 'strong' | 'hide';
+export const FOCUS_LOOKS: FocusLook[] = ['fade', 'strong', 'hide'];
+/** Fade is ADR-087's look (28 %); strong is fainter; hide draws nothing. One map feeds the drawing and 3D. */
+export const FOCUS_OPACITY: Record<FocusLook, number> = { fade: 0.28, strong: 0.1, hide: 0 };
+export const nextFocusLook = (l: FocusLook): FocusLook =>
+  FOCUS_LOOKS[(FOCUS_LOOKS.indexOf(l) + 1) % FOCUS_LOOKS.length];
 
 /**
  * One level up from `sel` (ADR-203, G-053): a space → the space around it, a top space → the whole piece (`null`), the

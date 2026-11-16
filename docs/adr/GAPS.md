@@ -1415,7 +1415,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-471: Catalog page is taller than the 15000 px script limit
 
-- Status: ADR-272
+- Status: Open
 - Origin: ADR-201 tests, 2026-11-06; agent found it
 - Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
 - Request: Not asked; the script's own limit.
@@ -1751,7 +1751,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: UI flow audit, 2026-11-15 (G-508)
-- Missing: docs/research/2026-11-15-ui-flow-audit.md covers Projects, Catalog and Editor at 390 and 1280 px in the light theme with no saved data. Not covered: the 3D view, the wizard steps, Settings and Material dialogs, Gaps, Research, Information, Account, Share, Assistant, dark theme, and states that need saved data. Findings F-06 to F-14 and F-17 to F-19 are Reported from code mapping, citations not yet checked.
+- Missing: Pass 2 (N314) covered the wizard steps, Settings, Material, the dark theme and an empty project (44 screens, 32 contrast states). Still not covered: the 3D view, the Gaps, Research and Information pages, Account, Share, the Assistant, and every screen that needs saved pieces (the project plan with pieces, populated Settings, the room tools). Findings F-11 and F-18 of docs/research/2026-11-15-ui-flow-audit.md are not checked line by line.
 - Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
 - Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
 - Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
@@ -1770,3 +1770,49 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: High
 - Impact: Medium
 - Necessity: Medium
+
+### G-514: The gaps Stop hook can still be passed by citing any G id
+
+- Status: Open
+- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
+- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
+- Request: Fix the gaps force skip vector
+- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
+- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
+- Work: Low
+
+### G-515: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+
+- Status: Open
+- Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
+- Missing: No find-it test was written for the four ADRs: the cut-sheet warning list, the Structure tree, hover/Ctrl-click/pin, and enter/focus (browser script for ADR-270).
+- Request: Build ADR-265, 268, 269 and 270 in burst mode, which skips find-it tests.
+- Questions: None: say catch up to pay the debt.
+- Suggested pick: Run the catch-up skill: jsdom find-it for 265, 268, 269 and tools/*/find-it.mjs for 270.
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-516: Warnings on the cut sheet: free-text data words stay in the app language
+
+- Status: Open
+- Origin: ADR-265 D18-F6 build 2026-11-16
+- Missing: Data words inside a warning (hardware names, family names, the what param of hardware-to-choose) go through tr() and stay in the app language; a warning text built outside t()/tx() with a literal key is not caught by the key scan.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should hardware and family names get print-language entries?
+- Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-517: The reply-length and id-collision hooks have bypasses
+
+- Status: Open
+- Origin: Behavior audit findings 1 and 2, 2026-11-16 (N315)
+- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes (kept as is, the suggested pick, 2026-11-16). The id check is now hard: the CI job `id-check` runs it on every pull request and the hook falls back to the last fetched origin/main offline (N316). Neither hook nor the CI job was observed catching a real collision.
+- Request: Enforce #1 and #2 now
+- Questions: Should the length hook also check the reply against the user's last message (a report was asked), and should the id check also run in CI against the merge ref?
+- Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Low

@@ -1,6 +1,6 @@
-import { t } from './i18n';
-import { parentOf } from './design';
-import type { Space } from './types';
+import { t, tr } from './i18n';
+import { findInProduct, parentOf } from './design';
+import type { Product, Space, SpaceKind } from './types';
 
 /**
  * Where a space sits among its siblings, in words (ADR-267): `Left`/`Right` for two children of a vertical split,
@@ -30,4 +30,34 @@ export function spacePlace(root: Space, id: string): string | null {
 /** `what` with its place in front ("Left: Drawers"); `what` alone when the space has no place. */
 export function placed(place: string | null, what: string): string {
   return place ? t('{place}: {what}', { place, what }) : what;
+}
+
+/** What a space is, by kind (the crumb text, ADR-267). */
+export const KIND_LABEL: Record<SpaceKind, string> = {
+  empty: t('Empty'),
+  shelves: t('Shelves'),
+  drawers: t('Drawers'),
+  hanging: t('Hanging'),
+  split: t('Divided'),
+};
+
+/** The whole piece, by product kind. */
+export const WHOLE_LABEL: Record<Product['kind'], string> = {
+  cabinet: t('Whole cabinet'),
+  desk: t('Whole desk'),
+  corner: t('Whole corner unit'),
+  panel: t('Whole panel'),
+  frame: t('Whole frame'),
+  panels: t('Whole panel set'),
+};
+
+/** The name of a space on the path and in the tree: its place and kind ("Left: Drawers"). */
+export const spaceName = (root: Space, s: Space) =>
+  placed(spacePlace(root, s.id), KIND_LABEL[s.kind]);
+
+/** The name of a space of a piece by id (ADR-267 names), or null when it is not in the piece. */
+export function nameOfSpace(prod: Product, id: string): string | null {
+  const f = findInProduct(prod, id);
+  if (!f) return null;
+  return f.space.id === f.root.id ? tr(f.label) : spaceName(f.root, f.space);
 }

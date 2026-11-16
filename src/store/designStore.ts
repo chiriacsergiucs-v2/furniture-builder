@@ -51,7 +51,7 @@ import { catalogFamilies } from '../core/catalog';
 import { carryEdits, carryText, ownEdits, SIZE_SKIP, syncRef } from '../core/ownEdits';
 import { setProjectSetting, SETTING_LABEL, withSettings } from '../core/projectSettings';
 import { countRows, countSubject, stepCount } from '../core/counts';
-import { drill, type Selection } from '../core/selectPath';
+import { deepestAt, drill, drillIn, insidePiece, type Selection } from '../core/selectPath';
 import { resizeBed, resizeProduct } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup } from '../core/groupSize';
@@ -496,7 +496,16 @@ export const useDesign = create<State>((rawSet, get) => {
         sessionBase: null,
       });
     },
-    tapPiece: (x, y) => set({ selectedId: drill(get().model, x, y, get().selectedId) }),
+    tapPiece: (x, y, deep, enteredId) => {
+      const { model, selectedId } = get();
+      if (!insidePiece(model, x, y)) return;
+      if (enteredId) return set({ selectedId: drillIn(model, x, y, selectedId, enteredId) });
+      if (deep) {
+        const id = deepestAt(model, x, y);
+        return set({ selectedId: id ?? null });
+      }
+      set({ selectedId: drill(model, x, y, selectedId) });
+    },
     tapItem: (id, at) => {
       const { project, selectedItemId, drillItemId, selectedId } = get();
       const item = project?.items.find((i) => i.id === id);

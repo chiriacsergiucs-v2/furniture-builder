@@ -23,12 +23,19 @@ import {
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
-import { placed, spacePlace } from '../core/spaceNames';
+import {
+  KIND_LABEL,
+  WHOLE_LABEL as WHOLE,
+  nameOfSpace,
+  placed,
+  spacePlace,
+} from '../core/spaceNames';
+import { StructureTree } from './StructureTree';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../store/libraryStore';
-import { parentOf as parentSel, type Selection } from '../core/selectPath';
+import { parentOf as parentSel, type FocusLook, type Selection } from '../core/selectPath';
 import { useMediaQuery } from '../store/useMediaQuery';
 import { usePieceLockHint } from './pieceLockHint';
 import type {
@@ -75,6 +82,7 @@ import {
 } from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from '../store/uiStore';
+import { useEntered } from '../store/useEntered';
 import { tNode } from './i18n';
 import {
   ApplianceEditor,
@@ -86,13 +94,48 @@ import {
   PieceInfo,
 } from './Editors';
 
-const KIND_LABEL: Record<SpaceKind, string> = {
-  empty: t('Empty'),
-  shelves: t('Shelves'),
-  drawers: t('Drawers'),
-  hanging: t('Hanging'),
-  split: t('Divided'),
+/**
+ * The space the drawer shows (ADR-269): the pinned space while it exists in this piece, else the selection. A pin whose
+ * space is gone, or that belongs to another piece, is dropped.
+ */
+/** The shown state of an entered space (ADR-270): what is entered and a way out; nothing otherwise. */
+function EnteredStatus() {
+  const enteredId = useEntered();
+  const exitEntered = useUi((s) => s.exitEntered);
+  const name = useDesign((s) => (enteredId ? nameOfSpace(s.design.product, enteredId) : null));
+  if (!enteredId) return null;
+  return (
+    <div className="enter-row" role="status">
+      <p className="entered-note">{t('Editing inside: {name}', { name: name ?? '' })}</p>
+      <button type="button" className="btn outline sm" onClick={exitEntered}>
+        {t('Exit')}
+      </button>
+    </div>
+  );
+}
+
+const FOCUS_NAME: Record<FocusLook, () => string> = {
+  fade: () => t('Fade'),
+  strong: () => t('Strong'),
+  hide: () => t('Hide'),
 };
+
+function useShownId(): Selection {
+  const designId = useDesign((s) => s.design.id);
+  const selectedId = useDesign((s) => s.selectedId);
+  const exists = useDesign((s) => {
+    const p = useUi.getState().pinnedId;
+    return p ? !!findInProduct(s.design.product, p) : false;
+  });
+  const pinnedId = useUi((s) => s.pinnedId);
+  const pinnedDesignId = useUi((s) => s.pinnedDesignId);
+  const unpin = useUi((s) => s.unpin);
+  const valid = !!pinnedId && pinnedDesignId === designId && exists;
+  useEffect(() => {
+    if (pinnedId && !valid) unpin();
+  }, [pinnedId, valid, unpin]);
+  return valid ? pinnedId : selectedId;
+}
 
 /**
  * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
@@ -101,9 +144,9 @@ const KIND_LABEL: Record<SpaceKind, string> = {
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
-  const selectedId = useDesign((s) => s.selectedId);
+  const shownId = useShownId();
   const prod = design.product;
-  const found = selectedId ? findInProduct(prod, selectedId) : undefined;
+  const found = shownId ? findInProduct(prod, shownId) : undefined;
   if (mode === 'compose')
     return found ? (
       <SpaceEditor
@@ -164,7 +207,7 @@ function SizeLockNote() {
  */
 export function InsideEditor() {
   const design = useDesign((s) => s.design);
-  const selectedId = useDesign((s) => s.selectedId);
+  const selectedId = useShownId();
   const prod = design.product;
   const found = typeof selectedId === 'string' ? findInProduct(prod, selectedId) : undefined;
   if (found)
@@ -178,6 +221,8 @@ export function InsideEditor() {
     );
   return (
     <>
+      <EnteredStatus />
+      <StructureTree />
       <p className="hint">
         {t('Selected: {name}.', { name: WHOLE[prod.kind] })}{' '}
         <InfoTip label={t('About picking a space')} align="start">
@@ -231,6 +276,8 @@ function ComposeStart() {
           </p>
         )}
       </header>
+      <EnteredStatus />
+      <StructureTree />
       {whole && (
         <PieceSize product={prod} onChange={resize} locked={sizeLocked} lockedKeys={lockedKeys} />
       )}
@@ -267,15 +314,6 @@ export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Se
     found.space.kind === 'split' ? t('Divided space') : KIND_LABEL[found.space.kind],
   );
 }
-
-const WHOLE = {
-  cabinet: t('Whole cabinet'),
-  desk: t('Whole desk'),
-  corner: t('Whole corner unit'),
-  panel: t('Whole panel'),
-  frame: t('Whole frame'),
-  panels: t('Whole panel set'),
-};
 
 const matName = (materials: Material[], id: string) =>
   tr(materials.find((m) => m.id === id)?.name ?? '—');
@@ -449,6 +487,14 @@ function SpaceEditor({
 }) {
   const update = useDesign((s) => s.updateSpace);
   const select = useDesign((s) => s.select);
+  const designId = useDesign((s) => s.design.id);
+  const pinned = useUi((s) => s.pinnedId === space.id);
+  const pin = useUi((s) => s.pin);
+  const unpin = useUi((s) => s.unpin);
+  const enteredId = useEntered();
+  const enter = useUi((s) => s.enter);
+  const focusLook = useUi((s) => s.focusLook);
+  const cycleFocus = useUi((s) => s.cycleFocus);
   const opening = useDesign((s) => s.model.spaces.find((o) => o.nodeId === space.id));
   const allDiags = useDesign((s) => s.model.diagnostics);
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
@@ -474,7 +520,40 @@ function SpaceEditor({
       <DrawerHead name={title}>
         <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
         <header className="insp-head">
-          <h2>{title}</h2>
+          <div className="info-row">
+            <h2>{title}</h2>
+            <InfoTip label={t('About selecting')} align="start">
+              {t(
+                'A tap goes one space in. Ctrl or Cmd and a click jumps to the innermost space. Shift+Enter or Esc goes one level up.',
+              )}
+            </InfoTip>
+            <button
+              type="button"
+              className={`btn outline sm pin-btn${pinned ? ' on' : ''}`}
+              aria-pressed={pinned}
+              onClick={() => (pinned ? unpin() : pin(space.id, designId))}
+            >
+              {t('Pin the drawer')}
+            </button>
+          </div>
+          {pinned && <p className="pinned-note">{t('Pinned: {name}', { name: title })}</p>}
+          <div className="enter-row">
+            {space.kind === 'split' && enteredId !== space.id && (
+              <button
+                type="button"
+                className="btn outline sm"
+                onClick={() => {
+                  enter(space.id, designId);
+                }}
+              >
+                {t('Edit inside this space')}
+              </button>
+            )}
+            <button type="button" className="btn outline sm" onClick={cycleFocus}>
+              {t('Focus: {mode}', { mode: FOCUS_NAME[focusLook]() })}
+            </button>
+          </div>
+          <EnteredStatus />
           {opening && (
             <p className="measure">
               {tNode('{w} wide × {h} high × {d} deep inside', {
@@ -486,6 +565,8 @@ function SpaceEditor({
           )}
         </header>
       </DrawerHead>
+
+      <StructureTree />
 
       {diags.length > 0 && (
         <ul className="inline-diags">

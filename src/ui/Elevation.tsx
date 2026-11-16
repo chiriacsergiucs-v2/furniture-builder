@@ -1,11 +1,31 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
-import { productRoots } from '../core/design';
+import {
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from 'react';
+import { findInProduct, productRoots } from '../core/design';
 import { pt } from '../core/i18n/print';
 import { t } from '../core/i18n';
-import { inSelection, selectionBox } from '../core/selectPath';
+import {
+  FOCUS_OPACITY,
+  deepestAt,
+  drill,
+  inSelection,
+  parentOf as parentSel,
+  pathAt,
+  selectionBox,
+} from '../core/selectPath';
+import { WHOLE_LABEL, nameOfSpace } from '../core/spaceNames';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { useDesign } from '../store/designStore';
+import { useUi } from '../store/uiStore';
+import { useEntered } from '../store/useEntered';
+import { useMediaQuery } from '../store/useMediaQuery';
 import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
@@ -64,6 +84,15 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
   const tapPiece = useDesign((s) => s.tapPiece);
+  const select = useDesign((s) => s.select);
+  // Hover (ADR-269): only a pointer that can hover; touch is unchanged. It never changes the selection.
+  const canHover = useMediaQuery('(hover: hover) and (pointer: fine)') && !print;
+  const hoverId = useUi((s) => s.hoverId);
+  const setHover = useUi((s) => s.setHover);
+  const pinnedId = useUi((s) => s.pinnedId);
+  const enteredId = useEntered();
+  const enter = useUi((s) => s.enter);
+  const focusLook = useUi((s) => s.focusLook);
   const showFronts = useDesign((s) => s.showFronts);
   const mats = useMemo(() => new Map(design.materials.map((m) => [m.id, m])), [design.materials]);
   // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
@@ -107,8 +136,24 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   // The whole piece selected (ADR-083) is outlined round its bounds; everything outside the outline is faded (ADR-087).
   const selBox = selectionBox(model, selectedId);
   const selectedSpace = selBox ? { box: selBox } : undefined;
-  const fade = (box: Panel['box']) => (selBox && !inSelection(selBox, box) ? ' faded' : '');
+  // What stays solid: the entered space (ADR-270), else the selection; everything outside fades or, under Hide, goes.
+  const enteredBox = enteredId ? selectionBox(model, enteredId) : undefined;
+  const keepBox = enteredBox ?? selBox;
+  const fade = (box: Panel['box']) => (keepBox && !inSelection(keepBox, box) ? ' faded' : '');
+  const shown = (box: Panel['box']) => !(focusLook === 'hide' && fade(box));
   const fontSize = Math.max(b.w, b.h) / 26;
+  // The previewed space (ADR-269) and the pinned one, each in its own dashed outline.
+  const hoverBox = canHover && hoverId !== undefined ? selectionBox(model, hoverId) : undefined;
+  const hoverName =
+    hoverBox && hoverId !== undefined
+      ? hoverId === null
+        ? WHOLE_LABEL[design.product.kind]
+        : nameOfSpace(design.product, hoverId)
+      : null;
+  const pinBox =
+    pinnedId && !print && findInProduct(design.product, pinnedId)
+      ? selectionBox(model, pinnedId)
+      : undefined;
 
   // Quick counts (ADR-084) lie inside the drawing in the corner farthest from the selection and its size label
   // (ADR-112). Placed from the outline's screen box, so it follows zoom and resizes; it never changes the drawing.
@@ -152,11 +197,36 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, design.product]);
 
   // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
-  const onTap = (e: MouseEvent<SVGSVGElement>) => {
+  const pointAt = (e: MouseEvent<SVGSVGElement>) => {
     const m = e.currentTarget.getScreenCTM();
-    if (!m) return;
-    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
-    tapPiece(Math.round(pt.x), Math.round(-pt.y));
+    if (!m) return undefined;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    return { x: Math.round(p.x), y: Math.round(-p.y) };
+  };
+  // Ctrl or Cmd click jumps to the innermost space (ADR-269).
+  const onTap = (e: MouseEvent<SVGSVGElement>) => {
+    const at = pointAt(e);
+    if (at) tapPiece(at.x, at.y, e.ctrlKey || e.metaKey, enteredId);
+  };
+  // A double click with a mouse enters the divided space under the pointer (ADR-270); a button does it on touch.
+  const onDouble = (e: MouseEvent<SVGSVGElement>) => {
+    if (!canHover) return;
+    const at = pointAt(e);
+    if (!at) return;
+    const split = pathAt(model, at.x, at.y)
+      .filter((id) => findInProduct(design.product, id)?.space.kind === 'split')
+      .at(-1);
+    if (!split) return;
+    enter(split, design.id);
+    select(split);
+  };
+  // What the next tap would select, outlined and named; nothing outside the piece.
+  const onHover = (e: MouseEvent<SVGSVGElement>) => {
+    if (!canHover) return;
+    const at = pointAt(e);
+    if (!at) return setHover(undefined);
+    const deep = e.ctrlKey || e.metaKey;
+    setHover(deep ? deepestAt(model, at.x, at.y) : drill(model, at.x, at.y, selectedId));
   };
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
@@ -166,7 +236,16 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
       className="elevation"
       aria-label={t('Front view. Select a space to edit it.')}
     >
-      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
+      <svg
+        viewBox={vb}
+        preserveAspectRatio="xMidYMid meet"
+        role="group"
+        onClick={onTap}
+        onDoubleClick={onDouble}
+        style={{ '--focus-opacity': FOCUS_OPACITY[focusLook] } as CSSProperties}
+        onMouseMove={canHover ? onHover : undefined}
+        onMouseLeave={canHover ? () => setHover(undefined) : undefined}
+      >
         <defs>
           {design.materials.flatMap((m) => {
             const url = m.image ? urls.get(m.image.id) : undefined;
@@ -190,9 +269,11 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         {/* A piece opened from a project with a room shows the wall behind it (ADR-208). */}
         <WallBehind b={b} />
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
-        {backs.map((p) => (
-          <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
-        ))}
+        {backs
+          .filter((p) => shown(p.box))
+          .map((p) => (
+            <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
+          ))}
         {leaves.map((s) => (
           <g
             key={s.nodeId}
@@ -206,41 +287,54 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               h: s.box.h,
             })}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === 'Enter' && e.shiftKey) {
+                // Shift+Enter goes up one level, as Esc does (ADR-269).
                 e.preventDefault();
-                tapPiece(Math.round(s.box.x + s.box.w / 2), Math.round(s.box.y + s.box.h / 2));
+                select(parentSel(model, s.nodeId));
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                tapPiece(
+                  Math.round(s.box.x + s.box.w / 2),
+                  Math.round(s.box.y + s.box.h / 2),
+                  false,
+                  enteredId,
+                );
               }
             }}
           >
             <rect x={s.box.x} y={Y(s.box.y, s.box.h)} width={s.box.w} height={s.box.h} />
           </g>
         ))}
-        {structure.map((p) => (
-          <polygon
-            key={p.id}
-            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
-            points={outlinePoints(p)}
-            style={{ fill: fillOf(p) }}
-            data-plain={mats.get(p.materialId)?.color}
-          />
-        ))}
+        {structure
+          .filter((p) => shown(p.box))
+          .map((p) => (
+            <polygon
+              key={p.id}
+              className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
+              points={outlinePoints(p)}
+              style={{ fill: fillOf(p) }}
+              data-plain={mats.get(p.materialId)?.color}
+            />
+          ))}
         {/* Fronts fill with their board's picture as carcass panels do, dashed outline kept (ADR-206). */}
         {showFronts &&
-          fronts.map((p) => {
-            const pic = pictureOf(p);
-            return (
-              <polygon
-                key={p.id}
-                className={`el-front${fade(p.box)}`}
-                points={outlinePoints(p)}
-                style={pic ? { fill: pic } : undefined}
-                data-plain={pic ? mats.get(p.materialId)?.color : undefined}
-              />
-            );
-          })}
+          fronts
+            .filter((p) => shown(p.box))
+            .map((p) => {
+              const pic = pictureOf(p);
+              return (
+                <polygon
+                  key={p.id}
+                  className={`el-front${fade(p.box)}`}
+                  points={outlinePoints(p)}
+                  style={pic ? { fill: pic } : undefined}
+                  data-plain={pic ? mats.get(p.materialId)?.color : undefined}
+                />
+              );
+            })}
         {showFronts &&
           fronts
-            .filter((p) => p.handleHoles)
+            .filter((p) => p.handleHoles && shown(p.box))
             .map((p) => {
               const pts = p.handleHoles!.at.map(([u, v]) => [p.box.x + u, -(p.box.y + v)] as const);
               return pts.length === 2 ? (
@@ -262,19 +356,39 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
                 />
               );
             })}
-        {leaves.map((s) => (
-          <text
-            key={`l-${s.nodeId}`}
-            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
-            x={s.box.x + s.box.w / 2}
-            y={Y(s.box.y, s.box.h) + s.box.h / 2}
-            fontSize={Math.min(fontSize, s.box.w / 6)}
-            dominantBaseline="middle"
-            textAnchor="middle"
-          >
-            {describe(s, counts.get(s.nodeId), print)}
-          </text>
-        ))}
+        {leaves
+          .filter((s) => shown(s.box))
+          .map((s) => (
+            <text
+              key={`l-${s.nodeId}`}
+              className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
+              x={s.box.x + s.box.w / 2}
+              y={Y(s.box.y, s.box.h) + s.box.h / 2}
+              fontSize={Math.min(fontSize, s.box.w / 6)}
+              dominantBaseline="middle"
+              textAnchor="middle"
+            >
+              {describe(s, counts.get(s.nodeId), print)}
+            </text>
+          ))}
+        {hoverBox && (
+          <rect
+            className="el-hover"
+            x={hoverBox.x}
+            y={Y(hoverBox.y, hoverBox.h)}
+            width={hoverBox.w}
+            height={hoverBox.h}
+          />
+        )}
+        {pinBox && (
+          <rect
+            className="el-pinned"
+            x={pinBox.x}
+            y={Y(pinBox.y, pinBox.h)}
+            width={pinBox.w}
+            height={pinBox.h}
+          />
+        )}
         {selectedSpace && (
           <rect
             ref={selRef}
@@ -300,6 +414,11 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
           </g>
         )}
       </svg>
+      {hoverName && (
+        <span className="el-chip" aria-hidden="true">
+          {hoverName}
+        </span>
+      )}
       {selectedSpace && (
         <CountStepper
           ref={stepRef}
