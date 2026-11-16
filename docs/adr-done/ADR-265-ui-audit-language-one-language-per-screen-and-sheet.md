@@ -1,7 +1,8 @@
 # ADR-265: UI audit — Language: one language per screen and per printed sheet
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-10
+- Implemented: 2026-11-16 (Shipped after the burst run; evidence in backlog N274)
 - Depends on: none
 - Design: docs/ui-design.md
 - Backlog: N274

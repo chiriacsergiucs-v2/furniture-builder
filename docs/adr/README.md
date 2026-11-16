@@ -326,7 +326,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-262](../adr-done/ADR-262-ui-audit-catalog-keep-edits-name-every-button.md) | UI audit — Catalog and templates: an import never loses an edit, every failure and button is named | — | ✅ Implemented |
 | [ADR-263](../adr-done/ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md) | UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy | — | ✅ Implemented |
 | [ADR-264](../adr-done/ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | ✅ Implemented |
-| [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
+| [ADR-265](../adr-done/ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | ✅ Implemented |
 | [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |
 | [ADR-267](../adr-done/ADR-267-keep-the-drawer-still-named-path-fixed-shell-change-cue.md) | Keep the drawer still: named path, fixed shell, change cue | ADR-083, ADR-087, ADR-203, ADR-211 | ✅ Implemented |
 | [ADR-268](../adr-done/ADR-268-show-the-piece-as-a-structure-tree-that-follows-the-selectio.md) | Show the piece as a structure tree that follows the selection | ADR-267 | ✅ Implemented |
