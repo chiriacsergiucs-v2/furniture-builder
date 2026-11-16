@@ -106,8 +106,8 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
 - `PreToolUse` on `Bash`: `scripts/retired_name_hook.py` blocks `git commit` and `git push` while a tracked or new file
   names the retired third-party agent tool (user decision 2026-11-10).
 - `Stop`: `scripts/gaps_hook.py` blocks a reply once when it names unbuilt items (skipped, deferred, out of scope, open
-  questions), cites no G id and `docs/adr/GAPS.md` did not change on the branch (ADR-082; wired again 2026-11-15, user:
-  "Wire as is"). Record each with `pnpm gaps add`, cite the G ids, then finish.
+  questions), cites no G id (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
+  silences it, N312). Record each with `pnpm gaps add`, cite the G ids, then finish.
 - `permissions.allow`: only the checks in _Commands_ (`pnpm format`, `format:check`, `typecheck`, `lint`, `test`, `build`,
   `build:ci`, `docs:check`, `pnpm exec vitest`) run without a prompt (user 2026-11-15). `pnpm browser:capture` is not
   listed (toggle `browser-on-demand`). Editing this file needs the user's request.

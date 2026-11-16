@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/catalog-compact/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by role and visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { showAllRows } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -66,6 +67,8 @@ for (const width of [1280, 390]) {
   );
 
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  // The catalog is paged (N311): the height above is the page as it opens; the card checks below measure every card.
+  await showAllRows(page);
   const firstFamily = page.getByRole('article').first();
   const about = firstFamily.getByRole('button', { name: 'About this family' });
   const structure = firstFamily.getByText('Default structure:');
@@ -100,7 +103,8 @@ for (const width of [1280, 390]) {
     const bad = [];
     for (const c of cards) {
       const meta = c.querySelector('.item-meta');
-      const ts = [...c.querySelectorAll('.tag, .kind')];
+      // The "default" tag of a family's first card sits on the picture (user decision 2026-11-07), not on the meta line.
+      const ts = meta ? [...meta.querySelectorAll('.tag, .kind')] : [];
       if (!meta || !ts.length) {
         bad.push(`${c.querySelector('.item-name')?.textContent}: no meta line`);
         continue;

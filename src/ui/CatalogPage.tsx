@@ -579,9 +579,21 @@ const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
 
 /** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-118). */
 const CARD_LINES = '.item-name, .sub, .item-meta, .item-meta .num';
-/** Whether any of a card's lines is cut: its text is wider than its box. */
-const cardCut = (card: HTMLElement) =>
-  [...card.querySelectorAll<HTMLElement>(CARD_LINES)].some((el) => el.scrollWidth > el.clientWidth);
+/**
+ * Whether any of a card's lines is cut: its text is wider than its box. The "More" button takes room beside the summary,
+ * so it is taken out of the layout while measuring: the answer must not depend on whether the button shows now, or a card
+ * measured early (before the web font) would keep its "More" for as long as the button itself made the summary too wide.
+ */
+const cardCut = (card: HTMLElement) => {
+  const more = card.querySelector<HTMLElement>('.item-more');
+  const shown = more?.style.display ?? '';
+  if (more) more.style.display = 'none';
+  const cut = [...card.querySelectorAll<HTMLElement>(CARD_LINES)].some(
+    (el) => el.scrollWidth > el.clientWidth,
+  );
+  if (more) more.style.display = shown;
+  return cut;
+};
 
 /**
  * One item (variant) as a compact card: picture, name and summary beside Open, then one meta line (ADR-118). When a
