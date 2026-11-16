@@ -1759,18 +1759,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-516: Warnings on the cut sheet: free-text data words stay in the app language
-
-- Status: Open
-- Origin: ADR-265 D18-F6 build 2026-11-16
-- Missing: Data words inside a warning (hardware names, family names, the what param of hardware-to-choose) go through tr() and stay in the app language; a warning text built outside t()/tx() with a literal key is not caught by the key scan.
-- Request: Print each cut-sheet warning in the print language (ADR-265).
-- Questions: Should hardware and family names get print-language entries?
-- Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-517: The reply-length and id-collision hooks have bypasses
 
 - Status: Open
@@ -1781,4 +1769,16 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)
 - Work: Low
 - Impact: Medium
+- Necessity: Low
+
+### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
+
+- Status: Open
+- Origin: G-516 fix, 2026-11-16 (N322)
+- Missing: G-516 prints part labels in the print language. A piece name ({name}), a board name ({board}) and a hardware name inside a warning still print as the app made them: a piece name needs its Design (printPieceName), board and hardware names have no print entries.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should board and hardware names get Romanian, Russian and English print entries (a judgement on names, ADR-010)?
+- Suggested pick: Pass the Design with the warning and add print entries for built-in board and hardware names.
+- Work: Medium
+- Impact: Low
 - Necessity: Low

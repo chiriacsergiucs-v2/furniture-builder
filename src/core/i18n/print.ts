@@ -4,7 +4,8 @@
  * `pt(ro)` takes the Romanian text as its key and gives it in the print language; `PRINT_RU` and `PRINT_EN` hold the
  * other two. Pure TypeScript, no UI imports.
  */
-import { format, recordedMessage, type Params } from './index';
+import { dataSource, format, recordedMessage, type Params } from './index';
+import { partRo } from '../ro';
 import { PRINT_EN, PRINT_RU } from './print-text';
 import { WARNING_RO } from './warning-text';
 
@@ -57,7 +58,8 @@ const isMessageParam = (key: string, name: string): boolean =>
 /**
  * A warning's message in the print language (ADR-265, D18-F6). The message was made by `t()` from a key in
  * `WARNING_RO`; its key and params are looked up and the Romanian text for that key is printed with the params, a
- * param that is itself such a message (a reason) the same way. A message with no entry is printed as it is, in the
+ * param that is itself such a message (a reason) the same way, and a data word (a part label) is taken back to its
+ * English text and printed in the print language (G-516). A message with no entry is printed as it is, in the
  * app language; `tests/warning-print.test.ts` keeps that from happening for the warnings the core makes.
  */
 export function warningText(message: string): string {
@@ -67,7 +69,11 @@ export function warningText(message: string): string {
     ? Object.fromEntries(
         Object.entries(rec.params).map(([k, v]) => [
           k,
-          typeof v === 'string' && isMessageParam(rec.key, k) ? warningText(v) : v,
+          typeof v !== 'string'
+            ? v
+            : isMessageParam(rec.key, k)
+              ? warningText(v)
+              : partRo(dataSource(v)),
         ]),
       )
     : undefined;

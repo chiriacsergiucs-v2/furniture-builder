@@ -3541,6 +3541,18 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-516: Warnings on the cut sheet: free-text data words stay in the app language
+
+- Status: Done (N322, branch fix-g516)
+- Origin: ADR-265 D18-F6 build 2026-11-16
+- Missing: Data words inside a warning (hardware names, family names, the what param of hardware-to-choose) go through tr() and stay in the app language; a warning text built outside t()/tx() with a literal key is not caught by the key scan.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should hardware and family names get print-language entries?
+- Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
 ### G-518: Audit pass 3 findings F-24 to F-30 not fixed
 
 - Status: Done (N319)

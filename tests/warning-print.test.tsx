@@ -7,7 +7,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { COMPAT_RULES } from '../src/core/compat';
 import { templates } from '../src/core/design';
-import { setLang } from '../src/core/i18n';
+import { loadDictionary, setLang, t as tt, tr } from '../src/core/i18n';
 import { PRINT_LANGS, setPrintLang, warningText, type PrintLang } from '../src/core/i18n/print';
 import { PRINT_EN, PRINT_RU } from '../src/core/i18n/print-text';
 import { WARNING_RO } from '../src/core/i18n/warning-text';
@@ -184,5 +184,25 @@ describe('the cut sheet warning list follows the print language (ADR-265)', () =
         for (const [i, w] of warnings.entries()) expect(items[i]).not.toBe(w.message);
       unmount();
     }
+  });
+});
+
+describe('data words inside a warning follow the print language (G-516)', () => {
+  const msg = () => tt('{part} is only {w} mm wide.', { part: tr('Left side'), w: 50 });
+
+  it.each([
+    ['en', 'ro', 'Lateral stânga are doar 50 mm lățime.'],
+    ['ru', 'ro', 'Lateral stânga are doar 50 mm lățime.'],
+    ['en', 'en', 'Left side is only 50 mm wide.'],
+    ['ru', 'en', 'Left side is only 50 mm wide.'],
+    ['en', 'ru', 'Боковина слева — только 50 мм ширины.'],
+  ] as const)('app %s, print %s', async (app, print, want) => {
+    await loadDictionary(app);
+    setLang(app);
+    setPrintLang(print);
+    const text = warningText(msg());
+    if (print === 'ru') expect(text).toMatch(/^[^A-Za-z]*[А-Яа-я]/);
+    if (print !== 'ru') expect(text).toBe(want);
+    expect(text).not.toMatch(/\{\w+/);
   });
 });
