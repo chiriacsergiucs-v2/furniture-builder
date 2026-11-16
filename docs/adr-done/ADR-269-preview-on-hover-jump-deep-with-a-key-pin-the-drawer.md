@@ -1,7 +1,8 @@
 # ADR-269: Preview on hover, jump deep with a key, pin the drawer
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-16
+- Implemented: 2026-11-16 (Browser find-it added; evidence in backlog N287)
 - Depends on: ADR-267, ADR-268
 - Design: docs/ui-design.md (section 4, editor screen)
 - Backlog: N287
@@ -64,9 +65,9 @@ No change to `src/core/types.ts`, the design document or the Dexie schema (ADR-0
 
 ## Done when
 
-- [ ] `deepestAt(model, x, y)` returns the innermost space at a point and nothing outside the piece (unit test).
-- [ ] Hover over a space outlines the space a tap would select and does not change the drawer (find-it).
-- [ ] Ctrl-click and Cmd-click select the innermost space; Shift+Enter selects the parent (find-it).
-- [ ] Pinned, selecting another space leaves the drawer on the pinned one; deleting that space unpins (test).
-- [ ] A tap outside the piece keeps the selection; Esc at the whole piece clears it (store test).
-- [ ] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
+- [x] `deepestAt(model, x, y)` returns the innermost space at a point and nothing outside the piece (unit test).
+- [x] Hover over a space outlines the space a tap would select and does not change the drawer (find-it).
+- [x] Ctrl-click and Cmd-click select the innermost space; Shift+Enter selects the parent (find-it).
+- [x] Pinned, selecting another space leaves the drawer on the pinned one; deleting that space unpins (test).
+- [x] A tap outside the piece keeps the selection; Esc at the whole piece clears it (store test).
+- [x] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
