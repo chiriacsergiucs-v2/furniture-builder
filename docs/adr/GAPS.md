@@ -1755,18 +1755,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-522: F-04 Move and Adjust reasons not proved in a real browser
-
-- Status: Open
-- Origin: N326 (audit F-04), burst
-- Missing: The 3D toolbar lines 'Turn off Exploded 3D to move pieces' and '...to adjust a wall picture' are proved only on src/viewer/ExplodedWhy.tsx in jsdom (the viewer is stubbed); not found in the real 3D view at 390 and 1280 px.
-- Request: Prove each with a jsdom find-it test that fails before the fix (the reason is found by visible text at 390 and 1280 px).
-- Questions: None.
-- Suggested pick: Add tools/<area>/find-it.mjs against the production build in Chromium: turn on Exploded 3D, find the two lines by text at 390 and 1280 px; also check the added line does not overflow the toolbar. Effort Low-medium, value Low-medium.
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low
-
 ### G-523: Two backlog rows share id N326
 
 - Status: Open

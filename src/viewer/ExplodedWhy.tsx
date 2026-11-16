@@ -2,18 +2,18 @@ import { t } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 
 /**
- * Why Move and Adjust wall picture are off while Exploded 3D is on, as visible text (touch has no tooltip, F-04).
+ * Why Move or Adjust wall picture is off while Exploded 3D is on, as visible text (touch has no tooltip, F-04). One
+ * line per control, placed right after it in the tool row so the reason sits beside the disabled button (G-522).
  * Same wording as the buttons' `title`.
  */
-export function ExplodedWhy({ pieces, picture }: { pieces: boolean; picture: boolean }) {
+export function ExplodedWhy({ tool }: { tool: 'move' | 'picture' }) {
   const exploded = useDesign((s) => s.exploded);
   if (!exploded) return null;
   return (
-    <>
-      {pieces && <p className="hint three-why">{t('Turn off Exploded 3D to move pieces')}</p>}
-      {picture && (
-        <p className="hint three-why">{t('Turn off Exploded 3D to adjust a wall picture')}</p>
-      )}
-    </>
+    <p className="hint three-why">
+      {tool === 'move'
+        ? t('Turn off Exploded 3D to move pieces')
+        : t('Turn off Exploded 3D to adjust a wall picture')}
+    </p>
   );
 }

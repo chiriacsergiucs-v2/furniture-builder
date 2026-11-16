@@ -7370,9 +7370,12 @@ fieldset.group-locked {
   font-weight: 600;
 }
 
-/* F-04: the reason a control is off, as visible text (touch has no tooltip). */
+/* F-04: the reason a control is off, as visible text (touch has no tooltip). It is as wide as its text and sits right
+   after its button (G-522), so the pair shows together on one row. */
 .three-tools .three-why {
-  flex-basis: 100%;
+  align-self: center;
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   padding: var(--s-1) var(--s-2);
   background: var(--surface);
