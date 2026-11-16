@@ -1759,18 +1759,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-512: tools/catalog-compact has 6 failing checks on main
-
-- Status: Open
-- Origin: Catalog paging baseline run, 2026-11-16 (N311)
-- Missing: tools/catalog-compact/find-it.mjs fails 6 checks on main and on the paged catalog alike: item card tags on one meta line, unclipped (183 cards, 64 off on main), and cards whose More/Less text no longer matches after a resize and whose cut lines do not read in full after More, at 390 and 1280 px. ADR-272 (Pending), batch 1 of 7, also repairs this script; check it before building a second fix.
-- Request: Implement f9 fulkly, you pick numbers
-- Questions: Are these three checks still the intended rule, or did a later card layout change make them stale?
-- Suggested pick: Check each against the current card layout and fix the cards or the script (estimate: effort +15 %, value +10 %)
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low
-
 ### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
 
 - Status: Open
@@ -1782,3 +1770,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: High
 - Impact: Medium
 - Necessity: Medium
+
+### G-514: The gaps Stop hook can still be passed by citing any G id
+
+- Status: Open
+- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
+- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
+- Request: Fix the gaps force skip vector
+- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
+- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
