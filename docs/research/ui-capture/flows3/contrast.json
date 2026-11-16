@@ -1,0 +1,880 @@
+[
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "project-plan",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "piece-list",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "piece-selected",
+    "texts": 158,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "settings-populated",
+    "texts": 148,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "room-empty",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "room-added",
+    "texts": 134,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "room-draw",
+    "texts": 136,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "room-fill-dialog",
+    "texts": 154,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "3d-view",
+    "texts": 140,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "3d-more-menu",
+    "texts": 142,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "results-parts",
+    "texts": 140,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "copy-code",
+    "texts": 148,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "info",
+    "texts": 773,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "info-domain-open",
+    "texts": 773,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "gaps",
+    "texts": 1057,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "account-sign-in",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "account-create",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "account-forgot",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "account-privacy",
+    "texts": 30,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "share-link-invalid",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "share-link-unreachable",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "assistant-off",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "assistant-consent",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "assistant-signed-out",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "project-plan",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "piece-list",
+    "texts": 28,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "piece-selected",
+    "texts": 90,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "settings-populated",
+    "texts": 76,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-empty",
+    "texts": 28,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-added",
+    "texts": 76,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-draw",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-fill-dialog",
+    "texts": 34,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "3d-view",
+    "texts": 70,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "3d-more-menu",
+    "texts": 72,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "results-parts",
+    "texts": 70,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "copy-code",
+    "texts": 25,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "info",
+    "texts": 47,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "info-domain-open",
+    "texts": 88,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "gaps",
+    "texts": 1058,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "account-sign-in",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "account-create",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "account-forgot",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "account-privacy",
+    "texts": 30,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "share-link-invalid",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "share-link-unreachable",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "assistant-off",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "assistant-consent",
+    "texts": 18,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "assistant-signed-out",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "project-plan",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "piece-list",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "piece-selected",
+    "texts": 158,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "settings-populated",
+    "texts": 148,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "room-empty",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "room-added",
+    "texts": 134,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "room-draw",
+    "texts": 136,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "room-fill-dialog",
+    "texts": 154,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "3d-view",
+    "texts": 140,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "3d-more-menu",
+    "texts": 142,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "results-parts",
+    "texts": 140,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "copy-code",
+    "texts": 148,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "info",
+    "texts": 773,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "info-domain-open",
+    "texts": 773,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "gaps",
+    "texts": 1057,
+    "unread": 0,
+    "fail": 1,
+    "worst": [
+      {
+        "text": "Open",
+        "ratio": 2.01,
+        "need": 4.5,
+        "px": 13
+      }
+    ]
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "account-sign-in",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "account-create",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "account-forgot",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "account-privacy",
+    "texts": 30,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "share-link-invalid",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "share-link-unreachable",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "assistant-off",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "assistant-consent",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "assistant-signed-out",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "project-plan",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "piece-list",
+    "texts": 28,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "piece-selected",
+    "texts": 90,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "settings-populated",
+    "texts": 76,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-empty",
+    "texts": 28,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-added",
+    "texts": 76,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-draw",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-fill-dialog",
+    "texts": 34,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "3d-view",
+    "texts": 70,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "3d-more-menu",
+    "texts": 72,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "results-parts",
+    "texts": 70,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "copy-code",
+    "texts": 25,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "info",
+    "texts": 47,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "info-domain-open",
+    "texts": 88,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "gaps",
+    "texts": 1058,
+    "unread": 0,
+    "fail": 1,
+    "worst": [
+      {
+        "text": "Open",
+        "ratio": 2.01,
+        "need": 4.5,
+        "px": 13
+      }
+    ]
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "account-sign-in",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "account-create",
+    "texts": 21,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "account-forgot",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "account-privacy",
+    "texts": 30,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "share-link-invalid",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "share-link-unreachable",
+    "texts": 14,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "assistant-off",
+    "texts": 15,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "assistant-consent",
+    "texts": 18,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "assistant-signed-out",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  }
+]
