@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/doubled-top/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -55,7 +56,7 @@ for (const width of [1440, 390]) {
   };
   /** Build & Preview › Parts: how many parts are labelled "Top". */
   const topCount = async () => {
-    await mode(/Build & Preview/).dispatchEvent('click');
+    await goBuild(page);
     const t = page.getByRole('tab', { name: /Parts/ });
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
     await page.locator('td.labels').first().waitFor();
@@ -81,7 +82,7 @@ for (const width of [1440, 390]) {
   check(width, 'Parts lists one "Top" before', before === 1, `${before}`);
 
   // 2. Settings › Construction › "Top layers" › "Doubled".
-  await mode('Compose').dispatchEvent('click');
+  await goCompose(page);
   await openConstruction();
   const layers = dlg.getByRole('radiogroup', { name: 'Top layers' });
   await layers.scrollIntoViewIfNeeded();
@@ -104,9 +105,16 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('radio', { name: 'Two rails' }).click();
   check(width, '"Top layers" hidden for a rails top', (await layers.count()) === 0);
   await dlg.getByRole('radio', { name: 'A full panel' }).click();
+  // ADR-254 (user 2026-11-10): Two rails take a single top, so a doubled one became single; choose Doubled again.
   check(
     width,
-    '"Doubled" kept after switching back to a full panel',
+    '"Single" after switching back to a full panel (rails made it single, ADR-254)',
+    (await layers.getByRole('radio', { name: 'Single' }).getAttribute('aria-checked')) === 'true',
+  );
+  await layers.getByRole('radio', { name: 'Doubled' }).click();
+  check(
+    width,
+    '"Doubled" can be chosen again after switching back to a full panel',
     (await layers.getByRole('radio', { name: 'Doubled' }).getAttribute('aria-checked')) === 'true',
   );
   await closeSettings();
@@ -126,7 +134,7 @@ for (const width of [1440, 390]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   const cBefore = await topCount();
-  await mode('Compose').dispatchEvent('click');
+  await goCompose(page);
   await openConstruction();
   const cLayers = dlg.getByRole('radiogroup', { name: 'Top layers' });
   await cLayers.scrollIntoViewIfNeeded();

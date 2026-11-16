@@ -54,14 +54,14 @@ for (const width of [390, 1280]) {
   t = await said();
   ck(
     '2nd tap: the left bay',
-    phone ? t.includes('Selected: Divided space') : /Interior\s*\/?\s*Divided/.test(t),
-    t.slice(0, 80),
+    phone ? t.includes('Selected: Left: Divided space') : /Interior\s*\/?\s*Left: Divided/.test(t),
+    t.replace(/\n/g, ' | ').slice(0, 160),
   );
   await tap();
   t = await said();
   ck(
     '3rd tap: the hanging space',
-    phone ? t.includes('Selected: Hanging') : /Divided\s*\/?\s*Hanging/.test(t),
+    phone ? t.includes('Selected: Bottom: Hanging') : /Divided\s*\/?\s*Bottom: Hanging/.test(t),
     t.slice(0, 80),
   );
   ck('hanging space marked selected', (await hanging.getAttribute('aria-pressed')) === 'true');
@@ -127,10 +127,11 @@ for (const width of [390, 1280]) {
       green[1] > 0 && green[1] < green[0] && green[1] < green[2],
       green.join(' / '),
     );
-    // The tap before these left the right bay selected; the 1st 3D tap lands in the left bay.
+    // Names carry their path ("Left: Divided space", "Bottom: Hanging"). The tap before these left the right bay selected; the 1st 3D tap lands in the left bay.
     ck(
       '3D: taps at one spot drill in and wrap',
-      seen.join(' › ') === 'Divided space › Hanging › Whole cabinet › Divided space',
+      seen.join(' › ') ===
+        'Left: Divided space › Bottom: Hanging › Whole cabinet › Left: Divided space',
       seen.join(' › '),
     );
     await goCompose(page);
