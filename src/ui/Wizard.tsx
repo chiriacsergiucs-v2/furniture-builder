@@ -1012,6 +1012,9 @@ function Wizard({
           )}
         </aside>
       </div>
+      {isReview && c.errors > 0 && (
+        <p className="hint warn wz-why">{t('Fix the problems listed under Checks first')}</p>
+      )}
       <div className="wizard-footer wz-footer">
         <button
           type="button"
