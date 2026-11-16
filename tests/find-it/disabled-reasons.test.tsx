@@ -28,10 +28,20 @@ describe.each(WIDTHS)('disabled reasons are visible text at %ipx (F-04)', (width
     const { ExplodedWhy } = await import('../../src/viewer/ExplodedWhy');
     const { useDesign } = await import('../../src/store/designStore');
     useDesign.getState().setExploded(false);
-    const { rerender } = render(<ExplodedWhy pieces picture />);
+    const { rerender } = render(
+      <>
+        <ExplodedWhy tool="move" />
+        <ExplodedWhy tool="picture" />
+      </>,
+    );
     expect(screen.queryByText(/Turn off Exploded 3D/)).toBeNull();
     useDesign.getState().setExploded(true);
-    rerender(<ExplodedWhy pieces picture />);
+    rerender(
+      <>
+        <ExplodedWhy tool="move" />
+        <ExplodedWhy tool="picture" />
+      </>,
+    );
     expect(screen.getByText('Turn off Exploded 3D to move pieces')).toBeTruthy();
     expect(screen.getByText('Turn off Exploded 3D to adjust a wall picture')).toBeTruthy();
     useDesign.getState().setExploded(false);

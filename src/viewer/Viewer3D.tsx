@@ -634,7 +634,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
               {t('Move')}
             </button>
           )}
-          <ExplodedWhy pieces={hasPieces} picture={hasPicture} />
+          {hasPieces && <ExplodedWhy tool="move" />}
           {hasPieces && (
             <button
               type="button"
@@ -667,6 +667,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
               {t('Adjust wall picture')}
             </button>
           )}
+          {hasPicture && <ExplodedWhy tool="picture" />}
           {adjusting && adjustWall !== null && (
             <button
               type="button"

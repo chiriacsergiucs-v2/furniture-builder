@@ -35,7 +35,6 @@ export function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: (
   const same = options.filter((o) => o.sameWidth);
   const shown = others ? options : same;
   const pick = async (o: ReplaceOption<ViewFamily>) => {
-    onClose();
     const name = `${tr(o.family.name)}: ${tr(o.variant.name)}`;
     if (
       designEdited(item.design, families) &&
@@ -48,6 +47,8 @@ export function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: (
       ))
     )
       return;
+    // Closed only once the confirm (if any) is accepted: Cancel returns to this dialog (F-08).
+    onClose();
     const d = insertVariant(o.family, o.variant);
     if (!d) return;
     const report = useDesign.getState().replaceItem(item.id, d, { families });

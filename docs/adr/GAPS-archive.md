@@ -3391,15 +3391,6 @@ highest id in either file.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
 
-### G-474: Settings dialog scrolls sideways at 375 and 390 px
-
-- Status: Done (N322)
-- Origin: ADR-202 tests, 2026-11-06; agent found it
-- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
-- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
-- Questions: None; it is a bug.
-- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
-
 ### G-471: Catalog page is taller than the 15000 px script limit
 
 - Status: Done (N322)
@@ -3409,6 +3400,15 @@ highest id in either file.
 - Questions: Raise the limit to 16000 px, or shorten the catalog page?
 - Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
 - Fix: Stale; the Catalog is paged (N311). Ran 2026-11-16 on the production build (`pnpm build:ci`, preview, Playwright, light theme): `tools/catalog-compact/find-it.mjs` passes 'Catalog page under 15000 px tall' at 1280 px (8455 px) and 'under 30000 px' at 390 px (15994 px). No limit changed.
+
+### G-474: Settings dialog scrolls sideways at 375 and 390 px
+
+- Status: Done (N322)
+- Origin: ADR-202 tests, 2026-11-06; agent found it
+- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
+- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
+- Questions: None; it is a bug.
+- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
 
 ### G-477: AR corner snap does not detect walls automatically
 
@@ -3618,3 +3618,15 @@ highest id in either file.
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+
+### G-522: F-04 Move and Adjust reasons not proved in a real browser
+
+- Status: Done (N327)
+- Origin: N326 (audit F-04), burst
+- Missing: The 3D toolbar lines 'Turn off Exploded 3D to move pieces' and '...to adjust a wall picture' are proved only on src/viewer/ExplodedWhy.tsx in jsdom (the viewer is stubbed); not found in the real 3D view at 390 and 1280 px.
+- Request: Prove each with a jsdom find-it test that fails before the fix (the reason is found by visible text at 390 and 1280 px).
+- Questions: None.
+- Suggested pick: Add tools/<area>/find-it.mjs against the production build in Chromium: turn on Exploded 3D, find the two lines by text at 390 and 1280 px; also check the added line does not overflow the toolbar. Effort Low-medium, value Low-medium.
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low
