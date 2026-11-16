@@ -4969,6 +4969,24 @@ button.tile:hover {
     bottom: auto;
     max-height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px) - 16px);
     overflow: auto;
+    /* Scroll cue (audit F-01): a shadow at each edge that still has entries beyond it. The `local` layers cover
+       the `scroll` shadows once the content is scrolled to that edge. */
+    background:
+      linear-gradient(var(--surface) 30%, transparent) top / 100% 28px local no-repeat,
+      linear-gradient(transparent, var(--surface) 70%) bottom / 100% 28px local no-repeat,
+      radial-gradient(
+          farthest-side at 50% 0,
+          color-mix(in srgb, var(--ink) 35%, transparent),
+          transparent
+        )
+        top / 100% 10px scroll no-repeat,
+      radial-gradient(
+          farthest-side at 50% 100%,
+          color-mix(in srgb, var(--ink) 35%, transparent),
+          transparent
+        )
+        bottom / 100% 10px scroll no-repeat,
+      var(--surface);
   }
   /* The places become a one-row bottom nav at thumb height (ADR-078, replaces ADR-030's action bar). */
   .pages.places {
