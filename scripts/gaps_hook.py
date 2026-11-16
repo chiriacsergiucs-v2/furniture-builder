@@ -17,15 +17,33 @@ TRIGGER = re.compile(
 LEDGER = "docs/adr/GAPS.md"
 
 
-def decide(data):
+def known_ids(cwd):
+    """The G ids in the ledger and the archive under `cwd`; None when neither can be read (then any cited id counts)."""
+    found, readable = set(), False
+    for rel in (LEDGER, "docs/adr/GAPS-archive.md"):
+        try:
+            found |= set(re.findall(r"^### (G-\d{3,}):", (pathlib.Path(cwd) / rel).read_text(), re.M))
+            readable = True
+        except OSError:
+            pass
+    return found if readable else None
+
+
+def decide(data, known=None):
     if data.get("stop_hook_active"):
         return None
     reply = last_reply(data)
-    if not TRIGGER.search(reply) or re.search(r"\bG-\d{3}\b", reply):
+    if not TRIGGER.search(reply):
+        return None
+    cited = set(re.findall(r"\bG-\d{3,}\b", reply))
+    # A cited id must exist in the ledger or the archive: "G-999" or an old unrelated id is not a record (N318, G-514).
+    if cited and known is not None:
+        cited &= known
+    if cited:
         return None
     return {"decision": "block", "reason": (
         "Your reply names items that are not built (skipped, out of scope, deferred or open questions), but "
-        f"the reply cites no G id from {LEDGER}. Record each one with `pnpm gaps add` "
+        f"the reply cites no existing G id from {LEDGER} or the archive. Record each one with `pnpm gaps add` "
         "(origin, missing, the user's request in their words, questions, the suggested pick closest to the "
         "request with effort/value estimates), cite the G ids in the reply, then finish. If none of them is a "
         "furniture-builder gap, say so in one line and finish.")}
@@ -34,7 +52,7 @@ def decide(data):
 def main():
     try:
         data = json.load(sys.stdin)
-        out = decide(data)
+        out = decide(data, known_ids(data.get("cwd") or "."))
     except Exception:  # never break a session over a reminder
         return 0
     if out:

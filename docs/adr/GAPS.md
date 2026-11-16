@@ -1771,16 +1771,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-514: The gaps Stop hook can still be passed by citing any G id
-
-- Status: Open
-- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
-- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
-- Request: Fix the gaps force skip vector
-- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
-- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
-- Work: Low
-
 ### G-515: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
 
 - Status: Open
@@ -1821,22 +1811,10 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: UI audit pass 3, 2026-11-16 (G-509, N317)
-- Missing: Findings F-24 to F-30 of docs/research/2026-11-15-ui-flow-audit.md section 12 are reported, not fixed: F-24 dark Gaps-page pressed chip 2.01:1 (src/styles.css:6217-6221), F-25 empty phone Options menu in 2D, F-26 5-6 px plan labels at 390 px, F-27 signed-out Assistant flow, F-28 no Retry on a failed share link, F-29 no current place on Information and Gaps, F-30 3D tool row wraps over the scene
+- Missing: Findings of docs/research/2026-11-15-ui-flow-audit.md section 12 still reported, not fixed: F-26 5-6 px plan labels at 390 px, F-27 signed-out Assistant flow, F-28 no Retry on a failed share link, F-29 no current place on Information and Gaps, F-30 3D tool row wraps over the scene. F-24 and F-25 are fixed (N318).
 - Request: Parallel execution of G-517, G-509, G-507
 - Questions: Which findings to fix, and in what order?
 - Suggested pick: Fix F-24 first (same fix as F-20), then F-25 and F-29
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
-
-### G-519: Esc in the Save as project template form also closes Settings on a phone
-
-- Status: Open
-- Origin: ADR-275, 2026-11-16, found while repairing tools/project-actions/find-it.mjs
-- Missing: At 390 px one Escape in the Save as project template form closes the form and the Settings dialog behind it; the script expected Settings to stay open, as it does after Cancel. Not checked on a desktop width in a browser (unverified).
-- Request: Repair browser find-it scripts, batch 4 of 7 (user 2026-11-16)
-- Questions: Should Esc close only the form, as Cancel does?
-- Suggested pick: Close only the form
-- Work: Low
-- Impact: Low
-- Necessity: Low
