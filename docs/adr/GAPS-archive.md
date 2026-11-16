@@ -3505,3 +3505,15 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-520: ADR-265 is oversized and needs a split before it can be built
+
+- Status: Done (withdrawn 2026-11-16: ADR-265 was already built with every Done-when item ticked; it only needed `ship-adr`, run in the same change)
+- Origin: Burst run of the pending ADRs, 2026-11-16
+- Missing: ADR-265 (UI audit, Language) is 120 lines and 14515 bytes with 8 Done-when items, over the 110-line and 6.5 KB limit (OVERSIZED=1). Splitting into more ADRs needs the user's explicit approval (CLAUDE.md, General conduct 5), so it was not built.
+- Request: Proceed with sequential burst execution of all next adrs
+- Questions: Split ADR-265 into smaller ADRs, and into how many?
+- Suggested pick: Split into 2 ADRs by area
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
