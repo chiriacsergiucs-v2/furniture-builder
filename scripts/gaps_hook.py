@@ -8,33 +8,13 @@ it silenced the hook for the rest of a long-lived branch, so a reply could list 
 stays silent on any error: CI (pnpm docs:check) is the hard check, this is the reminder."""
 import json, pathlib, re, sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))  # -I leaves the script's folder off the path
+from hooklib import last_reply  # noqa: E402
+
 TRIGGER = re.compile(
     r"skipped this iteration|not implemented|not built|out of scope|left out|deferred|"
     r"open questions?|not done|follow-up|to be done|burst-skipped|\bskipped:|\bunblock:|\bblocker\b", re.I)
 LEDGER = "docs/adr/GAPS.md"
-
-
-def last_reply(data):
-    if isinstance(data.get("last_assistant_message"), str):
-        return data["last_assistant_message"]
-    path = data.get("transcript_path")
-    if not path:
-        return ""
-    texts = []
-    for line in pathlib.Path(path).read_text().splitlines():
-        try:
-            entry = json.loads(line)
-        except ValueError:
-            continue
-        msg = entry.get("message") or {}
-        content = msg.get("content")
-        if entry.get("type") == "user":
-            # A real user turn (not a tool result) starts a new reply.
-            if isinstance(content, str) or any(c.get("type") == "text" for c in content or [] if isinstance(c, dict)):
-                texts = []
-        elif entry.get("type") == "assistant" and isinstance(content, list):
-            texts += [c.get("text", "") for c in content if isinstance(c, dict) and c.get("type") == "text"]
-    return "\n".join(texts)
 
 
 def decide(data):

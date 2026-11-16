@@ -105,9 +105,15 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
   (audit, review) is written in full prose. "stop caveman" or "normal mode" ends it for the session.
 - `PreToolUse` on `Bash`: `scripts/retired_name_hook.py` blocks `git commit` and `git push` while a tracked or new file
   names the retired third-party agent tool (user decision 2026-11-10).
+- `PreToolUse` on `Bash`: `scripts/id_collision_hook.py` blocks `git push` while an id the branch added (backlog F/N/D, G-NNN,
+  ADR number) is already taken on `origin/main`, and names the next free ids (N315, from the audit finding "stale ids").
+  Before writing a row, a gap or an ADR number, run `pnpm next-id`: it fetches `origin/main` and prints the next free ids.
 - `Stop`: `scripts/gaps_hook.py` blocks a reply once when it names unbuilt items (skipped, deferred, out of scope, open
   questions), cites no G id (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
   silences it, N312). Record each with `pnpm gaps add`, cite the G ids, then finish.
+- `Stop`: `scripts/reply_length_hook.py` blocks a reply once when it is longer than 150 words (fenced code does not count),
+  so replies stay short (N315, user: "Lower your verbosity", "Keep it short, concise"). A reply that the user asked for as a
+  deliverable (a report, an audit, an explanation) starts with `[long]` and passes.
 - `permissions.allow`: only the checks in _Commands_ (`pnpm format`, `format:check`, `typecheck`, `lint`, `test`, `build`,
   `build:ci`, `docs:check`, `pnpm exec vitest`) run without a prompt (user 2026-11-15). `pnpm browser:capture` is not
   listed (toggle `browser-on-demand`). Editing this file needs the user's request.
