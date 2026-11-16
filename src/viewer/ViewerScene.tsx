@@ -43,7 +43,7 @@ import { useFocusedProblem } from '../store/focusedProblem';
 import { useUi } from '../store/uiStore';
 import { connectionSeams } from '../core/connections';
 import { t } from '../core/i18n';
-import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
+import { FOCUS_OPACITY, hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
   floorRect,
   roomDisplayBoxes,
@@ -1332,13 +1332,27 @@ export function Panels({
     const local = drillItem && selectionBox(drillModel, selectedSpace ?? null);
     return drillItem && local ? pieceBoxToRoom(drillItem, drillModel, local) : undefined;
   }, [look, inProject, view.model, selectedSpace, drillItem, drillModel]);
-  const fadeBox = !look
+  // An entered space (ADR-270) is what stays solid: everything outside it fades, whatever is selected inside.
+  const enteredId = useUi((s) => s.enteredId);
+  const focusLook = useUi((s) => s.focusLook);
+  const enteredBox = !look
     ? undefined
     : !inProject
-      ? outline
-      : drillItem && typeof selectedSpace === 'string'
-        ? selectionBox(drillModel, selectedSpace)
+      ? enteredId
+        ? selectionBox(view.model, enteredId)
+        : undefined
+      : drillItem && enteredId
+        ? selectionBox(drillModel, enteredId)
         : undefined;
+  const fadeBox =
+    enteredBox ??
+    (!look
+      ? undefined
+      : !inProject
+        ? outline
+        : drillItem && typeof selectedSpace === 'string'
+          ? selectionBox(drillModel, selectedSpace)
+          : undefined);
   const local = useMemo(() => new Map(drillModel.panels.map((p) => [p.id, p])), [drillModel]);
   const drag = usePieceDrag(inProject && moving, snapOn);
   const prefix = drillItem ? `${drillItem.id}:` : '';
@@ -1370,16 +1384,21 @@ export function Panels({
   };
   // The Simple look's panel edges, merged into one line per edge style (ADR-238).
   const edgeItems: EdgeItem[] = [];
-  const isFaded = (p: Panel) => {
-    if (litSet && !litSet.has(p.id)) return true;
+  const litFaded = (p: Panel) => !!litSet && !litSet.has(p.id);
+  // Outside the selection (or the entered space): the part FOCUS_OPACITY (ADR-270) sets.
+  const focusFaded = (p: Panel) => {
     if (!fadeBox) return false;
     if (!inProject) return !inSelection(fadeBox, (built.get(p.id) ?? p).box);
     const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;
     return !own || !inSelection(fadeBox, own.box);
   };
+  const isFaded = (p: Panel) => litFaded(p) || focusFaded(p);
+  const fadeOpacity = (p: Panel) => (litFaded(p) ? FOCUS_OPACITY.fade : FOCUS_OPACITY[focusLook]);
+  // Hide draws nothing outside the selection, except in the exploded view, which keeps every panel.
+  const hidden = (p: Panel) => focusLook === 'hide' && !exploded && !litFaded(p) && focusFaded(p);
 
   const meshes = panels
-    .filter((p) => showFronts || !FRONT.has(p.role))
+    .filter((p) => (showFronts || !FRONT.has(p.role)) && !hidden(p))
     .map((p) =>
       yawed(
         p,
@@ -1413,6 +1432,7 @@ export function Panels({
             color,
             map: map ?? null,
             faded,
+            fadeOpacity: fadeOpacity(p),
             side,
             back: p.role === 'back',
             finish: finishes.get(p.materialId),
@@ -1426,6 +1446,7 @@ export function Panels({
                 matrix: panelMatrix(p, centred),
                 selected: tinted || own,
                 faded,
+                fadeOpacity: fadeOpacity(p),
               });
           };
           // Outside in, one level per tap at the hit point (ADR-083).
@@ -1438,7 +1459,7 @@ export function Panels({
             if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
               toggleItem(p.nodeId.split(':')[0]);
             else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
-            else tapPiece(at.x, at.y);
+            else tapPiece(at.x, at.y, false, useUi.getState().enteredId);
           };
           const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
           // A board with a picture has its own texture coordinates; a plain box shares its size's geometry.
@@ -1563,7 +1584,9 @@ export function Panels({
           deps={[
             panels,
             showFronts,
-            edgeItems.map((i) => (i.selected ? 1 : 0) + (i.faded ? 2 : 0)).join(''),
+            edgeItems
+              .map((i) => `${i.selected ? 1 : 0}${i.faded ? 2 : 0}${i.fadeOpacity ?? ''}`)
+              .join(''),
           ]}
         />
       )}

@@ -191,8 +191,9 @@ export interface State {
   /**
    * Tap on the piece at (x, y) mm, front view or 3D: whole piece first, then one level smaller per tap (ADR-083). A tap
    * outside the piece keeps the selection (ADR-269); `deep` (Ctrl or Cmd click) selects the innermost space there.
+   * With `enteredId` (ADR-270) taps stay inside that space.
    */
-  tapPiece: (x: number, y: number, deep?: boolean) => void;
+  tapPiece: (x: number, y: number, deep?: boolean, enteredId?: string | null) => void;
   /**
    * Tap on a project piece (ADR-083, ADR-088): the first tap selects the whole piece; each further tap selects one
    * level smaller under the tap (room mm), and the project editor stays open. With no point (the plan) a further tap

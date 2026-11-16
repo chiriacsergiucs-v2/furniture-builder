@@ -23,13 +23,19 @@ import {
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
-import { KIND_LABEL, WHOLE_LABEL as WHOLE, placed, spacePlace } from '../core/spaceNames';
+import {
+  KIND_LABEL,
+  WHOLE_LABEL as WHOLE,
+  nameOfSpace,
+  placed,
+  spacePlace,
+} from '../core/spaceNames';
 import { StructureTree } from './StructureTree';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../store/libraryStore';
-import { parentOf as parentSel, type Selection } from '../core/selectPath';
+import { parentOf as parentSel, type FocusLook, type Selection } from '../core/selectPath';
 import { useMediaQuery } from '../store/useMediaQuery';
 import { usePieceLockHint } from './pieceLockHint';
 import type {
@@ -76,6 +82,7 @@ import {
 } from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from '../store/uiStore';
+import { useEntered } from '../store/useEntered';
 import { tNode } from './i18n';
 import {
   ApplianceEditor,
@@ -91,6 +98,28 @@ import {
  * The space the drawer shows (ADR-269): the pinned space while it exists in this piece, else the selection. A pin whose
  * space is gone, or that belongs to another piece, is dropped.
  */
+/** The shown state of an entered space (ADR-270): what is entered and a way out; nothing otherwise. */
+function EnteredStatus() {
+  const enteredId = useEntered();
+  const exitEntered = useUi((s) => s.exitEntered);
+  const name = useDesign((s) => (enteredId ? nameOfSpace(s.design.product, enteredId) : null));
+  if (!enteredId) return null;
+  return (
+    <div className="enter-row" role="status">
+      <p className="entered-note">{t('Editing inside: {name}', { name: name ?? '' })}</p>
+      <button type="button" className="btn outline sm" onClick={exitEntered}>
+        {t('Exit')}
+      </button>
+    </div>
+  );
+}
+
+const FOCUS_NAME: Record<FocusLook, () => string> = {
+  fade: () => t('Fade'),
+  strong: () => t('Strong'),
+  hide: () => t('Hide'),
+};
+
 function useShownId(): Selection {
   const designId = useDesign((s) => s.design.id);
   const selectedId = useDesign((s) => s.selectedId);
@@ -192,6 +221,7 @@ export function InsideEditor() {
     );
   return (
     <>
+      <EnteredStatus />
       <StructureTree />
       <p className="hint">
         {t('Selected: {name}.', { name: WHOLE[prod.kind] })}{' '}
@@ -246,6 +276,7 @@ function ComposeStart() {
           </p>
         )}
       </header>
+      <EnteredStatus />
       <StructureTree />
       {whole && (
         <PieceSize product={prod} onChange={resize} locked={sizeLocked} lockedKeys={lockedKeys} />
@@ -460,6 +491,10 @@ function SpaceEditor({
   const pinned = useUi((s) => s.pinnedId === space.id);
   const pin = useUi((s) => s.pin);
   const unpin = useUi((s) => s.unpin);
+  const enteredId = useEntered();
+  const enter = useUi((s) => s.enter);
+  const focusLook = useUi((s) => s.focusLook);
+  const cycleFocus = useUi((s) => s.cycleFocus);
   const opening = useDesign((s) => s.model.spaces.find((o) => o.nodeId === space.id));
   const allDiags = useDesign((s) => s.model.diagnostics);
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
@@ -502,6 +537,23 @@ function SpaceEditor({
             </button>
           </div>
           {pinned && <p className="pinned-note">{t('Pinned: {name}', { name: title })}</p>}
+          <div className="enter-row">
+            {space.kind === 'split' && enteredId !== space.id && (
+              <button
+                type="button"
+                className="btn outline sm"
+                onClick={() => {
+                  enter(space.id, designId);
+                }}
+              >
+                {t('Edit inside this space')}
+              </button>
+            )}
+            <button type="button" className="btn outline sm" onClick={cycleFocus}>
+              {t('Focus: {mode}', { mode: FOCUS_NAME[focusLook]() })}
+            </button>
+          </div>
+          <EnteredStatus />
           {opening && (
             <p className="measure">
               {tNode('{w} wide × {h} high × {d} deep inside', {
