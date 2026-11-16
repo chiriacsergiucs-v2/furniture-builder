@@ -280,6 +280,11 @@ export const ru_inspector = {
   '{place}: {what}': '{place}: {what}',
   'Selection changed to {name}': 'Теперь выбрано: {name}',
   Structure: 'Структура',
+  'About selecting': 'О выборе',
+  'A tap goes one space in. Ctrl or Cmd and a click jumps to the innermost space. Shift+Enter or Esc goes one level up.':
+    'Нажатие выбирает следующее пространство внутри. Ctrl или Cmd и щелчок выбирает самое внутреннее пространство. Shift+Enter или Esc поднимает на уровень выше.',
+  'Pin the drawer': 'Закрепить панель',
+  'Pinned: {name}': 'Закреплено: {name}',
   'Whole piece tree': 'Дерево всего изделия',
   '{name}, {size} mm': '{name}, {size} мм',
 } satisfies Record<string, string>;

@@ -27,8 +27,7 @@ export function pathAt(model: FurnitureModel, x: Mm, y: Mm): string[] {
 
 /** The selection after a tap at (x, y): whole piece first, then one level smaller per tap, then the whole piece again. */
 export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): Selection {
-  const b = model.bounds;
-  if (x < b.x || x > b.x + b.w || y < b.y || y > b.y + b.h) return undefined;
+  if (!insidePiece(model, x, y)) return undefined;
   if (current === undefined) return null;
   const full: (string | null)[] = [null, ...pathAt(model, x, y)];
   const at = full.indexOf(current);
@@ -40,6 +39,18 @@ export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): 
   let k = 0;
   while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
   return full[k + 1] ?? null;
+}
+
+/** Whether a point (piece mm) lies inside the piece's bounds. */
+export function insidePiece(model: FurnitureModel, x: Mm, y: Mm): boolean {
+  const b = model.bounds;
+  return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+}
+
+/** The innermost front-view space at a point (ADR-269: Ctrl or Cmd click); `undefined` outside the piece or on no space. */
+export function deepestAt(model: FurnitureModel, x: Mm, y: Mm): string | undefined {
+  if (!insidePiece(model, x, y)) return undefined;
+  return pathAt(model, x, y).at(-1);
 }
 
 /**

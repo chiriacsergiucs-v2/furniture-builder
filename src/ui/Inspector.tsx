@@ -88,15 +88,36 @@ import {
 } from './Editors';
 
 /**
+ * The space the drawer shows (ADR-269): the pinned space while it exists in this piece, else the selection. A pin whose
+ * space is gone, or that belongs to another piece, is dropped.
+ */
+function useShownId(): Selection {
+  const designId = useDesign((s) => s.design.id);
+  const selectedId = useDesign((s) => s.selectedId);
+  const exists = useDesign((s) => {
+    const p = useUi.getState().pinnedId;
+    return p ? !!findInProduct(s.design.product, p) : false;
+  });
+  const pinnedId = useUi((s) => s.pinnedId);
+  const pinnedDesignId = useUi((s) => s.pinnedDesignId);
+  const unpin = useUi((s) => s.unpin);
+  const valid = !!pinnedId && pinnedDesignId === designId && exists;
+  useEffect(() => {
+    if (pinnedId && !valid) unpin();
+  }, [pinnedId, valid, unpin]);
+  return valid ? pinnedId : selectedId;
+}
+
+/**
  * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
  * whole piece (size, construction, boards, drawers), whatever is selected, and is shown in Settings (ADR-080),
  * where the dialog title is the h2 and the editor its h3 (ADR-116).
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
-  const selectedId = useDesign((s) => s.selectedId);
+  const shownId = useShownId();
   const prod = design.product;
-  const found = selectedId ? findInProduct(prod, selectedId) : undefined;
+  const found = shownId ? findInProduct(prod, shownId) : undefined;
   if (mode === 'compose')
     return found ? (
       <SpaceEditor
@@ -157,7 +178,7 @@ function SizeLockNote() {
  */
 export function InsideEditor() {
   const design = useDesign((s) => s.design);
-  const selectedId = useDesign((s) => s.selectedId);
+  const selectedId = useShownId();
   const prod = design.product;
   const found = typeof selectedId === 'string' ? findInProduct(prod, selectedId) : undefined;
   if (found)
@@ -435,6 +456,10 @@ function SpaceEditor({
 }) {
   const update = useDesign((s) => s.updateSpace);
   const select = useDesign((s) => s.select);
+  const designId = useDesign((s) => s.design.id);
+  const pinned = useUi((s) => s.pinnedId === space.id);
+  const pin = useUi((s) => s.pin);
+  const unpin = useUi((s) => s.unpin);
   const opening = useDesign((s) => s.model.spaces.find((o) => o.nodeId === space.id));
   const allDiags = useDesign((s) => s.model.diagnostics);
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
@@ -460,7 +485,23 @@ function SpaceEditor({
       <DrawerHead name={title}>
         <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
         <header className="insp-head">
-          <h2>{title}</h2>
+          <div className="info-row">
+            <h2>{title}</h2>
+            <InfoTip label={t('About selecting')} align="start">
+              {t(
+                'A tap goes one space in. Ctrl or Cmd and a click jumps to the innermost space. Shift+Enter or Esc goes one level up.',
+              )}
+            </InfoTip>
+            <button
+              type="button"
+              className={`btn outline sm pin-btn${pinned ? ' on' : ''}`}
+              aria-pressed={pinned}
+              onClick={() => (pinned ? unpin() : pin(space.id, designId))}
+            >
+              {t('Pin the drawer')}
+            </button>
+          </div>
+          {pinned && <p className="pinned-note">{t('Pinned: {name}', { name: title })}</p>}
           {opening && (
             <p className="measure">
               {tNode('{w} wide × {h} high × {d} deep inside', {
