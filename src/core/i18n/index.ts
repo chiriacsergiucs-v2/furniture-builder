@@ -12,6 +12,7 @@
  */
 // Type only (ADR-229): the Russian dictionary is a lazy chunk, loaded by `loadDictionary` before the app's modules.
 import type { ru } from './ru';
+import { WARNING_RO } from './warning-text';
 
 export type Lang = 'en' | 'ru';
 export const LANGS: Lang[] = ['en', 'ru'];
@@ -89,9 +90,28 @@ export function english(key: string): string {
   return at < 0 ? key : key.slice(0, at);
 }
 
+/**
+ * The messages of warnings (ADR-265): the text `t` gave for a key listed in `WARNING_RO`, by that text, with the key and
+ * the params. The printed sheet looks a warning up by its message and prints it again in the print language. Bounded:
+ * the oldest message goes when there are too many.
+ */
+const recorded = new Map<string, { key: string; params?: Params }>();
+const RECORDED_MAX = 5000;
+export function recordText(text: string, key: string, params?: Params): string {
+  recorded.delete(text);
+  recorded.set(text, params ? { key, params } : { key });
+  if (recorded.size > RECORDED_MAX) recorded.delete(recorded.keys().next().value as string);
+  return text;
+}
+/** The key and params a message was made from, when it is a warning text (ADR-265). */
+export function recordedMessage(text: string): { key: string; params?: Params } | undefined {
+  return recorded.get(text);
+}
+
 /** The text in the current language. */
 export function t(key: Key, params?: Params): string {
-  return format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
+  const text = format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
+  return Object.hasOwn(WARNING_RO, key) ? recordText(text, key, params) : text;
 }
 
 const NUM = /\d+(?:[.,]\d+)?/g;

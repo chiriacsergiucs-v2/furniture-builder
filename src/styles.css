@@ -3319,6 +3319,15 @@ table.buy {
 .catalog-page .family {
   scroll-margin-top: 64px;
 }
+.group-more {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-2);
+  margin: var(--s-3) 0 var(--s-4);
+}
+.group-more .hint {
+  margin: 0;
+}
 .catalog-group {
   display: grid;
   gap: var(--s-3);

@@ -1759,7 +1759,31 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-510: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+### G-512: tools/catalog-compact has 6 failing checks on main
+
+- Status: Open
+- Origin: Catalog paging baseline run, 2026-11-16 (N311)
+- Missing: tools/catalog-compact/find-it.mjs fails 6 checks on main and on the paged catalog alike: item card tags on one meta line, unclipped (183 cards, 64 off on main), and cards whose More/Less text no longer matches after a resize and whose cut lines do not read in full after More, at 390 and 1280 px. ADR-272 (Pending), batch 1 of 7, also repairs this script; check it before building a second fix.
+- Request: Implement f9 fulkly, you pick numbers
+- Questions: Are these three checks still the intended rule, or did a later card layout change make them stale?
+- Suggested pick: Check each against the current card layout and fix the cards or the script (estimate: effort +15 %, value +10 %)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
+### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
+
+- Status: Open
+- Origin: ADR-272 to ADR-278, user 2026-11-16: "create a fixing plan of batches of adrs"
+- Missing: The 38 browser find-it scripts that fail in pnpm regress are not fixed; the seven ADRs only plan the fixes.
+- Request: For all failures, no skipping, all, create a fixing plan of batches of adrs; 6 per adr, all adrs in 1 pr, merged.
+- Questions: none
+- Suggested pick: Build ADR-272 to ADR-278 one after another with next-adr, each verified with pnpm regress at --jobs=1
+- Work: High
+- Impact: Medium
+- Necessity: Medium
+
+### G-514: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
 
 - Status: Open
 - Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
@@ -1771,7 +1795,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-511: Warnings on the cut sheet: free-text data words stay in the app language
+### G-515: Warnings on the cut sheet: free-text data words stay in the app language
 
 - Status: Open
 - Origin: ADR-265 D18-F6 build 2026-11-16
