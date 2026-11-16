@@ -69,6 +69,7 @@ import { useSnap } from '../store/useSnap';
 import { SELECT } from './panelResources';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useMoveMode } from './pieceDrag';
+import { ExplodedWhy } from './ExplodedWhy';
 import { ARBridge, useARState } from './AR';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import type { MaterialImage, Panel } from '../core/types';
@@ -633,6 +634,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
               {t('Move')}
             </button>
           )}
+          <ExplodedWhy pieces={hasPieces} picture={hasPicture} />
           {hasPieces && (
             <button
               type="button"
