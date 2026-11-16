@@ -89,7 +89,7 @@ for (const scheme of ['light', 'dark']) {
       for (let step = 1; step <= 12; step++) {
         await shot(page, width, scheme, `wizard-step-${String(step).padStart(2, '0')}`);
         // Next stays disabled on the Type step until a type is chosen: take the first one (Cabinet).
-        if (step === 1) await page.getByRole('button', { name: /^Cabinet \(closed box\)/ }).click();
+        if (step === 1) await page.getByRole('radio', { name: /^Cabinet \(closed box\)/ }).click();
         const next = page.getByRole('button', { name: 'Next', exact: true });
         if (!(await next.isVisible().catch(() => false)) || (await next.isDisabled())) break;
         await next.click();
