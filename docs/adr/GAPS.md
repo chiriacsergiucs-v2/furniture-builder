@@ -1766,3 +1766,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low-medium
 - Impact: Low-medium
 - Necessity: Low
+
+### G-523: Two backlog rows share id N326
+
+- Status: Open
+- Origin: Docs session 2026-11-16 (N327)
+- Missing: Two backlog rows share id N326 (More menu F-01/F-02 and disabled reasons F-04); ids are never renumbered, so the clash needs the user's decision
+- Request: Docs: mark fixed audit findings; F-11
+- Questions: Which N326 row keeps the id, or is a new id given to the second?
+- Suggested pick: Leave both as they are until the user decides
+- Work: Low
+- Impact: Low

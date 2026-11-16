@@ -33,6 +33,28 @@ Agent sessions run behind a proxy that refuses the Pages URL and ikea.com: deplo
 `Deploy GitHub Pages` run id only; live checks and the catalog feed (ADR-029, ADR-052) need the user or a
 session with that access (retro 2026-10-26).
 
+## Shell: places, modes and the phone sheet
+
+Checked in `src/ui/App.tsx`, `src/ui/SheetHandle.tsx`, `src/ui/shell/*`, `src/styles.css`.
+
+- **Places.** `type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info'` (`App.tsx:159`). The location hash picks
+  the page (`pageFromHash`, `usePage`, `App.tsx:161-185`); the bare address is Projects. Catalog, Gaps and Info are
+  lazy chunks (`App.tsx:72-74`). Nav: `nav.places` inside `header.bar` (`App.tsx:618-637`), a bottom nav at ≤ 760 px
+  (`styles.css:4992`). Gaps and Info are reached from ⋯ More or by their hash.
+- **Modes.** `MODES = ['compose', 'build']` (`src/store/uiStore.ts:18`), the `.modes` radio group under the bar
+  (`App.tsx:851-870`). Hidden on phones (`styles.css:5063-5065`); there the bottom nav adds a Cut list place that sets
+  `build` and Editor sets `compose` (`App.tsx:637-680`, ADR-241).
+- **Editor layout.** `main.work.mode-<mode>` holds `aside.side` (the Compose panel) and the stage (`App.tsx:912-914`).
+  On a phone `.side` is the bottom sheet: a peek row (`SheetHandle` + `.sheet-peek` button), a `#sheet-slot` where
+  Settings and Material open (ADR-247), and `.side-body` (`App.tsx:917-934`).
+- **Sheet stops.** `peek` (56 px), `half` (40 % of the window height), `full` (to the bar and bottom nav): state in
+  `App.tsx:274-284`, heights in `SheetHandle.tsx:6-20`. Selecting a piece or space opens it to half
+  (`App.tsx:314-332`); `askSheet` in `uiStore` lets a project's Edit this piece ask for `full` (`src/ui/Project.tsx:510`).
+- **⋯ More.** `src/ui/shell/MoreMenu.tsx` (New, Files, language, Gaps, Info, with arrow-key navigation);
+  `ProjectsPage.tsx`, `LanguageMenu.tsx`, `files.ts` and `importFile.ts` sit beside it. What each of the last four does
+  beyond its imports: not checked.
+- Layout detail and tokens: `docs/ui-design.md`.
+
 ## Domains (proposed 2026-11-15, not built)
 
 Status: a proposal for splitting the flat `src/core` (158 files), `src/ui` (82) and `src/store` (34) into domain
