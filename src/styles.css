@@ -1526,6 +1526,11 @@ td.note {
 .actions .menu[open] > summary {
   background: var(--bar-hover);
 }
+.actions .menu > summary[aria-current='page'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
 .actions .menu > summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -6055,6 +6060,20 @@ p > .info-tip {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
+}
+
+/* On a phone the tool row is one row that scrolls sideways (audit F-30), so it covers one button's height of the
+   scene and no tool sits alone below. While a panel under it is open (Move to, Section cut) it wraps as before. */
+@media (max-width: 760px) {
+  .three-tools:not(:has(.three-move-to, .section-tools)) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-block: 2px;
+    scrollbar-width: none;
+  }
+  .three-tools:not(:has(.three-move-to, .section-tools)) > * {
+    flex: 0 0 auto;
+  }
 }
 
 /* One-tap Move to buttons (ADR-147) ----------------------------------------- */

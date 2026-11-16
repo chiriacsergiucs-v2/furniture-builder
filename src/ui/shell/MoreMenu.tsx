@@ -32,11 +32,14 @@ export function MoreMenu({
   onOpened,
   onGaps,
   onInfo,
+  current,
 }: {
   onNew: () => void;
   onOpened: () => void;
   onGaps: () => void;
   onInfo: () => void;
+  /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
+  current?: 'gaps' | 'info';
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -112,7 +115,11 @@ export function MoreMenu({
   return (
     <>
       <details className="menu more" ref={ref}>
-        <summary aria-label={t('More')} title={t('New and files')}>
+        <summary
+          aria-label={t('More')}
+          aria-current={current ? 'page' : undefined}
+          title={t('New and files')}
+        >
           <Icon name="more" />
         </summary>
         <div className="menu-items">
@@ -270,11 +277,19 @@ export function MoreMenu({
           <span className="menu-sep" aria-hidden="true" />
           <LanguageMenu />
           <span className="menu-sep" aria-hidden="true" />
-          <button type="button" onClick={run(onInfo)}>
+          <button
+            type="button"
+            aria-current={current === 'info' ? 'page' : undefined}
+            onClick={run(onInfo)}
+          >
             <Icon name="info" />
             {t('Information and guides')} <small>{t('every feature, by domain')}</small>
           </button>
-          <button type="button" onClick={run(onGaps)}>
+          <button
+            type="button"
+            aria-current={current === 'gaps' ? 'page' : undefined}
+            onClick={run(onGaps)}
+          >
             <Icon name="alert-triangle" />
             {t('Gaps')} <small>{t('what is not built yet')}</small>
           </button>
