@@ -133,6 +133,17 @@ class HookTest(unittest.TestCase):
         self.assertIsNone(self.run_hook(reply + " (G-012)"))
         self.assertEqual(self.run_hook(reply)["decision"], "block")
 
+    def test_a_cited_id_must_exist_in_the_ledger(self):
+        reply = "**Skipped this iteration**\n- the 3D outline (G-999)"
+        path = transcript({"type": "user", "message": {"content": "go"}}, say(reply))
+        try:
+            data = {"transcript_path": path}
+            self.assertEqual(gaps_hook.decide(data, known={"G-001"})["decision"], "block")
+            self.assertIsNone(gaps_hook.decide(data, known={"G-001", "G-999"}))
+            self.assertIsNone(gaps_hook.decide(data))  # no ledger to compare with: any cited id counts
+        finally:
+            pathlib.Path(path).unlink()
+
     def test_more_wordings_of_a_skip_are_caught(self):
         for reply in ("Skipped: the outline. Cost: S.", "burst-skipped: lint (burst, 2026-11-16)",
                       "Unblock: you enable it.", "The blocker is the repo setting."):

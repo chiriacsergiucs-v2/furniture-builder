@@ -140,6 +140,8 @@ function SheetDialog({
       aria-label={title}
       onKeyDown={(e) => {
         if (e.key !== 'Escape' || e.defaultPrevented) return;
+        // A form opened inside the sheet (a modal dialog of its own) closes itself on Esc; the sheet stays (G-519, N318).
+        if ((e.target as HTMLElement).closest('dialog') !== ref.current) return;
         e.preventDefault();
         e.stopPropagation();
         onClose();

@@ -111,7 +111,7 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
   Offline it compares with the last fetched `origin/main`. The hard check is the CI job `id-check` (same script, `--ci`) on
   every pull request; `verify` fails with it (N316, G-517).
 - `Stop`: `scripts/gaps_hook.py` blocks a reply once when it names unbuilt items (skipped, deferred, out of scope, open
-  questions), cites no G id (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
+  questions), cites no G id that exists in the ledger or the archive (ADR-082; wired again 2026-11-15, user: "Wire as is"; a ledger change earlier on the branch no longer
   silences it, N312). Record each with `pnpm gaps add`, cite the G ids, then finish.
 - `Stop`: `scripts/reply_length_hook.py` blocks a reply once when it is longer than 150 words (fenced code does not count),
   so replies stay short (N315, user: "Lower your verbosity", "Keep it short, concise"). A reply that the user asked for as a

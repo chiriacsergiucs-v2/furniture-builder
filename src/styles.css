@@ -6229,7 +6229,8 @@ p > .info-tip {
 .gaps-page .chip.filter[aria-pressed='true'] {
   border-color: var(--primary);
   background: var(--primary-soft);
-  color: var(--primary);
+  /* --primary on --primary-soft is 2:1 in the dark theme (audit F-24, N318); --link is 5.9:1 in both. */
+  color: var(--link);
 }
 .gaps-list {
   list-style: none;

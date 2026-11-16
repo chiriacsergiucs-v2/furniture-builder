@@ -3506,6 +3506,28 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-514: The gaps Stop hook can still be passed by citing any G id
+
+- Status: Done (N318)
+- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
+- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
+- Request: Fix the gaps force skip vector
+- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
+- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
+- Work: Low
+
+### G-519: Esc in the Save as project template form also closes Settings on a phone
+
+- Status: Done (N318)
+- Origin: ADR-275, 2026-11-16, found while repairing tools/project-actions/find-it.mjs
+- Missing: At 390 px one Escape in the Save as project template form closes the form and the Settings dialog behind it; the script expected Settings to stay open, as it does after Cancel. Not checked on a desktop width in a browser (unverified).
+- Request: Repair browser find-it scripts, batch 4 of 7 (user 2026-11-16)
+- Questions: Should Esc close only the form, as Cancel does?
+- Suggested pick: Close only the form
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-520: ADR-265 is oversized and needs a split before it can be built
 
 - Status: Done (withdrawn 2026-11-16: ADR-265 was already built with every Done-when item ticked; it only needed `ship-adr`, run in the same change)
