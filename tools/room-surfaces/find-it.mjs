@@ -10,6 +10,7 @@
 // "Export for AR (.usdz)" (a zip holding a .usda, no request leaves the device); Render › "Engine: {name}" and the
 // first 8 samples; and the wall behind the sideboard opened with "Edit this piece". Not part of `pnpm test`.
 // Not checked here: AR on a real phone (Android View in AR, iPhone AR Quick Look); that needs the devices.
+// regress-timeout: 900 (both widths, with the picture steps, run longer than the default 300 s; `pnpm regress` reads this line)
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -194,6 +195,7 @@ for (const width of [1280, 390]) {
   await page.goto(url);
   await click(btn('Create a new project'));
   await click(btn('Create project'));
+  await page.locator('main.work').waitFor({ state: 'visible' });
   await sheet(true);
   await click(btn('Add a piece'));
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Sideboard');

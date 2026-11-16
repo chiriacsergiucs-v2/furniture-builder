@@ -4,6 +4,7 @@
 // Since ADR-079/080 the editor has two modes: Compose (drawing + editor, the editor in a bottom sheet on a phone) and
 // Build & Preview (3D and the parts with Download CSV and Print). "No errors" is read as Download CSV enabled there.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -58,14 +59,10 @@ for (const width of [1440, 375]) {
   const noSideScroll = () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   const csv = page.getByRole('button', { name: 'Download CSV' });
-  const mode = (name) =>
-    page
-      .getByRole('radiogroup', { name: 'Editor mode' })
-      .getByRole('radio', { name: new RegExp(`^${name}`) });
-  /** Switch editor mode (Compose / Build & Preview). */
+  /** Switch editor mode (Compose / Build & Preview); a phone has no mode row, its bottom nav does it (ADR-241). */
   const toMode = async (name) => {
-    const m = mode(name);
-    if ((await m.getAttribute('aria-checked')) !== 'true') await m.click();
+    if (name === 'Compose') await goCompose(page);
+    else await goBuild(page);
     await page.waitForTimeout(250);
   };
   // The piece's own editor (type, recline positions, back rake…) is the Settings dialog since ADR-080.
