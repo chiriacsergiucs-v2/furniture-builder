@@ -745,7 +745,7 @@ function ShowMore({
   const n = Math.min(step, left);
   return (
     <div className="group-more">
-      <p className="hint" role="status" tabIndex={-1} ref={status}>
+      <p className="hint" aria-live="polite" tabIndex={-1} ref={status}>
         {families
           ? t('Showing {shown} of {total} families', { shown, total })
           : t('Showing {shown} of {total}', { shown, total })}
