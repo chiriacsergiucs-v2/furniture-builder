@@ -136,6 +136,10 @@ for (const width of [1440, 375]) {
   };
   const closeDialog = async () => {
     await page.keyboard.press('Escape');
+    // A phone has no Esc key: its Settings dialog closes with the footer's Done button.
+    await page.waitForTimeout(300);
+    const done = dlg.locator('.dialog-footer').getByRole('button', { name: 'Done', exact: true });
+    if ((await dlg.count()) && (await done.isVisible().catch(() => false))) await done.click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
   // The results tabs are in Build & Preview / the phone's Cut list place (ADR-241); a click on the open tab closes
@@ -231,7 +235,7 @@ for (const width of [1440, 375]) {
     // The construction choices are in the piece editor's Settings (ADR-160, ADR-247).
     await click(btn('Settings'));
     await click(page.getByRole('radio', { name: 'Under the sides' }));
-    await page.keyboard.press('Escape');
+    await closeDialog();
     await click(btn('Back to project', false));
   }
   await openProjectSettings();

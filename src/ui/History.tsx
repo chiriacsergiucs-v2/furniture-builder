@@ -85,6 +85,8 @@ function HistoryForProject() {
   };
   return (
     <Group
+      // A stable key: the title changes with the version count, and a changed title would fold the group again.
+      id="project-history"
       title={
         versions.length
           ? t('History · {n|# version|# versions}', { n: versions.length })

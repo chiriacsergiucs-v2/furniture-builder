@@ -118,7 +118,7 @@ for (const width of [1280, 390]) {
   // 1. Bare app, nothing open: Gaps and Research have no Back to the editor.
   for (const [item, main] of [
     [/^Gaps/, 'Gaps'],
-    [/^Feature Research/, 'Feature Research & Catalog'],
+    [/^Information and guides/, 'Information and guides'],
   ]) {
     await more();
     await click(page.getByRole('button', { name: item }));
@@ -334,7 +334,9 @@ for (const width of [1280, 390]) {
   await places.getByRole('link', { name: 'Editor' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await sheet(true);
-  await click(page.locator('summary', { hasText: /^History/ }).first());
+  // ADR-267: a group the user opened stays open for the session; click History only when it is folded.
+  const history2 = page.locator('summary', { hasText: /^History/ }).first();
+  if (!(await history2.evaluate((el) => el.parentElement.open))) await click(history2);
   const orphan = page.locator('summary', { hasText: /^Versions of deleted projects \(\d+\)$/ });
   await orphan.waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
   const orphanText = (await orphan.textContent().catch(() => '')) ?? '';
@@ -483,10 +485,12 @@ for (const width of [1280, 390]) {
     await page.waitForTimeout(300);
     await view('Compose');
     const crumbs = page.getByRole('navigation', { name: 'Where this space sits' });
+    // Space names carry their path now ("Bottom: Hanging"); the last part is the space's own name.
+    const isHanging = (n) => /(^|: )Hanging$/.test(n ?? '');
     const seen = [];
     const current = async () =>
       (await visible(crumbs)) ? await crumbs.locator('[aria-current]').textContent() : null;
-    for (let i = 0; i < 5 && seen.at(-1) !== 'Hanging'; i++) {
+    for (let i = 0; i < 5 && !isHanging(seen.at(-1)); i++) {
       await sheet(false);
       const sp = page.getByRole('button', { name: /^Hanging.* space/ }).first();
       const b = await sp.boundingBox();
@@ -498,7 +502,7 @@ for (const width of [1280, 390]) {
     check(
       width,
       'taps reach the hanging space inside a column ("Hanging" on the path)',
-      seen.at(-1) === 'Hanging' && !!seen.at(-2),
+      isHanging(seen.at(-1)) && !!seen.at(-2),
       seen.join(' › '),
     );
     const up = crumbs.getByRole('button', { name: 'Up one level' });
