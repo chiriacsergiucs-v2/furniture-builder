@@ -50,6 +50,19 @@ for (const width of [1280, 390]) {
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
   const textBtn = (re) => page.locator('button', { hasText: re }).first();
   const pieces = page.locator('ul.pieces > li');
+  // ADR-160: a selected piece's editor replaces the list; "All pieces (N)" brings the list back and carries N.
+  const allPieces = page.getByRole('button', { name: /^All pieces \(\d+\)$/ });
+  const count = async () => {
+    if (await allPieces.isVisible()) {
+      const label = (await allPieces.textContent()) ?? '';
+      return Number(label.match(/\((\d+)\)/)[1]);
+    }
+    return pieces.count();
+  };
+  const pick = async (n) => {
+    if (await allPieces.isVisible()) await click(allPieces);
+    await click(pieces.nth(n).getByRole('button'));
+  };
   const openSheet = async () => {
     const peek = page.locator('.sheet-peek');
     if ((await peek.isVisible()) && (await peek.getAttribute('aria-expanded')) === 'false')
@@ -68,14 +81,11 @@ for (const width of [1280, 390]) {
     await openGroup('Position');
     return Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
   };
+  // G-311 hid the typed Rotation (°) field; the piece's angle is read from the turn handle on the plan (ADR-169).
   const turnSel = async () => {
-    await openGroup('Position');
-    return (
-      (await page
-        .getByRole('radio', { name: /^\d+°$/, checked: true })
-        .first()
-        .textContent()) ?? ''
-    );
+    const h = page.getByRole('slider', { name: /^Turn / }).first();
+    await h.waitFor({ state: 'attached' });
+    return `${await h.getAttribute('aria-valuenow')}°`;
   };
 
   // 1. Bare app → new project → one base cabinet, selected.
@@ -85,7 +95,7 @@ for (const width of [1280, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addPiece('Base cabinet', /Base cabinet, doors: 1 door \+ shelf/);
-  await click(pieces.first().getByRole('button'));
+  await pick(0);
   await page.waitForTimeout(150);
 
   // 2. Duplicate is found by text: a touching copy, one undo step.
@@ -94,7 +104,7 @@ for (const width of [1280, 390]) {
   const x0 = await fromLeft();
   await click(dup);
   await page.waitForTimeout(200);
-  check(width, 'Duplicate adds a second piece', (await pieces.count()) === 2);
+  check(width, 'Duplicate adds a second piece', (await count()) === 2);
   const x1 = await fromLeft();
   check(
     width,
@@ -105,20 +115,20 @@ for (const width of [1280, 390]) {
   await shot('duplicated');
   await click(btn('Undo'));
   await page.waitForTimeout(200);
-  check(width, 'one Undo removes the copy', (await pieces.count()) === 1);
+  check(width, 'one Undo removes the copy', (await count()) === 1);
   await click(btn('Redo'));
   await page.waitForTimeout(200);
-  check(width, 'Redo brings the copy back', (await pieces.count()) === 2);
+  check(width, 'Redo brings the copy back', (await count()) === 2);
 
   // 3. Turn 90° about the centre: the front turns, four turns come back to the same place.
   await openSheet();
-  await click(pieces.first().getByRole('button'));
-  const turn = textBtn(/^Turn 90° ↺$/);
+  await pick(0);
+  const turn = textBtn(/^Turn ↺$/);
   check(width, '"Turn 90°" is found in the selected-piece card', await turn.isVisible());
   const t0 = await fromLeft();
   const [fw, fd] = (
     (await page
-      .getByText(/^Takes \d+ × \d+ mm of floor/)
+      .getByText(/^\d+ × \d+ mm of floor, \d+ mm high/)
       .first()
       .textContent()) ?? ''
   )
@@ -151,7 +161,7 @@ for (const width of [1280, 390]) {
     (await fromLeft()) === t0 && (await turnSel()) === '0°',
     `${await fromLeft()}, ${await turnSel()}`,
   );
-  await click(textBtn(/^Turn 90° ↻$/));
+  await click(textBtn(/^Turn ↻$/));
   await page.waitForTimeout(120);
   check(
     width,
@@ -184,7 +194,7 @@ for (const width of [1280, 390]) {
 
   // 5. Mirror: a door piece mirrors (no message); a bookcase says there is nothing to mirror.
   await openSheet();
-  await click(pieces.first().getByRole('button'));
+  await pick(0);
   const mirror = textBtn(/^Mirror$/);
   check(width, '"Mirror" is found in the selected-piece card', await mirror.isVisible());
   await click(mirror);
@@ -192,22 +202,24 @@ for (const width of [1280, 390]) {
   check(
     width,
     'Mirror on a door cabinet changes it (no "Nothing to mirror")',
-    !(await page.getByText('Nothing to mirror in this piece').isVisible()),
+    !(await page.getByText('Nothing to mirror in this piece').first().isVisible()),
   );
+  // ADR-160: Mirror the run lives in the piece's ⋯ menu.
+  await click(btn('More actions'));
   const run = textBtn(/^Mirror the run \(2 pieces\)$/);
   check(width, '"Mirror the run (2 pieces)" is found', await run.isVisible());
   await click(run);
   await page.waitForTimeout(150);
-  check(width, 'Mirror the run keeps both pieces', (await pieces.count()) === 2);
+  check(width, 'Mirror the run keeps both pieces', (await count()) === 2);
   await shot('mirrored');
   await addPiece('Bookcase', /Bookcase/);
-  await click(pieces.nth(2).getByRole('button'));
+  await pick(2);
   await click(textBtn(/^Mirror$/));
   await page.waitForTimeout(150);
   check(
     width,
     'a bookcase says "Nothing to mirror in this piece"',
-    await page.getByText('Nothing to mirror in this piece').isVisible(),
+    await page.getByText('Nothing to mirror in this piece').first().isVisible(),
   );
   await shot('nothing-to-mirror');
 
@@ -219,12 +231,7 @@ for (const width of [1280, 390]) {
       .catch(() => {});
     await page.keyboard.press('Control+d');
     await page.waitForTimeout(200);
-    check(
-      width,
-      'Ctrl+D duplicates the selected piece',
-      (await pieces.count()) === 4,
-      `${await pieces.count()}`,
-    );
+    check(width, 'Ctrl+D duplicates the selected piece', (await count()) === 4, `${await count()}`);
   }
 
   check(width, 'no sideways scroll', await noSideScroll());

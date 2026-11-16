@@ -570,7 +570,14 @@ function ItemCard({
   useLayoutEffect(() => {
     const card = ref.current;
     if (!card || open) return;
-    const measure = () => setCut(cardCut(card));
+    // Measured as if "More" were not there: its own width narrows the summary, so a card it was shown on would
+    // otherwise keep reading as cut and keep the button after the card has room again.
+    const measure = () => {
+      card.classList.add('measuring');
+      const isCut = cardCut(card);
+      card.classList.remove('measuring');
+      setCut(isCut);
+    };
     measure();
     // Text widths change once the web font has loaded, without the card changing size (ADR-120's RO line).
     void document.fonts?.ready.then(measure);

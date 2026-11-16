@@ -1415,7 +1415,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-471: Catalog page is taller than the 15000 px script limit
 
-- Status: Open
+- Status: ADR-272
 - Origin: ADR-201 tests, 2026-11-06; agent found it
 - Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
 - Request: Not asked; the script's own limit.

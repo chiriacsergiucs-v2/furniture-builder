@@ -70,7 +70,8 @@ for (const width of [1280, 390]) {
   const about = firstFamily.getByRole('button', { name: 'About this family' });
   const structure = firstFamily.getByText('Default structure:');
   // ADR-119: the compact catalog at every width; a phone shows the short switch labels, a desktop the full ones.
-  const limit = phone ? 30000 : 15000;
+  // User 2026-11-16 (G-471): the catalog grew to 183 cards; the desktop limit is 16000 px, up from 15000.
+  const limit = phone ? 30000 : 16000;
   check(width, `Catalog page under ${limit} px tall`, height < limit, `${height} px`);
   const switchText = [(await saved.innerText()).trim(), (await byRoom.innerText()).trim()];
   check(
@@ -100,7 +101,8 @@ for (const width of [1280, 390]) {
     const bad = [];
     for (const c of cards) {
       const meta = c.querySelector('.item-meta');
-      const ts = [...c.querySelectorAll('.tag, .kind')];
+      // The "default" tag of a ready item sits beside its picture, not in the meta line (`.item-default`).
+      const ts = [...c.querySelectorAll('.item-meta .tag, .item-meta .kind')];
       if (!meta || !ts.length) {
         bad.push(`${c.querySelector('.item-name')?.textContent}: no meta line`);
         continue;

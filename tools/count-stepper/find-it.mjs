@@ -4,6 +4,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/count-stepper/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -30,6 +31,17 @@ for (const width of [1280, 390]) {
   const shot = (name) => page.screenshot({ path: `${out}/count-stepper-${name}-${width}.png` });
   const mode = (name) => page.getByRole('radio', { name });
   const front = page.locator('.view.front');
+  // The card over the drawing is hidden while the phone's bottom sheet is open (Elevation.tsx), and a tap on a space
+  // opens the sheet: fold it before looking for the card.
+  const foldSheet = async () => {
+    const peek = page.locator('.sheet-peek');
+    if (
+      (await peek.isVisible().catch(() => false)) &&
+      (await peek.getAttribute('aria-expanded')) === 'true'
+    )
+      await peek.click();
+    await page.waitForTimeout(250);
+  };
   const three = page.locator('.view.three');
   // The 3D view's card: over the view on a desktop, docked under it on a phone (G-070).
   const dock3 = phone ? page.locator('#count-dock') : three;
@@ -51,7 +63,7 @@ for (const width of [1280, 390]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await mode('Compose').click();
+  await goCompose(page);
 
   // 2. First tap selects the whole piece (ADR-083): the card shows the piece's dividers. A second tap on the drawer
   //    bank selects it: the card lies inside the drawing, in a corner away from it (ADR-112).
@@ -65,6 +77,7 @@ for (const width of [1280, 390]) {
   );
   await bank.click({ force: true });
   await page.waitForTimeout(250);
+  await foldSheet();
   const c = card(front);
   check(width, '"Quick counts" card in the drawing', await c.isVisible());
   // Short visible labels over the drawing (ADR-112); the counts keep their full names.
@@ -170,12 +183,15 @@ for (const width of [1280, 390]) {
     .first()
     .click({ force: true });
   await page.waitForTimeout(200);
+  await foldSheet();
   await card(front).getByRole('button', { name: 'More doors' }).click();
   await page.waitForTimeout(200);
   check(width, 'More doors → 2', (await valueOf(front, 'Doors')) === '2');
 
   // 5. 3D (Build & Preview): the same card over the 3D view, inside it; − Doors → 1.
-  await mode(/Build & Preview/).click();
+  await goBuild(page);
+  // ADR-144: the stage opens in 2D below 1500 px; the View switch's 3D shows the 3D view.
+  await page.getByRole('radio', { name: '3D', exact: true }).click();
   await three.locator('canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const c3 = card(dock3);

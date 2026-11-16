@@ -3549,6 +3549,10 @@ table.buy {
   margin-block: calc((1lh - var(--control-h)) / 2);
   padding: 0 var(--s-2);
 }
+/* Set for an instant while a card measures whether a line is cut: "More" itself must not count (ADR-119). */
+.item.compact.measuring .item-more {
+  display: none;
+}
 /* Open under the picture (column 1, rows 3–4, ADR-195). */
 .item.compact > .btn {
   grid-column: 1;
@@ -5094,6 +5098,10 @@ button.tile:hover {
   /* The top bar already names the project: the sheet starts at its pieces (ADR-160). */
   .work.mode-compose .side .insp-head {
     display: none;
+  }
+  /* The Settings dialog sits inside the sheet: it keeps its own head ("Whole cabinet"), as on a desktop. */
+  .work.mode-compose .side dialog .insp-head {
+    display: grid;
   }
   .work.mode-compose .peek-actions {
     display: inline-flex;
