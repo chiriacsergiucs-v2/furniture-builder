@@ -15,10 +15,12 @@ const interior = (): Space => {
   return { ...root, children: [splitSpace(root.children[0], 'y', 2), root.children[1]] };
 };
 
+let phone = false;
 beforeEach(() => {
+  phone = false;
   window.matchMedia = ((q: string) =>
     ({
-      matches: false,
+      matches: phone,
       media: q,
       addEventListener() {},
       removeEventListener() {},
@@ -37,6 +39,12 @@ describe('StructureTree (ADR-268)', () => {
     expect(screen.getByRole('tree', { name: 'Whole piece tree' })).toBeTruthy();
     expect(screen.getByText('Structure').closest('details')!.open).toBe(true);
     expect(names()).toEqual(['Whole cabinet', expect.stringMatching(/^Interior, \d+ × \d+ mm$/)]);
+  });
+
+  it('is closed in the phone sheet on a bare start', () => {
+    phone = true;
+    render(<StructureTree />);
+    expect(screen.getByText('Structure').closest('details')!.open).toBe(false);
   });
 
   it('expands the ancestors of a space selected elsewhere and marks its row selected', () => {
