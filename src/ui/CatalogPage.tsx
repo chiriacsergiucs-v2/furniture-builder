@@ -174,12 +174,11 @@ export function CatalogPage({
     [families, q],
   );
   const groups = useMemo(() => groupFamilies(shown, grouping), [shown, grouping]);
+  // A new query or grouping drops the revealed families for good (clearing the search later does not bring them back):
+  // state adjusted while rendering, the pattern React documents for state that follows a prop.
+  if (moreState.q !== q || moreState.grouping !== grouping)
+    setMoreState({ q, grouping, extra: {} });
   const extra = moreState.q === q && moreState.grouping === grouping ? moreState.extra : {};
-  // A new query or grouping drops the revealed families for good: clearing the search later does not bring them back.
-  useEffect(() => {
-    if (moreState.q !== q || moreState.grouping !== grouping)
-      setMoreState({ q, grouping, extra: {} });
-  }, [moreState, q, grouping]);
   const showMore = (key: string, by: number) =>
     setMoreState({ q, grouping, extra: { ...extra, [key]: (extra[key] ?? 0) + by } });
   const all = families.flatMap((f) => f.variants);
