@@ -1781,7 +1781,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
 - Work: Low
 
-### G-516: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+### G-515: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
 
 - Status: Open
 - Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
