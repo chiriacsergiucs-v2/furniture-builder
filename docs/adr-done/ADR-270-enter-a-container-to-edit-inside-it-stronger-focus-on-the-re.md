@@ -1,7 +1,8 @@
 # ADR-270: Enter a container to edit inside it; stronger focus on the rest
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-16
+- Implemented: 2026-11-16 (Browser find-it added; evidence in backlog N288)
 - Depends on: ADR-267, ADR-269
 - Design: docs/ui-design.md (section 4, editor screen; 3D view)
 - Backlog: N288
@@ -62,11 +63,11 @@ No change to `src/core/types.ts`, the design document or the Dexie schema (ADR-0
 
 ## Done when
 
-- [ ] `drillIn` cycles the children of the entered space, returns to the entered space, ignores taps outside it
+- [x] `drillIn` cycles the children of the entered space, returns to the entered space, ignores taps outside it
       (unit tests).
-- [ ] `Edit inside this space` and a double click enter; `Editing inside: …` shows with Exit; Esc exits first, then
+- [x] `Edit inside this space` and a double click enter; `Editing inside: …` shows with Exit; Esc exits first, then
       goes up (browser find-it).
-- [ ] The context ends when its space is deleted or another piece opens (store test).
-- [ ] `FOCUS_OPACITY` feeds both views; `hide` removes the faded panels in the drawing (browser find-it and unit
+- [x] The context ends when its space is deleted or another piece opens (store test).
+- [x] `FOCUS_OPACITY` feeds both views; `hide` removes the faded panels in the drawing (browser find-it and unit
       test of the mapping; the 3D materials get the same value, checked in code, not drawn headlessly).
-- [ ] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
+- [x] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
