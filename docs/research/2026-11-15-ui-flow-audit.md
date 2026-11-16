@@ -42,7 +42,7 @@ What was run:
 
 Limits you should weigh:
 - The app was captured at its first start with no saved projects. The Editor showed a default "Chest of drawers" piece. Saved-data states, long lists and error states were not captured.
-- Light theme only. The design document gives computed contrast ratios [D, `docs/ui-design.md:65`]; I did not recompute them.
+- Light theme only for sections 3 to 8. The dark theme, the wizard, Settings and Material were added in coverage pass 2 (section 11). The design document gives computed contrast ratios [D, `docs/ui-design.md:65`]; pass 2 measures them (section 11).
 - The 3D view was not captured, and its toolbar facts are [R] only.
 - The element map records only landmarks, headings and interactive elements. Sizes are the element's own box, not an enlarged hit area.
 - "Tab order" in the tables is the document order of focusable elements. It is not a recorded keyboard walk.
@@ -409,6 +409,10 @@ Severity: High = blocks a task or breaks a standard; Medium = a real obstacle wi
 | F-17 | Browser Back: Projects uses `replaceState`, so Back from Projects can leave the app; no `popstate` handler found. | [R] `App.tsx:172-184` | Navigation | H3 | Low | No `popstate` handler: proven (grep of `src`, 2026-11-16); Back leaving the app: Suspected |
 | F-18 | Error repair banner only on the project plan; a single piece shows problems inline. Two patterns for the same problem. | [R] `Project.tsx:1553`, `Inspector.tsx:459` | F13 | H4 | Low | Reported |
 | F-19 | Save to catalog is not available while editing a single piece in Compose. | [R] `Project.tsx:1027` | F12 | H7 | Low | Proven (checked 2026-11-16: `SaveToCatalogDialog` is used only at `Project.tsx:1027`) |
+| F-20 | In the dark theme the Catalog chips ("Ready", the type labels) are `#3a7260` text on `#24403a`, 2.01:1 against the 4.5:1 minimum, at both widths: 62 texts on the Catalog page. Cause: `.chip { color: var(--primary) }` on `var(--primary-soft)` (`src/styles.css:3046-3054`); the design document names `--link` as the dark text colour. **Fixed 2026-11-16 (N314):** `.chip` uses `--link` (5.9:1 in both themes); the contrast check then read 7,438 texts in 32 states with 0 below AA. | [M] `docs/research/ui-capture/contrast.json` before and after; a browser probe of `span.chip` (`rgb(58,114,96)` on `rgb(36,64,58)`) | F22 | 1.4.3 (AA) | Medium | Proven, fixed |
+| F-21 | On touch at 390 px, number fields are 32 px tall in the wizard's Size and Base steps (44×32) and in Settings (180×32 and 206×32), and two checkboxes are 18×18 ("Same plinth height for every piece", "Replace parts with their own board too"). The project's rule is 44 px; this extends F-03. | [M] `docs/research/ui-capture/flows/*-390-light.json` | F2, F16 | 2.5.8 passes at 24 px; the 18 px checkboxes rely on the spacing exception; 2.5.5 (AAA) fails | Low | Proven |
+| F-22 | The wizard's 8 steps (after Cabinet is chosen) wrap to three rows on a phone, about 120 px of the 812 px screen (about 15 %), before the step's content. | [M] `docs/research/ui-capture/flows/wizard-step-02-390-light.png` | F2 | H8 | Low | Proven (size from the screenshot) |
+| F-23 | Settings of an empty project (no pieces, no run) lists five "Run parts" actions ("Add worktop over…", "Add trim…", "Handles for this run…", "Add sink…", "Add hob…") beside a disabled "Suggest run parts". Whether the five work without a run was not tried. | [M] `docs/research/ui-capture/flows/settings-390-light.png`, `settings-1280-dark.png` | project Settings | H5, H8 | Low | Suspected |
 
 Findings I looked for and dropped:
 - The Gaps page title is not translated. That is a user rule (CLAUDE.md, 2026-10-29), not a defect.
@@ -425,6 +429,17 @@ Not found in the repo (within what was read): a skip link; focus moving to the p
 
 Not covered by this audit: the 3D view, the wizard's steps, the Settings and Material dialogs, Gaps, Research, Information, Account, Share and the Assistant beyond their entry points, dark theme, and any state that needs saved data.
 
+## 11. Coverage pass 2 (2026-11-16, G-509, N314)
+
+What was added after the first report:
+- **Flows capture** (`pnpm browser:capture-flows`): an empty project, Settings, Material and the wizard (8 steps after Cabinet is chosen) at 390 and 1280 px, light and dark: 44 screenshots and element maps in `docs/research/ui-capture/flows/`. No horizontal scroll and no page errors in any of them, and no state was skipped.
+- **Contrast check** (`pnpm browser:contrast`): the contrast of every visible text (its colour against the first opaque background above it) at both widths, both themes, on Projects, Catalog, Editor, the More menu, the New dialog, the wizard's first step, Settings and Material: 32 states. Disabled controls are skipped (exempt). The first run found 124 texts below AA, all in the dark Catalog (F-20). After the one-line fix in `src/styles.css`, the run read 7,438 texts and found 0 below AA, with none left unread. `docs/research/ui-capture/contrast.json` is the second run.
+- **Citation check** of the findings that were only Reported: F-06, F-07, F-13, F-14, F-19 are now Proven; F-12 is partly contradicted (a visible hint exists once the piece is selected); F-17's missing `popstate` handler is proven, and Back leaving the app is still Suspected. F-11 and F-18 were not checked line by line.
+
+Findings added: F-20 (fixed), F-21, F-22, F-23 (section 8).
+
+Limits of this pass: the contrast check reads text only, not icons, borders or focus rings, and skips a text over a gradient or an image (none were met). The empty project has no pieces, so the project plan, the 3D view and populated Settings were not captured. Still not covered: the 3D view, Gaps, Research, Information, Account, Share, the Assistant, and screens that need saved pieces (G-509 keeps these).
+
 ## 10. Appendix: file index
 
 - Captures: `docs/research/ui-capture/*.png` and `*.json`, `summary.json` (18 screens: Projects, Catalog, Editor × 390 and 1280 px × default, More menu, New dialog).
@@ -433,3 +448,4 @@ Not covered by this audit: the 3D view, the wizard's steps, the Settings and Mat
 - Editor: `src/ui/Elevation.tsx`, `Inspector.tsx`, `Selection.tsx`, `Editors.tsx`, `Wizard.tsx`, `MoveTo.tsx`, `Variables.tsx`, `Replace.tsx`, `PieceSize.tsx`, `PieceList.tsx`, `ProblemBanner.tsx`, `src/viewer/*`.
 - Results, projects, catalog: `src/ui/Output.tsx`, `Sheets.tsx`, `Shopping.tsx`, `Assembly.tsx`, `Project.tsx`, `ProjectSettings.tsx`, `History.tsx`, `CatalogPage.tsx`, `ReviewPack.tsx`, `src/ui/shell/ProjectsPage.tsx`, `MoreMenu.tsx`, `LanguageMenu.tsx`, `importFile.ts`.
 - Design documents: `docs/ui-design.md`, `docs/architecture.md`, `docs/backlog.md`, `docs/product/product-context.md`.
+- Pass 2 (section 11): `docs/research/ui-capture/flows/` (44 screens), `docs/research/ui-capture/contrast.json`, `tools/capture/flows.mjs`, `tools/capture/contrast.mjs`, `tools/lib/pagemap.mjs`.
