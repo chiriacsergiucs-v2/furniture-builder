@@ -62,3 +62,26 @@ describe.each(WIDTHS)('the assistant at %ipx (find-it, ADR-239, ADR-240)', (widt
     expect(server.assistantCalls).toHaveLength(1);
   });
 });
+
+describe.each(WIDTHS)('the assistant signed out at %ipx (find-it, F-27)', (width) => {
+  it('More › Assistant → switch → consent → a Sign in button; the request box is off until then', async () => {
+    const { user } = await renderApp(width);
+    localStorage.clear();
+    const { useAssistant } = await import('../../src/store/assistantStore');
+    useAssistant.setState({ enabled: false, consented: false, lines: [], preview: null });
+    await user.click(await screen.findByRole('button', { name: 'New single piece' }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await openMore(user);
+    await user.click(screen.getByRole('button', { name: /^Assistant/ }));
+    const dlg = within(await screen.findByRole('dialog', { name: 'Assistant' }));
+    await user.click(dlg.getByRole('checkbox', { name: 'Use the assistant on this device' }));
+    await user.click(dlg.getByRole('button', { name: 'Accept and start' }));
+    expect(dlg.getByText('Sign in to use the assistant.')).toBeTruthy();
+    expect((dlg.getByLabelText('Your request') as HTMLTextAreaElement).disabled).toBe(true);
+    await user.click(dlg.getByRole('button', { name: 'Sign in' }));
+    expect(await screen.findByRole('dialog', { name: 'Sign in' })).toBeTruthy();
+  });
+});

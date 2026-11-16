@@ -3525,6 +3525,15 @@ highest id in either file.
 - Questions: None: say catch up to pay the debt.
 - Suggested pick: Run the catch-up skill: jsdom find-it for 265, 268, 269 and tools/*/find-it.mjs for 270.
 - Work: Medium
+### G-518: Audit pass 3 findings F-24 to F-30 not fixed
+
+- Status: Done (N319)
+- Origin: UI audit pass 3, 2026-11-16 (G-509, N317)
+- Missing: Findings of docs/research/2026-11-15-ui-flow-audit.md section 12 still reported, not fixed: F-26 5-6 px plan labels at 390 px, F-27 signed-out Assistant flow, F-28 no Retry on a failed share link, F-29 no current place on Information and Gaps, F-30 3D tool row wraps over the scene. F-24 and F-25 are fixed (N318).
+- Request: Parallel execution of G-517, G-509, G-507
+- Questions: Which findings to fix, and in what order?
+- Suggested pick: Fix F-24 first (same fix as F-20), then F-25 and F-29
+- Work: Low
 - Impact: Medium
 - Necessity: Medium
 
