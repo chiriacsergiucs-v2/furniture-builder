@@ -76,7 +76,14 @@ try {
     await page.keyboard.press('Enter');
     await space.focus();
     await page.keyboard.press('Enter');
-    const selectionBefore = await page.locator('.side-body').innerText();
+    // The screen-reader announcer ("Selection changed to …", a live region) comes and goes inside the panel: leave it out.
+    const sideText = () =>
+      page.locator('.side-body').evaluate((el) => {
+        const copy = el.cloneNode(true);
+        copy.querySelectorAll('[aria-live], [role="status"]').forEach((n) => n.remove());
+        return copy.innerText ?? copy.textContent;
+      });
+    const selectionBefore = await sideText();
     check(
       'a space editor is selected before opening More',
       (await page.locator('.space-editor').count()) === 1,
@@ -89,10 +96,7 @@ try {
       'Escape on More restores focus',
       await more.evaluate((e) => e === document.activeElement),
     );
-    check(
-      'Escape on More preserves drawer selection',
-      (await page.locator('.side-body').innerText()) === selectionBefore,
-    );
+    check('Escape on More preserves drawer selection', (await sideText()) === selectionBefore);
     check(
       'no horizontal page scroll',
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),

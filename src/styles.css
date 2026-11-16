@@ -5327,7 +5327,8 @@ button.tile:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-2) var(--s-3);
+  /* Fronts, Select, Snap, Move alone (ADR-251) and Clear. stay on one row in a 488 px plan at 1280 px. */
+  gap: var(--s-2);
   min-width: 0;
 }
 .plan .drag-ghost.snapped rect {
@@ -5762,6 +5763,13 @@ p > .info-tip {
 /* ADR-144: on a phone the View switch keeps one row and never shrinks; Fronts takes the rest of the row. */
 .stage-tools:has(> .view-options) > .segmented {
   flex: none;
+}
+/* The "3D is not available" note shrinks and wraps instead of pushing the row past a phone's width. */
+.stage-tools:has(> .view-options) > .hint {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .stage-tools .fronts-short {
   display: none;

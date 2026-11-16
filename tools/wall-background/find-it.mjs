@@ -83,6 +83,10 @@ for (const width of [1280, 390]) {
   await sheet(true);
 
   // Room editor: Wall 1 → Picture.
+  // ADR-160: the room's fields sit in a closed "Room" fold; open it by its summary.
+  const roomFold = page.locator('details.room-fold');
+  if ((await roomFold.count()) && !(await roomFold.evaluate((el) => el.open)))
+    await roomFold.locator('> summary').click();
   const bg1 = page.getByLabel('Wall 1 background', { exact: true });
   await bg1.scrollIntoViewIfNeeded();
   check(width, 'Settings › Room shows "Wall 1 background"', await bg1.isVisible());
