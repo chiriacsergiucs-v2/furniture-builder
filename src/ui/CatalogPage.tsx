@@ -66,7 +66,7 @@ import {
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
 /**
- * Paging (N304). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
+ * Paging (N311). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
  * lists its first GROUP_PAGE families and each tap adds GROUP_STEP; a flat list (saved designs, a brand's decors and
  * pieces) lists LIST_PAGE rows and each tap adds LIST_STEP. Measured on the production build with 12 families per group:
  * no shorter; with 4: 15 996 px (phone) and 8 455 px (desktop).
@@ -1028,7 +1028,7 @@ function SaveAsTemplate({ onSaved }: { onSaved: (f: { id: string; name: string }
   );
 }
 
-/** One maker's decors and the saved pieces with one of its boards, a page at a time (N304). Keyed by brand, so a new brand starts at page one. */
+/** One maker's decors and the saved pieces with one of its boards, a page at a time (N311). Keyed by brand, so a new brand starts at page one. */
 function BrandBody({
   brand,
   saved,

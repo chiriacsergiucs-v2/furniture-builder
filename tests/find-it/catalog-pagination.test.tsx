@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for the paginated catalog (N304) in jsdom (ADR-108), from the bare app at 1280 and 390 px: each Catalog group
+// Find-it for the paginated catalog (N311) in jsdom (ADR-108), from the bare app at 1280 and 390 px: each Catalog group
 // lists its first families with "Showing 4 of N families" and a "Show … more" button that adds the next page; a group
 // that fits the first page shows neither; a new search starts the groups again at page one; a saved design lands on
 // page one after "Save to catalog"; the Saved list and a brand's decors list page their rows the same way.
@@ -29,7 +29,7 @@ async function openCatalog(user: User) {
 }
 const firstPageNote = new RegExp(`^Showing ${GROUP_PAGE} of \\d+ families$`);
 
-describe.each(WIDTHS)('catalog pagination at %ipx (find-it, N304)', (width) => {
+describe.each(WIDTHS)('catalog pagination at %ipx (find-it, N311)', (width) => {
   it('a long group lists its first families, then "Show … more" adds the next page', async () => {
     const { user } = await renderApp(width);
     await openCatalog(user);

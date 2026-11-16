@@ -86,7 +86,7 @@ try {
     await page.goto(url);
     await openCatalog();
     await shot('top');
-    // The page as it opens (paged, N304), then every card opened for the checks that measure all of them.
+    // The page as it opens (paged, N311), then every card opened for the checks that measure all of them.
     const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     await showAllRows(page);
     const cards = await page.evaluate(() => {
@@ -181,7 +181,7 @@ try {
     );
     if (phone) {
       check(
-        'page under 17 000 px tall as it opens (paged, N304)',
+        'page under 17 000 px tall as it opens (paged, N311)',
         pageHeight < 17000,
         `${pageHeight} px`,
       );

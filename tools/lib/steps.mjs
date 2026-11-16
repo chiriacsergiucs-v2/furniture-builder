@@ -74,7 +74,7 @@ export async function openTab(page, name) {
 }
 
 /**
- * Open every page of the paged catalog lists (N304): tap each "Show … more" until none is left, so a script that measures
+ * Open every page of the paged catalog lists (N311): tap each "Show … more" until none is left, so a script that measures
  * every card sees them all. A script that measures the default page leaves the lists as they open.
  */
 export async function showAllRows(page) {

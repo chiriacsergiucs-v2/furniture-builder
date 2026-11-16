@@ -3472,7 +3472,7 @@ highest id in either file.
 
 ### G-513: Catalog pagination at 12 families per group does not shorten the page
 
-- Status: Done (N304)
+- Status: Done (N311)
 - Origin: Catalog pagination, 2026-11-15 (F-09)
 - Missing: Per-group Show more at 12 families keeps the Catalog page at 27,738 px (390 px) and 14,151 px (1280 px, was 15,128): most groups have 12 or fewer families and the height comes from their variant cards (27 to 44 cards in a group of 12). The code, Russian text and 8 find-it tests are committed on the session branch but not merged.
 - Request: 1 yes (paginate the Catalog page in the app, per-group Show more)
@@ -3484,7 +3484,7 @@ highest id in either file.
 
 ### G-511: Catalog Brands and Saved lists are not paginated
 
-- Status: Done (N304)
+- Status: Done (N311)
 - Origin: Catalog pagination, 2026-11-15
 - Missing: Only the Templates source is paginated; the Brands decor list and the Saved list render every row.
 - Request: 1 yes (paginate the Catalog page in the app)
