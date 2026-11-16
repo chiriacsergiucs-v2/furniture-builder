@@ -333,7 +333,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-269](ADR-269-preview-on-hover-jump-deep-with-a-key-pin-the-drawer.md) | Preview on hover, jump deep with a key, pin the drawer | ADR-267, ADR-268 | Pending |
 | [ADR-270](ADR-270-enter-a-container-to-edit-inside-it-stronger-focus-on-the-re.md) | Enter a container to edit inside it; stronger focus on the rest | ADR-267, ADR-269 | Pending |
 | [ADR-271](../adr-done/ADR-271-mark-cut-list-parts-as-already-owned.md) | Mark cut-list parts as already owned | ADR-011, ADR-012 | ✅ Implemented |
-| [ADR-272](ADR-272-repair-browser-find-it-scripts-batch-1-of-7.md) | Repair browser find-it scripts, batch 1 of 7 | — | Pending |
+| [ADR-272](../adr-done/ADR-272-repair-browser-find-it-scripts-batch-1-of-7.md) | Repair browser find-it scripts, batch 1 of 7 | — | ✅ Implemented |
 | [ADR-273](ADR-273-repair-browser-find-it-scripts-batch-2-of-7.md) | Repair browser find-it scripts, batch 2 of 7 | — | Pending |
 | [ADR-274](ADR-274-repair-browser-find-it-scripts-batch-3-of-7.md) | Repair browser find-it scripts, batch 3 of 7 | — | Pending |
 | [ADR-275](ADR-275-repair-browser-find-it-scripts-batch-4-of-7.md) | Repair browser find-it scripts, batch 4 of 7 | — | Pending |
