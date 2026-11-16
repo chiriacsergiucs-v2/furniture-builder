@@ -91,7 +91,7 @@ built-in names stay English and are translated where they are shown.**
 - [x] In Russian, the shelf-span warning names the board «ЛДСП 18 белая» (core test).
 - [x] With storage blocked, Русский does not reload and shows the alert, in English and Russian (test).
 - [x] In Russian, an align or lock message and an Apply-material message name a built-in piece in Russian, e.g. «Нижний шкаф» (D04-F5, D08-F8; core test).
-- [ ] With print language Romanian, Russian and English, every warning on the cut sheet is in that language; a warning without an entry fails a test (test).
+- [x] With print language Romanian, Russian and English, every warning on the cut sheet is in that language; a warning without an entry fails a test (test).
 - [x] Find-it test passes from the bare app at phone and desktop widths.
 
 Evidence: tests/find-it/audit-language.test.tsx, tests/audit-language.test.ts, tests/audit-print-text.test.ts, tests/audit-typed-sizes.test.tsx, tests/audit-extra.test.ts, tests/diagnostic-golden.test.ts; tests/find-it/audit-rest.test.tsx (run 2026-11-10 in the sandbox: the full suite and the files above pass).
