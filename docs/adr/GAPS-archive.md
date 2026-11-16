@@ -3470,18 +3470,6 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
-### G-513: Catalog pagination at 12 families per group does not shorten the page
-
-- Status: Done (N311)
-- Origin: Catalog pagination, 2026-11-15 (F-09)
-- Missing: Per-group Show more at 12 families keeps the Catalog page at 27,738 px (390 px) and 14,151 px (1280 px, was 15,128): most groups have 12 or fewer families and the height comes from their variant cards (27 to 44 cards in a group of 12). The code, Russian text and 8 find-it tests are committed on the session branch but not merged.
-- Request: 1 yes (paginate the Catalog page in the app, per-group Show more)
-- Questions: Page size per group: 4 families (about 45 % shorter, estimate), 6 (about 30 %), or drop the change?
-- Suggested pick: 4 families per group, then measure the page height again (estimate: effort +10 %, value +30 %)
-- Work: Low
-- Impact: Medium
-- Necessity: Medium
-
 ### G-511: Catalog Brands and Saved lists are not paginated
 
 - Status: Done (N311)
@@ -3493,3 +3481,27 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-512: tools/catalog-compact has 6 failing checks on main
+
+- Status: Done (N313)
+- Origin: Catalog paging baseline run, 2026-11-16 (N311)
+- Missing: tools/catalog-compact/find-it.mjs fails 6 checks on main and on the paged catalog alike: item card tags on one meta line, unclipped (183 cards, 64 off on main), and cards whose More/Less text no longer matches after a resize and whose cut lines do not read in full after More, at 390 and 1280 px. ADR-272 (Pending), batch 1 of 7, also repairs this script; check it before building a second fix.
+- Request: Implement f9 fulkly, you pick numbers
+- Questions: Are these three checks still the intended rule, or did a later card layout change make them stale?
+- Suggested pick: Check each against the current card layout and fix the cards or the script (estimate: effort +15 %, value +10 %)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
+### G-513: Catalog pagination at 12 families per group does not shorten the page
+
+- Status: Done (N311)
+- Origin: Catalog pagination, 2026-11-15 (F-09)
+- Missing: Per-group Show more at 12 families keeps the Catalog page at 27,738 px (390 px) and 14,151 px (1280 px, was 15,128): most groups have 12 or fewer families and the height comes from their variant cards (27 to 44 cards in a group of 12). The code, Russian text and 8 find-it tests are committed on the session branch but not merged.
+- Request: 1 yes (paginate the Catalog page in the app, per-group Show more)
+- Questions: Page size per group: 4 families (about 45 % shorter, estimate), 6 (about 30 %), or drop the change?
+- Suggested pick: 4 families per group, then measure the page height again (estimate: effort +10 %, value +30 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
