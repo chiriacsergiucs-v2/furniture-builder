@@ -336,7 +336,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-272](../adr-done/ADR-272-repair-browser-find-it-scripts-batch-1-of-7.md) | Repair browser find-it scripts, batch 1 of 7 | — | ✅ Implemented |
 | [ADR-273](../adr-done/ADR-273-repair-browser-find-it-scripts-batch-2-of-7.md) | Repair browser find-it scripts, batch 2 of 7 | — | ✅ Implemented |
 | [ADR-274](../adr-done/ADR-274-repair-browser-find-it-scripts-batch-3-of-7.md) | Repair browser find-it scripts, batch 3 of 7 | — | ✅ Implemented |
-| [ADR-275](ADR-275-repair-browser-find-it-scripts-batch-4-of-7.md) | Repair browser find-it scripts, batch 4 of 7 | — | Pending |
+| [ADR-275](../adr-done/ADR-275-repair-browser-find-it-scripts-batch-4-of-7.md) | Repair browser find-it scripts, batch 4 of 7 | — | ✅ Implemented |
 | [ADR-276](ADR-276-repair-browser-find-it-scripts-batch-5-of-7.md) | Repair browser find-it scripts, batch 5 of 7 | — | Pending |
 | [ADR-277](ADR-277-repair-browser-find-it-scripts-batch-6-of-7.md) | Repair browser find-it scripts, batch 6 of 7 | — | Pending |
 | [ADR-278](ADR-278-repair-browser-find-it-scripts-batch-7-of-7.md) | Repair browser find-it scripts, batch 7 of 7 | — | Pending |

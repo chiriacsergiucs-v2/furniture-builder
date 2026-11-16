@@ -1828,3 +1828,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-519: Esc in the Save as project template form also closes Settings on a phone
+
+- Status: Open
+- Origin: ADR-275, 2026-11-16, found while repairing tools/project-actions/find-it.mjs
+- Missing: At 390 px one Escape in the Save as project template form closes the form and the Settings dialog behind it; the script expected Settings to stay open, as it does after Cancel. Not checked on a desktop width in a browser (unverified).
+- Request: Repair browser find-it scripts, batch 4 of 7 (user 2026-11-16)
+- Questions: Should Esc close only the form, as Cancel does?
+- Suggested pick: Close only the form
+- Work: Low
+- Impact: Low
+- Necessity: Low

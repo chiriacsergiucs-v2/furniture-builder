@@ -10,6 +10,8 @@ import { mkdirSync } from 'node:fs';
 const url = previewUrl();
 const out = outDir();
 mkdirSync(out, { recursive: true });
+// Sibling spaces of one kind carry their place in the name (ADR-267): "Right: Shelves".
+const SHELVES = /^((Left|Middle|Right): )?Shelves$/;
 const browser = await launchBrowser();
 const results = [];
 const check = (width, name, ok, detail = '') => {
@@ -141,7 +143,7 @@ for (const width of [1280, 390]) {
     check(
       width,
       '3D, a further tap: a space inside the piece, still the project editor',
-      (await inside.isVisible()) && second === 'Shelves' && (await inProject()),
+      (await inside.isVisible()) && SHELVES.test(second) && (await inProject()),
       second,
     );
     const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
@@ -178,7 +180,7 @@ for (const width of [1280, 390]) {
     check(
       width,
       'room front view: taps drill (bay → whole piece → bay), still the project editor',
-      wrapped && again === 'Shelves' && (await inProject()),
+      wrapped && SHELVES.test(again) && (await inProject()),
       `${wrapped} / ${again}`,
     );
     await page.getByRole('radio', { name: '3D', exact: true }).click();
@@ -240,7 +242,7 @@ for (const width of [1280, 390]) {
       width,
       '3D tap, then Compose: the project panel shows the space inside the piece',
       (await inProject()) &&
-        /Sideboard › (Shelves|Drawers)$/.test(h.trim()) &&
+        /Sideboard › (\w+: )?(Shelves|Drawers)$/.test(h.trim()) &&
         (await inside.isVisible()),
       h,
     );

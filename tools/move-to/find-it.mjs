@@ -113,19 +113,32 @@ for (const width of [1280, 390]) {
   await openPosition();
   await panel.scrollIntoViewIfNeeded().catch(() => {});
   check(width, 'a "Move to" group is in the piece panel', await panel.isVisible());
+  // ADR-250: the panel shows only the buttons that work; the others are listed with the reason under "N more are off".
   const found = [];
   for (const l of LABELS)
     if (await panel.getByRole('button', { name: l, exact: true }).isVisible()) found.push(l);
-  check(width, 'all 11 Move to buttons are there', found.length === 11, found.join(', '));
-
-  // 3. An off button says why when tapped: the new piece touches the one on its left.
-  await click(panel.getByRole('button', { name: 'To left piece', exact: true }));
-  await page.waitForTimeout(200);
-  const why = panel.getByRole('status');
-  const whyText = (await why.textContent().catch(() => '')) ?? '';
+  const offBox = panel.locator('details.move-to-off');
+  if ((await offBox.count()) && !(await offBox.evaluate((el) => el.open)))
+    await click(offBox.locator('> summary'));
+  const offItems = panel.locator('details.move-to-off li');
+  const offLabels = await offItems.locator('strong').allTextContents();
+  for (const l of LABELS) if (offLabels.includes(l)) found.push(l);
   check(
     width,
-    'tapping an off button says why',
+    'all 11 Move to buttons are there (working as buttons, the others listed as off)',
+    LABELS.every((l) => found.includes(l)) && found.length === 11,
+    found.join(', '),
+  );
+
+  // 3. An off button says why: the new piece touches the one on its left.
+  const whyText =
+    (await offItems
+      .filter({ hasText: 'To left piece' })
+      .textContent()
+      .catch(() => '')) ?? '';
+  check(
+    width,
+    'an off button says why (listed with its reason)',
     /^To left piece: Already touching /.test(whyText),
     whyText,
   );
@@ -158,13 +171,27 @@ for (const width of [1280, 390]) {
   const tools = page.getByRole('toolbar', { name: 'Place pieces in 3D' });
   await click(tools.getByRole('button', { name: 'Move', exact: true }));
   const open3d = tools.getByRole('button', { name: 'Move to…', exact: true });
-  check(width, '"Move to…" shows over the 3D view in Move mode', await open3d.isVisible());
-  await click(open3d);
+  await open3d.waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
+  check(
+    width,
+    '"Move to…" shows over the 3D view in Move mode',
+    await open3d.isVisible(),
+    (await tools.getByRole('button').allTextContents()).join(' | '),
+  );
   const three = tools.getByRole('group', { name: 'Move to' });
+  // The toggle is a button with aria-expanded: tap it until the group shows (the 3D view may still be settling).
+  const openThree = async () => {
+    for (let i = 0; i < 4 && !(await three.isVisible().catch(() => false)); i++) {
+      if ((await open3d.getAttribute('aria-expanded')) !== 'true') await click(open3d);
+      await three.waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
+    }
+  };
+  await openThree();
   check(
     width,
     'Move to… opens the same buttons over the 3D view',
     (await three.getByRole('button').count()) === 11,
+    (await three.getByRole('button').allTextContents()).join(' | '),
   );
   await click(three.getByRole('button', { name: 'To ceiling', exact: true }));
   await page.waitForTimeout(400);
@@ -172,9 +199,7 @@ for (const width of [1280, 390]) {
   const up3d = await placed();
   check(width, 'To ceiling in 3D hangs it on the wall', up3d.kind === 'Wall', up3d.kind);
   await sheet(false);
-  if (!(await three.isVisible().catch(() => false))) {
-    await click(open3d);
-  }
+  await openThree();
   await click(three.getByRole('button', { name: 'Down', exact: true }));
   await page.waitForTimeout(400);
   await shot('three-down');

@@ -56,6 +56,13 @@ for (const width of [1440, 375]) {
   const first = pieces.nth(0),
     second = pieces.nth(1);
   const snap = plan.getByRole('checkbox', { name: 'Snap', exact: true });
+  // On a phone Snap sits behind the plan's Options menu (ADR-144, G-269), which closes on any outside tap: open it
+  // before each use of the toggle.
+  const openSnap = async () => {
+    const menu = plan.locator('details.view-options');
+    if ((await menu.count()) && !(await menu.first().evaluate((d) => d.open)))
+      await menu.first().locator(':scope > summary').click();
+  };
   const ghost = plan.locator('.drag-ghost');
   // The live snap note shows over the plan only while a piece is dragged (ADR-080).
   const status = plan.locator('.plan-drag-note[role="status"]');
@@ -149,6 +156,7 @@ for (const width of [1440, 375]) {
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'the plan "Room plan, seen from above" is visible', await plan.isVisible());
   check(width, 'two "Base cabinet…" pieces are on the plan', (await pieces.count()) === 2);
+  await openSnap();
   check(width, 'the "Snap" toggle is found above the plan', await snap.isVisible());
   check(width, '"Snap" is on by default', await snap.isChecked());
   const idle = await aboutText();
@@ -212,6 +220,7 @@ for (const width of [1440, 375]) {
   );
 
   // 3. Snap off: the same drag lands where released (on the 10 mm step), no snapped preview.
+  await openSnap();
   await click(snap);
   check(width, '"Snap" turns off', !(await snap.isChecked()));
   const idleOff = await aboutText();
@@ -248,6 +257,7 @@ for (const width of [1440, 375]) {
     );
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   }
+  await openSnap();
   const kept = (await snap.isVisible().catch(() => false)) && !(await snap.isChecked());
   check(width, '"Snap" stays off after a reload', kept);
   if (await snap.isVisible().catch(() => false)) {
@@ -256,6 +266,7 @@ for (const width of [1440, 375]) {
   }
 
   // 5. Desktop: Alt held while dragging places freely even with Snap on.
+  await openSnap();
   if (!phone && (await snap.isVisible().catch(() => false))) {
     await drag(second, 1000, { name: 'away-again' });
     const xs = await fromLeft();

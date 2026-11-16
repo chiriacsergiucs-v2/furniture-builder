@@ -119,7 +119,10 @@ try {
     settings = page.getByRole('dialog', { name: /^Settings:/ });
     await settings.getByRole('button', { name: 'Save as project template', exact: true }).click();
     await page.keyboard.press('Escape');
-    await settings.getByRole('button', { name: 'Done', exact: true }).click();
+    await page.waitForTimeout(300);
+    // On a phone the Escape also closes Settings behind the form (G-519); close it when it is still open.
+    if (await settings.isVisible().catch(() => false))
+      await settings.getByRole('button', { name: 'Done', exact: true }).click();
     await place('Projects');
     await page
       .getByRole('heading', { name: 'Create from a project template', exact: true })

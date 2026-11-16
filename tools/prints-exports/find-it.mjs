@@ -84,7 +84,12 @@ for (const width of [1280, 390]) {
   const settingsBoards = async () => {
     await click(btn('Settings'));
     await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
-    await dlg.getByText('Boards, sheets and saw cut', { exact: true }).click();
+    // A group the user opened stays open (ADR-267): click its summary only while it is closed.
+    const boards = dlg.locator('details.group', {
+      has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
+    });
+    if (!(await boards.first().evaluate((d) => d.open)))
+      await boards.first().locator('summary').first().click();
   };
   /** Settings › Boards: the first board takes the Regency product with this code (its shipped picture). */
   const pickBoard = async (code) => {
