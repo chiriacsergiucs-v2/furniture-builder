@@ -1,7 +1,8 @@
 # ADR-274: Repair browser find-it scripts, batch 3 of 7
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-16
+- Implemented: 2026-11-16 (Batch 3 repaired; evidence in backlog N306)
 - Depends on: none
 - Design: n/a
 - Backlog: N306
@@ -63,10 +64,10 @@ Each script is verified alone with `pnpm regress <script-dir>/ --no-build` at `-
 
 ## Done when
 
-- [ ] `pnpm regress tools/enter-undo/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm regress tools/fasteners/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm regress tools/gaps/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm regress tools/lock-piece/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm regress tools/look-render/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm regress tools/material/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
-- [ ] `pnpm typecheck`, `pnpm build` and `pnpm docs:check` exit 0
+- [x] `pnpm regress tools/enter-undo/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm regress tools/fasteners/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm regress tools/gaps/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm regress tools/lock-piece/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm regress tools/look-render/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm regress tools/material/ --no-build` at `--jobs=1` passes, or the script is retired with the jsdom test that proves it named in the backlog row
+- [x] `pnpm typecheck`, `pnpm build` and `pnpm docs:check` exit 0

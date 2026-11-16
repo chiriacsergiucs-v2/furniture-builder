@@ -30,6 +30,12 @@ const URL = `http://localhost:${PORT}/furniture-builder/`;
 const ONLINE_URL = `http://localhost:${ONLINE_PORT}/furniture-builder/`;
 const REPORT = 'regress-report';
 const SCRIPT_TIMEOUT_MS = 5 * 60 * 1000;
+/** A script that needs longer (a software GPU renders for ~25 min) says so in its header: `regress-timeout: <seconds>`. */
+function timeoutOf(script) {
+  const head = readFileSync(script, 'utf8').split('\n').slice(0, 25).join('\n');
+  const m = head.match(/regress-timeout:\s*(\d+)/);
+  return m ? Number(m[1]) * 1000 : SCRIPT_TIMEOUT_MS;
+}
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
@@ -195,7 +201,7 @@ function run(script) {
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill('SIGKILL');
-    }, SCRIPT_TIMEOUT_MS);
+    }, timeoutOf(script));
     child.on('close', (code) => {
       clearTimeout(timer);
       out.end();
@@ -204,7 +210,7 @@ function run(script) {
         found(
           script,
           status === 'timeout'
-            ? `no result in ${SCRIPT_TIMEOUT_MS / 1000} s`
+            ? `no result in ${timeoutOf(script) / 1000} s`
             : firstError || `exited with code ${code}`,
         );
       }

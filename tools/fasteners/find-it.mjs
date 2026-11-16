@@ -2,6 +2,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/fasteners/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -30,7 +31,6 @@ for (const width of [1440, 1280, 390, 375]) {
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   const shot = (name) =>
     page.screenshot({ path: `${out}/fasteners-${name}-${width}.png`, fullPage: true });
-  const mode = (name) => page.getByRole('radio', { name });
   // Settings (ADR-080) holds what was Configure › Materials, including Fasteners.
   const dlg = page.locator('dialog[open]');
   const group = (name) => dlg.locator('details.group > summary', { hasText: name });
@@ -91,7 +91,7 @@ for (const width of [1440, 1280, 390, 375]) {
   await closeSettings();
 
   // 3. Build & Preview › Hardware and Shopping list, before a fastener is chosen.
-  await mode(/Build & Preview/).click();
+  await goBuild(page);
   {
     const t = tab('Hardware');
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
@@ -113,7 +113,10 @@ for (const width of [1440, 1280, 390, 375]) {
   const choose = panel('shopping').getByRole('region', { name: 'To choose before buying' });
   ck(
     'Shopping list: "Joint fixings: 18 joints — choose your fastener" under To choose before buying',
-    await choose.getByText('Joint fixings: 18 joints — choose your fastener').isVisible(),
+    // The row's cell: the row's product dialog also carries the text in its heading.
+    await choose
+      .getByRole('cell', { name: 'Joint fixings: 18 joints — choose your fastener', exact: true })
+      .isVisible(),
   );
   ck(
     'Shopping list line is labelled guidance',
@@ -139,7 +142,7 @@ for (const width of [1440, 1280, 390, 375]) {
   await closeSettings();
 
   // 5. The counted line in Hardware and Shopping list.
-  await mode(/Build & Preview/).click();
+  await goBuild(page);
   {
     const t = tab('Hardware');
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
@@ -154,7 +157,8 @@ for (const width of [1440, 1280, 390, 375]) {
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
   }
   const hw = panel('shopping').getByRole('region', { name: 'Hardware' });
-  const row = hw.getByRole('row', { name: /Confirmat 7 × 50/ });
+  // The item's row, not the product-detail row under it (`tr.seller-row`).
+  const row = hw.locator('tr.has-seller').filter({ hasText: /Confirmat 7 × 50/ });
   ck(
     'Shopping list › Hardware: Confirmat 7 × 50, 36 pcs, guidance',
     (await row.isVisible()) &&

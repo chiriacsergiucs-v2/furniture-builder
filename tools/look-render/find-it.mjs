@@ -2,6 +2,7 @@
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/look-render/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
+// regress-timeout: 3300 (a software GPU needs ~25 min for the 256 samples at 1280 × 720; `pnpm regress` reads this line)
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
@@ -85,8 +86,12 @@ for (const width of [1280, 390]) {
   // A phone shows 3D in Build & Preview only (ADR-079), its view controls under "Options" (N82); a desktop picks 3D.
   if (phone) {
     await goBuild(page);
+    // The phone opens Build & Preview on the 2D view (ADR-144): pick 3D in Options first.
+    const options = page.locator('details.view-options');
+    await options.locator(':scope > summary').click();
+    await page.getByRole('radio', { name: '3D', exact: true }).click();
     await page.locator('.view.three canvas').waitFor({ timeout: 20000 });
-    await page.locator('details.view-options > summary').click();
+    if (!(await options.evaluate((d) => d.open))) await options.locator(':scope > summary').click();
   } else await page.getByRole('radio', { name: '3D' }).click();
   const lookGroup = page.getByRole('radiogroup', { name: 'Look' });
   await lookGroup.waitFor();

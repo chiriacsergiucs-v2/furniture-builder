@@ -55,19 +55,27 @@ for (const width of [1280, 390]) {
     'Open filter on by default',
     (await openFilter.getAttribute('aria-pressed')) === 'true',
   );
+  // Done gaps move to docs/adr/GAPS-archive.md (N170) and are not on this page: the Done filter is a toggle that counts
+  // none and lists no gap (tests/find-it/feature-gaps-sync.test.tsx holds the same "Done (0)").
   const doneFilter = page.getByRole('button', { name: /^Done \(\d+\)$/ });
+  const doneCount = Number(/\((\d+)\)/.exec(await doneFilter.innerText())[1]);
+  const openRows = await page.locator('li.gap').count();
   await doneFilter.click();
   check(
     width,
-    'Done filter adds done gaps (G-019)',
-    await page.getByText(/G-019/).first().isVisible(),
+    'Done filter is on and adds no gap (done gaps are archived)',
+    (await doneFilter.getAttribute('aria-pressed')) === 'true' &&
+      (await page.locator('li.gap').count()) === openRows + doneCount,
+    `Done (${doneCount}), ${openRows} rows`,
   );
   await doneFilter.click();
 
+  // A gap that is on the page now (the ledger changes), found by the id of its first row.
+  const gapId = /G-\d+/.exec(await page.locator('li.gap').first().innerText())[0];
   const search = page.getByRole('searchbox', { name: 'Search the gaps' });
-  await search.fill('G-021');
-  const row = page.locator('li.gap').filter({ hasText: 'G-021' });
-  check(width, 'search finds a gap by id (G-021)', (await row.count()) === 1);
+  await search.fill(gapId);
+  const row = page.locator('li.gap').filter({ hasText: gapId });
+  check(width, `search finds a gap by id (${gapId})`, (await row.count()) === 1);
   check(
     width,
     '"1 of" shown after the search',
@@ -99,8 +107,8 @@ for (const width of [1280, 390]) {
   const text = await box.inputValue();
   check(
     width,
-    'Copy decisions shows "acknowledge G-021" with the note',
-    text.includes('acknowledge G-021') && text.includes(`checked at ${width}`),
+    `Copy decisions shows "acknowledge ${gapId}" with the note`,
+    text.includes(`acknowledge ${gapId}`) && text.includes(`checked at ${width}`),
     text.split('\n')[1] ?? '',
   );
 
@@ -108,8 +116,8 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(800);
   await page.reload();
   await heading.waitFor();
-  await page.getByRole('searchbox', { name: 'Search the gaps' }).fill('G-021');
-  const again = page.locator('li.gap').filter({ hasText: 'G-021' });
+  await page.getByRole('searchbox', { name: 'Search the gaps' }).fill(gapId);
+  const again = page.locator('li.gap').filter({ hasText: gapId });
   check(
     width,
     'mark survives a reload ("You: acknowledge")',

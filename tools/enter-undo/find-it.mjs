@@ -35,19 +35,26 @@ for (const width of [1280, 390]) {
     if (m.type() === 'error') errors.push(m.text());
   });
   const dlg = page.locator('dialog[open]');
-  const undo = async () => {
-    await page.keyboard.press('Control+z');
+  // ADR-198: Ctrl+Z never reaches the design from a field or from under an open dialog, so the undo step is taken with
+  // the bar's Undo button; a dialog is closed first (Done) and reopened (`reopen`) to read the field again.
+  const undoStep = async () => {
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await page.waitForTimeout(250);
   };
   /** Type a value + Enter, then one Undo: the field shows the value before again. */
-  const enterThenUndo = async (name, field, value) => {
+  const enterThenUndo = async (name, getField, value, reopen) => {
+    let field = await getField();
     await field.scrollIntoViewIfNeeded();
     const before = await field.inputValue();
     await field.fill(value);
     await field.press('Enter');
     await page.waitForTimeout(250);
     const typed = await field.inputValue();
-    await undo();
+    if (reopen) await dlg.getByRole('button', { name: 'Done' }).click();
+    await undoStep();
+    if (reopen) await reopen();
+    field = await getField();
+    await field.scrollIntoViewIfNeeded();
     const after = await field.inputValue();
     check(
       width,
@@ -55,6 +62,10 @@ for (const width of [1280, 390]) {
       typed === value && after === before,
       `${before} → ${typed} → ${after}`,
     );
+  };
+  const reopenSettings = async () => {
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await dlg.waitFor({ state: 'visible' });
   };
 
   // 1. A piece: Settings › Width and an edge band width.
@@ -67,15 +78,23 @@ for (const width of [1280, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await page.getByRole('button', { name: 'Settings' }).click();
   await dlg.waitFor({ state: 'visible' });
-  const widthField = dlg.getByLabel('Width', { exact: true }).first();
-  await enterThenUndo('Width', widthField, String(Number(await widthField.inputValue()) + 10));
+  const widthField = () => dlg.getByLabel('Width', { exact: true }).first();
+  await enterThenUndo(
+    'Width',
+    async () => widthField(),
+    String(Number(await widthField().inputValue()) + 10),
+    reopenSettings,
+  );
   const pal = dlg.getByRole('group', { name: 'Edge band for PAL 18 white' });
-  const boards = dlg.locator('details.group', {
-    has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
-  });
-  if ((await boards.count()) && !(await boards.first().evaluate((d) => d.open)))
-    await boards.first().locator('summary').first().click();
-  await pal.scrollIntoViewIfNeeded();
+  const openBoards = async () => {
+    const boards = dlg.locator('details.group', {
+      has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
+    });
+    if ((await boards.count()) && !(await boards.first().evaluate((d) => d.open)))
+      await boards.first().locator('summary').first().click();
+    await pal.scrollIntoViewIfNeeded();
+  };
+  await openBoards();
   // A band is saved once it has a type, a thickness and a width.
   await pal.getByLabel('Band type').selectOption({ label: 'ABS' });
   await pal.getByRole('radio', { name: '0.8 mm' }).click();
@@ -84,7 +103,15 @@ for (const width of [1280, 390]) {
   await bandWidth.fill('22');
   await bandWidth.press('Tab');
   await page.waitForTimeout(200);
-  await enterThenUndo('Band width', bandWidth, '23');
+  await enterThenUndo(
+    'Band width',
+    async () => {
+      await openBoards();
+      return pal.getByLabel('Band width (mm)');
+    },
+    '23',
+    reopenSettings,
+  );
   await dlg.getByRole('button', { name: 'Done' }).click();
 
   // 2. A project piece: its service zone depth (a clearance field).
@@ -102,12 +129,16 @@ for (const width of [1280, 390]) {
   const place = page.getByRole('button', { name: 'Place to the right', exact: true });
   if (await place.isVisible()) await place.click();
   if (phone && (await peek.getAttribute('aria-expanded')) !== 'true') await peek.click();
-  await openGroup('Clearance');
+  await openGroup('More: clearance, merge');
   const zones = page.getByRole('group', { name: 'Clearance zones' });
   await zones.scrollIntoViewIfNeeded();
   await zones.getByRole('radio', { name: 'Front' }).click();
   await page.waitForTimeout(200);
-  await enterThenUndo('Service zone depth', zones.getByLabel('Service zone depth'), '650');
+  await enterThenUndo(
+    'Service zone depth',
+    async () => zones.getByLabel('Service zone depth'),
+    '650',
+  );
 
   check(width, 'no page errors', errors.length === 0, errors.join(' / '));
   await ctx.close();

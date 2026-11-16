@@ -168,7 +168,17 @@ for (const width of [1440, 390]) {
       .getByRole('toolbar', { name: 'Place pieces in 3D' })
       .getByRole('button', { name: 'Move', exact: true });
     // The Simple look draws fast enough in a software-rendered browser (as tools/move-3d does).
-    await page.getByRole('radio', { name: 'Simple' }).click();
+    {
+      // The Options menu that holds the Look (on a phone the plan has its own Options menu too).
+      const menu = page
+        .locator('details.view-options')
+        .filter({ has: page.getByRole('radio', { name: 'Simple', includeHidden: true }) });
+      const inMenu = (await menu.count()) > 0;
+      if (inMenu && !(await menu.evaluate((d) => d.open)))
+        await menu.locator(':scope > summary').click();
+      await page.getByRole('radio', { name: 'Simple' }).click();
+      if (inMenu) await page.keyboard.press('Escape');
+    }
     await page.waitForTimeout(800);
     await click(move);
     const r = await canvas.boundingBox();

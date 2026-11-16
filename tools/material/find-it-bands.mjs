@@ -6,6 +6,7 @@
 // oak; Material → Fronts → Edge band › Your own band… → 2 mm → Apply → the Parts list names the 2 mm band; no
 // horizontal scroll, no page errors. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, openTab } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -98,12 +99,8 @@ for (const width of [1280, 390]) {
   await md.getByRole('button', { name: 'Close' }).click();
 
   // 5. Parts: the worktop on PAL 18 oak; the 2 mm band named.
-  if (phone)
-    await page
-      .getByRole('radio', { name: 'Build & Preview' })
-      .click()
-      .catch(() => {});
-  await page.getByRole('tab', { name: /^Parts/ }).click();
+  await goBuild(page);
+  await openTab(page, /^Parts/);
   await page.waitForTimeout(300);
   const tables = page.getByRole('table');
   let oakWorktop = false;
