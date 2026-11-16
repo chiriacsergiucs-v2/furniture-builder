@@ -137,9 +137,18 @@ for (const width of [390, 1280, 1600]) {
       'peek row reads "Selected: Interior"',
       (await peek.innerText()).includes('Selected: Interior'),
     );
+    // User 2026-11-14 (replaces the 2026-11-09 peek-only rule): choosing a space opens the sheet to half; the peek row
+    // folds it again, and then the drawing and its card are as the earlier rule asked.
     check(
       width,
-      'tapping a space leaves the sheet closed',
+      'tapping a space opens the sheet to half',
+      (await peek.getAttribute('aria-expanded')) === 'true',
+    );
+    await peek.click();
+    await page.waitForTimeout(500);
+    check(
+      width,
+      'the peek row folds the sheet',
       (await peek.getAttribute('aria-expanded')) === 'false',
     );
     const stage = await page.locator('.work .stage').boundingBox();

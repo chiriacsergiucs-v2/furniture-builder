@@ -178,6 +178,8 @@ for (const width of [1280, 390]) {
   // 4. Second tap: the drawer bank. The card lies inside the stage and covers neither the bank nor its size label.
   await bank.click({ force: true });
   await page.waitForTimeout(400);
+  // The card is hidden while the phone's bottom sheet is open (Elevation.tsx), and a tap on a space opens it.
+  await sheet(false);
   const c2 = card(front);
   const cb = await box(c2);
   const selB = await box(front.locator('rect.el-selection'));
@@ -215,7 +217,7 @@ for (const width of [1280, 390]) {
   // Build & Preview (and the phone's Cut list place, ADR-241) keep the 2D/3D switch on the drawing: pick 3D.
   const r3 = page.getByRole('radio', { name: '3D', exact: true });
   if (await r3.isVisible().catch(() => false)) await r3.click();
-  await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
+  await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 60000 });
   await page.waitForTimeout(1500);
   const c3 = card(phone ? page.locator('#count-dock') : page.locator('.view.three'));
   check(

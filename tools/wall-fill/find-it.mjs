@@ -1,7 +1,7 @@
 // Find-it acceptance for Fill a wall (CLAUDE.md R3, backlogs N101 and N102, ADR-103 and ADR-104), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/wall-fill/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: Projects → New → Fill a wall, a 3000 mm
-// wall 2000 mm high, 4 suggested mixes with pictures (5 × 600 first, the tall cabinet warned), Refine with a max
+// wall 2000 mm high, 2 suggested mixes with pictures (N302; ADR-103 said 4) (5 × 600 first, the tall cabinet warned), Refine with a max
 // piece width of 550 and with 6 equal fronts, Wall cabinets Any (with and without a wall row) and Always (every card has
 // one beside the tall cabinet), a 2600 mm wall with a top box over the tall cabinet, then Use this mix opens a saved project with both rows.
 // Not part of `pnpm test`.
@@ -82,12 +82,13 @@ for (const width of widths) {
   await shot('wall');
   check(width, 'no sideways scroll (Wall)', await noSideScroll());
 
-  // 3. Show suggestions: 4 mixes with pictures, 5 × 600 first, the tall cabinet above 2000 mm warned.
+  // 3. Show suggestions: 2 mixes with pictures, 5 × 600 first, the tall cabinet above 2000 mm warned.
   await dlg.getByRole('button', { name: 'Show suggestions' }).click();
   await cards.first().waitFor();
   await page.waitForTimeout(300);
   const n = await cards.count();
-  check(width, '4 suggested mixes', n === 4, `${n}`);
+  // User (N302): "Lower count of suggestions by 2": wall and room mixes went from 4 to 2.
+  check(width, '2 suggested mixes', n === 2, `${n}`);
   check(width, 'every card has a picture', (await pictures()) === n, `${await pictures()}/${n}`);
   const first = await cards.first().innerText();
   check(
