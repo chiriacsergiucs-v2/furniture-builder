@@ -239,7 +239,11 @@ export const useDesign = create<State>((rawSet, get) => {
       if (n >= 0) applied.splice(n, 1);
     }
     const skipped = [...r.skipped, ...kept.map((name) => t('{name}: locked', { name }))];
-    if (!applied.length || project.items.every((it, n) => it === base.items[n]))
+    // A run part's board lives outside the items (ADR-188): a changed list of run parts is a change too.
+    if (
+      !applied.length ||
+      (project.runParts === base.runParts && project.items.every((it, n) => it === base.items[n]))
+    )
       return { applied: [], skipped };
     const why = commitProject(project, name);
     return why ? { applied: [], skipped: [...skipped, why] } : { applied, skipped };
