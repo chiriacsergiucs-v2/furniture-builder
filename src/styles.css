@@ -98,6 +98,16 @@
     --control-h-sm: 44px;
   }
 }
+/* A field's inner input fills its 44 px wrapper, so a finger anywhere in the field lands on the input (audit F-03, F-21). */
+@media (pointer: coarse) {
+  .mm input,
+  .catalog-toolbar .search input,
+  .start-from .search input,
+  .gaps-toolbar .search input {
+    align-self: stretch;
+    min-height: calc(var(--control-h) - 2px);
+  }
+}
 
 /* Dark theme: follows the system unless the user picked one (data-theme). Print always uses the light set. */
 @media screen and (prefers-color-scheme: dark) {
