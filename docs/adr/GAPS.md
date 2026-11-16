@@ -1413,15 +1413,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a bug.
 - Suggested pick: Reproduce with the piece-safety script, find which unmount removes the node twice, and fix it. (estimate: effort +5 %, value +5 %)
 
-### G-471: Catalog page is taller than the 15000 px script limit
-
-- Status: Open
-- Origin: ADR-201 tests, 2026-11-06; agent found it
-- Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
-- Request: Not asked; the script's own limit.
-- Questions: Raise the limit to 16000 px, or shorten the catalog page?
-- Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
-
 ### G-472: Core-only test selection: saving unproven
 
 - Status: Open
@@ -1439,15 +1430,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
 - Questions: Make the outer reveal round symmetrically too, which changes the 1 mm position of such fronts in new mirrored copies only?
 - Suggested pick: Yes: apply the remainderFirst rounding to the outer reveal, for new mirrored copies only. (estimate: effort +5 %, value +4 %)
-
-### G-474: Settings dialog scrolls sideways at 375 and 390 px
-
-- Status: Open
-- Origin: ADR-202 tests, 2026-11-06; agent found it
-- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
-- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
-- Questions: None; it is a bug.
-- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
 
 ### G-475: Client sheet: occasional second page and table at the page edge
 
@@ -1477,16 +1459,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: You run it after the deploy and tell Claude; Claude records it in the backlog (estimate: effort +0 % for Claude, value +15 %: the only proof AR works)
 - Work: Low
 - Impact: Medium-high
-
-### G-483: Catalog cards: meta line still cut on most cards at 390 px
-
-- Status: Acknowledged (2026-11-07)
-- Origin: ADR-195 item 4, built 2026-11-06 (implementer could not meet the Done-when item; user not yet asked)
-- Missing: Done-when 'At 390 px under 30 % of cards show More' is not met. With Open under the picture (column 1, rows 3–4) the text column is 214 px at 390 px (281 px at 1280), not the ≈240 px the ADR estimated, and the meta line (kind chip + size · parts · checks) needs 272 px at the median and 292 px at the 70th percentile (measured by tools/catalog-flows/find-it.mjs on the production build). Result: 178 of 183 cards (97.3 %) still show More at 390 px (was 182), 91 of 183 at 1280 px (was 98). The page stays under 30 000 px (29 734 px) and every card keeps one meta line.
-- Request: Nearly every card is cut … Fix: Open under the picture (column 1, rows 3–4): ≈240 px for text, same height, one meta line (ADR-118), 'More' where still cut. Done when: At 390 px under 30 % of cards show 'More'; the page stays under 30 000 px; one meta line per card.
-- Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
-- Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
-- Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 
 ### G-484: Start from shows template sizes that differ from the row they sit under
 
@@ -1774,7 +1746,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 ### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
 
 - Status: Open
-- Origin: G-516 fix, 2026-11-16 (N322)
+- Origin: G-516 fix, 2026-11-16 (N324)
 - Missing: G-516 prints part labels in the print language. A piece name ({name}), a board name ({board}) and a hardware name inside a warning still print as the app made them: a piece name needs its Design (printPieceName), board and hardware names have no print entries.
 - Request: Print each cut-sheet warning in the print language (ADR-265).
 - Questions: Should board and hardware names get Romanian, Russian and English print entries (a judgement on names, ADR-010)?
