@@ -329,7 +329,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
 | [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |
 | [ADR-267](../adr-done/ADR-267-keep-the-drawer-still-named-path-fixed-shell-change-cue.md) | Keep the drawer still: named path, fixed shell, change cue | ADR-083, ADR-087, ADR-203, ADR-211 | ✅ Implemented |
-| [ADR-268](ADR-268-show-the-piece-as-a-structure-tree-that-follows-the-selectio.md) | Show the piece as a structure tree that follows the selection | ADR-267 | Pending |
+| [ADR-268](../adr-done/ADR-268-show-the-piece-as-a-structure-tree-that-follows-the-selectio.md) | Show the piece as a structure tree that follows the selection | ADR-267 | ✅ Implemented |
 | [ADR-269](ADR-269-preview-on-hover-jump-deep-with-a-key-pin-the-drawer.md) | Preview on hover, jump deep with a key, pin the drawer | ADR-267, ADR-268 | Pending |
 | [ADR-270](ADR-270-enter-a-container-to-edit-inside-it-stronger-focus-on-the-re.md) | Enter a container to edit inside it; stronger focus on the rest | ADR-267, ADR-269 | Pending |
 | [ADR-271](../adr-done/ADR-271-mark-cut-list-parts-as-already-owned.md) | Mark cut-list parts as already owned | ADR-011, ADR-012 | ✅ Implemented |

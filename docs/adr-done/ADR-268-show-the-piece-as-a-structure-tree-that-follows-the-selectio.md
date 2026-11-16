@@ -1,7 +1,8 @@
 # ADR-268: Show the piece as a structure tree that follows the selection
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-16
+- Implemented: 2026-11-16 (Find-it added; evidence in backlog N286)
 - Depends on: ADR-267
 - Design: docs/ui-design.md (section 4, editor screen and phone bottom sheet)
 - Backlog: N286
@@ -63,11 +64,11 @@ No change to `src/core/types.ts`, the design document or the Dexie schema (ADR-0
 
 ## Done when
 
-- [ ] `structureRows` lists the whole piece first, then spaces depth first, hides children of a closed split, and
+- [x] `structureRows` lists the whole piece first, then spaces depth first, hides children of a closed split, and
       lists every root of a desk (unit tests).
-- [ ] Tapping a nested space on the drawing marks its row selected and expands its ancestors (find-it).
-- [ ] Clicking a row selects that space and the drawer title and path change to it; the whole-piece row selects the
+- [x] Tapping a nested space on the drawing marks its row selected and expands its ancestors (find-it).
+- [x] Clicking a row selects that space and the drawer title and path change to it; the whole-piece row selects the
       piece (find-it).
-- [ ] Arrow, Home, End, Enter and Space behave as in item 4 and arrows alone never change the selection (test).
-- [ ] The group is open at 1280 px and closed at 390 px on a bare start (find-it).
-- [ ] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
+- [x] Arrow, Home, End, Enter and Space behave as in item 4 and arrows alone never change the selection (test).
+- [x] The group is open at 1280 px and closed at 390 px on a bare start (find-it).
+- [x] Every new text has a Russian entry (`pnpm typecheck`); `pnpm docs:check` passes.
