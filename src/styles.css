@@ -3052,7 +3052,8 @@ table.buy {
   font-size: var(--fs-xs);
   font-weight: 600;
   background: var(--primary-soft);
-  color: var(--primary);
+  /* The text-on-tint colour: --primary on --primary-soft is 2:1 in the dark theme (N314); --link is 5.9:1 in both. */
+  color: var(--link);
 }
 .chip.subtle {
   background: var(--surface-2);
