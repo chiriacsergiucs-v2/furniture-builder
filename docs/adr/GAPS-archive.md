@@ -3400,6 +3400,16 @@ highest id in either file.
 - Questions: None; it is a bug.
 - Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
 
+### G-471: Catalog page is taller than the 15000 px script limit
+
+- Status: Done (N322)
+- Origin: ADR-201 tests, 2026-11-06; agent found it
+- Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
+- Request: Not asked; the script's own limit.
+- Questions: Raise the limit to 16000 px, or shorten the catalog page?
+- Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
+- Fix: Stale; the Catalog is paged (N311). Ran 2026-11-16 on the production build (`pnpm build:ci`, preview, Playwright, light theme): `tools/catalog-compact/find-it.mjs` passes 'Catalog page under 15000 px tall' at 1280 px (8455 px) and 'under 30000 px' at 390 px (15994 px). No limit changed.
+
 ### G-477: AR corner snap does not detect walls automatically
 
 - Status: Done (ADR-218)
@@ -3454,6 +3464,17 @@ highest id in either file.
 - Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
 - Work: Medium
 - Impact: Low
+
+### G-483: Catalog cards: meta line still cut on most cards at 390 px
+
+- Status: Done (N322)
+- Origin: ADR-195 item 4, built 2026-11-06 (implementer could not meet the Done-when item; user not yet asked)
+- Missing: Done-when 'At 390 px under 30 % of cards show More' is not met. With Open under the picture (column 1, rows 3–4) the text column is 214 px at 390 px (281 px at 1280), not the ≈240 px the ADR estimated, and the meta line (kind chip + size · parts · checks) needs 272 px at the median and 292 px at the 70th percentile (measured by tools/catalog-flows/find-it.mjs on the production build). Result: 178 of 183 cards (97.3 %) still show More at 390 px (was 182), 91 of 183 at 1280 px (was 98). The page stays under 30 000 px (29 734 px) and every card keeps one meta line.
+- Request: Nearly every card is cut … Fix: Open under the picture (column 1, rows 3–4): ≈240 px for text, same height, one meta line (ADR-118), 'More' where still cut. Done when: At 390 px under 30 % of cards show 'More'; the page stays under 30 000 px; one meta line per card.
+- Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
+- Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
+- Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
+- Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
 
 ### G-506: Duplicate backlog id D02
 
