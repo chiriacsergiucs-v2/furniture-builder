@@ -136,6 +136,7 @@ export const ru_account = {
   'Shared item': 'Общий элемент',
   'Open a copy': 'Открыть копию',
   'Opening the link…': 'Открытие ссылки…',
+  'Try again': 'Повторить',
   'This shared item is not a valid piece or template, so it cannot be opened.':
     'Этот общий элемент не является корректным изделием или шаблоном, поэтому его нельзя открыть.',
   '{kind} · {w} × {h} × {d} mm · {n} parts. Open a copy to save it on this device; the original is not changed.':
