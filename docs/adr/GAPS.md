@@ -1758,3 +1758,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+
+### G-510: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+
+- Status: Open
+- Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
+- Missing: No find-it test was written for the four ADRs: the cut-sheet warning list, the Structure tree, hover/Ctrl-click/pin, and enter/focus (browser script for ADR-270).
+- Request: Build ADR-265, 268, 269 and 270 in burst mode, which skips find-it tests.
+- Questions: None: say catch up to pay the debt.
+- Suggested pick: Run the catch-up skill: jsdom find-it for 265, 268, 269 and tools/*/find-it.mjs for 270.
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-511: Warnings on the cut sheet: free-text data words stay in the app language
+
+- Status: Open
+- Origin: ADR-265 D18-F6 build 2026-11-16
+- Missing: Data words inside a warning (hardware names, family names, the what param of hardware-to-choose) go through tr() and stay in the app language; a warning text built outside t()/tx() with a literal key is not caught by the key scan.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should hardware and family names get print-language entries?
+- Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
