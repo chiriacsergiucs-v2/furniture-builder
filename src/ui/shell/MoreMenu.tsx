@@ -53,12 +53,11 @@ export function MoreMenu({
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
   const [roomFill, setRoomFill] = useState(false);
-  const close = () => ref.current?.removeAttribute('open');
-  // Closing hides the entry that had focus, so focus goes to the More button first; a dialog that opens next
-  // then restores focus there when it closes (audit F-02).
-  const closeToButton = () => {
-    close();
-    ref.current?.querySelector('summary')?.focus();
+  // With focusButton, focus goes to the More button: closing hides the entry that had it, and a dialog that opens
+  // next restores focus there (audit F-02).
+  const close = (focusButton?: boolean) => {
+    ref.current?.removeAttribute('open');
+    if (focusButton) ref.current?.querySelector('summary')?.focus();
   };
   const [codeOpen, setCodeOpen] = useState(false);
 
@@ -133,7 +132,9 @@ export function MoreMenu({
   };
 
   const run = (fn: () => void | Promise<void>) => () => {
-    closeToButton();
+    // Closing hides the entry that had focus, so focus goes to the More button first; a dialog that opens next
+    // then restores focus there when it closes (audit F-02).
+    close(true);
     void fn();
   };
 
