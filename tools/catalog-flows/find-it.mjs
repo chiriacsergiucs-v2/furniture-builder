@@ -4,6 +4,7 @@
 //   node tools/catalog-flows/find-it.mjs http://127.0.0.1:4176/furniture-builder/ <out dir>
 // Not part of `pnpm test`. Every check prints PASS or FAIL; the script exits 1 when any check fails.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { showAllRows } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl('http://127.0.0.1:4176/furniture-builder/');
@@ -85,6 +86,9 @@ try {
     await page.goto(url);
     await openCatalog();
     await shot('top');
+    // The page as it opens (paged, N304), then every card opened for the checks that measure all of them.
+    const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    await showAllRows(page);
     const cards = await page.evaluate(() => {
       const LINES = '.item-name, .sub, .item-meta, .item-meta .num';
       const list = [...document.querySelectorAll('.catalog-page li.item')];
@@ -176,7 +180,11 @@ try {
       `${cards.mismatch} off`,
     );
     if (phone) {
-      check('page under 30 000 px tall', cards.height < 30000, `${cards.height} px`);
+      check(
+        'page under 17 000 px tall as it opens (paged, N304)',
+        pageHeight < 17000,
+        `${pageHeight} px`,
+      );
       check(
         // ADR-195 item 4 met by user decision 2026-11-07, "Accept 73.8%, ship": at most the measured 135 of 183.
         '"More" on at most 73.8 % of cards (user-accepted, 2026-11-07)',
@@ -185,7 +193,7 @@ try {
       );
     } else {
       console.log(
-        `INFO ${width}px "More" on ${cards.more} of ${cards.n} cards (${pct} %), page ${cards.height} px`,
+        `INFO ${width}px "More" on ${cards.more} of ${cards.n} cards (${pct} %), page ${pageHeight} px as it opens, ${cards.height} px with every card`,
       );
     }
     check('no horizontal page scroll (catalog)', await noSideScroll());

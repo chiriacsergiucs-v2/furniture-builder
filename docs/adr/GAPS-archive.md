@@ -3469,3 +3469,27 @@ highest id in either file.
 - Work: High
 - Impact: Medium
 - Necessity: Medium
+
+### G-510: Catalog pagination at 12 families per group does not shorten the page
+
+- Status: Done (N304)
+- Origin: Catalog pagination, 2026-11-15 (F-09)
+- Missing: Per-group Show more at 12 families keeps the Catalog page at 27,738 px (390 px) and 14,151 px (1280 px, was 15,128): most groups have 12 or fewer families and the height comes from their variant cards (27 to 44 cards in a group of 12). The code, Russian text and 8 find-it tests are committed on the session branch but not merged.
+- Request: 1 yes (paginate the Catalog page in the app, per-group Show more)
+- Questions: Page size per group: 4 families (about 45 % shorter, estimate), 6 (about 30 %), or drop the change?
+- Suggested pick: 4 families per group, then measure the page height again (estimate: effort +10 %, value +30 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-511: Catalog Brands and Saved lists are not paginated
+
+- Status: Done (N304)
+- Origin: Catalog pagination, 2026-11-15
+- Missing: Only the Templates source is paginated; the Brands decor list and the Saved list render every row.
+- Request: 1 yes (paginate the Catalog page in the app)
+- Questions: Do the Brands and Saved lists need pagination too, or are they short enough?
+- Suggested pick: Measure their length with a seeded device first; paginate only if long (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low

@@ -65,8 +65,16 @@ import {
   waitsFor,
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
-/** Families a group lists before "Show more", and how many each tap adds (N303): the catalog is 15 000 px tall without it. */
-const GROUP_PAGE = 12;
+/**
+ * Paging (N304). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
+ * lists its first GROUP_PAGE families and each tap adds GROUP_STEP; a flat list (saved designs, a brand's decors and
+ * pieces) lists LIST_PAGE rows and each tap adds LIST_STEP. Measured on the production build with 12 families per group:
+ * no shorter; with 4: 15 996 px (phone) and 8 455 px (desktop).
+ */
+export const GROUP_PAGE = 4;
+export const GROUP_STEP = 8;
+const LIST_PAGE = 24;
+const LIST_STEP = 24;
 
 /** Size, parts and checks of one item, from its built model (ADR-004). */
 function itemFacts(f: ViewFamily, v: CatalogVariant) {
@@ -136,8 +144,13 @@ export function CatalogPage({
     setSource('templates');
     setQuery('');
     setEditing(null);
-    // A family just saved lands on the first page of its groups; tests/find-it/catalog-pagination.test.tsx fails if it does not.
-    setMoreState({ q: '', grouping, extra: {} });
+    // The family may sit below the first page of its group (or groups): open each of them down to it.
+    const extra: Record<string, number> = {};
+    for (const g of groupFamilies(families, grouping)) {
+      const at = g.items.findIndex((i) => i.family.id === id);
+      if (at >= GROUP_PAGE) extra[g.key] = at + 1 - GROUP_PAGE;
+    }
+    setMoreState({ q: '', grouping, extra });
     setJump({ id });
   };
   useEffect(() => {
@@ -490,9 +503,12 @@ export function CatalogPage({
                 onEdit={() => startEdit(family)}
               />
             ))}
-            <GroupMore
+            <ShowMore
+              families
               shown={Math.min(g.items.length, GROUP_PAGE + (extra[g.key] ?? 0))}
               total={g.items.length}
+              first={GROUP_PAGE}
+              step={GROUP_STEP}
               onMore={(n) => showMore(g.key, n)}
             />
           </section>
@@ -707,40 +723,69 @@ function ItemCard({
  * One family, then every item (variant) as its own compact card. Its default structure, configurations, rooms and
  * other names wait behind "About this family" (ADR-118 on a phone, ADR-119 at every width).
  */
-/** Under a group's families: how many are listed, and a button for the next page (N303). Nothing when all are shown. */
-function GroupMore({
+/** Under a list: how many rows are shown, and a button for the next page. Nothing when the list fits the first page. */
+function ShowMore({
   shown,
   total,
+  first,
+  step,
+  families,
   onMore,
 }: {
   shown: number;
   total: number;
+  first: number;
+  step: number;
+  /** A catalog group counts families; a flat list counts rows. */
+  families?: boolean;
   onMore: (n: number) => void;
 }) {
   const status = useRef<HTMLParagraphElement>(null);
-  if (total <= GROUP_PAGE) return null;
+  if (total <= first) return null;
   const left = total - shown;
+  const n = Math.min(step, left);
   return (
     <div className="group-more">
       <p className="hint" role="status" tabIndex={-1} ref={status}>
-        {t('Showing {shown} of {total} families', { shown, total })}
+        {families
+          ? t('Showing {shown} of {total} families', { shown, total })
+          : t('Showing {shown} of {total}', { shown, total })}
       </p>
       {left > 0 && (
         <button
           type="button"
           className="btn outline"
           onClick={() => {
-            const n = Math.min(GROUP_PAGE, left);
             onMore(n);
             // The button goes with the last page: focus moves to the count line instead of falling to the page.
             if (n >= left) setTimeout(() => status.current?.focus(), 0);
           }}
         >
-          {t('Show {n|# more family|# more families}', { n: Math.min(GROUP_PAGE, left) })}
+          {families
+            ? t('Show {n|# more family|# more families}', { n })
+            : t('Show {n} more', { n })}
         </button>
       )}
     </div>
   );
+}
+
+/** A flat list one page at a time: the rows to show and the "Show more" control to put under them. */
+function usePaged<T>(items: T[]): { visible: T[]; more: ReactNode } {
+  const [extra, setExtra] = useState(0);
+  const shown = Math.min(items.length, LIST_PAGE + extra);
+  return {
+    visible: items.slice(0, shown),
+    more: (
+      <ShowMore
+        shown={shown}
+        total={items.length}
+        first={LIST_PAGE}
+        step={LIST_STEP}
+        onMore={(n) => setExtra((e) => e + n)}
+      />
+    ),
+  };
 }
 
 function FamilyBlock({
@@ -984,6 +1029,73 @@ function SaveAsTemplate({ onSaved }: { onSaved: (f: { id: string; name: string }
   );
 }
 
+/** One maker's decors and the saved pieces with one of its boards, a page at a time (N304). Keyed by brand, so a new brand starts at page one. */
+function BrandBody({
+  brand,
+  saved,
+  savedFailed,
+  onTake,
+}: {
+  brand: ReturnType<typeof decorBrands>[number];
+  saved: StoredDesign[];
+  savedFailed?: boolean;
+  onTake: (d: Design) => void;
+}) {
+  const pieces = useMemo(() => saved.filter((r) => usesBrand(r.design, brand)), [saved, brand]);
+  const decorPage = usePaged(brand.decors);
+  const piecePage = usePaged(pieces);
+  return (
+    <section aria-label={brand.label}>
+      <h3 className="list-head">{t('{brand} decors', { brand: brand.label })}</h3>
+      <ul className="template-list">
+        {decorPage.visible.map((d) => (
+          <li key={d.id} className="decor-row">
+            <span className="swatch" style={{ background: d.color }} aria-hidden="true" />
+            <span>
+              <strong>
+                {d.code} {d.name}
+              </strong>
+              <span className="sub">
+                {t('{n} mm', { n: d.thickness })} · {kindName(d.kind) ?? d.kind}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {decorPage.more}
+      <h3 className="list-head">
+        {t('Saved pieces with a {brand} board', { brand: brand.label })}
+      </h3>
+      {pieces.length ? (
+        <>
+          <ul className="template-list template-grid">
+            {piecePage.visible.map((r) => (
+              <li key={r.id}>
+                <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
+                  <span className="glyph">
+                    <Icon name={templateGlyph(r.design.product.kind)} />
+                  </span>
+                  <span>
+                    <strong>{r.name}</strong>
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {piecePage.more}
+        </>
+      ) : savedFailed ? (
+        <p className="alert error" role="alert">
+          {t('Designs saved on this device could not be read.')}
+        </p>
+      ) : (
+        <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
+      )}
+    </section>
+  );
+}
+
 /**
  * Catalog → Brands (ADR-210, G-044): a chip per manufacturer of the decor list on this device, with its count, beside
  * any shipped brand entry (`children`). A chip lists that maker's decors and the saved pieces with a board of it.
@@ -1033,7 +1145,6 @@ function DecorBrandList({
       </p>
     );
   const brand = brands.find((b) => b.key === picked);
-  const pieces = brand ? data.saved.filter((r) => usesBrand(r.design, brand)) : [];
   return (
     <>
       {brands.length > 0 && (
@@ -1052,50 +1163,13 @@ function DecorBrandList({
         </div>
       )}
       {brand && (
-        <section aria-label={brand.label}>
-          <h3 className="list-head">{t('{brand} decors', { brand: brand.label })}</h3>
-          <ul className="template-list">
-            {brand.decors.map((d) => (
-              <li key={d.id} className="decor-row">
-                <span className="swatch" style={{ background: d.color }} aria-hidden="true" />
-                <span>
-                  <strong>
-                    {d.code} {d.name}
-                  </strong>
-                  <span className="sub">
-                    {t('{n} mm', { n: d.thickness })} · {kindName(d.kind) ?? d.kind}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <h3 className="list-head">
-            {t('Saved pieces with a {brand} board', { brand: brand.label })}
-          </h3>
-          {pieces.length ? (
-            <ul className="template-list template-grid">
-              {pieces.map((r) => (
-                <li key={r.id}>
-                  <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
-                    <span className="glyph">
-                      <Icon name={templateGlyph(r.design.product.kind)} />
-                    </span>
-                    <span>
-                      <strong>{r.name}</strong>
-                    </span>
-                    <Icon name="chevron-right" className="chev sm" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : data.savedFailed ? (
-            <p className="alert error" role="alert">
-              {t('Designs saved on this device could not be read.')}
-            </p>
-          ) : (
-            <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
-          )}
-        </section>
+        <BrandBody
+          key={brand.key}
+          brand={brand}
+          saved={data.saved}
+          savedFailed={data.savedFailed}
+          onTake={onTake}
+        />
       )}
       {children}
     </>
@@ -1105,6 +1179,7 @@ function DecorBrandList({
 function SavedList({ onTake }: { onTake: (d: Design) => void }) {
   const [rows, setRows] = useState<StoredDesign[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const { visible, more } = usePaged(rows ?? []);
   useEffect(() => {
     listDesigns()
       .then(setRows)
@@ -1130,26 +1205,29 @@ function SavedList({ onTake }: { onTake: (d: Design) => void }) {
       </p>
     );
   return (
-    <ul className="template-list template-grid">
-      {rows.map((r) => (
-        <li key={r.id}>
-          <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
-            <span className="glyph">
-              <Icon name={templateGlyph(r.design.product.kind)} />
-            </span>
-            <span>
-              <strong>{r.name}</strong>
-              <span className="sub">
-                {r.design.catalog?.origin
-                  ? t('Based on {name}', { name: tr(r.design.catalog.origin.productName) })
-                  : t('Your design')}
+    <>
+      <ul className="template-list template-grid">
+        {visible.map((r) => (
+          <li key={r.id}>
+            <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
+              <span className="glyph">
+                <Icon name={templateGlyph(r.design.product.kind)} />
               </span>
-            </span>
-            <Icon name="chevron-right" className="chev sm" />
-          </button>
-        </li>
-      ))}
-    </ul>
+              <span>
+                <strong>{r.name}</strong>
+                <span className="sub">
+                  {r.design.catalog?.origin
+                    ? t('Based on {name}', { name: tr(r.design.catalog.origin.productName) })
+                    : t('Your design')}
+                </span>
+              </span>
+              <Icon name="chevron-right" className="chev sm" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {more}
+    </>
   );
 }
 

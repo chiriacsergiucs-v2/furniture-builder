@@ -245,6 +245,8 @@ export const ru_catalog = {
   'No saved piece has a board of this maker yet.':
     'Пока ни одно сохранённое изделие не имеет плиты этого производителя.',
   // N303: the catalog lists a group's first families, then "Show more".
+  'Showing {shown} of {total}': 'Показано {shown} из {total}',
+  'Show {n} more': 'Показать ещё {n}',
   'Showing {shown} of {total} families': 'Показано {shown} из {total} семейств',
   'Show {n|# more family|# more families}': 'Показать ещё {n|# семейство|# семейства|# семейств}',
   // ADR-195: catalog and template flows.

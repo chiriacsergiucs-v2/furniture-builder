@@ -72,3 +72,12 @@ export async function openTab(page, name) {
     return;
   await tab.click();
 }
+
+/**
+ * Open every page of the paged catalog lists (N304): tap each "Show … more" until none is left, so a script that measures
+ * every card sees them all. A script that measures the default page leaves the lists as they open.
+ */
+export async function showAllRows(page) {
+  const more = page.locator('.group-more button');
+  for (let guard = 0; guard < 200 && (await more.count()) > 0; guard++) await more.first().click();
+}
