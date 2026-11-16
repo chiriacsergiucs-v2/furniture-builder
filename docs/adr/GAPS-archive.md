@@ -3516,6 +3516,18 @@ highest id in either file.
 - Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
 - Work: Low
 
+### G-515: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+
+- Status: Done (N320)
+- Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
+- Missing: No find-it test was written for the four ADRs: the cut-sheet warning list, the Structure tree, hover/Ctrl-click/pin, and enter/focus (browser script for ADR-270).
+- Request: Build ADR-265, 268, 269 and 270 in burst mode, which skips find-it tests.
+- Questions: None: say catch up to pay the debt.
+- Suggested pick: Run the catch-up skill: jsdom find-it for 265, 268, 269 and tools/*/find-it.mjs for 270.
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-518: Audit pass 3 findings F-24 to F-30 not fixed
 
 - Status: Done (N319)
