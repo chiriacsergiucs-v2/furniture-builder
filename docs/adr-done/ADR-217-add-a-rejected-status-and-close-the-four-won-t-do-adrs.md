@@ -1,7 +1,8 @@
 # ADR-217: Add a Rejected status and close the four won't-do ADRs
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-07
+- Implemented: 2026-11-16 (Rejected status verified 2026-11-16 (N222))
 - Depends on: ADR-050, ADR-082
 - Design: n/a
 - Backlog: N222
@@ -49,8 +50,8 @@ stay the shopping-list file, ADR-064).
 
 ## Done when
 
-- [ ] `pnpm docs:check` passes with the four ADRs in `docs/adr-done/` as `Rejected (<reason>)`, and fails on a
+- [x] `pnpm docs:check` passes with the four ADRs in `docs/adr-done/` as `Rejected (<reason>)`, and fails on a
       Rejected ADR left in `docs/adr/` (checked by hand).
-- [ ] `tests/sync-pending.test.ts` passes (rejected ADRs are not listed as uncited).
-- [ ] `next-adr.sh` runs and reports no next ADR besides ADR-217 itself.
-- [ ] README conventions, the template comment and the index rows name the new status.
+- [x] `tests/sync-pending.test.ts` passes (rejected ADRs are not listed as uncited).
+- [x] `next-adr.sh` runs and reports no next ADR besides ADR-217 itself.
+- [x] README conventions, the template comment and the index rows name the new status.

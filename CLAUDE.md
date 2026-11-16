@@ -277,9 +277,11 @@ asks, never automatic.
   **on**): for a period of fast pushes, use the `auto` path and skip the slow steps below. A skip is never silent
   (R2): each one is logged as debt and listed under **Skipped this iteration**.
   - Skipped, each logged: writing and running find-it tests (jsdom or browser); `skip-review` stage 03; pick cards and
-    the Picks list; live-verify after deploy; `ship-adr` (the ADR stays Pending); local `pnpm format:check`, lint and
+    the Picks list; live-verify after deploy; local `pnpm format:check`, lint and
     the full suite (run `pnpm format`; CI runs the rest); the full _Read first_ (grep the backlog row and the last id
     instead of reading `docs/backlog.md` whole).
+  - `ship-adr` is not skipped (user 2026-11-16): it runs whenever every `Done when` item is met with evidence. It is
+    skipped, and logged, only when shipping needs the user's input or decision (an unmet item, an open question).
   - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
     rule, every hard rule and stop condition, CI on `main`.
   - Automerge (user 2026-11-16: "Burst also must include automerge"): while `burst` is on, merge the pull request as soon
