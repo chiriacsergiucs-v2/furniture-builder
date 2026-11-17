@@ -1779,7 +1779,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Catch-up 2026-11-17 (N330)
-- Missing: Live-verify of the 30 logged changes: the sandbox cannot open https://chiriacsergiucs-v2.github.io/furniture-builder/ (proxy answers 403) and no browser tool is linked, so no visible text was found on the live site. Unblock: run the browser scripts against the live URL from a machine that can reach it (node tools/<area>/find-it.mjs https://chiriacsergiucs-v2.github.io/furniture-builder/) or link Claude in Chrome. Cost: M
+- Missing: Live-verify of the logged changes: the sandbox reaches the published site now (200, 2026-11-17, N333) and 21 rows are paid. 13 rows keep a marker (N274, N286, N287, N288, N311, N318, N319, N302, N324, N329, N326, N325, N326): their changes need a flow the live script does not drive (a project with pieces, the print preview, the wizard, the 3D view), so no visible text was found for them yet.
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
 - Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
@@ -1816,3 +1816,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+
+### G-535: F-29 half fixed: the Gaps page marks no current place
+
+- Status: Open
+- Origin: Catch-up live-verify, 2026-11-17 (N333)
+- Missing: N319 says More is marked as the current place on Information and Gaps. On the live site, #info marks the More button (aria-current=page); #gaps does not (aria-current absent, and the More menu has no Gaps item), because App.tsx passes current only for the info page.
+- Request: Catch up
+- Questions: Which control marks the current place on the Gaps page, now that Gaps is reached from the Information page?
+- Suggested pick: Mark More as current on Gaps too and say it in the page's back link or heading context (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
