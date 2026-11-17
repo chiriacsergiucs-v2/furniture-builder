@@ -133,7 +133,7 @@ reviews. Keep the default effort; raise it one level only for a hard task, then 
 ## Orchestration (user 2026-11-17, from `maslennikov-ig/claude-code-orchestrator-kit`)
 
 The main session is the orchestrator: it gathers context, delegates multi-file work to a subagent in `.claude/agents/`,
-and verifies the result itself. These rules sit inside the build flow (_How we build_); they never relax a hard rule.
+and verifies the result itself (how-to: `docs/orchestration-tutorial.md`). These rules sit inside the build flow (_How we build_); they never relax a hard rule.
 
 1. **Gather context first.** Before delegating or editing, read the related code, search for the existing pattern, read
    the ADRs and backlog rows that apply, and check recent commits in the area.
