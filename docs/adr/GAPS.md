@@ -1765,3 +1765,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Leave both as they are until the user decides
 - Work: Low
 - Impact: Low
+
+### G-527: Three more backlog ids shared by two rows
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 3
+- Missing: Backlog ids N164, N281 and N302 are each used by two rows (G-523 covers N326); ids are never renumbered, so the clash needs the user's decision
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Which row keeps each of N164, N281 and N302, or does the second get a new id?
+- Suggested pick: Leave the ids as they are and keep the listed exceptions in scripts/check-docs.py until the user decides
+
+### G-528: Live-verify blocked from the sandbox
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330)
+- Missing: Live-verify of the 30 logged changes: the sandbox cannot open https://chiriacsergiucs-v2.github.io/furniture-builder/ (proxy answers 403) and no browser tool is linked, so no visible text was found on the live site. Unblock: run the browser scripts against the live URL from a machine that can reach it (node tools/<area>/find-it.mjs https://chiriacsergiucs-v2.github.io/furniture-builder/) or link Claude in Chrome. Cost: M
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
+- Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
+
+### G-529: Main CI red after the navbar change (234f34d)
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330), PR #281 CI
+- Missing: main commit 234f34d (Simplify the navbar: merge sync into Account, rename to Cut List, move Gaps to Information) made CI red on main: tests/find-it/accounts.test.tsx fails at 1280 and 390 px (no button named Your account, Uploading…, … In your account). The same failure is in PR #281 (test shard 3 and verify) although this PR does not touch it. The browser scripts were verified on d189439, before that commit, and were not re-run against it. Cost: M
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
+- Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)

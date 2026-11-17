@@ -86,9 +86,9 @@ for (const width of [1280, 390]) {
   // A phone shows 3D in Build & Preview only (ADR-079), its view controls under "Options" (N82); a desktop picks 3D.
   if (phone) {
     await goBuild(page);
-    // The phone opens Build & Preview on the 2D view (ADR-144): pick 3D in Options first.
+    // The phone opens Build & Preview on the 2D view (ADR-144). The 2D/3D switch is outside Options, and Options holds
+    // no tool in 2D, so it is not shown there (audit F-25, N318): pick 3D first, then open Options for the Look.
     const options = page.locator('details.view-options');
-    await options.locator(':scope > summary').click();
     await page.getByRole('radio', { name: '3D', exact: true }).click();
     await page.locator('.view.three canvas').waitFor({ timeout: 20000 });
     if (!(await options.evaluate((d) => d.open))) await options.locator(':scope > summary').click();

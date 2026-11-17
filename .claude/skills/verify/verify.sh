@@ -45,7 +45,8 @@ rows="$(awk '
     gsub(/^[ \t]+|[ \t]+$/, "", name)
     gsub(/^[ \t]+|[ \t]+$/, "", cmd)
     if (name == "" || name == "Check" || name ~ /^-+$/) next
-    gsub(/^`|`$/, "", cmd)
+    # The command is the first `code span`; text after it ("(the full suite)") is a note (catch-up gap G-524).
+    if (match(cmd, /`[^`]*`/)) cmd = substr(cmd, RSTART + 1, RLENGTH - 2)
     print name "\t" cmd
   }' "$claude_md")"
 
@@ -106,6 +107,16 @@ while IFS=$'\t' read -r name cmd; do
       lint|type-check|typecheck) ;;
       *) continue ;;
     esac
+  fi
+
+  # `<changed files>` stands for the source and test files changed against origin/main; none changed, nothing to run.
+  if [[ "$cmd" == *"<changed files>"* ]]; then
+    changed="$(git diff --name-only origin/main 2>/dev/null | grep -E '^(src|tests)/.*\.(ts|tsx)$' | tr '\n' ' ')"
+    if [ -z "$changed" ]; then
+      echo "⏭  $name (skipped: no source or test file changed against origin/main)"
+      continue
+    fi
+    cmd="${cmd//<changed files>/$changed}"
   fi
 
   run_step
