@@ -12,3 +12,7 @@ __pycache__
 .claude/worktrees/
 .eslintcache
 regress-report
+.tmp/
+/*-report.md
+/*-hunting-report.md
+/*-fixes-implemented.md
