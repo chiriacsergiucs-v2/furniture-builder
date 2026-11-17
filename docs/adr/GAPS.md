@@ -1792,3 +1792,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
 - Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
+
+### G-530: Value cycle build, variables, project in core
+
+- Status: Open
+- Origin: architect-review 2026-11-17
+- Missing: src/core/build.ts imports ./variables (build.ts:11), variables.ts:22 imports ./project, project.ts:8 imports ./build: a value-import cycle through a model file. ADR-219 and tests/core-boundary.test.ts only block a direct ./project import from model files, so the cycle passes. 20 more value cycles exist (14 around project.ts, i18n/print and ro, 5 in ui, Viewer3D and ViewerScene).
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: Break the cycle in the code (move the shared pieces out of variables.ts) or widen the ADR-219 rule to cover transitive imports?
+- Suggested pick: Decide with a new ADR; the model files are build.ts, cabinet.ts and the others listed in eslint.config.js
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+
+### G-534: Architecture checks the review could not cover
+
+- Status: Open
+- Origin: architect-review 2026-11-17
+- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Run each check and record its result in a dated report under docs/research
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
