@@ -12,6 +12,9 @@ export { chromium };
 export const PREVIEW_URL = 'http://localhost:4173/furniture-builder/';
 /** The two widths most scripts check: desktop and phone (CLAUDE.md R3). */
 export const WIDTHS = [1280, 390];
+// Colour schemes the capture scripts run (`tools/capture/flows*.mjs`). Light only for now (user 2026-11-17: theme runs
+// are not the priority); `CAPTURE_DARK=1` adds the dark run back.
+export const SCHEMES = process.env.CAPTURE_DARK === '1' ? ['light', 'dark'] : ['light'];
 /** Where a system Chromium usually lives on Linux. */
 export const SYSTEM_CHROMIUM = [
   '/opt/pw-browsers/chromium',

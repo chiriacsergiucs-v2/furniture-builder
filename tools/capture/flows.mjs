@@ -1,8 +1,8 @@
 // On-demand capture of the flows the place-by-place capture does not reach (G-509, N314): a project, the wizard steps,
-// Settings, Material and the dark theme. Same rules as `capture.mjs` (CLAUDE.md toggle `browser-on-demand`): run only when
+// Settings, Material and the dark theme (`CAPTURE_DARK=1`, light only by default). Same rules as `capture.mjs` (CLAUDE.md toggle `browser-on-demand`): run only when
 // the user asks; it asserts nothing. Each state that cannot be reached is logged and skipped, never fatal.
 //   pnpm build:ci && pnpm preview &  pnpm browser:capture-flows [url] [out dir]
-import { launchBrowser, previewUrl, outDir, WIDTHS } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, WIDTHS, SCHEMES } from '../lib/harness.mjs';
 import { mapPage } from '../lib/pagemap.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -37,7 +37,7 @@ async function state(width, scheme, name, fn) {
 }
 
 const browser = await launchBrowser();
-for (const scheme of ['light', 'dark']) {
+for (const scheme of SCHEMES) {
   for (const width of WIDTHS) {
     const phone = width < 500;
     const ctx = await browser.newContext({

@@ -12,7 +12,7 @@
 //   VITE_SUPABASE_URL=https://backend.invalid VITE_SUPABASE_ANON_KEY=placeholder pnpm exec vite build --outDir dist-online
 //   pnpm exec vite preview --outDir dist-online --port 4174 &
 //   pnpm browser:capture-flows3 [url] [out dir] [online url]
-import { launchBrowser, previewUrl, outDir, WIDTHS } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, WIDTHS, SCHEMES } from '../lib/harness.mjs';
 import { mapPage } from '../lib/pagemap.mjs';
 import { measure } from '../lib/contrast-measure.mjs';
 import { goBuild, goCompose, openTab, showPieces } from '../lib/steps.mjs';
@@ -102,7 +102,7 @@ async function state(width, scheme, name, fn) {
 }
 
 const browser = await launchBrowser();
-for (const scheme of ['light', 'dark']) {
+for (const scheme of SCHEMES) {
   for (const width of WIDTHS) {
     // --- Offline build: a project with pieces, the room, 3D, Information, Gaps, Copy code. ---
     const { ctx, page, errors, phone } = await newPage(browser, width, scheme);
