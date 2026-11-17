@@ -106,7 +106,7 @@ regex = '''-----BEGIN (RSA |EC )?PRIVATE KEY-----'''
 ```bash
 #!/bin/sh
 gitleaks protect --staged --verbose || exit 1
-pnpm type-check || exit 1
+pnpm typecheck || exit 1
 pnpm lint || exit 1
 ```
 
@@ -354,7 +354,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '${{ env.NODE_VERSION }}', cache: 'pnpm' }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check && pnpm lint && pnpm build && pnpm test:ci
+      - run: pnpm typecheck && pnpm lint && pnpm build && pnpm test:ci
 
   # Gate 3: Dependency Audit
   dependency-audit:

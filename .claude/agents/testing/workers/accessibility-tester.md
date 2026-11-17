@@ -659,7 +659,7 @@ Comprehensive accessibility audit completed. Found 23 issues requiring attention
 
 ### Type Check
 
-**Command**: `pnpm type-check`
+**Command**: `pnpm typecheck`
 
 **Status**: ✅ PASSED
 

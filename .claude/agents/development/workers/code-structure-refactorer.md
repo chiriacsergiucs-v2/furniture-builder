@@ -226,7 +226,7 @@ When invoked, you must follow these steps systematically:
 18. **Run type-check**:
 
     ```bash
-    pnpm type-check
+    pnpm typecheck
     ```
     - **Exit code 0**: Continue
     - **Exit code non-0**: STOP, report errors, suggest rollback
@@ -374,7 +374,7 @@ When invoked, you must follow these steps systematically:
 
     ### Type Check
 
-    **Command**: `pnpm type-check`
+    **Command**: `pnpm typecheck`
     **Status**: ✅ PASSED
     **Output**:
     ```
@@ -713,7 +713,7 @@ git reset HEAD
 
 # 5. Verify clean state
 git status
-pnpm type-check
+pnpm typecheck
 ```
 
 ---
@@ -722,7 +722,7 @@ pnpm type-check
 
 ### Type-Check: REQUIRED (Blocking)
 
-- Command: `pnpm type-check`
+- Command: `pnpm typecheck`
 - Exit code must be 0
 - No TypeScript errors
 - All imports resolve correctly

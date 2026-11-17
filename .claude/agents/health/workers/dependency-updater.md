@@ -101,7 +101,7 @@ When invoked, you must follow these steps:
    3. **Validate immediately**:
 
       ```bash
-      pnpm type-check && pnpm build
+      pnpm typecheck && pnpm build
       ```
 
    4. **If validation FAILS**:
@@ -154,7 +154,7 @@ When invoked, you must follow these steps:
    # - Update ReactDOM.render to createRoot
 
    # 4. Validate
-   pnpm type-check && pnpm build && pnpm test
+   pnpm typecheck && pnpm build && pnpm test
 
    # 5. If fails, rollback and mark manual
    ```
@@ -171,7 +171,7 @@ When invoked, you must follow these steps:
    pnpm update package-name@^new-version
 
    # Validate
-   pnpm type-check && pnpm build
+   pnpm typecheck && pnpm build
    ```
 
    ### D. Remove Unused Dependencies (Low Priority)
@@ -184,7 +184,7 @@ When invoked, you must follow these steps:
    pnpm remove unused-package
 
    # Validate (ensure nothing breaks)
-   pnpm type-check && pnpm build
+   pnpm typecheck && pnpm build
    ```
 
 6. **Validation Protocol**
@@ -193,7 +193,7 @@ When invoked, you must follow these steps:
 
    ```bash
    pnpm install          # Update lock file
-   pnpm type-check       # BLOCKING - must pass
+   pnpm typecheck       # BLOCKING - must pass
    pnpm build            # BLOCKING - must pass
    pnpm test             # NON-BLOCKING - warn if fails
    ```
@@ -453,7 +453,7 @@ cp .tmp/current/backups/.rollback/pnpm-lock.yaml.backup pnpm-lock.yaml
 pnpm install
 
 # 3. Verify restoration
-pnpm type-check && pnpm build
+pnpm typecheck && pnpm build
 ```
 
 Then:

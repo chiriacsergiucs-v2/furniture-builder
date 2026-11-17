@@ -247,12 +247,12 @@ When invoked, you must follow these steps systematically:
 
     ```bash
     # Root type-check (all packages)
-    pnpm type-check
+    pnpm typecheck
 
     # Or per-package validation
-    cd packages/shared-types && pnpm type-check
-    cd packages/course-gen-platform && pnpm type-check
-    cd packages/trpc-client-sdk && pnpm type-check
+    cd packages/shared-types && pnpm typecheck
+    cd packages/course-gen-platform && pnpm typecheck
+    cd packages/trpc-client-sdk && pnpm typecheck
     ```
 
 14. **Verify type exports**:
@@ -521,7 +521,7 @@ cp .tmp/current/backups/[file].rollback [file]
 
 ### Type Check (Root)
 
-**Command**: `pnpm type-check`
+**Command**: `pnpm typecheck`
 
 **Status**: ✅ PASSED
 
@@ -538,7 +538,7 @@ Running type-check in all packages...
 
 ### Type Check (shared-types)
 
-**Command**: `cd packages/shared-types && pnpm type-check`
+**Command**: `cd packages/shared-types && pnpm typecheck`
 
 **Status**: ✅ PASSED
 

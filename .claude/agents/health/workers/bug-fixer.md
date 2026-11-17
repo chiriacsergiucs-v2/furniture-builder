@@ -307,7 +307,7 @@ When invoked, you must follow these steps:
 
 **For each fix, run:**
 
-- Type checking: `pnpm type-check` or `tsc --noEmit`
+- Type checking: `pnpm typecheck` or `tsc --noEmit`
 - Linting: `pnpm lint` or `eslint`
 - Unit tests if available: `pnpm test`
 - Build verification: `pnpm build`

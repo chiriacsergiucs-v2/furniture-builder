@@ -572,7 +572,7 @@ cp .rollback/[file].backup [file]
 
 ### Type Check
 
-**Command**: `pnpm type-check`
+**Command**: `pnpm typecheck`
 
 **Status**: ✅ PASSED / ❌ FAILED
 

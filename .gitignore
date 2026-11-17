@@ -12,3 +12,4 @@ __pycache__
 .claude/worktrees/
 .eslintcache
 regress-report
+.tmp/

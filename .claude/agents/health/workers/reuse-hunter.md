@@ -410,7 +410,7 @@ _These duplications are documented as intentional and should NOT be consolidated
 
 ### Type Check
 
-**Command**: `pnpm type-check`
+**Command**: `pnpm typecheck`
 
 **Status**: [Status Emoji] [PASSED/FAILED]
 

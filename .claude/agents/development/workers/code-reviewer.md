@@ -82,7 +82,7 @@ Execute Steps 1-7 from the skill:
 - **Step 1**: Determine scope (from plan or prompt)
 - **Step 2**: Analyze git history (mandatory — don't skip)
 - **Step 3**: Read & analyze (Issues vs Improvements, good findings with file:line)
-- **Step 4**: Quality gates (`pnpm type-check && pnpm build`)
+- **Step 4**: Quality gates (`pnpm typecheck && pnpm build`)
 - **Step 5**: Generate report to `docs/reports/code-reviews/{YYYY-MM}/CR-{date}-{topic}.md`
 - **Step 6**: Create Beads tasks with `bd create`
 - **Step 7**: Present summary

@@ -55,7 +55,11 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `frontend-design`, `caveman`
+  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `frontend-design`, `caveman`,
+  and the health loops `health-bugs`, `health-security`, `health-deps`, `health-cleanup`, `health-reuse` (shared loop in
+  `health-bugs/loop.md`; see _Orchestration_)
+- `.claude/agents/` — subagents from the MIT-licensed `maslennikov-ig/claude-code-orchestrator-kit`, by area (health,
+  testing, development, database, documentation, infrastructure, meta, research); see _Orchestration_
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -125,6 +129,34 @@ something, write "not found in the repo" instead of inferring it. An empty or mi
 
 Guidance only, nothing in the settings enforces it. In the Claude app, use Opus for work spanning several packages or an ADR and Sonnet for single-file fixes and
 reviews. Keep the default effort; raise it one level only for a hard task, then lower it again.
+
+## Orchestration (user 2026-11-17, from `maslennikov-ig/claude-code-orchestrator-kit`)
+
+The main session is the orchestrator: it gathers context, delegates multi-file work to a subagent in `.claude/agents/`,
+and verifies the result itself. These rules sit inside the build flow (_How we build_); they never relax a hard rule.
+
+1. **Gather context first.** Before delegating or editing, read the related code, search for the existing pattern, read
+   the ADRs and backlog rows that apply, and check recent commits in the area.
+2. **Delegate with a full brief.** Give the agent the file paths, the pattern to follow, the hard rules that apply
+   (offline core, integer millimetres, translation rule, …) and the exact output and checks expected. The agent files
+   come from another stack: a step that names a tool or skill not in this repo (Beads, Gastown, Context7, Next.js,
+   tRPC, `setup-knip`, `run-quality-gate`) is skipped, and CLAUDE.md wins over the agent file.
+3. **Do small work directly.** A one-file change, a typo, a config line or a lookup is done in the main session.
+4. **Verify every delegation.** Read the changed files and run the sandbox checks (_Verify before done_). If the result
+   is wrong, re-delegate once with the error; then fix it yourself or stop and report. An agent's summary is never
+   reported as checked (_General conduct_ 3).
+5. **Track progress** with the task tools: one task per step, marked done only after verification.
+6. **Pick the agent by task:** `bug-hunter`/`bug-fixer`, `security-scanner`/`vulnerability-fixer`,
+   `dependency-auditor`/`dependency-updater`, `dead-code-hunter`/`dead-code-remover`, `reuse-hunter`/`reuse-fixer`
+   (through the `health-*` skills, which show the report and fix only the priorities the user approves);
+   `test-writer`, `accessibility-tester`, `mobile-responsiveness-tester`/`mobile-fixes-implementer`,
+   `performance-optimizer`, `code-reviewer`, `problem-investigator`, `typescript-types-specialist`, `technical-writer`,
+   `deployment-engineer` (GitHub Actions), `supabase-auditor`/`supabase-fixer`/`database-architect` (`supabase/` only),
+   `code-structure-refactorer` (only when the user asks for a refactor, ADR-016), `meta-agent-v3` and `skill-builder-v2`
+   (new agents and skills).
+7. **Not adopted from the kit:** the library-first rule (new dependencies follow _Engineering conventions_), `/push`
+   after every task (pushes follow _Git_), Beads and Gastown tracking (the backlog and gaps ledgers are the trackers),
+   SpecKit (ADRs cover specs) and the kit's MCP configuration.
 
 ## How we build (user rule 2026-11-07, replaces the 2026-10-27/29 flow)
 

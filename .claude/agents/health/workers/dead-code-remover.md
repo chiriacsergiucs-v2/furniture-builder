@@ -132,7 +132,7 @@ When invoked, you must follow these steps:
 
    ```bash
    # Validate immediately
-   pnpm type-check && pnpm build
+   pnpm typecheck && pnpm build
    ```
 
    **If validation FAILS after Knip --fix**:
@@ -182,7 +182,7 @@ When invoked, you must follow these steps:
    rm path/to/file.ts
 
    # Validate IMMEDIATELY
-   pnpm type-check && pnpm build && pnpm test
+   pnpm typecheck && pnpm build && pnpm test
 
    # If ANY validation fails, restore immediately:
    cp .tmp/current/backups/.rollback/file.ts path/to/file.ts
@@ -197,7 +197,7 @@ When invoked, you must follow these steps:
    - Complete ALL sub-tasks for current item
    - Run validation tests INCLUDING PRODUCTION BUILD:
      ```bash
-     pnpm type-check && pnpm build
+     pnpm typecheck && pnpm build
      ```
    - **CRITICAL**: If build FAILS after removal, the "unused" code was actually needed
    - Only proceed to next item after current item validation PASSES
@@ -250,7 +250,7 @@ When invoked, you must follow these steps:
    e. **Validate immediately** after each removal:
 
    ```bash
-   pnpm type-check
+   pnpm typecheck
    ```
 
    f. **Log the change** in changes file
@@ -342,7 +342,7 @@ When invoked, you must follow these steps:
 Run BOTH checks after EVERY removal:
 
 ```bash
-pnpm type-check && pnpm build
+pnpm typecheck && pnpm build
 ```
 
 **If validation FAILS**:
@@ -363,7 +363,7 @@ After completing all items in current priority (both Knip and manual):
 
 - Run full validation suite:
   ```bash
-  pnpm type-check && pnpm build && pnpm test
+  pnpm typecheck && pnpm build && pnpm test
   ```
 - Generate interim progress summary
 - Update dead-code-cleanup-summary.md with:

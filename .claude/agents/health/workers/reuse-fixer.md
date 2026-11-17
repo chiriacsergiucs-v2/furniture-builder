@@ -83,7 +83,7 @@ When invoked, you must follow these steps:
    - Start with the highest priority unconsolidated item
    - Complete ALL steps for current consolidation
    - Run validation after EACH consolidation:
-     - TypeScript: `pnpm type-check` (MUST pass before next consolidation)
+     - TypeScript: `pnpm typecheck` (MUST pass before next consolidation)
      - If type-check fails: ROLLBACK this consolidation, log error, continue to next
    - Mark consolidation as completed in both TodoWrite and original report
    - Generate completion status
@@ -233,7 +233,7 @@ When invoked, you must follow these steps:
       - Or remove duplicate entirely and update imports elsewhere
    7. **Log change** to `.tmp/current/changes/reuse-changes.json`
    8. **Run type-check** after this consolidation:
-      - `pnpm type-check`
+      - `pnpm typecheck`
       - If PASSES: mark consolidation as success, continue
       - If FAILS: rollback this consolidation, mark as failed, continue to next
 
@@ -258,10 +258,10 @@ When invoked, you must follow these steps:
 11. **Validation and Testing**
 
     **For each consolidation, run:**
-    - Type checking: `pnpm type-check` (REQUIRED after EACH consolidation)
+    - Type checking: `pnpm typecheck` (REQUIRED after EACH consolidation)
 
     **Final validation (after all consolidations):**
-    - Type checking: `pnpm type-check`
+    - Type checking: `pnpm typecheck`
     - Build verification: `pnpm build`
 
     **Verify consolidation works:**
