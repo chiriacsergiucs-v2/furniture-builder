@@ -4,7 +4,7 @@
 // Done gap (Done gaps live in docs/adr/GAPS-archive.md), at phone and desktop widths. Uses the real ledger.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openGaps, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('feature tree and gaps sync at %i px (find-it, N170)', (width) => {
   it('bare app → Information and guides → Output › Results → "Results tabs under the views"', async () => {
@@ -26,9 +26,7 @@ describe.each(WIDTHS)('feature tree and gaps sync at %i px (find-it, N170)', (wi
 
   it('bare app → More → Gaps → the Done filter counts no gap', async () => {
     const { user } = await renderApp(width);
-    await user.click(screen.getByLabelText(/^More$/));
-    await user.click(screen.getByRole('button', { name: /^Gaps/ }));
-    const page = await screen.findByRole('main', { name: 'Gaps' });
+    const page = await openGaps(user);
     const status = within(page).getByRole('group', { name: 'Status' });
     expect(within(status).getByRole('button', { name: 'Done (0)' })).toBeTruthy();
     expect(within(status).getByRole('button', { name: /^Open \([1-9]\d*\)$/ })).toBeTruthy();

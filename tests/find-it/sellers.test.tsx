@@ -56,8 +56,7 @@ describe.each(WIDTHS)('seller products at %ipx (find-it, ADR-161)', (width) => {
     await user.click(within(settings).getByRole('button', { name: 'Done' }));
 
     // Shopping list: Product on the runner line, then Add seller product.
-    if (width === PHONE_WIDTH)
-      await user.click(screen.getByRole('radio', { name: /Build & Preview/ }));
+    if (width === PHONE_WIDTH) await user.click(screen.getByRole('radio', { name: /Cut List/ }));
     await user.click(screen.getByRole('tab', { name: /Shopping/ }));
     await user.click(
       await screen.findByRole('button', { name: /^Product for Ball-bearing side runner pair/ }),

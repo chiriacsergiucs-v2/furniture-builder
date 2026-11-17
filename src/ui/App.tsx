@@ -50,7 +50,7 @@ import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from '../store/uiStore'
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
-import { AccountButton, AccountDialog, SyncStatus } from './Account';
+import { AccountButton, AccountDialog } from './Account';
 import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
 import { initAccount } from '../store/accountActions';
@@ -616,24 +616,6 @@ export function App() {
     <>
       <div className={`app page-${page}`}>
         <header className="bar" ref={barRef}>
-          {/* The mark goes to Projects, like the Projects place (G-059); on a phone it also names the app. */}
-          <a
-            className="brand"
-            href="#"
-            title={t('Projects')}
-            aria-label={t('Furniture Builder, go to Projects')}
-            onClick={(e) => {
-              e.preventDefault();
-              setPage('projects');
-            }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <line x1="3" y1="15.5" x2="21" y2="15.5" />
-            </svg>
-            <span className="brand-name">Furniture Builder</span>
-          </a>
           <nav className="pages places" aria-label={t('Places')} ref={navRef}>
             {PLACES.map((p) => (
               <a
@@ -671,7 +653,7 @@ export function App() {
                 }}
               >
                 <Icon name="layers" className="sm" />
-                <span>{t('Cut list')}</span>
+                <span>{t('Cut List')}</span>
                 {(errors || warnings) > 0 && (
                   <span className={`badge ${errors ? 'error' : 'warning'}`} aria-label={buildMeta}>
                     {errors || warnings}
@@ -770,7 +752,6 @@ export function App() {
             </span>
           )}
           {page === 'editor' && !phone && <EstimateChip />}
-          <SyncStatus />
           <div className="bar-tools">
             {page === 'editor' && (
               <>
@@ -841,9 +822,8 @@ export function App() {
             <MoreMenu
               onNew={() => setDialog('new')}
               onOpened={() => setPage('editor')}
-              onGaps={() => setPage('gaps')}
               onInfo={() => setPage('info')}
-              current={page === 'gaps' || page === 'info' ? page : undefined}
+              current={page === 'info' ? 'info' : undefined}
             />
           </div>
         </header>
@@ -907,7 +887,13 @@ export function App() {
             />
           )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
-          {page === 'info' && <InfoPage onDone={() => setPage('editor')} designOpen={designOpen} />}
+          {page === 'info' && (
+            <InfoPage
+              onDone={() => setPage('editor')}
+              designOpen={designOpen}
+              onGaps={() => setPage('gaps')}
+            />
+          )}
         </Suspense>
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}

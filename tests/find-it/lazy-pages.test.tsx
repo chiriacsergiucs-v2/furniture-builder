@@ -4,7 +4,7 @@
 // loading fallback, by role and visible text, at phone and desktop widths.
 import { screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { openMore, renderApp, WIDTHS } from './setup';
+import { openGaps, openMore, renderApp, WIDTHS } from './setup';
 
 beforeEach(() => {
   // A build with a backend URL, so the Account button shows; nothing is contacted (no sign-in is made).
@@ -14,11 +14,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe.each(WIDTHS)('pages loaded on demand at %ipx (find-it, ADR-222)', (width) => {
-  it('⋯ › Gaps shows the Gaps page', async () => {
+  it('⋯ › Information and guides › Gaps shows the Gaps page', async () => {
     const { user } = await renderApp(width);
-    await openMore(user);
-    await user.click(await screen.findByRole('button', { name: /^Gaps/ }));
-    const gaps = await screen.findByRole('main', { name: 'Gaps' });
+    const gaps = await openGaps(user);
     expect(within(gaps).getByRole('region', { name: 'Totals' })).toBeTruthy();
   });
 

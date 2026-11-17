@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findFamily } from '../../src/core/catalog';
 import { setPrintLang } from '../../src/core/i18n/print';
 import { data_catalog } from '../../src/core/i18n/ru/data-catalog';
-import { renderApp, WIDTHS } from './setup';
+import { openGaps, renderApp, WIDTHS } from './setup';
 
 const gap = (id: string, title: string) => `### ${id}: ${title}
 
@@ -45,9 +45,7 @@ const csvFile = (name: string, text: string) => new File([text], name, { type: '
 describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
   it('bare app → More → Gaps → Export marks, then Import marks keeps the newer mark and counts skipped rows', async () => {
     const { user } = await renderApp(width);
-    await user.click(screen.getByLabelText(/^More$/));
-    await user.click(screen.getByRole('button', { name: /^Gaps/ }));
-    const page = await screen.findByRole('main', { name: 'Gaps' });
+    const page = await openGaps(user);
     const exportBtn = within(page).getByRole('button', { name: 'Export marks' });
     await waitFor(() => expect((exportBtn as HTMLButtonElement).disabled).toBe(false));
 
@@ -219,7 +217,7 @@ describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
       within(start).getAllByRole('button', { name: /Base cabinet, doors: 1 door \+ shelf/ })[0],
     );
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+    const build = screen.queryByRole('radio', { name: /Cut List/ });
     if (build) await user.click(build);
     await user.click(screen.getByRole('tab', { name: /Shopping/ }));
     const list = await screen.findByRole('tabpanel');

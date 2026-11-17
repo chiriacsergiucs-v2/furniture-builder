@@ -27,7 +27,7 @@ describe.each(WIDTHS)('project assembly order at %ipx (find-it, ADR-178)', (widt
 
     // Build & Preview → Assembly.
     if (width === PHONE_WIDTH) {
-      const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+      const build = screen.queryByRole('radio', { name: /Cut List/ });
       if (build) await user.click(build);
     }
     await user.click(screen.getByRole('tab', { name: /^Assembly/ }));

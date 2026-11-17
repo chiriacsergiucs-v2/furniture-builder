@@ -23,7 +23,7 @@ describe.each(WIDTHS)('running estimate at %ipx (find-it, ADR-172)', (width) => 
     await waitFor(() => expect(chip().getAttribute('aria-label')).toMatch(/^No prices yet/));
 
     // A price for the first line of the Shopping list.
-    const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+    const build = screen.queryByRole('radio', { name: /Cut List/ });
     if (build) await user.click(build);
     await user.click(screen.getByRole('tab', { name: /Shopping/ }));
     const list = await screen.findByRole('tabpanel');

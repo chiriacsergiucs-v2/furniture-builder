@@ -114,7 +114,7 @@ describe.each(WIDTHS)('typed connections at %ipx (find-it, ADR-207)', (width) =>
     await newProject(user);
     await addPiece(user, /Base cabinet, doors: 1 door/);
     if (width === PHONE_WIDTH) {
-      const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+      const build = screen.queryByRole('radio', { name: /Cut List/ });
       if (build) await user.click(build);
     }
     await user.click(screen.getByRole('tab', { name: /^Assembly/ }));

@@ -40,7 +40,7 @@ async function chest(user: User) {
 
 async function results(user: User, width: number, tab: RegExp) {
   if (width === PHONE_WIDTH) {
-    const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+    const build = screen.queryByRole('radio', { name: /Cut List/ });
     if (build) await user.click(build);
   }
   await user.click(screen.getByRole('tab', { name: tab }));

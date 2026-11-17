@@ -27,67 +27,56 @@ export function useOnline(): boolean {
 
 export const initial = (s: string) => (s.trim()[0] ?? '?').toUpperCase();
 
-/** The Account button in the top bar (ADR-136, G-251): the initial once signed in. Hidden in a build with no backend. */
+type SyncView = ReturnType<typeof useAccount.getState>['sync'];
+
+/** The sync status text, as the save status showed it (ADR-139, G-260): failures stay until resolved. */
+function syncText(sync: SyncView): string {
+  if (!sync) return t('Your account');
+  if (sync.state === 'syncing') return t('Uploading…');
+  if (sync.state === 'offline')
+    return sync.waiting
+      ? t('Waiting for a connection ({n})', { n: sync.waiting })
+      : t('Waiting for a connection');
+  if (sync.state === 'error') return t('Upload failed — Retry');
+  if (sync.conflicts.length) return t('Kept both: {n}', { n: sync.conflicts.length });
+  return sync.waiting ? t('Waiting to upload ({n})', { n: sync.waiting }) : t('In your account');
+}
+
+function syncTone(sync: NonNullable<SyncView>): 'failed' | 'saving' | 'waiting' | 'saved' {
+  if (sync.state === 'error') return 'failed';
+  if (sync.state === 'syncing') return 'saving';
+  if (sync.state === 'offline') return 'waiting';
+  return 'saved';
+}
+
+/**
+ * The Account button in the top bar (ADR-136, G-251): the initial once signed in. Signed in, it also shows the sync
+ * status (ADR-139, G-260): a dot, the text in its title and label, and Retry on a failed upload. Hidden in a build
+ * with no backend.
+ */
 export function AccountButton() {
   const configured = useAccount((s) => s.configured);
   const user = useAccount((s) => s.user);
+  const sync = useAccount((s) => s.sync);
   const setDialog = useAccount((s) => s.setDialog);
   if (!configured) return null;
+  const text = user ? syncText(sync) : null;
   return (
     <button
       type="button"
       className={`btn icon account-btn${user ? ' signed-in' : ''}`}
-      aria-label={t('Account')}
-      title={user ? t('Signed in as {email}', { email: user.email }) : t('Sign in')}
-      onClick={() => setDialog(user ? 'account' : 'sign-in')}
+      aria-label={text ? `${t('Account')}, ${text}` : t('Account')}
+      title={user ? (sync?.error ?? text ?? undefined) : t('Sign in')}
+      onClick={() =>
+        user && sync?.state === 'error' ? void syncNow() : setDialog(user ? 'account' : 'sign-in')
+      }
     >
       {user ? (
         <span className="account-initial">{initial(user.name || user.email)}</span>
       ) : (
         <Icon name="user" />
       )}
-    </button>
-  );
-}
-
-/** The sync status beside the save status (ADR-139, G-260): failures stay until resolved. */
-export function SyncStatus() {
-  const user = useAccount((s) => s.user);
-  const sync = useAccount((s) => s.sync);
-  const setDialog = useAccount((s) => s.setDialog);
-  if (!user) return null;
-  const text = !sync
-    ? t('Your account')
-    : sync.state === 'syncing'
-      ? t('Uploading…')
-      : sync.state === 'offline'
-        ? sync.waiting
-          ? t('Waiting for a connection ({n})', { n: sync.waiting })
-          : t('Waiting for a connection')
-        : sync.state === 'error'
-          ? t('Upload failed — Retry')
-          : sync.conflicts.length
-            ? t('Kept both: {n}', { n: sync.conflicts.length })
-            : sync.waiting
-              ? t('Waiting to upload ({n})', { n: sync.waiting })
-              : t('In your account');
-  const tone =
-    sync?.state === 'error'
-      ? 'failed'
-      : sync?.state === 'syncing'
-        ? 'saving'
-        : sync?.state === 'offline'
-          ? 'waiting'
-          : 'saved';
-  return (
-    <button
-      type="button"
-      className={`status sync-status ${tone}`}
-      title={sync?.error ?? text}
-      onClick={() => (sync?.state === 'error' ? void syncNow() : setDialog('account'))}
-    >
-      <Icon name="cloud" className="sm" />
-      <span className="txt">{text}</span>
+      {user && sync && <span className={`sync-dot ${syncTone(sync)}`} aria-hidden="true" />}
     </button>
   );
 }

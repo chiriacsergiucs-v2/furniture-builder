@@ -8,7 +8,7 @@ import { db, saveDesign } from '../src/persist/db';
 import { fakeBackend, fakeServer, type FakeServer } from '../src/online/fake';
 import * as client from '../src/online/client';
 import { useAccount } from '../src/store/accountStore';
-import { AccountButton, AccountDialog, AccountBadge, SyncStatus } from '../src/ui/Account';
+import { AccountButton, AccountDialog, AccountBadge } from '../src/ui/Account';
 import { ShareLinkDialog, SharedItemDialog } from '../src/ui/Share';
 
 // ADR-134 to ADR-139, ADR-142, ADR-143: the account UI against the in-memory backend (no network).
@@ -54,7 +54,6 @@ afterEach(() => cleanup());
 const ui = () =>
   render(
     <>
-      <SyncStatus />
       <AccountButton />
       <AccountDialog />
       <ShareLinkDialog />
@@ -87,7 +86,7 @@ describe('sign-in screens (ADR-136)', () => {
     await waitFor(() => expect(useAccount.getState().user?.email).toBe('me@example.com'));
     expect(JSON.parse(localStorage.getItem('fb:account')!).email).toBe('me@example.com');
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Account' }).textContent).toBe('M');
+    expect(screen.getByRole('button', { name: /^Account/ }).textContent).toBe('M');
   });
 
   it('a wrong password shows the error and keeps the typed email', async () => {
@@ -186,10 +185,32 @@ describe('signed in (ADR-130, ADR-137, ADR-139, ADR-142)', () => {
     );
   });
 
+  it('a failed upload shows its text and the red dot; the click retries and does not open the dialog', async () => {
+    const u = userEvent.setup();
+    useAccount.setState({
+      user: { id: 'u1', email: 'me@example.com', provider: 'email' },
+      sync: {
+        state: 'error',
+        waiting: 1,
+        conflicts: [],
+        error: 'Network down',
+        items: {},
+        elsewhere: [],
+      },
+    });
+    ui();
+    const btn = screen.getByRole('button', { name: 'Account, Upload failed — Retry' });
+    expect(btn.getAttribute('title')).toBe('Network down');
+    expect(btn.querySelector('.sync-dot.failed')).not.toBeNull();
+    useAccount.setState({ dialog: null });
+    await u.click(btn);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('Sign out keeps this device’s rows; the account panel offers Add another account', async () => {
     await saveDesign(templates[0].create());
     const u = await signIn();
-    await u.click(screen.getByRole('button', { name: 'Account' }));
+    await u.click(screen.getByRole('button', { name: /^Account/ }));
     expect(dlg().getByRole('button', { name: 'Add another account' })).toBeTruthy();
     expect(dlg().getByRole('button', { name: 'Export my data' })).toBeTruthy();
     await u.click(dlg().getByRole('button', { name: 'Sign out' }));
@@ -269,7 +290,7 @@ describe('start-up (ADR-134, ADR-135)', () => {
     const { AccountButton: Btn } = await import('../src/ui/Account');
     fresh.setState({ configured: true });
     render(<Btn />);
-    expect(screen.getByRole('button', { name: 'Account' }).textContent).toBe('K');
+    expect(screen.getByRole('button', { name: /^Account/ }).textContent).toBe('K');
     expect(calls).toEqual([]);
   });
 

@@ -18,7 +18,7 @@ type Mode = 'compose' | 'build';
 export const MODES: Mode[] = ['compose', 'build'];
 export const MODE_LABEL: Record<Mode, string> = {
   compose: t('Compose'),
-  build: t('Build & Preview'),
+  build: t('Cut List'),
 };
 
 const KEY = 'fb:mode';

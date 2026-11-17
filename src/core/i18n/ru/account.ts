@@ -2,7 +2,6 @@
 export const ru_account = {
   // Account button, sync status and badges
   Account: 'Аккаунт',
-  'Signed in as {email}': 'Вы вошли как {email}',
   'Sign in': 'Войти',
   'Your account': 'Ваш аккаунт',
   'Uploading…': 'Загрузка…',
