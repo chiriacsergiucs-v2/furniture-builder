@@ -182,6 +182,8 @@ try {
     });
     await page.getByRole('button', { name: 'Save a version', exact: true }).click();
     await page.getByText('Version saved.', { exact: true }).waitFor();
+    // The saved version's row renders a moment after the notice; a count taken at once raced it under CPU load.
+    await page.getByRole('button', { name: 'Restore', exact: true }).first().waitFor();
     check(
       'version retry succeeds',
       (await page.getByRole('button', { name: 'Restore', exact: true }).count()) === 1,

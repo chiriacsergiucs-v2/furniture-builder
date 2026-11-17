@@ -2,15 +2,15 @@
 // change updates one place instead of every script that walks through it.
 
 /**
- * Show the results (ADR-241): the Build & Preview mode on a desktop, the Cut list place in the bottom nav on a phone
+ * Show the results (ADR-241): the Build & Preview mode (named Cut List since the navbar change 234f34d) on a desktop, the Cut list place in the bottom nav on a phone
  * (the mode row is hidden there).
  */
 export async function goBuild(page) {
-  const radio = page.getByRole('radio', { name: /Build & Preview/ });
+  const radio = page.getByRole('radio', { name: /Build & Preview|Cut List/ });
   if (await radio.isVisible().catch(() => false)) return radio.click();
   await page
     .getByRole('navigation', { name: 'Places' })
-    .getByRole('link', { name: /Cut list/ })
+    .getByRole('link', { name: /Cut list/i })
     .click();
 }
 

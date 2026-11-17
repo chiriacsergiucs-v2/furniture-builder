@@ -3630,3 +3630,30 @@ highest id in either file.
 - Work: Low-medium
 - Impact: Low-medium
 - Necessity: Low
+
+### G-524: verify.sh fails two Commands rows
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330)
+- Missing: verify.sh could not run the Related tests and Test rows: it kept the text after the closing backtick of a Commands cell, and did not fill <changed files>
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: Read the first code span of the cell and fill <changed files> from git diff against origin/main (built, commit fd36837)
+
+### G-525: Browser scripts stale after N318 and N319
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 2
+- Missing: Four of the 84 browser scripts failed after later UI changes: home and project-actions raced the page under load, look-render and wall-picture-fit followed an Options menu and a tool row that N318 and N319 changed
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: Wait for the element in the two racing scripts, follow the new Options menu and compare the scene below the tool row in the other two (built, commit fd36837)
+
+### G-526: docs:check allows repeated backlog ids
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 3
+- Missing: docs:check did not reject a backlog id used by two rows
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: A repeated id fails docs:check except N164, N281, N302 and N326, which are listed (built, commit fd36837)
