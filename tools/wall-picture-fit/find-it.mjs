@@ -161,11 +161,25 @@ for (const width of [1280, 390]) {
   check(width, 'the front view draws the picture on the back wall', !!raw);
   await view('3D');
   const canvas = page.locator('canvas').first();
+  // The 3D tool row sits over the top of the canvas and, on a phone, scrolls sideways (audit F-30, N319), so a picture
+  // of the canvas that includes it differs between two shots of the same wall. Compare the scene below the tool rows.
+  const sceneBelowTools = async (path) => {
+    const cb0 = await canvas.boundingBox();
+    let top = cb0.y;
+    for (const tb of await page.locator('.three-tools').all()) {
+      const b = await tb.boundingBox();
+      if (b && b.y < cb0.y + cb0.height / 2) top = Math.max(top, b.y + b.height + 4);
+    }
+    return page.screenshot({
+      path,
+      clip: { x: cb0.x, y: top, width: cb0.width, height: cb0.y + cb0.height - top },
+    });
+  };
   // The 3D toolbar mounts with the lazy-loaded viewer.
   await btn('Solid walls').waitFor({ timeout: 30000 });
   await click(btn('Solid walls'));
   await page.waitForTimeout(1200);
-  const shot0 = await canvas.screenshot({ path: `${out}/wall-picture-3d-before-${width}.png` });
+  const shot0 = await sceneBelowTools(`${out}/wall-picture-3d-before-${width}.png`);
 
   // Straighten photo › drag the top-left handle onto the wall's corner › Apply.
   await view('2D');
@@ -211,7 +225,7 @@ for (const width of [1280, 390]) {
     .screenshot({ path: `${out}/wall-picture-front-${width}.png` });
   await view('3D');
   await page.waitForTimeout(1200);
-  const shot1 = await canvas.screenshot({ path: `${out}/wall-picture-3d-straight-${width}.png` });
+  const shot1 = await sceneBelowTools(`${out}/wall-picture-3d-straight-${width}.png`);
   const d01 = await differ(page, shot0, shot1);
   check(
     width,
@@ -236,7 +250,7 @@ for (const width of [1280, 390]) {
   );
   await view('3D');
   await page.waitForTimeout(1200);
-  const shot2 = await canvas.screenshot({ path: `${out}/wall-picture-3d-reset-${width}.png` });
+  const shot2 = await sceneBelowTools(`${out}/wall-picture-3d-reset-${width}.png`);
   const d02 = await differ(page, shot0, shot2);
   check(
     width,
@@ -260,10 +274,10 @@ for (const width of [1280, 390]) {
     /Tap a wall with a picture/.test((await note.textContent()) ?? ''),
   );
   const cb = await canvas.boundingBox();
-  // On a phone the 3D toolbar covers the upper middle of the short canvas: tap the back wall in its top right corner,
-  // above the buttons.
-  const tx = cb.x + cb.width * (phone ? 0.92 : 0.5),
-    ty = cb.y + cb.height * (phone ? 0.1 : 0.25);
+  // On a phone the 3D tool row covers the top of the short canvas (F-30): tap the back wall to the right of the piece,
+  // below the row.
+  const tx = cb.x + cb.width * (phone ? 0.85 : 0.5),
+    ty = cb.y + cb.height * (phone ? 0.32 : 0.25);
   if (phone) await page.touchscreen.tap(tx, ty);
   else await page.mouse.click(tx, ty);
   await page.waitForTimeout(600);

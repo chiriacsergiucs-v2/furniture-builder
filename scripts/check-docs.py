@@ -56,6 +56,13 @@ backlog = {m.group(1): (m.group(2).strip(), m.group(3))
            for m in re.finditer(r"^\| ([FND]\d{2,}) +\|[^|\n]*\|([^|\n]*)\|?(.*)$",
                                 (REPO / "docs/backlog.md").read_text(), re.M)}
 
+# A backlog id names one row (catch-up gap G-523). These four were each used twice before the check existed, and ids
+# are never renumbered (CLAUDE.md), so they are listed here; any other repeated id fails.
+KNOWN_DUPLICATE_BACKLOG_IDS = {"N164", "N281", "N302", "N326"}
+_backlog_ids = re.findall(r"^\| ([FND]\d{2,}) +\|", (REPO / "docs/backlog.md").read_text(), re.M)
+for _id in sorted({i for i in _backlog_ids if _backlog_ids.count(i) > 1} - KNOWN_DUPLICATE_BACKLOG_IDS):
+    errors.append(f"docs/backlog.md: backlog id {_id} is used by more than one row")
+
 # Index rows: | [ADR-NNN](link) | title | depends | status |
 index = (ADR / "README.md").read_text()
 rows = re.findall(r"^\| \[ADR-(\d{3})\]\(([^)]+)\)\s*\|.*\| ([^|]+) \|$", index, re.M)

@@ -58,7 +58,14 @@ for (const width of [1440, 375, 360]) {
   check(
     width,
     'empty device says nothing saved yet',
-    await page.getByText('No projects saved yet').isVisible(),
+    // Waits for the saved-projects list to load from IndexedDB; an immediate isVisible() raced it under CPU load.
+    await page
+      .getByText('No projects saved yet')
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   // Rewritten: the built-in Mobila projects were removed from the app by the user (backlog D02).
   check(
