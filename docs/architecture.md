@@ -16,10 +16,10 @@
   cutlist.ts grouping, edges L/W, grain, m², band metres, CSV, hardware summary
   geometry.ts boxes, overlap, distribute, cutDimensions
                           │
- src/persist  Dexie `furniture-builder` v1: designs   (autosave, library, import/export)
+ src/persist  Dexie `furniture-builder` v12 (db.ts:96-208): designs, projects, templates, ... (autosave, library, import/export)
 ```
 
-Boundaries: `src/core` imports nothing from React, three or Dexie (ADR-013). Views never generate geometry
+Boundaries: `src/core` imports nothing from React, three or Dexie (ADR-013). `src/shared` (`planDrag.ts`, `renderSupport.ts`) holds code that `src/ui` and `src/viewer` both import and imports nothing from the app (ADR-219). Views never generate geometry
 (ADR-004). The viewer never edits a design (ADR-014); it only places project pieces with Move and Turn (ADR-093, `src/viewer/pieceDrag.ts` → `src/core/drag3d.ts`). Checks in `build.ts` do not trust generators (ADR-008).
 Network (ADR-126, replacing ADR-002's rule): the offline core makes no request; online features live in `src/online`,
 are imported only dynamically after the user opts in, and contact only `onlineOrigins()` (`tests/network-boundary.test.ts`).
@@ -39,14 +39,14 @@ Checked in `src/ui/App.tsx`, `src/ui/SheetHandle.tsx`, `src/ui/shell/*`, `src/st
 
 - **Places.** `type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info'` (`App.tsx:159`). The location hash picks
   the page (`pageFromHash`, `usePage`, `App.tsx:161-185`); the bare address is Projects. Catalog, Gaps and Info are
-  lazy chunks (`App.tsx:72-74`). Nav: `nav.places` inside `header.bar` (`App.tsx:618-637`), a bottom nav at ≤ 760 px
-  (`styles.css:4992`). Gaps and Info are reached from ⋯ More or by their hash.
+  lazy chunks (`App.tsx:72-74`). Nav: `nav.places` inside `header.bar` (`App.tsx:619-664`), a bottom nav at ≤ 760 px
+  (`styles.css:4843`). Gaps and Info are reached from ⋯ More or by their hash.
 - **Modes.** `MODES = ['compose', 'build']` (`src/store/uiStore.ts:18`), the `.modes` radio group under the bar
-  (`App.tsx:851-870`). Hidden on phones (`styles.css:5063-5065`); there the bottom nav adds a Cut list place that sets
-  `build` and Editor sets `compose` (`App.tsx:637-680`, ADR-241).
-- **Editor layout.** `main.work.mode-<mode>` holds `aside.side` (the Compose panel) and the stage (`App.tsx:912-914`).
+  (`App.tsx:831-858`). Hidden on phones (`styles.css:4915-4917`); there the bottom nav adds a Cut list place that sets
+  `build` and Editor sets `compose` (`App.tsx:633-654`, ADR-241).
+- **Editor layout.** `main.work.mode-<mode>` holds `aside.side` (the Compose panel) and the stage (`App.tsx:898-901`).
   On a phone `.side` is the bottom sheet: a peek row (`SheetHandle` + `.sheet-peek` button), a `#sheet-slot` where
-  Settings and Material open (ADR-247), and `.side-body` (`App.tsx:917-934`).
+  Settings and Material open (ADR-247), and `.side-body` (`App.tsx:902-926`).
 - **Sheet stops.** `peek` (56 px), `half` (40 % of the window height), `full` (to the bar and bottom nav): state in
   `App.tsx:274-284`, heights in `SheetHandle.tsx:6-20`. Selecting a piece or space opens it to half
   (`App.tsx:314-332`); `askSheet` in `uiStore` lets a project's Edit this piece ask for `full` (`src/ui/Project.tsx:510`).
@@ -57,7 +57,7 @@ Checked in `src/ui/App.tsx`, `src/ui/SheetHandle.tsx`, `src/ui/shell/*`, `src/st
 
 ## Domains (proposed 2026-11-15, not built)
 
-Status: a proposal for splitting the flat `src/core` (158 files), `src/ui` (82) and `src/store` (34) into domain
+Status: a proposal for splitting the flat `src/core` (149 files), `src/ui` (82) and `src/store` (34) into domain
 folders. Nothing is moved yet. Open decisions: folders by domain vs vertical slices vs separate packages; core only
 vs core + store + ui. The grouping below comes from file names, not from the import graph; files that straddle
 domains (`shopping`, `connections`, `rules`, `gaps`, `variables`) are settled from the imports before any move.

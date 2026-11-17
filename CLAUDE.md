@@ -40,6 +40,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `src/store` — Zustand store: design, derived model, selection, undo/redo
 - `src/persist` — IndexedDB (Dexie) storage
 - `src/ui` — React UI; `src/viewer` — lazy three.js preview
+- `src/shared` — code both `src/ui` and `src/viewer` import (drag helpers, render support); imports nothing from the app (ADR-219)
 - `src/online` — opt-in online features (ADR-126); `supabase/` — the backend: `functions/assistant`, `migrations/`
 - `tests/` — core, fuzz, storage and UI-logic tests (Vitest)
 - `tools/` — the catalog PDF extractor, the find-it acceptance scripts (`tools/*/find-it.mjs`), the shared browser
