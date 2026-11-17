@@ -270,6 +270,8 @@ const FIXED: Record<string, string> = {
   PAL: 'ЛДСП',
   MDF: 'МДФ',
   'Kitchen worktop': 'Кухонная столешница',
+  // Built-in worktop material (project.ts worktopMaterial, id worktop38); the stored name stays English.
+  'Worktop 38': 'Столешница 38',
   Other: 'Другое',
   ABS: 'ABS',
   PVC: 'ПВХ',

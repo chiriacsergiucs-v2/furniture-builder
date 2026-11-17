@@ -8,6 +8,7 @@
 import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { newId } from '../core/design';
 import { projectBoards, roleBoard } from '../core/finish';
+import { boxCentre } from '../core/geometry';
 import { t } from '../core/i18n';
 import {
   BAR_SPACINGS,
@@ -1107,8 +1108,8 @@ export function PlanKitchenMarks({
         <g key={c.id} className={`cutout ${c.kind}`}>
           <rect x={c.box.x} y={c.box.z} width={c.box.w} height={c.box.d} />
           <text
-            x={c.box.x + c.box.w / 2}
-            y={c.box.z + c.box.d / 2}
+            x={boxCentre(c.box).x}
+            y={boxCentre(c.box).z}
             fontSize={Math.min(fs * 0.8, c.box.w / 5)}
             textAnchor="middle"
             dominantBaseline="middle"

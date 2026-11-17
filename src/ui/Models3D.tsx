@@ -9,7 +9,7 @@ import {
   type ModelTurn,
 } from '../core/model3d';
 import { newId } from '../core/design';
-import { frontEdge } from '../core/geometry';
+import { boxCentre, frontEdge } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
@@ -619,8 +619,8 @@ export function PlanModels({
             <rect x={b.x} y={b.z} width={b.w} height={b.d} />
             <line className="front" x1={x1} y1={z1} x2={x2} y2={z2} />
             <text
-              x={b.x + b.w / 2}
-              y={b.z + b.d / 2}
+              x={boxCentre(b).x}
+              y={boxCentre(b).z}
               fontSize={Math.min(fs, b.w / 7)}
               textAnchor="middle"
               dominantBaseline="middle"
@@ -680,8 +680,8 @@ export function FrontModels({ pm, fs }: { pm: ProjectModel; fs: number }) {
           >
             <rect x={b.x} y={-(b.y + b.h)} width={b.w} height={b.h} />
             <text
-              x={b.x + b.w / 2}
-              y={-(b.y + b.h / 2)}
+              x={boxCentre(b).x}
+              y={-boxCentre(b).y}
               fontSize={Math.min(fs, b.w / 7)}
               textAnchor="middle"
               dominantBaseline="middle"

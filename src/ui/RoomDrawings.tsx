@@ -62,7 +62,7 @@ import {
   type Room,
 } from '../core/room';
 import { Dim, DimV, outlinePoints } from './Elevation';
-import { frontEdge } from '../core/geometry';
+import { boxCentre, frontEdge } from '../core/geometry';
 import { FrontModels, PlanModels } from './Models3D';
 import { PlanKitchenMarks } from './RunRequests';
 import { ZoneOverlay, ZoneToolbar } from './Clearances';
@@ -695,8 +695,8 @@ export function RoomPlan({
                 </>
               )}
               <text
-                x={b.x + b.w / 2}
-                y={b.z + b.d / 2 + dy}
+                x={boxCentre(b).x}
+                y={boxCentre(b).z + dy}
                 fontSize={size}
                 textAnchor="middle"
                 dominantBaseline="middle"
@@ -819,12 +819,7 @@ export function RoomPlan({
               if (dragRef.current || turnRef.current) return;
               e.stopPropagation();
               const b = turnPc.bounds;
-              const g = pressTurn(
-                turnPc.item.id,
-                { x: b.x + b.w / 2, z: b.z + b.d / 2 },
-                rotationOf(turnPc.item),
-                at(e),
-              );
+              const g = pressTurn(turnPc.item.id, boxCentre(b), rotationOf(turnPc.item), at(e));
               if (!g) return;
               e.currentTarget.setPointerCapture?.(e.pointerId);
               justTapped.current = false;

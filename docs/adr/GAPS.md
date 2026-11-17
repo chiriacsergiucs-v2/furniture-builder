@@ -1828,3 +1828,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 H-1, .tmp/current/bug-hunting-report.md
+- Missing: CLAUDE.md network rule does not name the ADR-161 seller-picture exception; src/ui/ProductPicker.tsx:56 defaults pictures on
+- Request: Reconcile the rule with ADR-161 or change the default to off
+- Questions: Keep pictures on by default (ADR-161), or make them opt-in?
+- Suggested pick: ADR for the exception, or change the default (user decides)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-537: Print path does not translate built-in material name 'Worktop 38' (bug-hunt M-1 follow-up)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 M-1
+- Missing: Russian entry added for the UI (data-parts.ts). Print paths still show the English name: src/core/ro.ts:408, src/ui/PrintSheet.tsx:103,301,323, src/core/shopping.ts:162; print.ts:49-53 says print never looks up names
+- Request: Translate built-in material names on print
+- Questions: Translate built-in names in print and CSV, or keep them as stored?
+- Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 L-2
+- Missing: Not moved to boxCentre: Elevation.tsx:380-381, RoomDrawings.tsx:951, ViewerScene.tsx:486,581,807,824, AR.tsx:928, arPlace.ts:187,313; core call sites selectPath.ts, project.ts:1145, fusion.ts:68, selection.ts:136, snapshot.ts:242, projectProfiles.ts:176
+- Request: Move remaining centre arithmetic to boxCentre
+- Questions: Include core call sites in a follow-up?
+- Suggested pick: Follow-up change, each site checked for its formula
+- Work: Low
+- Impact: Low
+- Necessity: Low

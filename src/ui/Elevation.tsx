@@ -8,6 +8,7 @@ import {
   type MouseEvent,
 } from 'react';
 import { findInProduct, productRoots } from '../core/design';
+import { boxCentre } from '../core/geometry';
 import { pt } from '../core/i18n/print';
 import { t } from '../core/i18n';
 import {
@@ -309,8 +310,8 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 tapPiece(
-                  Math.round(s.box.x + s.box.w / 2),
-                  Math.round(s.box.y + s.box.h / 2),
+                  Math.round(boxCentre(s.box).x),
+                  Math.round(boxCentre(s.box).y),
                   false,
                   enteredId,
                 );

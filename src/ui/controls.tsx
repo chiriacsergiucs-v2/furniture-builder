@@ -83,7 +83,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={t('Decrease {label}', { label })}
-          disabled={disabled}
+          disabled={disabled || value - step < min}
           onClick={() => bump(-step)}
         >
           −
@@ -108,7 +108,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={t('Increase {label}', { label })}
-          disabled={disabled}
+          disabled={disabled || value + step > max}
           onClick={() => bump(step)}
         >
           +

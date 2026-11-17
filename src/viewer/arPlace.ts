@@ -1,3 +1,4 @@
+import { boxCentre } from '../core/geometry';
 import type { Box } from '../core/types';
 import { S } from './pieceDrag';
 
@@ -37,7 +38,7 @@ function turnXZ(x: number, z: number, yaw: number): [number, number] {
 
 /** A point of the content on its own floor, in metres (x, z). */
 export function pointLocal(b: Box, p: ARPoint): [number, number] {
-  if (p === 'centre') return [(b.x + b.w / 2) * S, (b.z + b.d / 2) * S];
+  if (p === 'centre') return [boxCentre(b).x * S, boxCentre(b).z * S];
   return [(p === 'back-left' ? b.x : b.x + b.w) * S, b.z * S];
 }
 
