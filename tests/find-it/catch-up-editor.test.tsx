@@ -18,7 +18,7 @@ describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (wid
 
     // N75: the two modes and Settings in the bar.
     expect(screen.getByRole('radio', { name: 'Compose' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: /Build & Preview/ })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /Cut List/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });

@@ -34,7 +34,7 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
 
     // Cut list: a phone place only, opening the results on Parts or Checks.
     if (width === PHONE_WIDTH) {
-      await user.click(places().getByRole('link', { name: /Cut list/ }));
+      await user.click(places().getByRole('link', { name: /Cut List/ }));
       await waitFor(() =>
         expect(
           screen.getAllByRole('tab').some((tab) => tab.getAttribute('aria-selected') === 'true'),
@@ -42,7 +42,7 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
       );
       expect(
         places()
-          .getByRole('link', { name: /Cut list/ })
+          .getByRole('link', { name: /Cut List/ })
           .getAttribute('aria-current'),
       ).toBe('page');
       // Editor brings the drawing back.
@@ -51,7 +51,7 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
         'page',
       );
     } else {
-      expect(places().queryByRole('link', { name: /Cut list/ })).toBeNull();
+      expect(places().queryByRole('link', { name: /Cut List/ })).toBeNull();
     }
 
     // The piece editor screen is one step away under More actions.
@@ -96,8 +96,8 @@ describe.each(WIDTHS)('phone editor structure at %ipx (find-it, ADR-241)', (widt
       within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
     );
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    if (width === PHONE_WIDTH) await user.click(places().getByRole('link', { name: /Cut list/ }));
-    else await user.click(screen.getByRole('radio', { name: /Build & Preview/ }));
+    if (width === PHONE_WIDTH) await user.click(places().getByRole('link', { name: /Cut List/ }));
+    else await user.click(screen.getByRole('radio', { name: /Cut List/ }));
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const dlg = await screen.findByRole('dialog', { name: /^Settings: / });
     expect(composePanel().contains(dlg)).toBe(false);

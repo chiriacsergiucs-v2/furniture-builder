@@ -19,7 +19,9 @@ describe.each(WIDTHS)('More menu keyboard at %ipx (find-it, F-02)', (width) => {
     await user.keyboard('{ArrowUp}');
     expect(document.activeElement).toBe(first);
     await user.keyboard('{End}');
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Gaps/ }));
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /^Information and guides/ }),
+    );
     await user.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(first);
     await user.keyboard('{Home}');

@@ -7,7 +7,7 @@
 // new project and Delete. Drags (the sheet, the front-view box) need layout: `tools/editor-nav/find-it.mjs`.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { addPiece, openMore, openSheet, PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import { addPiece, openGaps, openMore, openSheet, PHONE_WIDTH, renderApp, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
 
@@ -42,20 +42,19 @@ describe.each(WIDTHS)('editor and navigation follow-ups at %ipx (find-it, ADR-21
 
   it('Gaps: no Back to the editor with nothing open; Back once a design is open', async () => {
     const { user } = await renderApp(width);
-    const visit = async (button: RegExp, page: string) => {
-      await openMore(user);
-      await user.click(screen.getByRole('button', { name: button }));
-      return screen.findByRole('main', { name: page });
-    };
-    let gaps = await visit(/^Gaps/, 'Gaps');
+    let gaps = await openGaps(user);
     expect(within(gaps).queryByRole('button', { name: 'Back to the editor' })).toBeNull();
 
     // Open a design: the page now leads back to it.
-    await user.click(screen.getByRole('link', { name: 'Furniture Builder, go to Projects' }));
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'Places' })).getByRole('link', {
+        name: 'Projects',
+      }),
+    );
     await user.click(await screen.findByRole('button', { name: 'New single piece' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getAllByRole('button', { name: /Sideboard/ })[0]);
-    gaps = await visit(/^Gaps/, 'Gaps');
+    gaps = await openGaps(user);
     await user.click(within(gaps).getByRole('button', { name: 'Back to the editor' }));
   });
 

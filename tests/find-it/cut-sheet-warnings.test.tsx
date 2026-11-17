@@ -27,7 +27,7 @@ describe.each(WIDTHS)('cut-sheet warnings at %ipx (find-it, ADR-265)', (width) =
     const { setPrintLang } = await import('../../src/core/i18n/print');
     act(() => useDesign.getState().resizePiece('width', 2600));
     if (width === PHONE_WIDTH) {
-      const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+      const build = screen.queryByRole('radio', { name: /Cut List/ });
       if (build) await user.click(build);
     }
     await user.click(screen.getByRole('tab', { name: /^Parts/ }));

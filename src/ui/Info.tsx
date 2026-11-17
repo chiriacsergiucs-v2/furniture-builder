@@ -39,9 +39,12 @@ function Domain({ d, open }: { d: FeatureDomain; open: boolean }) {
 export function InfoPage({
   onDone,
   designOpen = true,
+  onGaps,
 }: {
   onDone: () => void;
   designOpen?: boolean;
+  /** Opens the Gaps page (ADR-101); the button shows only when this is given. */
+  onGaps?: () => void;
 }) {
   const wide = !useMediaQuery(PHONE);
   const total = FEATURES.reduce((n, d) => n + count(d), 0);
@@ -59,6 +62,12 @@ export function InfoPage({
             )}
           </p>
         </div>
+        {onGaps && (
+          <button type="button" className="btn outline" onClick={onGaps}>
+            <Icon name="alert-triangle" className="sm" />
+            {t('Gaps')} <small>{t('what is not built yet')}</small>
+          </button>
+        )}
         {designOpen && (
           <button type="button" className="btn outline" onClick={onDone}>
             <Icon name="chevron-left" className="sm" />

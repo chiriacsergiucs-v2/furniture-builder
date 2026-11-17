@@ -13,7 +13,7 @@ import { db, saveDesign } from '../src/persist/db';
 import { fakeBackend, fakeServer, type FakeServer } from '../src/online/fake';
 import * as client from '../src/online/client';
 import { useAccount } from '../src/store/accountStore';
-import { AccountButton, AccountDialog, AccountRowActions, SyncStatus } from '../src/ui/Account';
+import { AccountButton, AccountDialog, AccountRowActions } from '../src/ui/Account';
 
 vi.stubGlobal('fetch', () => {
   throw new Error('real fetch attempted');
@@ -55,7 +55,6 @@ afterEach(() => cleanup());
 const ui = () =>
   render(
     <>
-      <SyncStatus />
       <AccountButton />
       <AccountDialog />
     </>,

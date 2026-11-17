@@ -3,7 +3,7 @@ import { MODE_LABEL, MODES, parseMode, useUi } from '../src/store/uiStore';
 
 describe('editor modes (ADR-079, ADR-080)', () => {
   it('has two modes in order, with the agreed labels; Configure is gone', () => {
-    expect(MODES.map((m) => MODE_LABEL[m])).toEqual(['Compose', 'Build & Preview']);
+    expect(MODES.map((m) => MODE_LABEL[m])).toEqual(['Compose', 'Cut List']);
   });
   it('reads a stored mode and falls back to Compose for anything else, the old configure included', () => {
     expect(parseMode('build')).toBe('build');

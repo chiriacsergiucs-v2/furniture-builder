@@ -25,21 +25,20 @@ const FILE_FAILED = () =>
 
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
- * the clean-up of unused pictures since G-059), and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
+ * the clean-up of unused pictures since G-059), and Information and guides. The Gaps page (ADR-101) is reached from
+ * the Information page. Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
  */
 export function MoreMenu({
   onNew,
   onOpened,
-  onGaps,
   onInfo,
   current,
 }: {
   onNew: () => void;
   onOpened: () => void;
-  onGaps: () => void;
   onInfo: () => void;
   /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
-  current?: 'gaps' | 'info';
+  current?: 'info';
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -310,14 +309,6 @@ export function MoreMenu({
           >
             <Icon name="info" />
             {t('Information and guides')} <small>{t('every feature, by domain')}</small>
-          </button>
-          <button
-            type="button"
-            aria-current={current === 'gaps' ? 'page' : undefined}
-            onClick={run(onGaps)}
-          >
-            <Icon name="alert-triangle" />
-            {t('Gaps')} <small>{t('what is not built yet')}</small>
           </button>
         </div>
       </details>

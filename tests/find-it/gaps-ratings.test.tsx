@@ -2,9 +2,9 @@
 // Find-it for ADR-187 (N191), in jsdom (ADR-108): from the bare app, More → Gaps → Impact: High leaves only the
 // high-impact gaps, each row with its Issue and Fix lines, and a gap whose fix conflicts with an ADR shows its
 // Conflicts chip, at phone and desktop widths.
-import { screen, within } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { openGaps, renderApp, WIDTHS } from './setup';
 
 const gap = (id: string, title: string, status: string, extra: string) => `### ${id}: ${title}
 
@@ -49,9 +49,7 @@ vi.mock('../../docs/adr/GAPS.md?raw', () => ({
 describe.each(WIDTHS)('gaps ratings at %i px (find-it, ADR-187)', (width) => {
   it('bare app → More → Gaps → Impact: High → only high-impact rows with Issue, Fix and Conflicts', async () => {
     const { user } = await renderApp(width);
-    await user.click(screen.getByLabelText(/^More$/));
-    await user.click(screen.getByRole('button', { name: /^Gaps/ }));
-    const page = await screen.findByRole('main', { name: 'Gaps' });
+    const page = await openGaps(user);
     expect(within(page).getByRole('heading', { level: 1, name: 'Gaps' })).toBeTruthy();
     const list = within(page).getByRole('list');
     expect(within(list).getAllByRole('listitem')).toHaveLength(4);

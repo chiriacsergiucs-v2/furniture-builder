@@ -227,6 +227,15 @@ export async function openMore(user: User, name: RegExp | string = /^More$/) {
   await user.click(screen.getByLabelText(name));
 }
 
+/** Goes ⋯ › Information and guides › Gaps (the Gaps page is reached from Information) and returns the Gaps page. */
+export async function openGaps(user: User) {
+  await openMore(user);
+  await user.click(screen.getByRole('button', { name: /^Information and guides/ }));
+  const info = await screen.findByRole('main', { name: 'Information and guides' });
+  await user.click(within(info).getByRole('button', { name: /^Gaps/ }));
+  return screen.findByRole('main', { name: 'Gaps' });
+}
+
 /** Opens a card's More actions menu and returns it. */
 export async function openMenu(user: User, card: HTMLElement) {
   await user.click(within(card).getByRole('button', { name: 'More actions' }));
