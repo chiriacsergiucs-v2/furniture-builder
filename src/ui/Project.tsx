@@ -1,5 +1,6 @@
 import { isSizeLocked, lockedAxes } from '../core/sizeLock';
 import { RoomFront, RoomPlan } from './RoomDrawings';
+import { boxCentre } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
@@ -595,8 +596,7 @@ export function TurnHandle({
   onCancel: () => void;
 }) {
   const b = pc.bounds;
-  const cx = b.x + b.w / 2,
-    cz = b.z + b.d / 2;
+  const { x: cx, z: cz } = boxCentre(b);
   const [fx1, fz1, fx2, fz2] = pc.front;
   const mx = (fx1 + fx2) / 2,
     mz = (fz1 + fz2) / 2;

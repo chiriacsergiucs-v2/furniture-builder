@@ -42,6 +42,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { useFocusedProblem } from '../store/focusedProblem';
 import { useUi } from '../store/uiStore';
 import { connectionSeams } from '../core/connections';
+import { boxCentre } from '../core/geometry';
 import { t } from '../core/i18n';
 import { FOCUS_OPACITY, hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
@@ -534,9 +535,9 @@ export function RoomLight() {
 export function KeyLight({ bounds }: { bounds: Box }) {
   const ref = useRef<DirectionalLight>(null);
   const get = useThree((s) => s.get);
-  const cx = (bounds.x + bounds.w / 2) * S,
-    cy = (bounds.y + bounds.h / 2) * S,
-    cz = (bounds.z + bounds.d / 2) * S;
+  const cx = boxCentre(bounds).x * S,
+    cy = boxCentre(bounds).y * S,
+    cz = boxCentre(bounds).z * S;
   const r = Math.max(0.5, 0.6 * Math.hypot(bounds.w, bounds.h, bounds.d) * S);
   const e = r * 1.5;
   useEffect(() => {
@@ -701,7 +702,7 @@ function ModelItemMesh({
     <>
       {selected && handles && <ResizeHandles item={handles} box={box} />}
       <group
-        position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
+        position={[boxCentre(box).x * S, boxCentre(box).y * S, boxCentre(box).z * S]}
         rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
         onPointerDown={(e) => drag.press(e, item.id)}
         onClick={(e) => {
@@ -760,9 +761,7 @@ export const CUT_POSITION: Record<SectionAxis, string> = {
  */
 function ResizeHandles({ item, box }: { item: ModelItem; box: Box }) {
   const press = useModelResize();
-  const cx = box.x + box.w / 2,
-    cy = box.y + box.h / 2,
-    cz = box.z + box.d / 2;
+  const { x: cx, y: cy, z: cz } = boxCentre(box);
   const at: Record<HandleAxis, [number, number, number]> = {
     x: [box.x + box.w, cy, cz],
     y: [cx, box.y + box.h, cz],
@@ -899,7 +898,7 @@ export function LockAnchors({
       const el = badges.current.get(pc.item.id);
       if (!el) continue;
       const b = pc.bounds;
-      v.set((b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S).project(camera);
+      v.set(boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S).project(camera);
       if (v.z > 1) {
         el.style.visibility = 'hidden';
         continue;
@@ -950,7 +949,7 @@ export function RoomWalls({
   const mesh = (b: Box, key: string, color: string, opacity: number) => (
     <mesh
       key={key}
-      position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+      position={[boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S]}
       raycast={() => null}
     >
       <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
@@ -1230,12 +1229,7 @@ export function Fit({ bounds }: { bounds: Box }) {
   const { camera, size: view } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const target = useMemo(
-    () =>
-      [
-        (bounds.x + bounds.w / 2) * S,
-        (bounds.y + bounds.h / 2) * S,
-        (bounds.z + bounds.d / 2) * S,
-      ] as const,
+    () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],
   );
   // Distance that fits the bounding sphere in the narrower field of view.
@@ -1514,7 +1508,7 @@ export function Panels({
           const mesh = (
             <mesh
               key={meshKey}
-              position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+              position={[boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S]}
               {...shared}
               material={material}
               onClick={onClick}
@@ -1538,9 +1532,9 @@ export function Panels({
             >
               <mesh
                 position={[
-                  (b.x + b.w / 2 - pv[0]) * S,
-                  (b.y + b.h / 2 - pv[1]) * S,
-                  (b.z + b.d / 2 - pv[2]) * S,
+                  (boxCentre(b).x - pv[0]) * S,
+                  (boxCentre(b).y - pv[1]) * S,
+                  (boxCentre(b).z - pv[2]) * S,
                 ]}
                 key={meshKey}
                 {...shared}
@@ -1647,7 +1641,7 @@ export function ZoneBoxes() {
         const mesh = (
           <mesh
             key={i}
-            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            position={[boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S]}
             raycast={() => null}
             renderOrder={4}
           >
@@ -1712,11 +1706,7 @@ export function ProblemBoxes() {
     <>
       {zone && (
         <mesh
-          position={[
-            (zone.x + zone.w / 2) * S,
-            (zone.y + zone.h / 2) * S,
-            (zone.z + zone.d / 2) * S,
-          ]}
+          position={[boxCentre(zone).x * S, boxCentre(zone).y * S, boxCentre(zone).z * S]}
           raycast={() => null}
           renderOrder={5}
         >
@@ -1781,7 +1771,7 @@ function MoveGhost({ panels, showFronts }: { panels: Panel[]; showFronts: boolea
     const b = ghost.target.box;
     return (
       <mesh
-        position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+        position={[boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S]}
         raycast={() => null}
         renderOrder={5}
       >
@@ -1830,7 +1820,7 @@ function GhostBoxes({
       {own.map(({ box: b, yaw }, i) => (
         <YawGroup key={i} yaw={yaw}>
           <mesh
-            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            position={[boxCentre(b).x * S, boxCentre(b).y * S, boxCentre(b).z * S]}
             raycast={() => null}
             renderOrder={5}
           >

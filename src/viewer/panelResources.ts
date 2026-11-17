@@ -14,6 +14,7 @@ import {
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { boxCentre } from '../core/geometry';
 import { FOCUS_OPACITY } from '../core/selectPath';
 import { finishLook } from '../core/surface';
 import type { BoardFinish, Panel } from '../core/types';
@@ -136,7 +137,8 @@ export function panelMatrix(p: Panel, centred: boolean): Matrix4 {
       .multiply(new Matrix4().makeRotationY((y.deg * Math.PI) / 180))
       .multiply(new Matrix4().makeTranslation(-y.cx * S, 0, -y.cz * S));
   if (!centred) return m;
-  const c = [b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2];
+  const k = boxCentre(b);
+  const c = [k.x, k.y, k.z];
   const s = p.shape;
   if (s?.kind !== 'tilt')
     return m.multiply(new Matrix4().makeTranslation(c[0] * S, c[1] * S, c[2] * S));
