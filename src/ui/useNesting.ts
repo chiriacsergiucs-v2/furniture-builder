@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { CutRow } from '../core/cutlist';
 import { t } from '../core/i18n';
 import { nest } from '../core/nesting';
-import type { NestJob, NestResult } from '../core/nesting/types';
-import type { NestResponse } from '../core/nesting/worker';
+import type { NestJob, NestResult } from '@furniture-builder/nesting';
+import { createNestWorker, type NestResponse } from '@furniture-builder/nesting/client';
 import { useView } from '../store/useView';
 
 type NestState =
@@ -39,9 +39,7 @@ export function useNesting(active: boolean): NestState & { blocked: boolean } {
         );
       };
       try {
-        worker.current ??= new Worker(new URL('../core/nesting/worker.ts', import.meta.url), {
-          type: 'module',
-        });
+        worker.current ??= createNestWorker();
         worker.current.onmessage = (e: MessageEvent<NestResponse>) => finish(e.data);
         worker.current.onerror = () =>
           finish({ id, error: t('The sheet layout could not run in this browser.') });

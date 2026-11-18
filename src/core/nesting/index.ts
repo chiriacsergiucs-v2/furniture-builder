@@ -1,9 +1,8 @@
 import type { CutRow } from '../cutlist';
-import type { NestJob } from './types';
+import type { NestJob } from '@furniture-builder/nesting';
 
-export * from './types';
-export { nest } from './place';
-export { validateNest } from './validate';
+// The engine lives in the @furniture-builder/nesting package (ADR-279); core adds the cut-list bridge.
+export * from '@furniture-builder/nesting';
 
 export interface SheetSettings {
   sheet: NestJob['sheet'];

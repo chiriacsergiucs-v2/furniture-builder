@@ -1,8 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { sourceTexts } from './helpers/sourceFiles';
+import { files, sourceTexts } from './helpers/sourceFiles';
 
 // ADR-219: the layer rules of CLAUDE.md, checked on the source itself, so CI fails even if eslint.config.js (which
 // holds the same rules) changes. Paths are repo-relative with forward slashes; targets are resolved without extension.
@@ -35,11 +35,12 @@ const MODEL = [
   'cutlist',
   'materials',
 ].map((m) => `src/core/${m}.ts`);
-const NESTING = ['place', 'validate', 'types'].map((m) => `src/core/nesting/${m}`);
 const CORE_PACKAGE = /^(react|react-dom|three|dexie|zustand)(\/|$)|^@react-three\/|^@supabase\//;
 const APP = /^src\/(store|ui|persist|viewer|online)(\/|$)/;
 const MODEL_UP =
-  /^src\/core\/(project|room|design|i18n\/print)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)/;
+  /^src\/core\/(project|room|design|i18n\/print)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)|^@furniture-builder\/nesting(\/|$)/;
+// ADR-279: a workspace package is reached by its name and exports, never by its files.
+const DEEP = /^@furniture-builder\/[^/]+\/(src|tests)(\/|$)|(^|\/)packages\//;
 // Allowance: src/ui/Gaps.tsx reads the gaps ledger as text (G-503).
 const RAW_ALLOWED = /^src\/core\/(catalog\/brands|sellers)\/|^src\/ui\/Gaps\.tsx$/;
 const RAW = /\?raw$/;
@@ -59,10 +60,9 @@ function violation(file: string, spec: string): string | null {
       if (!(file === 'src/core/desk.ts' && target === 'src/core/design'))
         return 'model imports upward';
     }
-    if (NESTING.includes(file.replace(/\.ts$/, '')) && !NESTING.includes(target))
-      return 'nesting engine imports outside itself';
-  } else if (/^src\/core\/nesting\/(place|validate)$/.test(target))
-    return 'app imports the nesting engine';
+  }
+  if (DEEP.test(spec) || target.startsWith('packages/'))
+    return 'deep import into a workspace package';
   // ADR-230: the viewer imports nothing from src/ui (no allowance).
   if (file.startsWith('src/viewer/') && /^src\/ui(\/|$)/.test(target)) return 'viewer imports ui';
   return null;
@@ -103,9 +103,11 @@ describe('layer boundaries (ADR-219)', () => {
     expect(violation('src/core/cabinet.ts', './project')).not.toBeNull();
     expect(violation('src/core/cabinet.ts', './design')).not.toBeNull();
     expect(violation('src/core/desk.ts', './design')).toBeNull();
-    expect(violation('src/core/nesting/place.ts', '../types')).not.toBeNull();
-    expect(violation('src/core/nesting/place.ts', './validate')).toBeNull();
-    expect(violation('src/ui/a.tsx', '../core/nesting/place')).not.toBeNull();
+    expect(violation('src/core/cabinet.ts', '@furniture-builder/nesting')).not.toBeNull();
+    expect(violation('src/core/projectEstimate.ts', '@furniture-builder/nesting')).toBeNull();
+    expect(violation('src/ui/a.tsx', '@furniture-builder/nesting/client')).toBeNull();
+    expect(violation('src/ui/a.tsx', '@furniture-builder/nesting/src/place')).not.toBeNull();
+    expect(violation('src/ui/a.tsx', '../../packages/nesting/src/place')).not.toBeNull();
     expect(violation('src/viewer/a.tsx', '../ui/x')).not.toBeNull();
     expect(violation('src/viewer/a.tsx', '../ui/planDrag')).not.toBeNull();
     expect(violation('src/viewer/a.tsx', '../ui/CountStepper')).not.toBeNull();
@@ -119,48 +121,86 @@ describe('layer boundaries (ADR-219)', () => {
   });
 });
 
-// ADR-228: the nesting engine (place, validate, types) is an internal module. Its three files import only each
-// other, and only src/core reaches place or validate; the app goes through core/nesting. Checked on the files
-// themselves and through ESLint (`pnpm lint`), each with a self-check that a forbidden import is caught.
-describe('nesting engine boundary (ADR-228)', () => {
-  const engine = NESTING.map((f) => `${f}.ts`);
-  /** Engine files' imports that leave the engine. */
-  const outside = (file: string, text: string): string[] =>
-    specifiers(text).filter(
-      (s) => !s.startsWith('./') || !NESTING.includes(posix.join(posix.dirname(file), s.slice(2))),
-    );
+// ADR-279 (after ADR-228): each workspace package imports only its own files and the packages its package.json
+// declares; nothing reaches into a package's files. Checked on the files themselves and through ESLint
+// (`pnpm lint`), each with a self-check that a forbidden import is caught.
+const PACKAGES = readdirSync(join(ROOT, 'packages')).map((name) => `packages/${name}`);
+const manifest = (dir: string): Record<string, Record<string, string> | undefined> =>
+  JSON.parse(readFileSync(join(ROOT, dir, 'package.json'), 'utf8'));
+const declared = (dir: string): string[] => {
+  const m = manifest(dir);
+  return Object.keys({ ...m.dependencies, ...m.peerDependencies });
+};
+/** The package name of a bare specifier (`@scope/name/sub` → `@scope/name`), or null for a relative one. */
+const packageOf = (spec: string): string | null =>
+  spec.startsWith('.')
+    ? null
+    : spec
+        .split('/')
+        .slice(0, spec.startsWith('@') ? 2 : 1)
+        .join('/');
 
-  it('the three engine files import only each other', () => {
-    const hits = engine.flatMap((file) =>
-      outside(file, readFileSync(join(ROOT, file), 'utf8')).map((s) => `${file} → ${s}`),
+/** Why `file` (repo-relative, inside package `dir`) may not import `spec`, or null. */
+function packageViolation(dir: string, file: string, spec: string, deps: string[]): string | null {
+  const name = packageOf(spec);
+  if (name === null)
+    return posix.normalize(posix.join(posix.dirname(file), spec)).startsWith(`${dir}/src/`)
+      ? null
+      : 'leaves the package source';
+  if (!deps.includes(name)) return `undeclared package ${name}`;
+  return DEEP.test(spec) ? 'deep import into a workspace package' : null;
+}
+
+describe('workspace packages (ADR-279)', () => {
+  it('each package source imports only itself and its declared packages', () => {
+    const hits = PACKAGES.flatMap((dir) =>
+      files(join(ROOT, dir, 'src')).flatMap((abs) => {
+        const file = abs.slice(ROOT.length).split(/[\\/]/).join('/');
+        return specifiers(readFileSync(abs, 'utf8')).flatMap((s) => {
+          const why = packageViolation(dir, file, s, declared(dir));
+          return why ? [`${file} → ${s}: ${why}`] : [];
+        });
+      }),
     );
     expect(hits).toEqual([]);
   });
 
-  it('only src/core imports place or validate', () => {
-    const hits = SOURCES.filter(({ file }) => !file.startsWith('src/core/')).flatMap(
-      ({ file, text }) =>
-        specifiers(text)
-          .filter((s) => /(^|\/)core\/nesting\/(place|validate)$/.test(s))
-          .map((s) => `${file} → ${s}`),
+  it('the app imports only the workspace packages it declares', () => {
+    const deps = declared('.');
+    const hits = SOURCES.flatMap(({ file, text }) =>
+      specifiers(text)
+        .filter((s) => s.startsWith('@furniture-builder/') && !deps.includes(packageOf(s)!))
+        .map((s) => `${file} → ${s}`),
     );
     expect(hits).toEqual([]);
   });
 
-  it('the file scan catches an import leaving the engine', () => {
-    const f = 'src/core/nesting/place.ts';
+  it('every package is private, scoped and exports TypeScript source', () => {
+    for (const dir of PACKAGES) {
+      const m = manifest(dir) as unknown as { name: string; private: boolean; exports: object };
+      expect(m.name).toBe(`@furniture-builder/${dir.split('/')[1]}`);
+      expect(m.private).toBe(true);
+      expect(Object.values(m.exports).every((t) => /^\.\/src\/.+\.ts$/.test(t))).toBe(true);
+    }
+  });
+
+  it('the file scan catches an import leaving a package', () => {
+    const d = 'packages/nesting';
+    const f = `${d}/src/place.ts`;
+    expect(packageViolation(d, f, './validate', [])).toBeNull();
+    expect(packageViolation(d, f, '../tests/nesting.test', [])).not.toBeNull();
+    expect(packageViolation(d, f, '../../../src/core/types', [])).not.toBeNull();
+    expect(packageViolation(d, f, 'react', [])).toBe('undeclared package react');
+    expect(packageViolation(d, f, '@furniture-builder/i18n', [])).not.toBeNull();
     expect(
-      outside(f, "import { a } from './validate';\nimport type { T } from './types';"),
-    ).toEqual([]);
-    expect(outside(f, "import { x } from './index';")).toEqual(['./index']);
-    expect(outside(f, "import { x } from './fromDesign';")).toEqual(['./fromDesign']);
-    expect(outside(f, "import { x } from '../cutlist';")).toEqual(['../cutlist']);
-    expect(outside(f, "export * from '../types';")).toEqual(['../types']);
-    expect(outside(f, "const m = await import('./worker');")).toEqual(['./worker']);
-    expect(outside(f, "import { x } from 'some-package';")).toEqual(['some-package']);
-    expect(violation('src/main.tsx', './core/nesting/validate')).not.toBeNull();
-    expect(violation('src/store/a.ts', '../core/nesting')).toBeNull();
-    expect(violation('src/core/projectEstimate.ts', './nesting/place')).toBeNull();
+      packageViolation(d, f, '@furniture-builder/i18n', ['@furniture-builder/i18n']),
+    ).toBeNull();
+    expect(
+      packageViolation(d, f, '@furniture-builder/i18n/src/x', ['@furniture-builder/i18n']),
+    ).not.toBeNull();
+    expect(packageOf('@a/b/c')).toBe('@a/b');
+    expect(packageOf('three/examples/x')).toBe('three');
+    expect(packageOf('./x')).toBeNull();
   });
 
   it('pnpm lint enforces the same boundary', async () => {
@@ -169,29 +209,43 @@ describe('nesting engine boundary (ADR-228)', () => {
       (await eslint.lintText(code, { filePath: join(ROOT, filePath) }))
         .flatMap((r) => r.messages)
         .filter((m) => m.ruleId === 'no-restricted-imports').length;
-    for (const file of engine) {
+    for (const file of ['place', 'validate', 'types', 'worker', 'index', 'client'].map(
+      (m) => `packages/nesting/src/${m}.ts`,
+    )) {
       expect(await errors(file, "import { a } from './validate';\nexport const b = a;\n")).toBe(0);
-      for (const spec of ['./index', './fromDesign', './worker', '../cutlist', '../types', 'react'])
+      for (const spec of [
+        '../tests/x',
+        '../../../src/core/types',
+        'react',
+        '@furniture-builder/i18n',
+      ])
         expect(
           await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`),
         ).toBeGreaterThan(0);
     }
-    for (const file of ['src/ui/a.tsx', 'src/store/a.ts', 'src/main.tsx', 'src/langInit.ts']) {
-      const up = file.split('/').length === 2 ? './core' : '../core';
-      expect(
-        await errors(file, `import { nest } from '${up}/nesting';\nexport const b = nest;\n`),
-      ).toBe(0);
-      for (const m of ['place', 'validate'])
+    for (const file of [
+      'src/ui/a.tsx',
+      'src/store/a.ts',
+      'src/main.tsx',
+      'src/core/projectEstimate.ts',
+    ]) {
+      const ok = ['@furniture-builder/nesting', '@furniture-builder/nesting/client'];
+      for (const spec of ok)
+        expect(await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`)).toBe(0);
+      for (const spec of [
+        '@furniture-builder/nesting/src/place',
+        '../../packages/nesting/src/place',
+      ])
         expect(
-          await errors(file, `import { a } from '${up}/nesting/${m}';\nexport const b = a;\n`),
-        ).toBe(1);
+          await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`),
+        ).toBeGreaterThan(0);
     }
     expect(
       await errors(
-        'src/core/projectEstimate.ts',
-        "import { nest } from './nesting/place';\nexport const b = nest;\n",
+        'src/core/cabinet.ts',
+        "import { nest } from '@furniture-builder/nesting';\nexport const b = nest;\n",
       ),
-    ).toBe(0);
+    ).toBeGreaterThan(0);
     // ADR-230: the viewer imports nothing from src/ui.
     for (const [spec, n] of [
       ['../ui/CountStepper', 1],

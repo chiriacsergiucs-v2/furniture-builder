@@ -1,0 +1,21 @@
+{
+  "name": "@furniture-builder/nesting",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Sheet nesting engine: guillotine placer and independent validator (ADR-018, ADR-279).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

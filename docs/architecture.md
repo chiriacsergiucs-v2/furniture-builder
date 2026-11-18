@@ -55,11 +55,22 @@ Checked in `src/ui/App.tsx`, `src/ui/SheetHandle.tsx`, `src/ui/shell/*`, `src/st
   beyond its imports: not checked.
 - Layout detail and tokens: `docs/ui-design.md`.
 
-## Domains (proposed 2026-11-15, not built)
+## Packages (ADR-279)
 
-Status: a proposal for splitting the flat `src/core` (149 files), `src/ui` (82) and `src/store` (34) into domain
-folders. Nothing is moved yet. Open decisions: folders by domain vs vertical slices vs separate packages; core only
-vs core + store + ui. The grouping below comes from file names, not from the import graph; files that straddle
+Decided 2026-11-19: the domains below become pnpm workspace packages `@furniture-builder/<name>` in `packages/`,
+private and consumed as TypeScript source; the app stays at the root and depends on them as `workspace:*`. A
+package imports only its own files and the packages its `package.json` declares (`tests/core-boundary.test.ts`,
+`pnpm lint`). `@furniture-builder/i18n` will be the bottom package.
+
+- Built: `nesting` (`place`, `validate`, `types`, `worker`; `index` exports the engine, `client` exports
+  `createNestWorker`). `src/core/nesting` keeps the cut-list bridge (`jobsFromCutlist`, `nestingJobs`).
+- Next, one ADR each (G-549): i18n, kernel (after the `types.ts` and `project.ts` split, G-548), catalog, model,
+  cutlist, hardware, room, shopping, then persist, online and viewer.
+
+## Domains (proposed 2026-11-15; ADR-279 turns them into packages)
+
+Status: the grouping of the flat `src/core` (149 files), `src/ui` (82) and `src/store` (34) by domain. Decided by
+ADR-279: separate packages, core first, one package per ADR. The grouping below comes from file names, not from the import graph; files that straddle
 domains (`shopping`, `connections`, `rules`, `gaps`, `variables`) are settled from the imports before any move.
 
 `src/core`:
@@ -85,5 +96,4 @@ account and assistant (`Account*`, `Assistant`), shell (`shell/`, `Settings`, `I
 `src/viewer`, `src/persist` and `src/online` are already domain-shaped and stay. The research domain was removed
 (N281).
 
-If built: barrel `index.ts` per domain, a lint rule against deep cross-domain imports, and the Repository layout
-in `CLAUDE.md` and this file updated in the same change.
+Each package ADR updates the Repository layout in `CLAUDE.md` and the Packages section above in the same change.

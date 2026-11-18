@@ -340,3 +340,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-276](../adr-done/ADR-276-repair-browser-find-it-scripts-batch-5-of-7.md) | Repair browser find-it scripts, batch 5 of 7 | — | ✅ Implemented |
 | [ADR-277](../adr-done/ADR-277-repair-browser-find-it-scripts-batch-6-of-7.md) | Repair browser find-it scripts, batch 6 of 7 | — | ✅ Implemented |
 | [ADR-278](../adr-done/ADR-278-repair-browser-find-it-scripts-batch-7-of-7.md) | Repair browser find-it scripts, batch 7 of 7 | — | ✅ Implemented |
+| [ADR-279](ADR-279-split-the-app-into-workspace-packages-starting-with-the-nest.md) | Split the app into workspace packages, starting with the nesting engine | ADR-053, ADR-219 | Pending |

@@ -3,7 +3,7 @@
  * list, hardware, run parts, sinks and seller items, with the boards' sheet counts from a quick layout, priced by the
  * user's prices and the seller prices. Fill the room shows it on each mix and checks the budget ceiling with it.
  */
-import { nest } from './nesting/place';
+import { nest } from '@furniture-builder/nesting';
 import { estimate, type Estimate, type PriceEntry, type SellerLookup } from './prices';
 import {
   projectCutlist,

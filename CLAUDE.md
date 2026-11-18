@@ -35,14 +35,19 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 
 ## Repository layout
 
-- `src/core` — pure TypeScript model: geometry, generators, checks, cut list, nesting, projects, Romanian
-  output, Fusion export, the design document. Imports nothing from React, three or Dexie.
+- `src/core` — pure TypeScript model: geometry, generators, checks, cut list, the cut-list bridge to nesting
+  (`core/nesting`), projects, Romanian output, Fusion export, the design document. Imports nothing from React,
+  three or Dexie.
+- `packages/<name>` — workspace packages `@furniture-builder/<name>` (ADR-279): private, consumed as TypeScript
+  source through their `exports`, each with its own `tests/`, `test` and `typecheck` scripts. A package imports
+  only its own files and the packages its `package.json` declares; nobody imports a package's files
+  (`tests/core-boundary.test.ts`, `pnpm lint`). Today: `nesting` (the sheet placer, validator and worker).
 - `src/store` — Zustand store: design, derived model, selection, undo/redo
 - `src/persist` — IndexedDB (Dexie) storage
 - `src/ui` — React UI; `src/viewer` — lazy three.js preview
 - `src/shared` — code both `src/ui` and `src/viewer` import (drag helpers, render support); imports nothing from the app (ADR-219)
 - `src/online` — opt-in online features (ADR-126); `supabase/` — the backend: `functions/assistant`, `migrations/`
-- `tests/` — core, fuzz, storage and UI-logic tests (Vitest)
+- `tests/` — core, fuzz, storage and UI-logic tests (Vitest); `pnpm test` also runs `packages/*/tests`
 - `tools/` — the catalog PDF extractor, the find-it acceptance scripts (`tools/*/find-it.mjs`), the shared browser
   harness (`tools/lib`) and the on-demand capture (`tools/capture`)
 - `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`); `scripts/*_hook.py` — hooks

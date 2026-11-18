@@ -66,5 +66,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   // Find-it tests (tests/find-it, ADR-108) walk the whole app in jsdom and need longer than the default 5 s.
-  test: { environment: 'node', include: ['tests/**/*.test.{ts,tsx}'], testTimeout: 30000 },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.{ts,tsx}', 'packages/*/tests/**/*.test.{ts,tsx}'],
+    testTimeout: 30000,
+  },
 }));

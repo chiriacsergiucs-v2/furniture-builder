@@ -6,6 +6,11 @@ import tseslint from 'typescript-eslint';
 // Layer boundaries (ADR-219). `tests/core-boundary.test.ts` scans src/ for the same rules, so CI fails even if this
 // file changes. ESLint gives one file the last matching block's `no-restricted-imports`, so each block repeats the
 // patterns of the blocks it narrows.
+// Workspace packages (ADR-279): code reaches a package only through its `exports`, never its files.
+const DEEP = {
+  regex: '^@furniture-builder/[^/]+/(src|tests)(/|$)|(^|/)packages/',
+  message: 'Import a workspace package by its name and exports, not its files (ADR-279).',
+};
 const CORE = [
   {
     regex: '^(\\.\\./)+(store|ui|persist|viewer|online)(/|$)',
@@ -15,25 +20,20 @@ const CORE = [
     regex: '^(react|react-dom|three|dexie|zustand)(/|$)|^@react-three/|^@supabase/',
     message: 'src/core imports no framework, 3D, storage or online package (ADR-219).',
   },
+  DEEP,
 ];
 // prettier-ignore
 const MODEL = ['geometry', 'cabinet', 'build', 'panel', 'panelset', 'frame', 'shape', 'corner', 'desk', 'rules', 'clearance', 'cutlist', 'materials'];
 const MODEL_UP = (design) => ({
-  regex: `^\\./(project|room|i18n/print${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)`,
+  regex: `^\\./(project|room|i18n/print${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)|^@furniture-builder/nesting(/|$)`,
   message: 'The model files import only the document, i18n and each other (ADR-219).',
 });
+// @furniture-builder/nesting declares no dependencies: its files import only each other (ADR-219, ADR-279).
 const NESTING = {
-  regex: '^(?!\\./(place|validate|types)$)',
-  message:
-    'The nesting engine (place, validate, types) imports nothing outside those three files (ADR-219).',
+  regex: '^(?!\\./)',
+  message: 'The nesting package imports nothing outside its own files (ADR-219, ADR-279).',
 };
-const APP = [
-  {
-    regex: '(^|/)core/nesting/(place|validate)$',
-    message:
-      'The app reaches the nesting engine through core/nesting, not place or validate (ADR-219).',
-  },
-];
+const APP = [DEEP];
 // The 3D viewer imports nothing from src/ui (ADR-230): ui pieces come in as render props.
 const VIEWER = {
   regex: '^(\\.\\./)+ui(/|$)',
@@ -60,10 +60,7 @@ export default tseslint.config(
   },
   // Allowance: desk.ts → ./design until diagnostics leave the model (G-491).
   { files: ['src/core/desk.ts'], rules: restrict([...CORE, MODEL_UP(false)]) },
-  {
-    files: ['src/core/nesting/{place,validate,types}.ts'],
-    rules: restrict([...CORE, NESTING]),
-  },
+  { files: ['packages/nesting/src/**/*.ts'], rules: restrict([NESTING]) },
   // The app outside core, including src/main.tsx and src/langInit.ts (ADR-228).
   {
     files: ['src/*.{ts,tsx}', 'src/{ui,store,persist,viewer,online}/**/*.{ts,tsx}'],
