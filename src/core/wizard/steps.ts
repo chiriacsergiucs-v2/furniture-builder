@@ -271,7 +271,7 @@ function putBoard(d: Design, value: string): Design {
 // ---------------------------------------------------------------------------
 
 const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
-  { value: 'open', label: 'Open', uses: [] },
+  { value: 'open', label: 'Open@@wizard', uses: [] },
   { value: 'shelves', label: 'Shelves', uses: ['shelves'] },
   { value: 'drawers', label: 'Drawers', uses: ['drawers'] },
   { value: 'hanging', label: 'Hanging rail', uses: [] },
@@ -509,7 +509,7 @@ export const STEPS: StepDef[] = [
         default: 'bar',
         options: [
           { value: 'bar', label: 'Bar' },
-          { value: 'knob', label: 'Knob' },
+          { value: 'knob', label: 'Knob@@wizard' },
           { value: 'push', label: 'Push to open' },
         ],
         help: 'Hole spacing 128 mm for bars (typical); check your handle.',
@@ -586,7 +586,7 @@ export const STEPS: StepDef[] = [
     fields: [
       {
         id: 'back',
-        label: 'Back panel',
+        label: 'Back panel@@wizard',
         kind: 'choice',
         default: 'applied',
         options: [
@@ -614,7 +614,7 @@ export const STEPS: StepDef[] = [
         kind: 'choice',
         default: 'panel',
         options: [
-          { value: 'panel', label: 'Panel' },
+          { value: 'panel', label: 'Panel@@wizard' },
           { value: 'slats', label: 'Slats' },
         ],
       },
@@ -694,7 +694,7 @@ export const STEPS: StepDef[] = [
       },
       {
         id: 'modesty',
-        label: 'Modesty panel',
+        label: 'Modesty panel@@wizard',
         kind: 'choice',
         default: 'yes',
         options: [

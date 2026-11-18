@@ -205,7 +205,7 @@ export function tr(text: string, params?: Params): string {
       return out;
     }
   }
-  return format(text, params);
+  return format(english(text), params);
 }
 
 /** Whether a data text has a Russian entry (tests of ADR-155). */
