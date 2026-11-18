@@ -14,7 +14,7 @@ import type {
 import { MAKER_WORDS } from '../materials';
 import type { ProductKind, SellerCatalog, SellerProduct } from './types';
 
-export type { ProductKind, SellerCatalog, SellerProduct } from './types';
+export type { SellerCatalog, SellerProduct } from './types';
 
 /** Every bundled seller. A new seller adds its converted file and one line here. */
 const SOURCES: { id: string; load: () => Promise<string> }[] = [

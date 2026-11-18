@@ -197,11 +197,7 @@ export function familyRooms(item: ProjectItem): { name: string; rooms: Room[] } 
 }
 
 /** Whether a rule's "applies to" covers a piece placed as `mount`. */
-export function appliesTo(
-  rule: CompatRule,
-  item: ProjectItem,
-  mount: Mount = mountOf(item),
-): boolean {
+function appliesTo(rule: CompatRule, item: ProjectItem, mount: Mount = mountOf(item)): boolean {
   const a = rule.appliesTo;
   if (a.productKinds && !a.productKinds.includes(item.design.product.kind)) return false;
   if (a.placements && !a.placements.includes(mount)) return false;

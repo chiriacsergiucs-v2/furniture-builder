@@ -193,7 +193,7 @@ export function connectorsOf(pieces: PlacedPiece[], room: Room | undefined): Con
   };
 }
 
-export interface Snapped {
+interface Snapped {
   /** "Joins Base cabinet 600" · "Against wall 1" · "Into the corner of walls 1 and 2". */
   label: string;
   /** Allowed differences, named: "depth 560 vs 600". */

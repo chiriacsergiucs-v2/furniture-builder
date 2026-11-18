@@ -1048,7 +1048,7 @@ export function compareCandidates(a: Candidate, b: Candidate): number {
   return 0;
 }
 
-export function cmp(a: number[], b: number[]): number {
+function cmp(a: number[], b: number[]): number {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const d = (a[i] ?? 0) - (b[i] ?? 0);
     if (d) return d;

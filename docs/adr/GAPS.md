@@ -1948,3 +1948,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: High
 - Impact: Medium
 - Necessity: Medium
+
+### G-546: MAX_SHELVES and MAX_DRAWERS have two values (dead-code finding, intent unconfirmed)
+
+- Status: Open
+- Origin: cleanup health 2026-11-18, .tmp/current/dead-code-report.md items 2-3
+- Missing: src/core/design.ts:755-757 exports MAX_SHELVES=50, MAX_DRAWERS=20; src/core/counts.ts:32-33 has private 12 and 10. Export removed only; values kept
+- Request: Confirm which limit each name means, then merge or rename
+- Questions: Are these two limits intended to differ (UI slider vs validation)?
+- Suggested pick: User decides
+- Work: Low
+- Impact: Low
+- Necessity: Low

@@ -555,5 +555,3 @@ function MaterialFields() {
     </div>
   );
 }
-
-export type { Material };

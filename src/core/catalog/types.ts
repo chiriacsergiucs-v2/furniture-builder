@@ -95,7 +95,7 @@ export interface CatalogVariant {
 }
 
 /** `safety`: built, but every variant waits for safety values the user confirms (ADR-035). */
-export type Support = 'ready' | 'needs-construction' | 'safety' | 'reference';
+type Support = 'ready' | 'needs-construction' | 'safety' | 'reference';
 
 export interface CatalogFamily {
   id: string;

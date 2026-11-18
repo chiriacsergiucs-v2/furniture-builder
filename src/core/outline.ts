@@ -13,7 +13,7 @@ const area2 = (poly: Pt[]) =>
     return s + (p[0] * q[1] - q[0] * p[1]);
   }, 0);
 /** The same polygon, counter-clockwise in (x, z). */
-export const ccw = (poly: Pt[]): Pt[] => (area2(poly) < 0 ? [...poly].reverse() : poly);
+const ccw = (poly: Pt[]): Pt[] => (area2(poly) < 0 ? [...poly].reverse() : poly);
 
 /** A flat panel's outline in plan: its profile when shaped (thickness along y), else its box. */
 export function footprint(p: Panel): Pt[] {

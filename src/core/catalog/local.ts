@@ -48,7 +48,7 @@ export interface ViewFamily extends CatalogFamily {
   own?: boolean;
 }
 
-export function toLocal(f: CatalogFamily): LocalFamily {
+function toLocal(f: CatalogFamily): LocalFamily {
   const { variants, ...rest } = f;
   return {
     ...structuredClone(rest),

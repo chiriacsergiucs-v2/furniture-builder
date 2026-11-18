@@ -33,7 +33,7 @@ interface RuleResult {
   diagnostics: Diagnostic[];
   hardware: HardwareItem[];
 }
-export interface Rule {
+interface Rule {
   code: string;
   /** What the rule looks at, for the reader of this file. */
   appliesTo: string;
@@ -68,7 +68,7 @@ const spanOf = (p: Panel) =>
 /** Width of a hinged door across its face (doors on a turned corner wing face sideways). */
 const faceWidth = (p: Panel) => (p.thicknessAxis === 'z' ? p.box.w : p.box.d);
 
-export const rules: Rule[] = [
+const rules: Rule[] = [
   {
     code: 'shelf-span',
     appliesTo: 'shelf panels',
