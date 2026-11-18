@@ -7,7 +7,7 @@ import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Decor } from '../../src/core/materials';
 // ./setup installs the test IndexedDB first; CatalogPage loads the storage library when it is imported.
-import { renderApp, WIDTHS } from './setup';
+import { openCatalog, renderApp, WIDTHS } from './setup';
 import { GROUP_PAGE, GROUP_STEP } from '../../src/ui/CatalogPage';
 
 // The first page of a flat list (saved designs, a brand's decors); the code keeps it in CatalogPage.tsx.
@@ -21,12 +21,6 @@ afterEach(async () => {
   await db.clearDecors();
 });
 
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function openCatalog(user: User) {
-  await user.click((await screen.findAllByRole('link', { name: /^(Catalog|Каталог)/ }))[0]);
-  return screen.findByRole('heading', { level: 1, name: /^(Catalog|Каталог)$/ });
-}
 const firstPageNote = new RegExp(`^Showing ${GROUP_PAGE} of \\d+ families$`);
 
 describe.each(WIDTHS)('catalog pagination at %ipx (find-it, N311)', (width) => {

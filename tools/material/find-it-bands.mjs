@@ -5,7 +5,7 @@
 // Suggest run parts) → Material → Run worktop chip → PAL 18 oak → Apply → the Parts list has the worktop on PAL 18
 // oak; Material → Fronts → Edge band › Your own band… → 2 mm → Apply → the Parts list names the 2 mm band; no
 // horizontal scroll, no page errors. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, openTab } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -14,10 +14,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;

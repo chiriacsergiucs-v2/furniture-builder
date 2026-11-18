@@ -9,14 +9,7 @@
  */
 import { t } from './i18n';
 import { groupOf, movedTo } from './selection';
-import {
-  moveBlocked,
-  pieceName,
-  placedBounds,
-  resolvePlacements,
-  type Project,
-  type ProjectItem,
-} from './project';
+import { moveBlocked, boundsOf, pieceName, type Project, type ProjectItem } from './project';
 import type { Box } from './types';
 
 export type AlignHow = 'left' | 'centre' | 'right' | 'back' | 'front' | 'top' | 'bottom';
@@ -112,9 +105,6 @@ function liftEach(project: Project, moves: Map<string, number>) {
   const items = project.items.map((it) => go.get(it.id) ?? it);
   return { project: { ...project, items }, skipped };
 }
-
-const boundsOf = (project: Project) =>
-  new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 
 /** The outer box of `boxes` (whole mm). */
 const unionOf = (boxes: Box[]): Box => {

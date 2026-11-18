@@ -1,7 +1,7 @@
 // Find-it acceptance for ADR-051 and ADR-054…062, ADR-064 (check labels name the ADR) (backlog N46, N49–N57, N59), run against a production build:
 //   npm run build && npx vite preview --port 4173 &  node tools/ensemble/find-it-adrs.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, openPieceEditor, openTab, showPieces } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -10,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 375]) {
   const phone = width < 500;

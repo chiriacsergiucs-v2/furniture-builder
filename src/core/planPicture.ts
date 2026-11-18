@@ -6,6 +6,7 @@
 import type { Pt } from './room';
 import type { Mm } from './types';
 import { t } from './i18n';
+import { isInt } from './guards';
 
 export interface PlanPicture {
   /** Row id in this device's `images` table. */
@@ -56,8 +57,6 @@ export function newPlanPicture(id: string, name: string, width: number): PlanPic
   return { id, name, a: [0, 0], b: [w, 0], length: w * 10 };
 }
 
-const isInt = (v: unknown, min = -1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 const isPt = (v: unknown) =>
   Array.isArray(v) && v.length === 2 && v.every((n) => isInt(n, 0) && (n as number) <= 100_000);
 

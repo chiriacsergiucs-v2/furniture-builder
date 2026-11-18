@@ -1,10 +1,7 @@
 /** Russian text for info (ADR-158). Key: the English text; value: the Russian text. */
 export const ru_info = {
-  'Information and guides': 'Информация и руководства',
-  'every feature, by domain': 'все функции по разделам',
   'What this version of the app can do: {n|# feature|# features}, grouped by domain.':
     'Что умеет эта версия приложения: {n|# функция|# функции|# функций}, по разделам.',
-  'Back to the editor': 'Назад в редактор',
   Features: 'Функции',
   // The feature tree (ADR-158).
   Creating: 'Создание',
@@ -29,7 +26,6 @@ export const ru_info = {
   'Create a project': 'Создать проект',
   'Several pieces placed in one room.': 'Несколько изделий, расставленных в одной комнате.',
   'Create a project from a project template': 'Создать проект из шаблона проекта',
-  'Fill a wall': 'Заполнить стену',
   'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.':
     'Введите ширину стены и выберите предложенный набор пеналов, нижних и навесных шкафов, который заполняет её точно; в уточнении задаются высота пеналов и глубина навесных шкафов, у каждого вида нижних шкафов может быть своя ширина, а одинаковые фасады могут делить корпуса до 4 фасадов.',
   'Make a new piece inside a project': 'Создать новое изделие внутри проекта',
@@ -150,7 +146,6 @@ export const ru_info = {
   'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).':
     'Глухие, Г-образные и диагональные углы, на полу или на стене (навесы выбираете вы).',
   'Tall cabinets': 'Пеналы',
-  'Doors and fronts': 'Дверцы и фасады',
   'Hinged doors, one or a pair': 'Распашные дверцы, одна или пара',
   'Overlay, half-overlay and inset fronts': 'Накладные, полунакладные и вкладные фасады',
   'Exact gaps between fronts': 'Точные зазоры между фасадами',
@@ -160,7 +155,6 @@ export const ru_info = {
   'Front-only panels': 'Отдельные фасадные панели',
   'An integrated appliance door or a cover panel with no carcass.':
     'Фасад встроенной техники или декоративная панель без корпуса.',
-  Drawers: 'Ящики',
   'Drawer boxes with runner choice and clearances':
     'Короба ящиков с выбором направляющих и зазорами',
   'Drawer boxes without an inner front': 'Короба ящиков без внутренней передней стенки',
@@ -290,13 +284,11 @@ export const ru_info = {
   'Printing and files': 'Печать и файлы',
   'Print sheets or save as PDF': 'Печать листов или сохранение в PDF',
   'Download drawings as SVG': 'Скачать чертежи в SVG',
-  'Fusion 360 script': 'Скрипт для Fusion 360',
   'Rebuilds the model as named solid boxes; not verified inside Fusion.':
     'Воссоздаёт модель как именованные тела-параллелепипеды; в Fusion не проверено.',
   'Review pack for a professional': 'Пакет для проверки специалистом',
   'Summary, parts CSV, drawings and the project file in one .zip.':
     'Сводка, CSV деталей, чертежи и файл проекта в одном .zip.',
-  Projects: 'Проекты',
   'Several pieces in one room, with combined lists':
     'Несколько изделий в одной комнате, с общими списками',
   'Projects page': 'Страница проектов',
@@ -348,7 +340,6 @@ export const ru_info = {
   'Keep saved data persistent': 'Постоянное хранение данных',
   'Backup reminder': 'Напоминание о резервной копии',
   'Only-on-this-device notice': 'Уведомление «только на этом устройстве»',
-  'Clean up unused pictures': 'Удалить неиспользуемые картинки',
   'Share links': 'Ссылки для общего доступа',
   'Signed in, a link to a piece or template; anyone with it opens a copy until you stop sharing.':
     'После входа — ссылка на изделие или шаблон; любой, у кого она есть, открывает копию, пока вы не закроете доступ.',
@@ -516,7 +507,6 @@ export const ru_info = {
   'Back to the editor only with a design open': '«Назад в редактор» только при открытом проекте',
   'On the Gaps and Research pages, as in the Catalog.':
     'На страницах пробелов и исследований, как в каталоге.',
-  'Room presets': 'Готовые комнаты',
   'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.':
     'Новое… → Готовая комната: спальня, домашний кабинет или кухня и стол, готовые в комнате 3600 × 3000.',
   'Variables in a piece': 'Переменные в изделии',

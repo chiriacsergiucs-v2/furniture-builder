@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { createListeners } from './deviceValue';
 
 /**
  * The 3D view's look (ADR-067): 'simple' is the plain preview, 'realistic' adds room light, soft shadows and
@@ -6,7 +7,7 @@ import { useSyncExternalStore } from 'react';
  */
 export type Look = 'simple' | 'realistic';
 const KEY = 'fb:look';
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 /** Until the user picks one: realistic on screens at least 1024 px wide, simple below (phones). */
 export function defaultLook(width: number): Look {
@@ -37,12 +38,7 @@ export function setLook(l: Look) {
   } catch {
     /* private mode: the choice lasts for this page only */
   }
-  listeners.forEach((f) => f());
-}
-
-function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => listeners.delete(l);
+  notify();
 }
 
 export function useLook(): Look {

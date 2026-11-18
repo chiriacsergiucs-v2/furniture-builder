@@ -3,7 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/critique-bugs/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width (390 with touch, 1280 with a mouse) and finds everything by role and
 // visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -11,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** Height of each located element, rounded (multi-line text areas are tall anyway and are left out). */
 const heights = (loc) =>

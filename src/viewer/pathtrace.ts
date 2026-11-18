@@ -16,7 +16,7 @@ import {
 import { GradientEquirectTexture, WebGLPathTracer } from 'three-gpu-pathtracer';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
 import { t } from '../core/i18n';
-import type { RenderEngineName } from '../shared/renderSupport';
+import { nextFrame, type RenderEngineName } from '../shared/renderSupport';
 
 /**
  * A photo-quality still of the 3D view (ADR-068): the scene the user is looking at, path-traced on this device's
@@ -31,8 +31,6 @@ export interface RenderJob {
   /** Frees the GPU; call when the picture is no longer shown. */
   dispose: () => void;
 }
-
-const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 interface RenderOptions {
   width: number;

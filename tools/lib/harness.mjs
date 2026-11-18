@@ -3,7 +3,7 @@
 //   pnpm build && pnpm preview &  node tools/<area>/find-it.mjs [url] [out dir]
 // The browser: `CHROMIUM_PATH` when set, else a system Chromium (the first of SYSTEM_CHROMIUM that exists), else the
 // browser Playwright installed for itself (PLAYWRIGHT_BROWSERS_PATH), as the scripts did before.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 export { chromium };
@@ -39,3 +39,23 @@ export function launchBrowser(options = {}) {
 export const previewUrl = (fallback = PREVIEW_URL) => process.argv[2] ?? fallback;
 /** The screenshot folder: the second argument, else `fallback`. */
 export const outDir = (fallback = 'dist-acceptance') => process.argv[3] ?? fallback;
+
+/**
+ * The `check` every find-it script declares: records `{ width, name, ok }` in `results` and prints the PASS/FAIL line.
+ * Pass the script's own `results` array; the script keeps its closing summary.
+ */
+export function makeChecker(results) {
+  const check = (width, name, ok, detail = '') => {
+    results.push({ width, name, ok });
+    console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
+  };
+  return { check };
+}
+
+/**
+ * `PROJECT_SCHEMA` read from the source text of `src/core/project.ts` (the `.mjs` scripts do not import the
+ * TypeScript app), for scripts that seed saved projects.
+ */
+export function projectSchema() {
+  return Number(/PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1]);
+}

@@ -16,14 +16,11 @@ import {
 } from '../src/core/project';
 import { shapeOutline } from '../src/core/room';
 import { partRo } from '../src/core/ro';
-import type { CabinetParams, Design, Material } from '../src/core/types';
+import type { Material } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
+import { withCab as cab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const cab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 
 /** n pieces side by side, starting 100 mm from the wall (room for a left cover panel). */
 function row(template: string, n: number, names: string[] = []): Project {

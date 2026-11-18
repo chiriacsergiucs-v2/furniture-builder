@@ -1,16 +1,12 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
+import { sourceTexts } from './helpers/sourceFiles';
 
 // ADR-219: the layer rules of CLAUDE.md, checked on the source itself, so CI fails even if eslint.config.js (which
 // holds the same rules) changes. Paths are repo-relative with forward slashes; targets are resolved without extension.
 const ROOT = new URL('..', import.meta.url).pathname;
-const files = (dir: string): string[] =>
-  readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    return statSync(p).isDirectory() ? files(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
-  });
 
 /** Every module specifier in a source text: static imports and re-exports, side-effect and dynamic imports. */
 function specifiers(text: string): string[] {
@@ -72,10 +68,7 @@ function violation(file: string, spec: string): string | null {
   return null;
 }
 
-const SOURCES = files(join(ROOT, 'src')).map((f) => ({
-  file: relative(ROOT, f).split(/[\\/]/).join('/'),
-  text: readFileSync(f, 'utf8'),
-}));
+const SOURCES = sourceTexts(ROOT);
 
 describe('layer boundaries (ADR-219)', () => {
   it('no module in src/ imports across a layer boundary', () => {

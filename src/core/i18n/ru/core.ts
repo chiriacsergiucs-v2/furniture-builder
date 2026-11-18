@@ -289,7 +289,6 @@ export const ru_core = {
   'topLayers must be 1 or 2': 'topLayers должно быть 1 или 2',
 
   // Undo step names (src/core/history.ts, src/store/designStore.ts)
-  '{n|# piece|# pieces}': '{n|# изделие|# изделия|# изделий}',
   'Add {what}': 'Добавить: {what}',
   'Remove {what}': 'Удалить: {what}',
   'Change {what}': 'Изменить: {what}',
@@ -308,7 +307,6 @@ export const ru_core = {
   'Rename the project': 'Переименовать проект',
   'Change the project': 'Изменить проект',
   'No project is open.': 'Проект не открыт.',
-  'Replace {name}': 'Заменить {name}',
   'Set {setting}': 'Задать: {setting}',
   'Follow project {setting}': 'Как в проекте: {setting}',
   'Moved without mirroring: {reasons}': 'Перемещено без зеркального отражения: {reasons}',

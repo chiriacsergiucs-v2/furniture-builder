@@ -1,3 +1,5 @@
+import type { Diagnostic } from './types';
+
 /**
  * Every diagnostic code (ADR-225). A code names one kind of problem: two different problems never share one, so checks,
  * repairs and tests key on the code instead of the translated message (ADR-008, ADR-153). The message stays the
@@ -186,3 +188,16 @@ const KNOWN: ReadonlySet<string> = new Set(DIAGNOSTIC_CODES);
 /** A listed code, or a compatibility rule's `compat-<rule id>`. */
 export const isDiagnosticCode = (c: string): c is DiagnosticCode =>
   KNOWN.has(c) || /^compat-[a-z0-9-]+$/.test(c);
+
+/** An error diagnostic with this code and message. */
+export const errorDiag = (code: DiagnosticCode, message: string): Diagnostic => ({
+  severity: 'error',
+  code,
+  message,
+});
+/** A warning diagnostic with this code and message. */
+export const warnDiag = (code: DiagnosticCode, message: string): Diagnostic => ({
+  severity: 'warning',
+  code,
+  message,
+});

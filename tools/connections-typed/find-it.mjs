@@ -7,7 +7,7 @@
 // copies"; a blind corner and a base cabinet → Shared sides; Build & Preview › 3D › Assembly → Show step on "Fit
 // hardware to the sides" lights the 3D view (`data-lit` on the 3D view, ADR-230), Move step up, Reset the steps; New single
 // piece → Lounger → Settings → Backrest end → Right. No page errors. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -16,10 +16,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;

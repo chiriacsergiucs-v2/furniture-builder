@@ -5,7 +5,8 @@ import { commonDesign, commonPanelCheck } from '../src/core/common';
 import { templates } from '../src/core/design';
 import { footprint } from '../src/core/outline';
 import { buildProjectModel, makeItem, newProject, type Project } from '../src/core/project';
-import type { CabinetParams, Design, Panel } from '../src/core/types';
+import type { Design, Panel } from '../src/core/types';
+import { withCab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
 type Turn = 0 | 90 | 180 | 270;
@@ -14,10 +15,6 @@ const at = (p: Project, d: Design, x: number, z: number, r: Turn = 0) => ({
   position: { x, y: 0, z },
   rotationY: r,
 });
-const withCab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 const diagonal = (): Design => {
   const d = t('corner-l');
   return d.product.kind === 'corner'

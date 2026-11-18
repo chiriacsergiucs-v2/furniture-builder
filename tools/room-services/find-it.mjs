@@ -3,7 +3,7 @@
 // Starts from the bare app at each width and finds everything by visible text: a project with a base cabinet and a
 // room, "Add pipe" and "Add outlet" in the Room panel, both drawn on the plan, and the pipe behind the cabinet
 // reported as a warning. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 1280, 390, 375]) {
   const phone = width < 500;

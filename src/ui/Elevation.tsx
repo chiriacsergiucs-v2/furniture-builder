@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { findInProduct, productRoots } from '../core/design';
 import { boxCentre } from '../core/geometry';
+import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { pt } from '../core/i18n/print';
 import { t } from '../core/i18n';
 import {
@@ -41,13 +42,8 @@ export const outlinePoints = (p: Panel) =>
 /** The smallest a drawing label is drawn on screen, in CSS pixels (audit F-26). */
 const MIN_LABEL_PX = 8;
 
-const FRONTS = new Set<Panel['role']>(['door', 'drawer-front']);
-const DRAWER_BOX = new Set<Panel['role']>([
-  'drawer-side',
-  'drawer-back',
-  'drawer-inner-front',
-  'drawer-bottom',
-]);
+const FRONTS = FRONT_ROLES;
+const DRAWER_BOX = DRAWER_BOX_ROLES;
 
 function describe(s: SpaceOpening, count?: number, print = false): string {
   // On a printed sheet the labels follow the print language (ADR-157, ADR-265).

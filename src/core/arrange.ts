@@ -8,13 +8,13 @@ import { newId, SCHEMA_VERSION } from './design';
 import { overlaps } from './geometry';
 import {
   carriedBy,
+  boundsOf,
   LOCKED_HINT,
   mirroredRotation,
   moveBlocked,
   turnBlocked,
   TURN_LOCKED_HINT,
   pieceName,
-  placedBounds,
   placedOutline,
   quarterTurn,
   resolvePlacements,
@@ -167,9 +167,6 @@ export function mirrorDesign(d: Design): MirrorResult {
 // ---------------------------------------------------------------------------
 // Project operations
 // ---------------------------------------------------------------------------
-
-const boundsOf = (project: Project) =>
-  new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 
 /** Each piece as one box before any extra angle (ADR-121): same centre as its bounds, its own width and depth. */
 const outlinesOf = (project: Project) =>

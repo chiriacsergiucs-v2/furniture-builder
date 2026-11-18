@@ -1,7 +1,7 @@
 // Find-it acceptance for the New-piece wizard (CLAUDE.md R3, ADR-044–046), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/wizard/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -9,10 +9,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 const TYPES = [
   { label: 'Cabinet (closed box)', width: 1000 },

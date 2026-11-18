@@ -34,6 +34,7 @@ import {
 } from './project';
 import { NEAR_WALL, wallEnds, wallInward, type Pt, type Room } from './room';
 import { insideCorner } from './roomfill';
+import { DRAWER_BOX_ROLES, FRAME_ROLES, FRONT_WITH_BLIND_ROLES } from './panelRoles';
 import type {
   AssemblyEdit,
   Box,
@@ -181,25 +182,6 @@ export const ASSEMBLY_GUIDANCE = t(
   "Guidance: order from the parts' positions; your joints, fasteners and drilling decide.",
 );
 
-const FRAME = new Set<PanelRole>([
-  'leg',
-  'apron',
-  'stretcher',
-  'slat',
-  'ledger',
-  'seat',
-  'headboard',
-  'footboard',
-  'stile',
-  'rung',
-]);
-const DRAWER = new Set<PanelRole>([
-  'drawer-side',
-  'drawer-back',
-  'drawer-inner-front',
-  'drawer-bottom',
-]);
-const FRONT = new Set<PanelRole>(['door', 'drawer-front', 'blind-panel']);
 /** Fronts that are hung and adjusted at the end (ADR-185). */
 const HUNG = new Set<PanelRole>(['door', 'drawer-front']);
 /** Hanging hardware: what a wall piece hangs on. */
@@ -246,9 +228,9 @@ function stepOf(p: Panel, pinned: Set<string>, loose: boolean): StepId {
     case 'plinth':
       return 'plinth';
     default:
-      if (DRAWER.has(p.role)) return 'drawers';
-      if (FRONT.has(p.role)) return 'fronts';
-      if (p.role === 'loose' || FRAME.has(p.role)) return 'loose';
+      if (DRAWER_BOX_ROLES.has(p.role)) return 'drawers';
+      if (FRONT_WITH_BLIND_ROLES.has(p.role)) return 'fronts';
+      if (p.role === 'loose' || FRAME_ROLES.has(p.role)) return 'loose';
       return 'also';
   }
 }
@@ -406,7 +388,7 @@ export function assemblySteps(model: FurnitureModel, edit?: AssemblyEdit): Assem
 function generatedSteps(model: FurnitureModel): AssemblyStep[] {
   const pinned = new Set(model.hardware.filter((h) => h.kind === 'shelf-pin').map((h) => h.nodeId));
   // A panel set (ADR-041) or frame furniture (ADR-038): one step, no order claimed.
-  const loose = model.panels.some((p) => p.role === 'loose' || FRAME.has(p.role));
+  const loose = model.panels.some((p) => p.role === 'loose' || FRAME_ROLES.has(p.role));
   const byStep = new Map<StepId, Panel[]>();
   const stepOfId = new Map<string, StepId>();
   for (const p of model.panels) {

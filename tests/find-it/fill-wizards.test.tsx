@@ -5,27 +5,7 @@
 // and Use this mix opens a project whose room has the door, kept free of pieces.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function startNew(user: User, row: RegExp, title: string) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  const start = await screen.findByRole('dialog', { name: 'Start something new' });
-  await user.click(within(start).getByRole('button', { name: row }));
-  return screen.findByRole('dialog', { name: title });
-}
-
-async function retype(user: User, dlg: HTMLElement, label: string, value: string) {
-  const input = within(dlg).getByLabelText(label);
-  await user.clear(input);
-  if (value) await user.type(input, value);
-  return input as HTMLInputElement;
-}
-
-const step = (dlg: HTMLElement, list: string, name: string) =>
-  within(within(dlg).getByRole('list', { name: list })).getByRole('button', { name });
+import { renderApp, retype, startNewWith as startNew, step, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('Fill a wall and Fill the room at %ipx (find-it, ADR-204)', (width) => {
   it('Fill a wall → Refine: Tall cabinet height and Wall cabinet depth; a wrong one is named; good ones give cards', async () => {

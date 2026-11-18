@@ -152,7 +152,7 @@ const norm = (s: string) =>
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
-const MAKER_WORDS: Record<string, MaterialMaker> = {
+export const MAKER_WORDS: Record<string, MaterialMaker> = {
   egger: 'egger',
   kastamonu: 'kastamonu',
   fundermax: 'fundermax',

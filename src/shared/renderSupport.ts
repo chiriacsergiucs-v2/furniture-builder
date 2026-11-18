@@ -41,3 +41,6 @@ export async function detectEngine(): Promise<RenderEngineName> {
     return 'WebGL 2';
   }
 }
+
+/** Resolves on the next animation frame. */
+export const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));

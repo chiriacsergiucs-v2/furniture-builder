@@ -9,8 +9,6 @@ export const data_wizard: Record<string, string> = {
   Base: 'Основание',
   Back: 'Задняя стенка',
   Frame: 'Каркас',
-  Desk: 'Письменный стол',
-  Bed: 'Кровать',
   Review: 'Проверка',
   'Overall size in whole millimetres (width, height from the floor, depth). Until you change them, sizes and name follow the type you picked.':
     'Габариты в целых миллиметрах (ширина, высота от пола, глубина). Пока вы их не измените, размеры и название следуют выбранному типу.',
@@ -37,7 +35,6 @@ export const data_wizard: Record<string, string> = {
   // Fields
   Name: 'Название',
   Category: 'Категория',
-  Width: 'Ширина',
   Height: 'Высота',
   Depth: 'Глубина',
   Board: 'Плита',
@@ -52,12 +49,9 @@ export const data_wizard: Record<string, string> = {
   Handles: 'Ручки',
   'Hole spacing 128 mm for bars (typical); check your handle.':
     'Межосевое расстояние 128 мм для ручек-скоб (типично); проверьте свою ручку.',
-  'Plinth height': 'Высота цоколя',
   'Underside above the floor': 'Низ над полом',
   'Back panel': 'Задняя стенка',
   Top: 'Крышка',
-  Stretchers: 'Проножки',
-  'Lower shelf': 'Нижняя полка',
   'Lower shelf height': 'Высота нижней полки',
   'Leg section (square)': 'Сечение ножки (квадрат)',
   'Solid timber; a layout default, not a load rating.':
@@ -73,9 +67,6 @@ export const data_wizard: Record<string, string> = {
   'Headboard height': 'Высота изголовья',
 
   // Options
-  'Kitchen cabinets': 'Кухонные шкафы',
-  'Storage and display': 'Хранение и витрины',
-  'Tables and surfaces': 'Столы и поверхности',
   Seating: 'Сиденья',
   'Sleeping and lying': 'Сон и отдых',
   'PAL 18 white (18 mm)': 'ЛДСП 18 белая (18 мм)',
@@ -86,7 +77,6 @@ export const data_wizard: Record<string, string> = {
   Custom: 'Своя',
   Open: 'Открытая',
   Shelves: 'Полки',
-  Drawers: 'Ящики',
   'Hanging rail': 'Штанга для одежды',
   'Shelves over drawers': 'Полки над ящиками',
   None: 'Нет',
@@ -98,7 +88,6 @@ export const data_wizard: Record<string, string> = {
   Bar: 'Скоба',
   Knob: 'Кнопка',
   'Push to open': 'Нажимное открывание',
-  Plinth: 'Цоколь',
   'None (on the floor)': 'Нет (на полу)',
   'Hung on the wall': 'Навесной на стене',
   'Nailed on the back': 'Прибита сзади',
@@ -111,9 +100,6 @@ export const data_wizard: Record<string, string> = {
   Yes: 'Да',
   No: 'Нет',
   'Two gables': 'Две боковые панели',
-  'Pedestal left': 'Тумба слева',
-  'Pedestal right': 'Тумба справа',
-  'Two pedestals': 'Две тумбы',
   'Low (rails height)': 'Низкое (на высоте царг)',
   Raised: 'Высокое',
 

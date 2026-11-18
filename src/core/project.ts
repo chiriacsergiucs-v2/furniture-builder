@@ -51,6 +51,7 @@ import {
   overlaps,
   penetration,
   sizeOn,
+  swapXZ,
   union,
   yawPoint,
 } from './geometry';
@@ -1432,6 +1433,10 @@ function backCutsOf(
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
 
+/** The placed box of every item, by item id (after `resolvePlacements`). */
+export const boundsOf = (project: Project) =>
+  new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
+
 /**
  * The piece as one box before its extra angle (ADR-121): `position` is its lowest corner and it shares its centre with
  * `placedBounds`. The same box as `placedBounds` for a piece at a quarter turn.
@@ -2303,7 +2308,6 @@ const SAME_FRAME: RunFrame = {
   axis: (a) => a,
   face: (f) => f,
 };
-const swapXZ = (a: Axis): Axis => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
 export function runFrame(r: QuarterTurn): RunFrame {
   if (r === 90)
     return {

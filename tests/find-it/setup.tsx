@@ -7,7 +7,8 @@
 // - Find by role, accessible name and visible text (`getByRole`, `within`, `getByText`), never by class name:
 //   `querySelector` and `querySelectorAll` are refused by ESLint under `tests/find-it/`. When a thing has no role or
 //   name, give the component an accessible name (through `t()`, with its Russian entry) instead.
-// - Shared steps (`addPiece`, `projectWithTwoPieces`, `selectRows`, `openMore`, `openMenu`, `openSheet`) live here;
+// - Shared steps (`addPiece`, `projectWithTwoPieces`, `selectRows`, `openMore`, `openMenu`, `openSheet`, `startNew`,
+//   `startNewWith`, `retype`, `step`, `openCatalog`) live here;
 //   import them instead of copying them into a test file.
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
@@ -145,6 +146,38 @@ export async function addPiece(
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a piece' })).toBeNull());
   const place = screen.queryByRole('button', { name: 'Place to the right' });
   if (place) await user.click(place);
+}
+
+/** ⋯ › New…: opens the "Start something new" dialog. */
+export async function startNew(user: User) {
+  await user.click(screen.getByLabelText('More'));
+  await user.click(await screen.findByRole('button', { name: /New…/ }));
+  return screen.findByRole('dialog', { name: 'Start something new' });
+}
+
+/** ⋯ › New… › the row matching `row`: opens the dialog named `title`. */
+export async function startNewWith(user: User, row: RegExp, title: string) {
+  const start = await startNew(user);
+  await user.click(within(start).getByRole('button', { name: row }));
+  return screen.findByRole('dialog', { name: title });
+}
+
+/** The dialog's field with this label, typed over. */
+export async function retype(user: User, dlg: HTMLElement, label: string, value: string) {
+  const input = within(dlg).getByLabelText(label);
+  await user.clear(input);
+  if (value) await user.type(input, value);
+  return input as HTMLInputElement;
+}
+
+/** The button `name` in the dialog's step list `list`. */
+export const step = (dlg: HTMLElement, list: string, name: string) =>
+  within(within(dlg).getByRole('list', { name: list })).getByRole('button', { name });
+
+/** The top bar's Catalog tab. */
+export async function openCatalog(user: User) {
+  await user.click((await screen.findAllByRole('link', { name: /^(Catalog|Каталог)/ }))[0]);
+  return screen.findByRole('heading', { level: 1, name: /^(Catalog|Каталог)$/ });
 }
 
 /** Bare app → ⋯ › New… › Project with several pieces → Compose, with two base cabinets. */

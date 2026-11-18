@@ -9,7 +9,8 @@ import { pt, type PrintKey } from './i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping-types';
-import { inPlaneAxes } from './geometry';
+import { AXES, inPlaneAxes } from './geometry';
+import { FRAME_ROLES } from './panelRoles';
 import type { Axis, Box, FurnitureModel, Mm, Panel, PanelRole } from './types';
 
 export type JointType =
@@ -114,19 +115,6 @@ const JOINED = new Set<PanelRole>([
   'gable',
   'modesty',
 ]);
-/** Frame furniture (ADR-038): joinery is the maker's own, not counted as carcass joints. */
-const FRAME = new Set<PanelRole>([
-  'leg',
-  'apron',
-  'stretcher',
-  'slat',
-  'ledger',
-  'seat',
-  'headboard',
-  'footboard',
-  'stile',
-  'rung',
-]);
 
 const span = (b: Box, a: 0 | 1 | 2): [number, number] =>
   a === 0 ? [b.x, b.x + b.w] : a === 1 ? [b.y, b.y + b.h] : [b.z, b.z + b.d];
@@ -144,7 +132,6 @@ function contactAxis(a: Box, b: Box): Axis | null {
   }
   return touch;
 }
-const AXES: Axis[] = ['x', 'y', 'z'];
 
 /** A joint: one board's edge or face against another board's face (two edges butted together are not one). */
 const isJoint = (a: Panel, b: Panel): boolean => {
@@ -170,7 +157,7 @@ const perimeter = (p: Panel): Mm => {
 export function carcassJointPairs(model: FurnitureModel): [Panel, Panel][] {
   const pinned = new Set(model.hardware.filter((h) => h.kind === 'shelf-pin').map((h) => h.nodeId));
   // In frame furniture, rails are frame members too (ADR-038), joined by the maker's own joinery.
-  const frame = model.panels.some((p) => FRAME.has(p.role));
+  const frame = model.panels.some((p) => FRAME_ROLES.has(p.role));
   const joined = model.panels.filter(
     (p) =>
       JOINED.has(p.role) &&

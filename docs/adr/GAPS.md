@@ -1864,3 +1864,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-539: Russian key conflicts with different wording (reuse H1)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 H1, .tmp/current/reuse-hunting-report.md
+- Missing: 10 keys defined twice with different Russian values: width (editors.ts:300 vs project.ts:325), More 3D actions (prints.ts:27 vs surfaces.ts:39), and 8 data keys in data-parts, data-catalog, data-wizard
+- Request: Pick one Russian wording per key or use @@context keys
+- Questions: Which Russian wording for each conflicting key?
+- Suggested pick: User picks wording (excluded from the fix)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-540: Store and tool helper extractions skipped (reuse M2, M3)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 M2, M3
+- Missing: M2 createExternalValue not extracted: localStorage bodies differ (useLook width default, module-load reads). M3 find-it variants with failed++, ok:!!ok, ok+detail and string width not unified; closing summary in 4 wordings
+- Request: Extract the differing helpers
+- Questions: Accept a larger extraction under ADR-016?
+- Suggested pick: Decide per helper (user)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-541: Remaining duplicates skipped (reuse L5, L7, B1-B3)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 L5, L7, boundary-blocked
+- Missing: L7: assistant.ts isInt and wallfill.ts whole differ from guards.ts; seller origin string in src/online and tools/sellers (tools cannot import src); test picture bases kept literal. B1: Deno assistant function copies cannot import src/. B2 Viewer3D FRONT now uses core panelRoles. B3 tools/sellers pictureExt standalone
+- Request: Consolidate where layers allow
+- Questions: Allow tools or Deno to import shared code?
+- Suggested pick: Keep duplicated (boundary)
+- Work: Low
+- Impact: Low
+- Necessity: Low

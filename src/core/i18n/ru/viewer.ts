@@ -1,14 +1,6 @@
 /** Russian text for viewer (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_viewer = {
   // Shared
-  mm: 'мм',
-  Width: 'Ширина',
-  Height: 'Высота',
-  Depth: 'Глубина',
-  Cancel: 'Отмена',
-  Reset: 'Сбросить',
-  Apply: 'Применить',
-  Delete: 'Удалить',
   'Fill wall': 'Заполнить стену',
   'Make the picture cover the whole wall': 'Растянуть картинку на всю стену',
   'Wall {n}': 'Стена {n}',
@@ -26,7 +18,6 @@ export const ru_viewer = {
   'Save PNG': 'Сохранить PNG',
   'Render a picture': 'Рендер картинки',
   'Rendering needs WebGL 2 on this device': 'Для рендера на этом устройстве нужен WebGL 2',
-  Size: 'Размер',
   'Renders what the 3D view shows, with realistic light. Best on a laptop; a phone may be slow. The picture stays on this device.':
     'Рендерит то, что показывает 3D-вид, с реалистичным светом. Лучше всего на ноутбуке; на телефоне может быть медленно. Картинка остаётся на этом устройстве.',
   'Rendering… {n} / {total} samples': 'Рендер… {n} / {total} проходов',
@@ -57,16 +48,9 @@ export const ru_viewer = {
   // Wall background (WallBackground.tsx)
   '{name} keeps its current background.': '{name} сохраняет текущий фон.',
   '{name} background': '{name}: фон',
-  None: 'Нет',
   Colour: 'Цвет',
   Picture: 'Картинка',
-  '{name} colour': '{name}: цвет',
   'Picture on {name}': 'Картинка: {name}',
-  'Preparing picture…': 'Подготовка картинки…',
-  'Replace picture': 'Заменить картинку',
-  'Add a picture': 'Добавить картинку',
-  'Replace picture for {name}': 'Заменить картинку: {name}',
-  'Add a picture for {name}': 'Добавить картинку: {name}',
   'The picture {file} is not on this device. Its average colour is shown; add the picture again to see it.':
     'Картинки {file} нет на этом устройстве. Показан её средний цвет; добавьте картинку снова, чтобы её увидеть.',
   'Covers: {rect}': 'Покрывает: {rect}',
@@ -85,7 +69,6 @@ export const ru_viewer = {
   'Wall: {w} mm': 'Стена: {w} мм',
   '…and {n} more in the project.': '…и ещё {n} в проекте.',
   'Use this mix': 'Выбрать этот набор',
-  'Fill a wall': 'Заполнить стену',
   'The project could not be saved in this browser’s storage.':
     'Не удалось сохранить проект в хранилище этого браузера.',
   'Fill a wall steps': 'Шаги заполнения стены',
@@ -95,35 +78,24 @@ export const ru_viewer = {
   'same as depth': 'как глубина',
   'Leave a field empty for any. The width range is your choice; shelves wider than the shelf-span guidance get a centre divider.':
     'Оставьте поле пустым — подойдёт любое значение. Диапазон ширины выбираете вы; полки шире рекомендуемого пролёта получают центральную перегородку.',
-  'Min piece width': 'Мин. ширина изделия',
-  'Max piece width': 'Макс. ширина изделия',
-  'Base height': 'Высота нижних шкафов',
-  'Number of pieces': 'Количество изделий',
   any: 'любое',
-  'Tall cabinets': 'Пеналы',
   'At least, open shelf bases': 'Не меньше, открытых нижних шкафов с полками',
   'At least, drawer bases': 'Не меньше, нижних шкафов с ящиками',
   'At least, door bases': 'Не меньше, нижних шкафов с дверцами',
-  'Equal fronts': 'Одинаковые фасады',
   off: 'выкл.',
   'Every door the same width; insides left empty to configure later.':
     'Все дверцы одной ширины; внутреннее наполнение остаётся пустым, чтобы настроить позже.',
-  'Wall cabinet height': 'Высота настенных шкафов',
   'Wall cabinet tops sit at the wall height.': 'Верх настенных шкафов — на высоте стены.',
   // ADR-204: Refine fields of Fill a wall and Fill the room.
   'Tall cabinet height': 'Высота пеналов',
   'Wall cabinet depth': 'Глубина настенных шкафов',
 
-  'Wall cabinets': 'Навесные шкафы',
   Any: 'Любые',
   Always: 'Всегда',
   Never: 'Никогда',
   'Tall cabinets stand': 'Высокие шкафы стоят',
   Auto: 'Авто',
-  Left: 'Слева',
-  Right: 'Справа',
   'Both ends': 'По краям',
-  Centre: 'По центру',
   'Suggested mixes': 'Предложенные наборы',
   '{width} mm wall · best {n}, each checked for problems':
     'Стена {width} мм · лучшие {n}, каждый проверен на проблемы',
@@ -131,7 +103,6 @@ export const ru_viewer = {
   'Suggest again': 'Предложить снова',
 
   // 3D models (Models3D.tsx)
-  Front: 'Фасад',
   'Selected 3D model: {name}': 'Выбранная 3D-модель: {name}',
   'Selected 3D model': 'Выбранная 3D-модель',
   'About 3D models': 'О 3D-моделях',
@@ -171,7 +142,6 @@ export const ru_viewer = {
   'Importing…': 'Импорт…',
   'Import 3D model': 'Импортировать 3D-модель',
   '{n} triangles': 'треугольников: {n}',
-  'Delete {name}': 'Удалить {name}',
   '{name} (3D model), {w} by {d} mm': '{name} (3D-модель), {w} на {d} мм',
   '{name} (3D model), {w} wide, {h} high': '{name} (3D-модель), ширина {w}, высота {h}',
 
@@ -218,8 +188,6 @@ export const ru_viewer = {
   'Turn about its centre (R)': 'Повернуть вокруг центра (R)',
   'Turn 90° clockwise about its centre': 'Повернуть на 90° по часовой стрелке вокруг центра',
   'Turn about its centre (Shift+R)': 'Повернуть вокруг центра (Shift+R)',
-  'Turn 90° ↺': 'Повернуть на 90° ↺',
-  'Turn 90° ↻': 'Повернуть на 90° ↻',
   'Move to…': 'Переместить к…',
   'Cut through the project to see inside': 'Разрезать проект, чтобы увидеть внутри',
   Section: 'Разрез',
@@ -262,10 +230,8 @@ export const ru_viewer = {
   'Alt held: placing freely.': 'Alt зажат: свободное размещение.',
   'Snap is off.': 'Привязка выключена.',
   // Fill the room (ADR-173).
-  'Fill the room': 'Заполнить комнату',
   'Pick a room shape; get suggested mixes for every wall at once, with a corner cabinet at each inside corner, then refine them.':
     'Выберите форму комнаты; получите наборы сразу для всех стен с угловым шкафом в каждом внутреннем углу, затем уточните их.',
-  Room: 'Комната',
   Walls: 'Стены',
   'Fill the room steps': 'Шаги заполнения комнаты',
   'A ready shape and its sizes, in mm, with its doors, windows and other features.':
@@ -306,7 +272,6 @@ export const ru_viewer = {
   '{summary} · {n|# corner cabinet|# corner cabinets}':
     '{summary} · {n|# угловой шкаф|# угловых шкафа|# угловых шкафов}',
   'Add this mix': 'Добавить этот набор',
-  Next: 'Далее',
   'Fill the room…': 'Заполнить комнату…',
   'every wall of this room at once': 'все стены этой комнаты сразу',
   'Type the walkway width to place an island.': 'Введите ширину прохода, чтобы поставить остров.',
