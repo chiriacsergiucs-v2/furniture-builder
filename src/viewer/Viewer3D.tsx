@@ -53,6 +53,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { explode } from '../core/explode';
+import { FRONT_ROLES } from '../core/panelRoles';
 import { t } from '../core/i18n';
 import { setPictureFit, useAdjustMode, useAdjustWall } from './wallPictureDrag';
 import { inPlaneAxes, union } from '../core/geometry';
@@ -74,7 +75,7 @@ import { ARBridge, useARState } from './AR';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import type { MaterialImage, Panel } from '../core/types';
 
-export const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
+export const FRONT = FRONT_ROLES;
 export const HIGHLIGHT = '#f2c230';
 
 const geoCache = new WeakMap<Panel, ExtrudeGeometry>();

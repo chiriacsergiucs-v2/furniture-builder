@@ -4,7 +4,7 @@
 // `tools/catalog-flows/find-it.mjs` (Acceptance: browser).
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import { openCatalog, PHONE_WIDTH, renderApp, WIDTHS } from './setup';
 
 // Dexie keeps the IndexedDB it first saw across the fresh modules of each run: the templates saved here go.
 afterEach(async () => {
@@ -15,11 +15,6 @@ afterEach(async () => {
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
 
-/** The top bar's Catalog tab. */
-async function openCatalog(user: User) {
-  await user.click((await screen.findAllByRole('link', { name: /^(Catalog|Каталог)/ }))[0]);
-  return screen.findByRole('heading', { level: 1, name: /^(Catalog|Каталог)$/ });
-}
 /** On a phone the catalog's own actions fold under "More catalog actions" (ADR-118). */
 async function catalogActions(user: User, width: number, label = 'More catalog actions') {
   if (width === PHONE_WIDTH) await user.click(screen.getByText(label));

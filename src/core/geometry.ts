@@ -287,3 +287,13 @@ export function penetration(a: Box, b: Box): Mm {
     }
   return Math.ceil(least - 1e-6);
 }
+
+/** Swaps the x and z axes (a quarter turn about y); y stays. */
+export const swapXZ = (a: Axis): Axis => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
+
+/** The three axes in x, y, z order. */
+export const AXES: readonly Axis[] = ['x', 'y', 'z'];
+
+/** The smaller and larger halves of a whole-mm length (`halfLo + halfHi = g`). */
+export const halfLo = (g: Mm) => Math.floor(g / 2);
+export const halfHi = (g: Mm) => g - Math.floor(g / 2);

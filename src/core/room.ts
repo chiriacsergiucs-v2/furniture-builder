@@ -9,8 +9,10 @@ import { footprintOf } from './geometry';
 import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
 import { t, tr } from './i18n';
+import { isObj, isInt } from './guards';
+import type { Pt } from './outline';
 
-export type Pt = [Mm, Mm];
+export type { Pt };
 
 /** Starting height for a new room; the user sets their own (the field says so). */
 export const DEFAULT_ROOM_HEIGHT = 2500;
@@ -816,11 +818,6 @@ export function closeOutline(points: Pt[]): Pt[] {
   const extra: Pt = prev[1] === last[1] ? [first[0], last[1]] : [last[0], first[1]];
   return [...points, extra];
 }
-
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
-const isInt = (v: unknown, min = -1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
 /** A fitted picture's rectangle (ADR-146): whole mm, at least 1 mm, within `MAX_TILE` of the wall. */
 const isWallRect = (v: unknown) =>

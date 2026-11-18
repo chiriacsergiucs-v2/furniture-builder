@@ -6,7 +6,7 @@
 // why when tapped, **To ceiling** making the piece wall-hung under the ceiling, one **Undo** putting it back, and in the
 // 3D view with **Move** on, **Move to…** showing the same buttons, where **To ceiling** and **Down** move the piece.
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -14,10 +14,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 const LABELS = [
   'To wall',
   'To left piece',

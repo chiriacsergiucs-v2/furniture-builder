@@ -2,6 +2,7 @@ import { useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Raycaster, Vector2 } from 'three';
 import { axisPoint } from '../core/drag3d';
+import type { Axis } from '../core/types';
 import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 import { S } from './pieceDrag';
 
@@ -28,7 +29,7 @@ export function previewStore<T>() {
   };
 }
 
-export type Axis = 'x' | 'y' | 'z';
+export type { Axis };
 
 /**
  * A handle dragged along one room axis in Move mode. The pointer is only turned into millimetres along the axis

@@ -5,7 +5,7 @@
  */
 import type { CutTree, NestJob, NestResult, Placement } from './types';
 
-const int = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n);
+export const int = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n);
 
 interface Box {
   x: number;

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { FEATURES } from '../src/ui/info/features';
@@ -8,14 +8,10 @@ import { usePieceList } from '../src/store/pieceListStore';
 import { usePrices } from '../src/store/priceStore';
 import { useProblem } from '../src/store/problemStore';
 import { useUi } from '../src/store/uiStore';
+import { files } from './helpers/sourceFiles';
 
 // ADR-236: the Zustand stores live in src/store, the feature tree beside the Info page, the Mobila sample in tests.
 const SRC = new URL('../src', import.meta.url).pathname;
-const files = (dir: string): string[] =>
-  readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    return statSync(p).isDirectory() ? files(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
-  });
 
 describe('module locations (ADR-236)', () => {
   it('the six stores import from src/store with their state and actions', () => {

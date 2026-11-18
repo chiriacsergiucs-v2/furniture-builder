@@ -25,7 +25,16 @@ import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
-import { FillFooter, Field, MixWarnings, Problems, ResultProblems, SaveError } from './fillParts';
+import {
+  FillFooter,
+  Field,
+  MixWarnings,
+  Problems,
+  ResultProblems,
+  SaveError,
+  num,
+  opt,
+} from './fillParts';
 
 type StepId = 'wall' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -82,8 +91,6 @@ const START: Form = {
 const WALL_STEP: WallIssue['field'][] = ['width', 'depth', 'height', 'tallDepth'];
 
 /** Empty = any (absent); anything else goes to the core as a number, which reports what is wrong with it. */
-const num = (s: string) => Number(s.trim());
-const opt = (s: string) => (s.trim() === '' ? undefined : num(s));
 
 function toInput(f: Form): WallInput {
   return {

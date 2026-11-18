@@ -3,7 +3,7 @@
 // From the bare app at 1440 and 390 px, by visible text: a project piece shows its template and revision; after the
 // template is edited on this device the piece shows "Template updated (revision 1 → 2)", the project panel and the
 // Projects list count it, Keep mine hides it; a piece added after the edit shows revision 2. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -11,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;

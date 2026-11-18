@@ -8,7 +8,7 @@
 //   VITE_SUPABASE_URL=https://catchup-test.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_test pnpm build
 //   pnpm exec vite preview --port 4173 &  node tools/catch-up/find-it.mjs http://localhost:4173/furniture-builder/ <out>
 // From the bare app, by role and visible text, at 390, 1280 and 1600 px. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -18,10 +18,7 @@ const BACKEND = 'catchup-test.supabase.co';
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
 const USER = {

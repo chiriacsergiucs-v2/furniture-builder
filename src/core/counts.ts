@@ -28,7 +28,7 @@ interface CountRow {
 }
 
 /** Same bounds as the inspector's counters (parts 2–8 → dividers 0–7, shelves 0–12, drawers 1–10). */
-const MAX_DIVIDERS = 7;
+export const MAX_DIVIDERS = 7;
 const MAX_SHELVES = 12;
 const MAX_DRAWERS = 10;
 

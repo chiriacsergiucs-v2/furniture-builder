@@ -3,7 +3,7 @@
  * space. Applying keeps the selected space's id (so selection survives), gives every other node a fresh id, and never
  * touches outer sizes or materials. One undo step, because it goes through the normal space update.
  */
-import { newId } from '../design';
+import { renew } from '../design';
 import type { Space } from '../types';
 import { insertable, type CatalogFamily } from './types';
 
@@ -13,11 +13,6 @@ interface LayoutPreset {
   name: string;
   space: () => Space;
 }
-
-const renew = (s: Space): Space =>
-  s.kind === 'split'
-    ? { ...s, id: newId(), children: s.children.map(renew) }
-    : { ...s, id: newId() };
 
 export function layoutPresets(families: CatalogFamily[]): LayoutPreset[] {
   const out: LayoutPreset[] = [];

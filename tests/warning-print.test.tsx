@@ -12,7 +12,7 @@ import { PRINT_LANGS, setPrintLang, warningText, type PrintLang } from '../src/c
 import { PRINT_EN, PRINT_RU } from '../src/core/i18n/print-text';
 import { WARNING_RO } from '../src/core/i18n/warning-text';
 import { buildProjectModel, makeItem, newProject, type Project } from '../src/core/project';
-import type { CabinetParams, Design, Diagnostic } from '../src/core/types';
+import type { Diagnostic } from '../src/core/types';
 import { dynamicSites, fileKeys, warningSites } from './helpers/warningKeys';
 
 const shown = vi.hoisted(() => ({ diagnostics: [] as Diagnostic[] }));
@@ -21,6 +21,7 @@ vi.mock('../src/store/useView', async (orig) => {
   return { ...real, useView: () => ({ ...real.useView(), diagnostics: shown.diagnostics }) };
 });
 import { PrintSheet } from '../src/ui/PrintSheet';
+import { withCab } from './helpers/cabinet';
 
 afterEach(() => {
   cleanup();
@@ -83,10 +84,6 @@ describe('warning texts have a print entry (ADR-265)', () => {
 });
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const withCab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 
 /** Two base units side by side, the second not as deep (a compat warning), linked by a common top moved out of line
  * (a common-panel warning with a reason inside it). */

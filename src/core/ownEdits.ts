@@ -13,13 +13,12 @@ import type { CatalogFamily } from './catalog/types';
 import { newId, upgradeDesign, validateDesign } from './design';
 import { materialKey, type ProjectItem } from './project';
 import type { Design, Material } from './types';
+import { isObj } from './guards';
 
 /** Path ("interior.children.1.handle") → the piece's value; `UNSET` where it removed a setting. */
 type Overrides = Record<string, unknown>;
 const UNSET = { $unset: true } as const;
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const isUnset = (v: unknown) => isObj(v) && v.$unset === true;
 const isBoardKey = (k: string) => /materialId$/i.test(k);
 /** Keys that are references, not settings: dropped when comparing (boards are compared as boards). */

@@ -1,7 +1,6 @@
 /** Russian text for the New-piece wizard engine and step summaries (ADR-153). Key: the English text. */
 export const ru_wizard = {
   // Step summaries (suggestion cards and Review)
-  '{w} × {h} × {d} mm': '{w} × {h} × {d} мм',
   open: 'открыто',
   'hanging rail': 'штанга для одежды',
   '{n|# drawer|# drawers}': '{n|# ящик|# ящика|# ящиков}',

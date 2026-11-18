@@ -58,15 +58,11 @@ import {
   VARIABLES_SINCE,
   WALLS_SINCE,
 } from './project';
+import { isObj, isInt } from './guards';
 
 // ---------------------------------------------------------------------------
 // Validation (storage, import)
 // ---------------------------------------------------------------------------
-
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
-const isInt = (v: unknown, min = -1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
 /** A sink's or hob's position (ADR-209): absent, or whole mm from 0 to 3000 on each axis. */
 const validOffsets = (c: Record<string, unknown>) =>

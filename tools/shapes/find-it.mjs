@@ -3,7 +3,7 @@
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // Since ADR-079/080 the editor has two modes: Compose (drawing + editor, the editor in a bottom sheet on a phone) and
 // Build & Preview (3D and the parts with Download CSV and Print). "No errors" is read as Download CSV enabled there.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 // Family name on the Catalog page, item (variant) name, and the piece name it opens as.
 const ITEMS = [

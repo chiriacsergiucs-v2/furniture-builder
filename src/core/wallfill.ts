@@ -7,7 +7,7 @@
  * ADR-204 adds the tall cabinet height and the wall cabinet depth to Refine, one round width per base kind (ranked after
  * the shared width), and carcasses of 3 or 4 equal fronts.
  */
-import type { DiagnosticCode } from './diagnosticCodes';
+import { errorDiag as err, warnDiag as info, type DiagnosticCode } from './diagnosticCodes';
 import { t } from './i18n';
 import { buildModel } from './build';
 import {
@@ -27,7 +27,7 @@ import {
 } from './catalog/helpers';
 import { kitchen } from './catalog/kitchen';
 import { insertable } from './catalog/types';
-import { newId } from './design';
+import { newId, renew } from './design';
 import {
   buildProjectModel,
   isPieceWarning,
@@ -154,16 +154,6 @@ const PIECE_NAME: Record<PieceKind, string> = {
   door: 'Base, door + shelves',
 };
 
-const err = (code: DiagnosticCode, message: string): Diagnostic => ({
-  severity: 'error',
-  code,
-  message,
-});
-const info = (code: DiagnosticCode, message: string): Diagnostic => ({
-  severity: 'warning',
-  code,
-  message,
-});
 const whole = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n);
 
 /** The answer a problem names (ADR-193), so the wizard can mark that field. */
@@ -717,11 +707,6 @@ export function wallRowFor(slots: Slot[], input: WallInput): WallSlot[] | null {
 /** Whether a top box of this size builds without an error. */
 const topBoxFits = (box: WallSlot, input: WallInput) =>
   !buildModel(wallPiece(box, input)).diagnostics.some((d) => d.severity === 'error');
-
-const renew = (s: Space): Space =>
-  s.kind === 'split'
-    ? { ...s, id: newId(), children: s.children.map(renew) }
-    : { ...s, id: newId() };
 
 /** A wall-row piece: the catalog variant resized, tried with one door, two doors, then two bays (sag, ADR-103). */
 export function wallPiece(ws: WallSlot, input: WallInput): Design {

@@ -4,11 +4,10 @@
  * cut (profile). Floating point appears here only, for drawing and the oriented overlap test; never in sizes.
  */
 import { t, tr } from './i18n';
-import { box, enclosing, inPlaneAxes, overlaps } from './geometry';
+import { AXES, box, enclosing, inPlaneAxes, overlaps } from './geometry';
 import type { Axis, Box, Panel, PanelShape } from './types';
 
 export type V3 = [number, number, number];
-const AXES: Axis[] = ['x', 'y', 'z'];
 const idx = (a: Axis) => AXES.indexOf(a);
 const unit = (a: Axis): V3 => [a === 'x' ? 1 : 0, a === 'y' ? 1 : 0, a === 'z' ? 1 : 0];
 const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];

@@ -4,7 +4,7 @@
 // Starts from the bare app at 1280 px and at 390 px with touch, and finds everything by role and visible text: a single
 // Sideboard (the card over the drawing and over 3D, Width in the side panel / bottom sheet), then a Sideboard in a
 // project (the plan toolbar row, the card over the front view). Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -13,10 +13,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;

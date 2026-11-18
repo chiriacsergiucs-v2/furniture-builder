@@ -1,8 +1,6 @@
 /** Russian text for account (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_account = {
   // Account button, sync status and badges
-  Account: 'Аккаунт',
-  'Sign in': 'Войти',
   'Your account': 'Ваш аккаунт',
   'Uploading…': 'Загрузка…',
   'Waiting for a connection ({n})': 'Ожидание подключения ({n})',
@@ -15,22 +13,18 @@ export const ru_account = {
   'Only on this device': 'Только на этом устройстве',
   Conflict: 'Конфликт',
   'Account actions for {name}': 'Действия с аккаунтом для «{name}»',
-  'Share link': 'Ссылка для доступа',
   'Save to account': 'Сохранить в аккаунт',
   'Keep on this device only': 'Хранить только на этом устройстве',
   'removes it from your account': 'удаляет из вашего аккаунта',
   '“{name}” is now in Catalog › Templates on this device.':
     '«{name}» теперь в разделе Каталог › Шаблоны на этом устройстве.',
-  Template: 'Шаблон',
   Piece: 'Изделие',
   'not on this device': 'нет на этом устройстве',
-  Open: 'Открыть',
 
   // Sign-in dialog
   Email: 'Эл. почта',
   Password: 'Пароль',
   'New password': 'Новый пароль',
-  Confirm: 'Подтверждение',
   'Your email': 'Ваша эл. почта',
   'The sign-in service sets the minimum length and says if a password is too short.':
     'Минимальную длину задаёт служба входа; она сообщит, если пароль слишком короткий.',
@@ -62,7 +56,6 @@ export const ru_account = {
     'Выйти из {email}? Ваши проекты останутся на этом устройстве.',
   'Sign out and remove this account’s copies from this device':
     'Выйти и удалить копии этого аккаунта с этого устройства',
-  Cancel: 'Отмена',
   'Delete my account': 'Удалить мой аккаунт',
   'This deletes your account, every item saved in it and every share link, at once. It cannot be undone. Your designs on this device stay. Type your email to confirm.':
     'Это сразу удалит ваш аккаунт, всё, что в нём сохранено, и все ссылки для доступа. Отменить это нельзя. Ваши проекты на этом устройстве останутся. Для подтверждения введите свою эл. почту.',
@@ -114,16 +107,13 @@ export const ru_account = {
   'Your rights': 'Ваши права',
   'You can see and download your data (Export my data), correct it, and delete it (Delete my account), or write to the contact above. You can also complain to the Romanian data protection authority (ANSPDCP).':
     'Вы можете просмотреть и скачать свои данные («Экспорт моих данных»), исправить и удалить их («Удалить мой аккаунт») или написать по указанному выше контакту. Вы также можете подать жалобу в румынский орган по защите данных (ANSPDCP).',
-  Back: 'Назад',
 
   // Share links
   'This browser did not allow copying. Select the link and copy it.':
     'Этот браузер не разрешил копирование. Выделите ссылку и скопируйте её.',
   'Share link: {name}': 'Ссылка для доступа: {name}',
-  Done: 'Готово',
   'Anyone with the link can open a copy of the latest saved version. Your item never changes. Stop sharing turns a link off.':
     'Любой, у кого есть ссылка, может открыть копию последней сохранённой версии. Ваш элемент не меняется. «Закрыть доступ» отключает ссылку.',
-  'Loading…': 'Загрузка…',
   Copied: 'Скопировано',
   'Copy link': 'Копировать ссылку',
   'Make another link': 'Создать ещё одну ссылку',
@@ -144,7 +134,6 @@ export const ru_account = {
     'Есть проблемы, которые нужно исправить: {n|# ошибка|# ошибки|# ошибок}.',
   'Front view': 'Вид спереди',
   'Front view of {name}': 'Вид спереди: {name}',
-  'Loading 3D…': 'Загрузка 3D…',
   'Show in 3D': 'Показать в 3D',
 
   // Design codes
@@ -157,7 +146,6 @@ export const ru_account = {
   Code: 'Код',
   Link: 'Ссылка',
   'Code copied.': 'Код скопирован.',
-  'Copy code': 'Скопировать код',
   'Link copied.': 'Ссылка скопирована.',
   'That code could not be opened.': 'Не удалось открыть этот код.',
   'Open from code': 'Открыть из кода',
@@ -203,7 +191,6 @@ export const ru_account = {
   'No wall or tall units facing the room yet.':
     'Пока нет навесных или высоких шкафов, обращённых в комнату.',
   'Trim height': 'Высота планки',
-  mm: 'мм',
   'Whole number from 1 to 3000.': 'Целое число от 1 до 3000.',
   'Enter the height; there is no default.': 'Введите высоту; значения по умолчанию нет.',
   Bar: 'Скоба',
@@ -223,11 +210,9 @@ export const ru_account = {
   'Add sink…': 'Добавить мойку…',
   Run: 'Ряд',
   'Run: {names}': 'Ряд: {names}',
-  Handle: 'Ручка',
   'Hole centres': 'Межосевое расстояние',
   '{n} mm': '{n} мм',
   'Handle line': 'Линия ручек',
-  Height: 'Высота',
   'Top of fronts': 'По верху фасадов',
   'Line height above the floor': 'Высота линии от пола',
   'Enter the height; there is no default. A front the line does not cross gets the handle near its top.':

@@ -4,7 +4,7 @@
 // From the bare app, by visible text. 1440 px: box-select three pieces → drag one → all move; Group → a tap selects
 // the group, the next tap the piece. 390 px: Select → tap two pieces → Delete → Undo brings them back. Not part of
 // `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;

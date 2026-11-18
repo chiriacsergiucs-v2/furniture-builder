@@ -6,7 +6,7 @@
 // "Apply" changes the picture in the front view and in 3D, "Reset" restores it; 3D › "Adjust wall picture" › tap
 // Wall 1 › dragging the wall changes "From left", a handle changes "W … × H …", Undo restores it, "Fill wall" fills the
 // wall again; the front view follows; with Adjust off the 3D view behaves as before. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -17,10 +17,7 @@ const SNAP = 60;
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 // Share of pixels that differ between two PNGs of the same size, counted in the page.
 const differ = (page, a, b) =>
   page.evaluate(

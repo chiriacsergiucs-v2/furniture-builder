@@ -8,7 +8,7 @@
 // tick too, and Build & Preview › 3D draws a seam line (counted in `data-seams` on the 3D view, ADR-230) that is gone while
 // exploded and after Disconnect. ADR-201 (G-346): in Build & Preview › 3D with Move on, dragging a connected piece moves
 // the connected set along, and on a desktop an Alt drag moves that piece alone (then one Undo). Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -17,10 +17,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;

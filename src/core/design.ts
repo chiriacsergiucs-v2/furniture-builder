@@ -20,6 +20,7 @@ import { t } from './i18n';
 import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
+import { isObj } from './guards';
 
 type PedestalSide = 'left' | 'right';
 
@@ -28,6 +29,12 @@ export const newId = (): string =>
     globalThis.crypto?.randomUUID?.() ??
     `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`
   ).slice(0, 8);
+
+/** A copy of this space tree with fresh ids throughout. */
+export const renew = (s: Space): Space =>
+  s.kind === 'split'
+    ? { ...s, id: newId(), children: s.children.map(renew) }
+    : { ...s, id: newId() };
 
 /** User's stock (2026-10-21): PAL and HDF 2800 × 2070, MDF 2440 × 1220, 10 mm trim per edge, 4 mm kerf. */
 export const DEFAULT_KERF = 4;
@@ -750,8 +757,6 @@ const MAX_MM = 100_000;
 export const MAX_DRAWERS = 20;
 export const MAX_LOOSE = 100;
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min;
 const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 500;
 

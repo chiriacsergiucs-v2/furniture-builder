@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { useDesign } from './designStore';
+import { createListeners } from './deviceValue';
 
 /**
  * Keep proportions for the selected 3D model (ADR-102): screen state only, never saved (G-111). It is on each time a
@@ -7,12 +8,7 @@ import { useDesign } from './designStore';
  * handles.
  */
 let off: string | null = null;
-const listeners = new Set<() => void>();
-const notify = () => listeners.forEach((f) => f());
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe, notify } = createListeners();
 // A new selection turns it back on.
 useDesign.subscribe((s, prev) => {
   if (off !== null && s.selectedItemId !== prev.selectedItemId) {

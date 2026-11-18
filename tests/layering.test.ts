@@ -1,16 +1,11 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
+import { posix } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { sourceTexts } from './helpers/sourceFiles';
 
 // ADR-223: persistence sits behind the store. `src/ui` reaches saved data through `src/store/libraryStore.ts`, never
 // through `src/persist/db` itself; the raw Dexie handle `db` is used only inside `src/persist`; and `src/persist`
 // imports no React. Checked on the source text, so CI fails on a new offender; offenders are printed on failure.
 const ROOT = new URL('..', import.meta.url).pathname;
-const files = (dir: string): string[] =>
-  readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    return statSync(p).isDirectory() ? files(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
-  });
 
 /** Every import in a source text: what it names (`*` for a namespace, `` for side effects) and where from. */
 export function imports(text: string): { names: string[]; from: string }[] {
@@ -70,10 +65,7 @@ export function violation(file: string, spec: string, names: string[]): string |
   return null;
 }
 
-const SOURCES = files(join(ROOT, 'src')).map((f) => ({
-  file: relative(ROOT, f).split(/[\\/]/).join('/'),
-  text: readFileSync(f, 'utf8'),
-}));
+const SOURCES = sourceTexts(ROOT);
 
 describe('persistence behind the store (ADR-223)', () => {
   it('no src/ui import of persist/db, no raw db outside src/persist, no React in src/persist', () => {

@@ -6,9 +6,7 @@
 // card's image), not as pixels.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
+import { renderApp, startNewWith as startNew, WIDTHS } from './setup';
 
 /** The SVG text behind a card picture (an image data URL, ADR-143). */
 function svgOf(card: HTMLElement): string {
@@ -25,14 +23,6 @@ const cardsOf = (list: HTMLElement) => within(list).getAllByRole('listitem');
 const topCards = (region: HTMLElement) =>
   cardsOf(region).filter((li) => li.className.includes('wz-card'));
 const SEE_THROUGH = /fill-opacity="0\.28"/;
-
-async function startNew(user: User, row: RegExp, title: string) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  const start = await screen.findByRole('dialog', { name: 'Start something new' });
-  await user.click(within(start).getByRole('button', { name: row }));
-  return screen.findByRole('dialog', { name: title });
-}
 
 describe.each(WIDTHS)('Suggestion cards at %ipx (find-it, N302)', (width) => {
   it('the wizard lists 4 combinations, Show more brings the rest, fronts are see-through', async () => {

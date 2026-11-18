@@ -5,7 +5,7 @@
 // Updated for the app shell (ADR-078: Projects place, ⋯ More → Files, breadcrumb in place of banners), the editor
 // modes (ADR-079/080: Parts CSV and Print on the Parts list in Build & Preview, Materials in the Settings dialog)
 // and the phone layout (N82: the project panel is a bottom sheet; Compose shows the drawing only).
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, openPieceEditor, openTab, showPieces } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -14,10 +14,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 375]) {
   const phone = width < 500;

@@ -4,7 +4,7 @@
 // Starts from the bare app at each width and finds everything by visible text: two base cabinets and a bed in a
 // project; a bed dragged next to a kitchen base → "Won’t snap to …" naming the family rule; two base units of
 // different depths → Checks shows the depth warning; Settings › Rules lists the rules. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -13,10 +13,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;

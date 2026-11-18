@@ -3,7 +3,7 @@
 // A project with one base cabinet, opened in 3D: the tool row over the scene ("Place pieces in 3D": ⋯, Move, Select and
 // the rest) is one row at 390 px (it scrolls sideways), so it covers one button height of the scene and no tool sits alone below.
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir, WIDTHS } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, WIDTHS, makeChecker } from '../lib/harness.mjs';
 import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of WIDTHS) {
   const phone = width < 500;

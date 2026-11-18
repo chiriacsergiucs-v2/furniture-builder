@@ -3,7 +3,7 @@
 // A project with one base cabinet in the real 3D view, Exploded 3D on: the line "Turn off Exploded 3D to move pieces" is
 // visible beside the disabled Move button, the tool row keeps its layout and nothing overflows the page sideways.
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 const SIZES = [
   { width: 390, height: 812, phone: true },
   { width: 1280, height: 900, phone: false },

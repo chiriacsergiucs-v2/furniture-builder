@@ -3,7 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/project-drill/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // The user's steps: edit a project, tap a piece, tap it again → still the project editor, with the space's controls.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, openPieceEditor } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -14,10 +14,7 @@ mkdirSync(out, { recursive: true });
 const SHELVES = /^((Left|Middle|Right): )?Shelves$/;
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;

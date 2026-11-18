@@ -7,7 +7,7 @@
 // - Wizard Doors: a five-option segmented control, every label whole; two rows at 390 px, one at 1280 px (G-357);
 //   Review reads "Compartment widths: 0 mm" (G-360).
 // - Arrow keys on Editor mode (G-361).
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -15,10 +15,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** Overlaps between sibling fields of each Materials row, and fields running past their row. */
 const materialsLayout = (page) =>
