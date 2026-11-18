@@ -128,7 +128,7 @@ export const CONSTRUCTION_TYPES: ConstructionType[] = [
   },
   {
     id: 'wardrobe',
-    label: 'Wardrobe',
+    label: 'Wardrobe@@wizard',
     description:
       'A tall carcass for clothes: hanging rails, shelves and drawers, behind hinged or sliding doors.',
     steps: ['divisions', 'contents', 'fronts', 'base', 'carcass'],
