@@ -90,6 +90,8 @@ export const ru_shell = {
   'what is not built yet': 'что ещё не сделано',
 
   // Import
+  'That file is too large to import (over 20 MB).':
+    'Этот файл слишком велик для импорта (больше 20 МБ).',
   'That file could not be read as JSON.': 'Этот файл не удалось прочитать как JSON.',
   'The project template could not be saved on this device.':
     'Шаблон проекта не удалось сохранить на этом устройстве.',

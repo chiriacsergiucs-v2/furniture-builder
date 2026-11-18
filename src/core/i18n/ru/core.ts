@@ -94,6 +94,8 @@ export const ru_core = {
   'Missing project id or name': 'Нет id или названия проекта',
   'Invalid cutting settings': 'Неверные настройки распила',
   'Items missing': 'Нет изделий',
+  'Too many items: a project holds at most {max}':
+    'Слишком много изделий: в проекте не больше {max}',
   'Invalid item': 'Неверное изделие',
   'Duplicate item {id}': 'Повторяющееся изделие {id}',
   'Item quantity must be 1 to 99': 'Количество изделия должно быть от 1 до 99',
