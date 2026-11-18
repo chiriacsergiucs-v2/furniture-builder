@@ -1994,3 +1994,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: One ADR per package in the order above, each following the ADR-279 recipe (estimate: effort +10 % per package, value +5 % each)
 - Work: High
 - Impact: Medium
+
+### G-550: Audit advisories left after dependency health
+
+- Status: Open
+- Origin: catch-up 2026-11-19, pnpm audit
+- Missing: pnpm audit: 2 critical (tinypool via vitest 3, prototype pollution RCE), 3 moderate (vitest, @vitest/mocker x2). Fix needs vitest 4, blocked by G-545. Also missing from G-545: plugin-react 6.3.0 upgrade
+- Request: Upgrade vitest to a patched version, then re-run pnpm audit
+- Questions: Do the vitest 4 fix (seller-pictures BASE_URL expectation) now?
+- Suggested pick: Fix vitest 4 first
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-551: N343 find-it marker cannot be met
+
+- Status: Open
+- Origin: catch-up 2026-11-19, N343 marker
+- Missing: N343 find-it marker is mis-specified: the three-mesh-bvh peer warning (installed 0.9.16, pathtracer wants >=0.9.17) is an install message, not visible UI text. Evidence: pnpm-lock.yaml:2838. 0.9.17 and 0.9.18 exist on npm
+- Request: Replace the N343 find-it marker with a lockfile check, or bump three-mesh-bvh
+- Questions: Approve the three-mesh-bvh bump to 0.9.18?
+- Suggested pick: Ask user to approve the bump
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-552: look-render find-it incomplete in sandbox
+
+- Status: Open
+- Origin: catch-up 2026-11-19, tools/look-render/find-it.mjs
+- Missing: Script ran 14 PASS, 0 FAIL, then waited over 280 s for 'Save PNG' (256 path-tracer samples in software GL); end of run unverified
+- Request: Run tools/look-render/find-it.mjs to the end with a longer timeout or a GPU browser
+- Questions: Is a lower sample count in the script acceptable?
+- Suggested pick: Run with a longer timeout
+- Work: Low
+- Impact: Low
+- Necessity: Low
