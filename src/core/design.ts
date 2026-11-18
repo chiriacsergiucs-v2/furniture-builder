@@ -752,9 +752,9 @@ export function setProductParams<P extends Product>(prod: P, patch: Partial<P['p
 // Validation of an untrusted design (JSON import / storage)
 // ---------------------------------------------------------------------------
 
-export const MAX_SHELVES = 50;
+const MAX_SHELVES = 50;
 const MAX_MM = 100_000;
-export const MAX_DRAWERS = 20;
+const MAX_DRAWERS = 20;
 export const MAX_LOOSE = 100;
 
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min;

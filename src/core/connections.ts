@@ -35,7 +35,7 @@ export interface Connection {
 /** The kinds two pieces can be connected by; a wall connection holds one piece. */
 const PAIR_KINDS: readonly ConnectionKind[] = ['side', 'corner', 'stacked'];
 
-export const kindOf = (c: Pick<Connection, 'kind'>): ConnectionKind => c.kind ?? 'side';
+const kindOf = (c: Pick<Connection, 'kind'>): ConnectionKind => c.kind ?? 'side';
 
 /** The connection's two pieces, or null for a wall connection. */
 function pairOf(c: Connection): [string, string] | null {

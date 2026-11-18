@@ -141,7 +141,7 @@ export function applyFinish(
 // One Material control (ADR-163): any combination of part roles, or one part, on a part, item, group or project.
 // ---------------------------------------------------------------------------
 
-export { MATERIAL_ROLES, ROLE_PANELS, type MaterialRole, type MaterialScope } from './roles';
+export type { MaterialRole, MaterialScope } from './roles';
 
 /** The material roles an item has parts for, from its built model. */
 export function itemRoles(d: Design): MaterialRole[] {

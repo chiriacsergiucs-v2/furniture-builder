@@ -85,7 +85,7 @@ export function format(text: string, params: Params | undefined, l: Lang = lang)
 }
 
 /** The English text of a key: the key without its `@@context`. */
-export function english(key: string): string {
+function english(key: string): string {
   const at = key.indexOf('@@');
   return at < 0 ? key : key.slice(0, at);
 }

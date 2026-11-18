@@ -24,7 +24,7 @@ import {
 } from './steps';
 import type { Answers, ConstructionType, FieldDef, Option, StepDef } from './types';
 
-export { BASICS, REVIEW, TYPE };
+export { REVIEW, TYPE };
 
 export const typeOf = (a: Answers): ConstructionType | undefined => typeById.get(str(a, 'type'));
 

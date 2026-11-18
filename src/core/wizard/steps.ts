@@ -22,14 +22,13 @@ import type {
 } from '../types';
 import type { Answers, Compartment, Option, StepDef } from './types';
 
-export { MAX_DIVIDERS };
 const MAX_COMP_SHELVES = 20;
 
 // ---------------------------------------------------------------------------
 // Reading answers
 // ---------------------------------------------------------------------------
 
-export const num = (a: Answers, k: string, d = 0): number =>
+const num = (a: Answers, k: string, d = 0): number =>
   typeof a[k] === 'number' ? (a[k] as number) : d;
 export const str = (a: Answers, k: string, d = ''): string =>
   typeof a[k] === 'string' ? (a[k] as string) : d;
