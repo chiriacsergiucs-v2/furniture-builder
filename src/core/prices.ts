@@ -198,9 +198,9 @@ export function validatePrice(p: unknown): string[] {
 /** CSV `kind` column (ADR-062) ↔ the id prefix kept on stored prices. */
 const KIND_PREFIX: Record<string, string> = { board: 'board:', band: 'band:', hardware: 'hw:' };
 
-/** Cells starting with = + - @ are prefixed with ' so a spreadsheet does not run them as formulas (like the Parts CSV). */
+/** Cells starting with = + - @ tab or CR are prefixed with ' so a spreadsheet does not run them as formulas (like the Parts CSV). */
 export function csvCell(v: string): string {
-  const safe = /^[=+\-@]/.test(v) ? `'${v}` : v;
+  const safe = /^[\t\r=+\-@]/.test(v) ? `'${v}` : v;
   return /[";\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 

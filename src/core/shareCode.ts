@@ -12,7 +12,18 @@ const CODE_PREFIX = 'FB1-';
 /** The link form: `<app address>#open=<code>`. */
 export const LINK_KEY = '#open=';
 
-async function pipe(bytes: Uint8Array, stream: CompressionStream | DecompressionStream) {
+/** A pasted code longer than this is refused unread (security scan M-3). */
+export const MAX_CODE_CHARS = 300_000;
+/** The most a code may inflate to; past it reading stops (security scan M-3). */
+export const MAX_CODE_BYTES = 20_000_000;
+
+class TooLarge extends Error {}
+
+async function pipe(
+  bytes: Uint8Array,
+  stream: CompressionStream | DecompressionStream,
+  limit = Infinity,
+) {
   const writer = stream.writable.getWriter();
   void writer.write(bytes as Uint8Array<ArrayBuffer>).catch(() => undefined);
   void writer.close().catch(() => undefined);
@@ -24,6 +35,10 @@ async function pipe(bytes: Uint8Array, stream: CompressionStream | Decompression
     if (done) break;
     parts.push(value);
     size += value.length;
+    if (size > limit) {
+      void reader.cancel().catch(() => undefined);
+      throw new TooLarge();
+    }
   }
   const out = new Uint8Array(size);
   let at = 0;
@@ -74,15 +89,19 @@ type Decoded = { ok: true; doc: unknown } | { ok: false; error: string };
 export async function decodeCode(text: string): Promise<Decoded> {
   const code = codeIn(text);
   if (!code) return { ok: false, error: t('That is not a design code. Codes start with FB1-.') };
+  if (code.length > MAX_CODE_CHARS)
+    return { ok: false, error: t('That code is too large to open (over 300 KB of text).') };
   const bytes = fromBase64Url(code.slice(CODE_PREFIX.length));
   if (!bytes || !bytes.length)
     return { ok: false, error: t('That code is damaged: copy it again in full.') };
   try {
     const json = new TextDecoder().decode(
-      await pipe(bytes, new DecompressionStream('deflate-raw')),
+      await pipe(bytes, new DecompressionStream('deflate-raw'), MAX_CODE_BYTES),
     );
     return { ok: true, doc: JSON.parse(json) as unknown };
-  } catch {
+  } catch (e) {
+    if (e instanceof TooLarge)
+      return { ok: false, error: t('That code is too large to open (over 20 MB once unpacked).') };
     return { ok: false, error: t('That code is damaged: copy it again in full.') };
   }
 }

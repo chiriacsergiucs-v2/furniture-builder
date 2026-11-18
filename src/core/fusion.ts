@@ -40,6 +40,9 @@ const F = (v: V3): V3 => [v[0], -v[2], v[1]];
 const vec = (v: V3) => v.map((c) => Number(c.toFixed(6))).join(', ');
 const py = (s: string) => JSON.stringify(s); // JSON string literals are valid Python string literals
 
+/** Every character that ends a line in Python source or in common text editors. */
+const LINE_BREAKS = /[\r\n\u0085\u2028\u2029]/g;
+
 export function exportFusionPython(design: Design, model: FurnitureModel): string {
   const mats = new Map(design.materials.map((m) => [m.id, m.name]));
   const groups = fusionGroups(model);
@@ -85,11 +88,13 @@ export function exportFusionPython(design: Design, model: FurnitureModel): strin
     }
   }
   const hw = hardwareSummary(model).map(
-    (h) => `#   ${h.quantity} × ${h.label}${h.sizeMm ? ` ${h.sizeMm} mm` : ''}`,
+    // A label holds panel names (user text): line breaks would end the comment and start code (security scan H-1).
+    (h) =>
+      `#   ${h.quantity} × ${h.label.replace(LINE_BREAKS, ' ')}${h.sizeMm ? ` ${h.sizeMm} mm` : ''}`,
   );
   return `# -*- coding: utf-8 -*-
 # Furniture Builder → Autodesk Fusion 360 script (direct modelling, one solid body per panel).
-# Design: ${design.name.replace(/[\r\n]/g, ' ')}
+# Design: ${design.name.replace(LINE_BREAKS, ' ')}
 # Generated ${new Date().toISOString()} from the app's model. NOT verified inside Fusion — check before relying on it.
 # Units: centimetres (Fusion's internal unit). Axes: X = width, Z = height, -Y = front.
 # Run: Fusion → Utilities → Scripts and Add-Ins → + (create) → paste this file → Run, in a new empty design.

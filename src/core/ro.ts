@@ -398,7 +398,7 @@ export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, st
   const label = (l: string) => printedPartLabel(l, pieceNames);
   const esc = (v: string | number) => {
     const s = String(v);
-    const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
+    const safe = /^[\t\r=+\-@]/.test(s) ? `'${s}` : s;
     return /[";\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
   };
   const lines = [

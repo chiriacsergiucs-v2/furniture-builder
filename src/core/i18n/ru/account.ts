@@ -158,6 +158,10 @@ export const ru_account = {
     'Открыть проект по этой ссылке? Он будет сохранён на этом устройстве как новая копия.',
   'That is not a design code. Codes start with FB1-.':
     'Это не код проекта. Коды начинаются с FB1-.',
+  'That code is too large to open (over 300 KB of text).':
+    'Код слишком велик, чтобы его открыть (больше 300 КБ текста).',
+  'That code is too large to open (over 20 MB once unpacked).':
+    'Код слишком велик, чтобы его открыть (больше 20 МБ после распаковки).',
   'That code is damaged: copy it again in full.': 'Код повреждён: скопируйте его снова целиком.',
 
   // Run parts: worktops, trims, handles and sinks

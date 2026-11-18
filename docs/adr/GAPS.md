@@ -1900,3 +1900,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-542: Picture and row validation on file import and restore (security M-1, M-4)
+
+- Status: Open
+- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
+- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
+- Request: Route file pictures through the decode/re-encode path; validate rows per table
+- Questions: Approach for stricter picture and row validation on import and restore?
+- Suggested pick: User approves approach (ADR-011 implication)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-543: Hosted Supabase auth settings: confirmations and password length (security M-5)
+
+- Status: Open
+- Origin: security health 2026-11-18 M-5
+- Missing: supabase/config.toml:227 enable_confirmations=false; line 183 minimum_password_length=6; assistant cost is per account
+- Request: Enable confirmations, raise password minimum, add account-independent assistant budget, check hosted project
+- Questions: Apply hosted settings in the Supabase dashboard?
+- Suggested pick: User decides (hosted change)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-544: Security low items: migration grants, workflow pins, dev dependency advisories, localhost redirect (security L-2, L-4, L-5, L-6)
+
+- Status: Open
+- Origin: security health 2026-11-18 L-2, L-4, L-5, L-6
+- Missing: L-2 records write grant (supabase/migrations/20261028000000_accounts.sql:100); L-4 workflow actions pinned to tags and CLI latest (.github/workflows/deploy-assistant.yml:34); L-5 dev-only advisories (see dependency health); L-6 localhost redirect in supabase/config.toml:164
+- Request: Route writes through save_record; pin actions to SHAs; upgrade dev deps; remove localhost redirect outside dev
+- Questions: Approve migration and workflow changes?
+- Suggested pick: User decides per item
+- Work: Medium
+- Impact: Low
+- Necessity: Low

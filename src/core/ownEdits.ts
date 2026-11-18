@@ -41,8 +41,10 @@ function withBoards(d: Design, v: unknown): unknown {
   if (Array.isArray(v)) return v.map((x) => withBoards(d, x));
   if (!isObj(v)) return v;
   const out: Record<string, unknown> = {};
-  for (const [k, x] of Object.entries(v))
+  for (const [k, x] of Object.entries(v)) {
+    if (k === '__proto__') continue; // hardening: never set a copied object's prototype (security scan L-3)
     out[k] = isBoardKey(k) ? (board(d, x) ?? x) : withBoards(d, x);
+  }
   return out;
 }
 
@@ -51,7 +53,8 @@ function withoutRefs(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(withoutRefs);
   if (!isObj(v) || isBoard(v)) return v;
   const out: Record<string, unknown> = {};
-  for (const [k, x] of Object.entries(v)) if (!isRefKey(k)) out[k] = withoutRefs(x);
+  for (const [k, x] of Object.entries(v))
+    if (k !== '__proto__' && !isRefKey(k)) out[k] = withoutRefs(x);
   return out;
 }
 
@@ -146,6 +149,7 @@ function placeBoards(d: Design, v: unknown, key = ''): { d: Design; v: unknown }
   if (!isObj(v)) return { d, v };
   const obj: Record<string, unknown> = {};
   for (const [k, x] of Object.entries(v)) {
+    if (k === '__proto__') continue;
     const p = placeBoards(cur, x, k);
     cur = p.d;
     obj[k] = p.v;
