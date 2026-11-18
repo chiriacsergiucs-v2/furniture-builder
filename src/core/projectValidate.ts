@@ -20,7 +20,7 @@ import { validateModelItems } from './model3d';
 import { planPictureProblems } from './planPicture';
 import type {} from './nesting';
 import {} from './nesting';
-import type {} from './nesting/types';
+import type {} from '@furniture-builder/nesting';
 import { t } from './i18n';
 import { validOwned } from './owned';
 

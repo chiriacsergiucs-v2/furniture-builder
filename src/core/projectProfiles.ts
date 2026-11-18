@@ -12,7 +12,7 @@ import { area2 } from './shape';
 import {} from './planPicture';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
-import type { NestJob } from './nesting/types';
+import type { NestJob } from '@furniture-builder/nesting';
 import type { Box, Diagnostic, Face, FurnitureModel, HardwareItem, Material, Mm } from './types';
 import { t } from './i18n';
 

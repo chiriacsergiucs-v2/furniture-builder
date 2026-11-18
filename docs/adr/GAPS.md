@@ -1972,3 +1972,25 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+
+### G-548: The types.ts and project.ts hubs are not split
+
+- Status: Open
+- Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
+- Missing: src/core/types.ts (141 importers) and src/core/project.ts (2614 lines, 83 importers) are hubs; a kernel package cannot be cut while every domain imports them
+- Request: This repo and architecture structure seems to be way too interdependent
+- Questions: Split types.ts by domain, and project.ts into project model, validation and templates?
+- Suggested pick: Split types.ts into kernel types plus one type file per domain; split project.ts along its existing projectX siblings (estimate: effort +20 %, value +15 %)
+- Work: Medium
+- Impact: Medium
+
+### G-549: The other workspace packages are not extracted
+
+- Status: Open
+- Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
+- Missing: Only the nesting engine is a package. Not extracted, in order: i18n (bottom), kernel, catalog, model (design, cabinet, desk, build), cutlist, hardware, room, shopping, persist, online, viewer
+- Request: Suggest a way to have multiple packages, each managed on its own, which are then reused / used, integrated into the main app with the full functionality
+- Questions: One ADR per package in the order above?
+- Suggested pick: One ADR per package in the order above, each following the ADR-279 recipe (estimate: effort +10 % per package, value +5 % each)
+- Work: High
+- Impact: Medium

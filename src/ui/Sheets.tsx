@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { sheetOf } from '../core/design';
 import { t, tr } from '../core/i18n';
-import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types';
+import type { NestJob, NestResult, SheetLayout } from '@furniture-builder/nesting';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';
 import { useView } from '../store/useView';

@@ -1,11 +1,11 @@
 /**
  * Sheet nesting (ADR-018): unit tests plus a seeded fuzz that checks every layout against the independent
- * validator and that mutated layouts are rejected. FUZZ_N=5000 npx vitest run tests/nesting.test.ts for a deep run.
+ * validator and that mutated layouts are rejected. FUZZ_N=5000 pnpm --filter @furniture-builder/nesting exec vitest run for a deep run.
+ * The cut-list bridge (`jobsFromCutlist`) is tested in the app's tests/nesting-jobs.test.ts (ADR-279).
  */
 import { describe, it, expect } from 'vitest';
-import type { CutRow } from '../src/core/cutlist';
-import { jobsFromCutlist, nest, validateNest } from '../src/core/nesting';
-import type { CutTree, NestJob, NestPart, NestResult } from '../src/core/nesting';
+import { nest, validateNest } from '../src';
+import type { CutTree, NestJob, NestPart, NestResult } from '../src';
 
 const KERF = 4,
   TRIM = 10;
@@ -125,47 +125,6 @@ describe('nest', () => {
     expect(r.valid).toBe(false);
     expect(r.errors.length).toBeGreaterThan(0);
     expect(r.unplaced[0].reason).toBe('invalid-job');
-  });
-
-  it('builds one job per material from cut-list rows', () => {
-    const row = (
-      materialId: string,
-      panelIds: string[],
-      labels: string[],
-      length: number,
-      width: number,
-    ): CutRow => ({
-      materialId,
-      materialName: materialId.toUpperCase(),
-      thickness: 18,
-      length,
-      width,
-      quantity: panelIds.length,
-      edgesL: 0,
-      edgesW: 0,
-      grain: materialId === 'pal',
-      drilling: '',
-      labels,
-      panelIds,
-    });
-    const rows = [
-      row('pal', ['s1', 's2'], ['Side L', 'Side R'], 720, 560),
-      row('mdf', ['f1'], ['Front'], 700, 400),
-      row('pal', ['t'], ['Top'], 800, 560),
-      row('hdf', ['b'], ['Back'], 700, 700),
-    ];
-    const settings = new Map([
-      ['pal', { sheet: { ...PAL, count: null }, trim: TRIM, kerf: KERF }],
-      ['mdf', { sheet: { ...MDF, count: 2 }, trim: TRIM, kerf: KERF }],
-    ]);
-    const jobs = jobsFromCutlist(rows, settings);
-    expect(jobs.map((j) => j.materialId)).toEqual(['pal', 'mdf']);
-    expect(jobs[0].grain).toBe(true);
-    expect(jobs[0].parts).toEqual([
-      { key: 's1', label: 'Side L, Side R', length: 720, width: 560, quantity: 2 },
-      { key: 't', label: 'Top', length: 800, width: 560, quantity: 1 },
-    ]);
-    expect(jobs.every((j) => nest(j).valid)).toBe(true);
   });
 });
 

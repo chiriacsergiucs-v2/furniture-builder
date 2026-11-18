@@ -2,7 +2,7 @@ import { cutlist, type CutRow } from '../cutlist';
 import { kerfOf, sheetOf } from '../design';
 import type { Design, FurnitureModel } from '../types';
 import { jobsFromCutlist, type SheetSettings } from './index';
-import type { NestJob } from './types';
+import type { NestJob } from '@furniture-builder/nesting';
 
 /** Nesting jobs for every material in the design, from the cut list (ADR-004, ADR-018, ADR-019). */
 export function nestingJobs(

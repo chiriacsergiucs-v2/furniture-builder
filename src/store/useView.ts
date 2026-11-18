@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from 'react';
 import { cutlist, hardwareSummary, type CutRow } from '../core/cutlist';
 import { kerfOf } from '../core/design';
 import { nestingJobs } from '../core/nesting/fromDesign';
-import type { NestJob } from '../core/nesting/types';
+import type { NestJob } from '@furniture-builder/nesting';
 import { projectCutlist, projectHardware, projectNestingJobs } from '../core/project';
 import { applyOwned, type OwnedSplit } from '../core/owned';
 import { projectSellerChoices } from '../core/sellers/choices';
