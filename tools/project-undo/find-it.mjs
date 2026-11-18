@@ -1,7 +1,8 @@
 // Find-it acceptance for undo in a project (CLAUDE.md R3, backlog N46, ADR-051), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/project-undo/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
+import { showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -9,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 375]) {
   const phone = width < 500;
@@ -59,7 +57,15 @@ for (const width of [1440, 375]) {
     await dlg.getByRole('button', { name }).first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
-  const rows = async () => (await pieces.allInnerTexts()).join(' | ');
+  // ADR-160: a selected piece's panel replaces the list; showPieces goes back to it (All pieces).
+  const count = async () => {
+    await showPieces(page);
+    return pieces.count();
+  };
+  const rows = async () => {
+    await showPieces(page);
+    return (await pieces.allInnerTexts()).join(' | ');
+  };
 
   // 1. Bare app → Home → a project with two base cabinets side by side.
   await page.goto(url);
@@ -69,7 +75,7 @@ for (const width of [1440, 375]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addPiece('Base cabinet', /Base cabinet, doors: 1 door \+ shelf/);
   await addPiece('Base cabinet', /Base cabinet, doors: Drawer over door/);
-  check(width, 'two pieces in the project', (await pieces.count()) === 2);
+  check(width, 'two pieces in the project', (await count()) === 2);
   check(
     width,
     'Undo button visible and enabled in the project view',
@@ -78,8 +84,9 @@ for (const width of [1440, 375]) {
 
   // 2. Merge them (the confirmation now says undo brings them back).
   await openSheet();
+  await showPieces(page);
   await pieces.nth(0).getByRole('button').click();
-  await openGroup('Merge');
+  await openGroup('More: clearance, merge');
   await page
     .getByRole('button', { name: /^Merge with right piece Base cabinet, drawer over door$/ })
     .dispatchEvent('click');
@@ -91,7 +98,7 @@ for (const width of [1440, 375]) {
   );
   await dlg.getByRole('button', { name: 'Merge', exact: true }).click();
   await page.waitForTimeout(300);
-  check(width, 'one piece after merging', (await pieces.count()) === 1, await rows());
+  check(width, 'one piece after merging', (await count()) === 1, await rows());
   await shot('merged');
 
   // 3. Undo → both pieces are back; Redo → merged again; Undo again.
@@ -101,30 +108,33 @@ for (const width of [1440, 375]) {
   check(
     width,
     'Undo brings back both pieces',
-    (await pieces.count()) === 2 && /1 door/.test(back) && /drawer over door/.test(back),
+    (await count()) === 2 && /1 door/.test(back) && /drawer over door/.test(back),
     back,
   );
   check(width, 'Redo enabled after undo', await redo.isEnabled());
   await redo.click();
   await page.waitForTimeout(300);
-  check(width, 'Redo merges them again', (await pieces.count()) === 1);
+  check(width, 'Redo merges them again', (await count()) === 1);
   await undo.click();
   await page.waitForTimeout(300);
 
   // 4. Remove a piece, then Ctrl+Z brings it back.
   await openSheet();
+  await showPieces(page);
   await pieces.nth(1).getByRole('button').click();
+  // ADR-160: Remove from project lives in the piece's ⋯ menu.
+  await page.getByRole('button', { name: 'More actions' }).first().click();
   await page.getByRole('button', { name: 'Remove from project' }).dispatchEvent('click');
   await page.locator('dialog[open]').getByRole('button', { name: 'Remove', exact: true }).click();
   await page.waitForTimeout(300);
-  check(width, 'one piece after removing', (await pieces.count()) === 1);
+  check(width, 'one piece after removing', (await count()) === 1);
   await page
     .locator('body')
     .click({ position: { x: 1, y: 1 } })
     .catch(() => {});
   await page.keyboard.press('Control+z');
   await page.waitForTimeout(300);
-  check(width, 'Ctrl+Z brings the removed piece back', (await pieces.count()) === 2, await rows());
+  check(width, 'Ctrl+Z brings the removed piece back', (await count()) === 2, await rows());
   check(width, 'no sideways scroll', await noSideScroll());
   await shot('undone');
 
@@ -137,8 +147,7 @@ for (const width of [1440, 375]) {
     .click()
     .catch(() => {});
   await page.waitForTimeout(500);
-  if (await pieces.count())
-    check(width, 'restored project was saved', (await pieces.count()) === 2);
+  if (await count()) check(width, 'restored project was saved', (await count()) === 2);
   check(width, 'no page errors', errors.length === 0, errors.join(' / '));
   await ctx.close();
 }

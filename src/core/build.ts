@@ -11,9 +11,8 @@ import { runRules } from './rules';
 import { designVariableDiagnostics } from './variables';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';
+import { FRONT_WITH_BLIND_ROLES } from './panelRoles';
 import type { Design, Diagnostic, EdgeBand, FurnitureModel, Material, Panel } from './types';
-
-const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front', 'blind-panel']);
 
 /**
  * Build the single normalised model for a design. Every consumer (3D, cutlist, hardware, checks)
@@ -185,7 +184,7 @@ export function buildModel(design: Design): FurnitureModel {
       D + Math.max(front?.thickness ?? 0, slidingTrackDepth(prod.params.interior)),
     );
     for (const p of panels) {
-      if (!contains(FRONT_ROLES.has(p.role) ? frontEnv : env, aabbOf(p))) {
+      if (!contains(FRONT_WITH_BLIND_ROLES.has(p.role) ? frontEnv : env, aabbOf(p))) {
         diagnostics.push({
           severity: 'error',
           code: 'outside',

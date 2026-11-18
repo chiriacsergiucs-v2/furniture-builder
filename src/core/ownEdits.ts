@@ -13,13 +13,12 @@ import type { CatalogFamily } from './catalog/types';
 import { newId, upgradeDesign, validateDesign } from './design';
 import { materialKey, type ProjectItem } from './project';
 import type { Design, Material } from './types';
+import { isObj } from './guards';
 
 /** Path ("interior.children.1.handle") → the piece's value; `UNSET` where it removed a setting. */
 type Overrides = Record<string, unknown>;
 const UNSET = { $unset: true } as const;
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const isUnset = (v: unknown) => isObj(v) && v.$unset === true;
 const isBoardKey = (k: string) => /materialId$/i.test(k);
 /** Keys that are references, not settings: dropped when comparing (boards are compared as boards). */
@@ -42,8 +41,10 @@ function withBoards(d: Design, v: unknown): unknown {
   if (Array.isArray(v)) return v.map((x) => withBoards(d, x));
   if (!isObj(v)) return v;
   const out: Record<string, unknown> = {};
-  for (const [k, x] of Object.entries(v))
+  for (const [k, x] of Object.entries(v)) {
+    if (k === '__proto__') continue; // hardening: never set a copied object's prototype (security scan L-3)
     out[k] = isBoardKey(k) ? (board(d, x) ?? x) : withBoards(d, x);
+  }
   return out;
 }
 
@@ -52,7 +53,8 @@ function withoutRefs(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(withoutRefs);
   if (!isObj(v) || isBoard(v)) return v;
   const out: Record<string, unknown> = {};
-  for (const [k, x] of Object.entries(v)) if (!isRefKey(k)) out[k] = withoutRefs(x);
+  for (const [k, x] of Object.entries(v))
+    if (k !== '__proto__' && !isRefKey(k)) out[k] = withoutRefs(x);
   return out;
 }
 
@@ -147,6 +149,7 @@ function placeBoards(d: Design, v: unknown, key = ''): { d: Design; v: unknown }
   if (!isObj(v)) return { d, v };
   const obj: Record<string, unknown> = {};
   for (const [k, x] of Object.entries(v)) {
+    if (k === '__proto__') continue;
     const p = placeBoards(cur, x, k);
     cur = p.d;
     obj[k] = p.v;

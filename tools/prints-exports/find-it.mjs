@@ -12,7 +12,7 @@
 //   6. G-316: five Regency boards with shipped pictures, each seen in 3D (screenshots `g316-<code>-<width>.png`).
 // window.print is replaced by a counter so the print sheet stays on screen for checks; Chromium's own PDF printer
 // counts the client sheet's pages. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -32,10 +32,7 @@ const BOARDS = [
 
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -84,7 +81,12 @@ for (const width of [1280, 390]) {
   const settingsBoards = async () => {
     await click(btn('Settings'));
     await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
-    await dlg.getByText('Boards, sheets and saw cut', { exact: true }).click();
+    // A group the user opened stays open (ADR-267): click its summary only while it is closed.
+    const boards = dlg.locator('details.group', {
+      has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
+    });
+    if (!(await boards.first().evaluate((d) => d.open)))
+      await boards.first().locator('summary').first().click();
   };
   /** Settings › Boards: the first board takes the Regency product with this code (its shipped picture). */
   const pickBoard = async (code) => {

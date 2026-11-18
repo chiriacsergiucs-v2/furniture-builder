@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ledger from '../../docs/adr/GAPS.md?raw';
 import {
   decisionsText,
@@ -74,22 +74,28 @@ export function GapsPage({
   // The banner for a failed save goes only once every mark that failed is saved; another failure keeps it (ADR-266).
   // Marks whose save failed are written again with the next save.
   const unsaved = useRef(new Map<string, GapMark>());
-  const saveOne = (mark: GapMark) =>
-    saveGapMark(mark).then(
-      () => {
-        if (unsaved.current.get(mark.gapId) === mark) unsaved.current.delete(mark.gapId);
-        if (!unsaved.current.size) setError((e) => (e === SAVE_FAILED ? null : e));
-      },
-      () => {
-        unsaved.current.set(mark.gapId, mark);
-        setError(SAVE_FAILED);
-      },
-    );
-  const write = (mark: GapMark) => {
-    unsaved.current.delete(mark.gapId);
-    const again = [...unsaved.current.values()];
-    return Promise.all([saveOne(mark), ...again.map(saveOne)]).then(() => undefined);
-  };
+  const saveOne = useCallback(
+    (mark: GapMark) =>
+      saveGapMark(mark).then(
+        () => {
+          if (unsaved.current.get(mark.gapId) === mark) unsaved.current.delete(mark.gapId);
+          if (!unsaved.current.size) setError((e) => (e === SAVE_FAILED ? null : e));
+        },
+        () => {
+          unsaved.current.set(mark.gapId, mark);
+          setError(SAVE_FAILED);
+        },
+      ),
+    [],
+  );
+  const write = useCallback(
+    (mark: GapMark) => {
+      unsaved.current.delete(mark.gapId);
+      const again = [...unsaved.current.values()];
+      return Promise.all([saveOne(mark), ...again.map(saveOne)]).then(() => undefined);
+    },
+    [saveOne],
+  );
   // A note still waiting for its timer is written when the page closes or goes away.
   useEffect(() => {
     const queue = pending.current;
@@ -105,7 +111,7 @@ export function GapsPage({
       window.removeEventListener('pagehide', flush);
       flush();
     };
-  }, []);
+  }, [write]);
 
   const counts = useMemo(() => gapCounts(GAPS), []);
   // Rating counts follow the status filter and the search, so each level says how many it would show.

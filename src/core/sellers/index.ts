@@ -9,12 +9,12 @@ import type {
   HardwareKind,
   Material,
   MaterialKind,
-  MaterialMaker,
   ProductRef,
 } from '../types';
+import { MAKER_WORDS } from '../materials';
 import type { ProductKind, SellerCatalog, SellerProduct } from './types';
 
-export type { ProductKind, SellerCatalog, SellerProduct } from './types';
+export type { SellerCatalog, SellerProduct } from './types';
 
 /** Every bundled seller. A new seller adds its converted file and one line here. */
 const SOURCES: { id: string; load: () => Promise<string> }[] = [
@@ -192,13 +192,6 @@ export const runPartOffers = (cats: SellerCatalog[], worktop: boolean, query = '
 /** Any product at all (Add seller product). */
 export const anyOffers = (cats: SellerCatalog[], query = '') => searchProducts(cats, { query });
 
-const MAKER: Record<string, MaterialMaker> = {
-  egger: 'egger',
-  kastamonu: 'kastamonu',
-  fundermax: 'fundermax',
-  kronospan: 'kronospan',
-};
-
 /** "Pal melaminat Kronospan gri 112 PE, 2800 x 2070 x 18 mm" → "Pal melaminat Kronospan gri 112 PE". */
 export const shortName = (n: string) =>
   n.replace(/,\s*\d+\s*x\s*\d+(\s*x\s*\d+)?\s*mm\s*$/i, '').trim();
@@ -209,7 +202,7 @@ export const shortName = (n: string) =>
  */
 export function boardPatch(o: Offer, m: Material): Partial<Material> {
   const { p } = o;
-  const maker = p.m ? (MAKER[fold(p.m)] ?? 'other') : undefined;
+  const maker = p.m ? (MAKER_WORDS[fold(p.m)] ?? 'other') : undefined;
   const cat = fold(`${p.c} ${p.n}`);
   const kind: MaterialKind =
     p.k === 'worktop'

@@ -1,18 +1,14 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { relative } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isHttpsOrigin } from '../src/core/origin';
 import { onlineConfigured, onlineOrigins } from '../src/online/origins';
 import { backendConfigured } from '../src/store/accountStore';
+import { files } from './helpers/sourceFiles';
 
 // ADR-126: the offline core sends nothing. Only `src/online` may make requests, and the rest of the app reaches it
 // only through a dynamic import (a lazy chunk loaded after the user opts in, G-215).
 const SRC = new URL('../src', import.meta.url).pathname;
-const files = (dir: string): string[] =>
-  readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    return statSync(p).isDirectory() ? files(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
-  });
 const outside = files(SRC).filter((f) => !relative(SRC, f).startsWith('online/'));
 const REQUEST = /\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket|sendBeacon|EventSource/;
 const STATIC_ONLINE = /^\s*(import|export)\s[^;]*?from\s+['"][^'"]*\/online\//m;

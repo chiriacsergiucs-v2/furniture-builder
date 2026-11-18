@@ -3,7 +3,7 @@
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // The user's steps: tap the piece, tap a part of it, tap again → the whole piece is selected again, outlined, nothing
 // faded, and the quick-count card names it and acts on it.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -12,10 +12,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -84,7 +81,8 @@ for (const width of [1280, 390]) {
   check(
     width,
     '2nd tap: "Shelves", only the bay outlined, the rest faded',
-    (await said()) === 'Shelves' && share < 0.6 && (await faded()) > 0,
+    // A part now carries its place in the name ("Right: Shelves").
+    /^(?:[A-Za-z]+: )?Shelves$/.test(await said()) && share < 0.6 && (await faded()) > 0,
     `${await said()}, outline ${share.toFixed(2)}, ${await faded()} faded`,
   );
   await shot('drawing-bay');
@@ -96,6 +94,10 @@ for (const width of [1280, 390]) {
     (await said()) === 'Whole cabinet' && share > 0.95 && (await faded()) === 0,
     `${await said()}, outline ${share.toFixed(2)}`,
   );
+  // The phone sheet opens with a selection and covers the card at the foot of the drawing: fold it (ADR-160).
+  const peek = page.locator('.sheet-peek');
+  if (phone && (await peek.getAttribute('aria-expanded')) === 'true') await peek.click();
+  await page.waitForTimeout(300);
   await card(front).getByRole('button', { name: 'More vertical dividers' }).click();
   await page.waitForTimeout(200);
   check(
@@ -152,7 +154,7 @@ for (const width of [1280, 390]) {
   check(
     width,
     '3D: whole piece → the bay → whole piece again',
-    titles.join(' → ') === 'Whole cabinet → Shelves → Whole cabinet',
+    /^Whole cabinet → (?:[A-Za-z]+: )?Shelves → Whole cabinet$/.test(titles.join(' → ')),
     titles.join(' → '),
   );
   check(
@@ -178,7 +180,9 @@ for (const width of [1280, 390]) {
   check(
     width,
     'Realistic: a tap selects the bay, the card shows its counts',
-    (await said()) === 'Shelves' && (await heading()) === '' && (await card(dock3).isVisible()),
+    /^(?:[A-Za-z]+: )?Shelves$/.test(await said()) &&
+      (await heading()) === '' &&
+      (await card(dock3).isVisible()),
     `${await said()} / ${await heading()}`,
   );
   await shot('3d-realistic');

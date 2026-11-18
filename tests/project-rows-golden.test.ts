@@ -12,14 +12,10 @@ import {
   suggestRunParts,
   type Project,
 } from '../src/core/project';
-import type { CabinetParams, Design } from '../src/core/types';
 import { sampleProjects } from './fixtures/mobila';
+import { withCab as cab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const cab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 
 /**
  * A run that takes every per-piece build option: a run plinth (pieces lose their own), a common top, shared sides

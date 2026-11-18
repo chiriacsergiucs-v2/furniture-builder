@@ -51,6 +51,7 @@ import {
   overlaps,
   penetration,
   sizeOn,
+  swapXZ,
   union,
   yawPoint,
 } from './geometry';
@@ -440,6 +441,7 @@ export const KITCHEN_SINCE = 21;
 export const PIECE_LOCKS_SINCE = 21;
 export const SELLER_ITEMS_SINCE = 21;
 export const FOLLOW_UPS_SINCE = 21;
+export const OWNED_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -490,6 +492,11 @@ export interface Project {
    * product when its unit fits (piece or m), else by the board. Absent = none.
    */
   runProducts?: Record<string, HardwareProduct>;
+  /**
+   * Parts the user already owns (ADR-271, schemaVersion 21): cut-list row key (`ownedKey`) → how many, over all pieces.
+   * They leave the project's cut list and sheet layouts only. Absent = none.
+   */
+  ownedParts?: Record<string, number>;
   /** A picture of the floor plan to trace over (ADR-208, schemaVersion 21). Absent = none. */
   planPicture?: PlanPicture;
   /** Joints where worktops meet at a corner (ADR-205, schemaVersion 21). Absent = none chosen. */
@@ -1426,6 +1433,10 @@ function backCutsOf(
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
 
+/** The placed box of every item, by item id (after `resolvePlacements`). */
+export const boundsOf = (project: Project) =>
+  new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
+
 /**
  * The piece as one box before its extra angle (ADR-121): `position` is its lowest corner and it shares its centre with
  * `placedBounds`. The same box as `placedBounds` for a piece at a quarter turn.
@@ -2297,7 +2308,6 @@ const SAME_FRAME: RunFrame = {
   axis: (a) => a,
   face: (f) => f,
 };
-const swapXZ = (a: Axis): Axis => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
 export function runFrame(r: QuarterTurn): RunFrame {
   if (r === 90)
     return {

@@ -1,6 +1,7 @@
 import { Mesh, type Object3D } from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { t } from '../core/i18n';
+import { nextFrame } from '../shared/renderSupport';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
 
 /**
@@ -8,7 +9,6 @@ import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
  * pictures embedded, for Blender or another renderer. three's own GLTFExporter (part of `three`, MIT), loaded only
  * from here when the user asks; it reads the scene and never edits it (ADR-014); nothing leaves the device (ADR-002).
  */
-const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 export async function exportSceneGlb(): Promise<Blob> {
   const stage = getStage();

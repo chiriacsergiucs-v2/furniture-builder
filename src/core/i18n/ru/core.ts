@@ -94,6 +94,8 @@ export const ru_core = {
   'Missing project id or name': 'Нет id или названия проекта',
   'Invalid cutting settings': 'Неверные настройки распила',
   'Items missing': 'Нет изделий',
+  'Too many items: a project holds at most {max}':
+    'Слишком много изделий: в проекте не больше {max}',
   'Invalid item': 'Неверное изделие',
   'Duplicate item {id}': 'Повторяющееся изделие {id}',
   'Item quantity must be 1 to 99': 'Количество изделия должно быть от 1 до 99',
@@ -289,7 +291,6 @@ export const ru_core = {
   'topLayers must be 1 or 2': 'topLayers должно быть 1 или 2',
 
   // Undo step names (src/core/history.ts, src/store/designStore.ts)
-  '{n|# piece|# pieces}': '{n|# изделие|# изделия|# изделий}',
   'Add {what}': 'Добавить: {what}',
   'Remove {what}': 'Удалить: {what}',
   'Change {what}': 'Изменить: {what}',
@@ -308,7 +309,6 @@ export const ru_core = {
   'Rename the project': 'Переименовать проект',
   'Change the project': 'Изменить проект',
   'No project is open.': 'Проект не открыт.',
-  'Replace {name}': 'Заменить {name}',
   'Set {setting}': 'Задать: {setting}',
   'Follow project {setting}': 'Как в проекте: {setting}',
   'Moved without mirroring: {reasons}': 'Перемещено без зеркального отражения: {reasons}',

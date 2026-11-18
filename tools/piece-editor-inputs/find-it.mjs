@@ -1,13 +1,11 @@
 // Production acceptance for ADR-199: start from the bare app and use visible controls at both widths.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, projectSchema } from '../lib/harness.mjs';
 import { goCompose, openPieceEditor } from '../lib/steps.mjs';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
 const out = outDir('/tmp/furniture-piece-editor-acceptance');
 mkdirSync(out, { recursive: true });
-const schema = Number(
-  /PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1],
-);
+const schema = projectSchema();
 const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']

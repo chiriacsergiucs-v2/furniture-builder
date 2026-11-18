@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
+import { useUi } from '../store/uiStore';
 
 /**
  * Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet.
@@ -82,7 +83,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={t('Decrease {label}', { label })}
-          disabled={disabled}
+          disabled={disabled || value - step < min}
           onClick={() => bump(-step)}
         >
           −
@@ -107,7 +108,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={t('Increase {label}', { label })}
-          disabled={disabled}
+          disabled={disabled || value + step > max}
           onClick={() => bump(step)}
         >
           +
@@ -343,8 +344,21 @@ export function Group({
   useEffect(() => {
     if (openOn && ref.current) ref.current.open = true;
   }, [openOn]);
+  // What the user opened or closed is kept for the session, so a change of selection never refolds it (ADR-267).
+  const key = id ?? title;
+  const kept = useUi((s) => s.groupOpen[key]);
+  const setGroupOpen = useUi((s) => s.setGroupOpen);
+  const open = kept ?? defaultOpen;
   const group = (
-    <details ref={ref} className="group" open={defaultOpen} id={id}>
+    <details
+      ref={ref}
+      className="group"
+      open={open}
+      id={id}
+      onToggle={(e) => {
+        if (e.currentTarget.open !== open) setGroupOpen(key, e.currentTarget.open);
+      }}
+    >
       <summary>
         {title}
         <Icon name="chevron-down" className="chev" />

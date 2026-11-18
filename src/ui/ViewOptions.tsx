@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Children, useEffect, useRef, type ReactNode } from 'react';
 import { t } from '../core/i18n';
 import { Icon } from './icons';
 
@@ -32,6 +32,8 @@ export function ViewOptions({ menu, children }: { menu: boolean; children: React
     };
   }, [menu]);
   if (!menu) return <>{children}</>;
+  // Every tool may need the 3D view (a piece in 2D): a menu with nothing in it is not shown (audit F-25, N318).
+  if (Children.toArray(children).length === 0) return null;
   return (
     <details className="menu view-options" ref={ref}>
       <summary>

@@ -42,7 +42,7 @@ describe.each(WIDTHS)('unit price on Shopping list rows at %ipx (find-it, ADR-18
     await openSheet(user, panel);
     await addPiece(user);
 
-    const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+    const build = screen.queryByRole('radio', { name: /Cut List/ });
     if (build) await user.click(build);
     await user.click(screen.getByRole('tab', { name: /Shopping/ }));
     const list = await screen.findByRole('tabpanel');

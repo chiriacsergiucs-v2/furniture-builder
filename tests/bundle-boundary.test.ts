@@ -1,4 +1,4 @@
-// ADR-222: the first-paint `index` chunk stays free of the 3D engine, the account backend and the research data, and
+// ADR-222: the first-paint `index` chunk stays free of the 3D engine and the account backend,
 // under a byte budget. It reads the production build in `dist/assets`, so it runs after `pnpm build` (the CI `build`
 // job runs it after `pnpm build:ci` with REQUIRE_DIST=1, which turns a missing `dist` into a failure).
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -25,14 +25,13 @@ describe('ADR-222 bundle boundary', () => {
     const code = readFileSync(join(ASSETS, index[0]), 'utf8');
     expect(code.includes('WebGLRenderer'), 'three.js in index').toBe(false);
     expect(code.includes('createClient'), 'the Supabase client in index').toBe(false);
-    expect(code.includes('"ens-2026-10-23"'), 'research data in index').toBe(false);
     expect(statSync(join(ASSETS, index[0])).size).toBeLessThanOrEqual(INDEX_BUDGET);
     // No static import of the 3D chunks: `index` may only name them for a later `import()`.
     expect(code, 'a static import of a 3D chunk').not.toMatch(
       /(from|import)"\.\/(three|react-three)-/,
     );
     // The named chunks of `manualChunks` (vite.config.ts).
-    for (const name of ['three', 'react-three', 'dexie', 'research'])
+    for (const name of ['three', 'react-three', 'dexie'])
       expect(
         files.some((f) => f.startsWith(`${name}-`) && f.endsWith('.js')),
         `${name} chunk`,

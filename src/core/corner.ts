@@ -9,7 +9,7 @@ import {
   noFrontRoomMessage,
   type PartialModel,
 } from './cabinet';
-import { box, equalParts } from './geometry';
+import { box, equalParts, halfLo, swapXZ } from './geometry';
 import type {
   Box,
   CabinetParams,
@@ -30,7 +30,7 @@ import type {
  * Both are drawn for the corner on the left and mirrored for `side: 'right'`.
  */
 
-const lo = (n: number) => Math.floor(n / 2);
+const lo = halfLo;
 
 /** A hung corner (ADR-177) has no plinth; its stored plinth height is kept for when it stands again. */
 const plinthOf = (p: CornerParams) => (p.mount === 'wall' ? 0 : p.plinthHeight);
@@ -79,7 +79,6 @@ const FACE_MIRROR: Record<Face, Face> = {
   '+z': '+z',
   '-z': '-z',
 };
-const swapXZ = (a: Panel['thicknessAxis']) => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
 
 /** Quarter turn for wing B: local depth → world x, local width → world z running from `zEnd` back towards the corner. */
 function rotateBox(b: Box, zEnd: number): Box {

@@ -17,8 +17,10 @@ import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
+import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
+import { isObj } from './guards';
 
 type PedestalSide = 'left' | 'right';
 
@@ -27,6 +29,12 @@ export const newId = (): string =>
     globalThis.crypto?.randomUUID?.() ??
     `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`
   ).slice(0, 8);
+
+/** A copy of this space tree with fresh ids throughout. */
+export const renew = (s: Space): Space =>
+  s.kind === 'split'
+    ? { ...s, id: newId(), children: s.children.map(renew) }
+    : { ...s, id: newId() };
 
 /** User's stock (2026-10-21): PAL and HDF 2800 × 2070, MDF 2440 × 1220, 10 mm trim per edge, 4 mm kerf. */
 export const DEFAULT_KERF = 4;
@@ -744,13 +752,11 @@ export function setProductParams<P extends Product>(prod: P, patch: Partial<P['p
 // Validation of an untrusted design (JSON import / storage)
 // ---------------------------------------------------------------------------
 
-export const MAX_SHELVES = 50;
+const MAX_SHELVES = 50;
 const MAX_MM = 100_000;
-export const MAX_DRAWERS = 20;
+const MAX_DRAWERS = 20;
 export const MAX_LOOSE = 100;
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min;
 const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 500;
 
@@ -824,6 +830,13 @@ function validateBands(d: Record<string, unknown>, errs: string[]) {
       for (const [k, v] of Object.entries(pb))
         if (!k || bandProblems(v).length) errs.push(t('Invalid band for {k}', { k }));
   }
+}
+
+/** Parts the user already owns (schemaVersion 9, ADR-271); checked when present, never throws. */
+function validateOwnedParts(d: Record<string, unknown>, errs: string[]) {
+  if (d.ownedParts === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Owned parts need schemaVersion 9'));
+  if (!validOwned(d.ownedParts)) errs.push(t('Invalid owned parts'));
 }
 
 /** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
@@ -1190,6 +1203,7 @@ export function validateDesign(d: unknown): string[] {
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
   validateBands(d, errs);
+  validateOwnedParts(d, errs);
   validateCatalog(d.catalog, d.schemaVersion, errs);
   validateDesignVariables(d, errs);
   validateSellerChoices(d, errs);

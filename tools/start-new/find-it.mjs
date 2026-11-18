@@ -76,7 +76,7 @@ try {
     await dlg.getByRole('button', { name: 'Use this mix' }).first().waitFor();
     check(
       'Fill a wall: Wall → Refine → Back shows cards for the typed width',
-      await dlg.getByText('2400 mm wall · best 4, each checked for problems').isVisible(),
+      await dlg.getByText('2400 mm wall · best 2, each checked for problems').isVisible(),
     );
     check('Fill a wall: suggestions body has no sideways scroll', await noSideScroll(dlg));
     await page.screenshot({ path: `${out}/wall-cards-${width}.png` });
@@ -120,7 +120,7 @@ try {
     console.log(`  ${width}px first room card: ${total} warnings`);
     check(
       'Fill the room: Room → Refine → Back shows cards; first card has at most 4 warnings',
-      (await dlg.getByText('4 walls · best 4, each checked for problems').isVisible()) &&
+      (await dlg.getByText('4 walls · best 2, each checked for problems').isVisible()) &&
         total <= 4,
     );
     check(

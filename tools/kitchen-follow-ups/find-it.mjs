@@ -5,7 +5,7 @@
 // sink's From left / From front; the 3D view with the ceiling filler and a picked problem's box ("After repair");
 // Fasteners in project Settings; Parts with "Guidance: drilling positions from your values". Screenshots go to the out
 // dir. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -14,10 +14,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 const flat = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
 
 for (const width of [1280, 390]) {

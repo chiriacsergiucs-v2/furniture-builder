@@ -12,12 +12,9 @@ import {
 } from '../src/core/project';
 import { pruneShared, sharedSideCheck } from '../src/core/shared';
 import type { CabinetParams, Design, Panel } from '../src/core/types';
+import { withCab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const withCab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 function pair(a: Partial<CabinetParams> = {}, b: Partial<CabinetParams> = {}): Project {
   const p = newProject('Shared');
   const A = { ...makeItem(p, withCab(t('base-door'), a)), position: { x: 0, y: 0, z: 0 } };

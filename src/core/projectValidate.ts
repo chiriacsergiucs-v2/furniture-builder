@@ -22,6 +22,7 @@ import type {} from './nesting';
 import {} from './nesting';
 import type {} from './nesting/types';
 import { t } from './i18n';
+import { validOwned } from './owned';
 
 import {
   ANGLE_SINCE,
@@ -31,6 +32,7 @@ import {
   CONNECTIONS_SINCE,
   FITTED_WALLS_SINCE,
   FOLLOW_UPS_SINCE,
+  OWNED_SINCE,
   GROUPS_SINCE,
   KITCHEN_SINCE,
   LINKS_SINCE,
@@ -56,15 +58,11 @@ import {
   VARIABLES_SINCE,
   WALLS_SINCE,
 } from './project';
+import { isObj, isInt } from './guards';
 
 // ---------------------------------------------------------------------------
 // Validation (storage, import)
 // ---------------------------------------------------------------------------
-
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
-const isInt = (v: unknown, min = -1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
 /** A sink's or hob's position (ADR-209): absent, or whole mm from 0 to 3000 on each axis. */
 const validOffsets = (c: Record<string, unknown>) =>
@@ -185,6 +183,9 @@ function validateVariables(p: Record<string, unknown>): string[] {
   return errs;
 }
 
+/** The most items a project file may hold (security scan M-2; the report names no number, so a generous one). */
+export const MAX_PROJECT_ITEMS = 2000;
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return [t('Project must be an object')];
   const errs: string[] = [];
@@ -198,6 +199,12 @@ export function validateProject(p: unknown): string[] {
   )
     errs.push(t('Invalid cutting settings'));
   if (!Array.isArray(p.items)) return [...errs, t('Items missing')];
+  // A crafted file with tens of thousands of items would hang the tab; refuse it, never trim it (ADR-008).
+  if (p.items.length > MAX_PROJECT_ITEMS)
+    return [
+      ...errs,
+      t('Too many items: a project holds at most {max}', { max: MAX_PROJECT_ITEMS }),
+    ];
   const ids = new Set<string>();
   for (const it of p.items) {
     if (!isObj(it) || typeof it.id !== 'string' || !it.id) {
@@ -659,6 +666,11 @@ export function validateProject(p: unknown): string[] {
               t('Cut-out positions need project schemaVersion {v}', { v: FOLLOW_UPS_SINCE }),
             );
     }
+  }
+  if (p.ownedParts !== undefined) {
+    if ((p.schemaVersion as number) < OWNED_SINCE)
+      errs.push(t('Owned parts need project schemaVersion {v}', { v: OWNED_SINCE }));
+    if (!validOwned(p.ownedParts)) errs.push(t('Invalid owned parts'));
   }
   if (p.runProducts !== undefined) {
     if ((p.schemaVersion as number) < RUN_PRODUCTS_SINCE)

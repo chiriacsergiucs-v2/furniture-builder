@@ -3,7 +3,7 @@
 // "Built in the app" list was removed at the user's request (backlog D02), so the script checks it is gone.
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/home/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -11,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 375, 360]) {
   const phone = width < 500;
@@ -58,7 +55,14 @@ for (const width of [1440, 375, 360]) {
   check(
     width,
     'empty device says nothing saved yet',
-    await page.getByText('No projects saved yet').isVisible(),
+    // Waits for the saved-projects list to load from IndexedDB; an immediate isVisible() raced it under CPU load.
+    await page
+      .getByText('No projects saved yet')
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   // Rewritten: the built-in Mobila projects were removed from the app by the user (backlog D02).
   check(

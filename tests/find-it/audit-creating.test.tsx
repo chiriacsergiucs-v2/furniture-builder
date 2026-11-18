@@ -4,7 +4,7 @@
 // their field, Fill the room… sits outside Files, and the wizard's draft offer says what it is.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { renderApp, startNew, WIDTHS } from './setup';
 
 // The device storage refuses a save while `failSave` is set (a full or blocked browser storage).
 const store = vi.hoisted(() => ({ failSave: false }));
@@ -17,13 +17,6 @@ vi.mock('../../src/persist/db', async (orig) => {
   };
 });
 
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function startNew(user: User) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  return screen.findByRole('dialog', { name: 'Start something new' });
-}
 const db = () => import('../../src/persist/db');
 const projectCount = async () => (await (await db()).listProjects()).length;
 const designCount = async () => (await (await db()).listDesigns()).length;

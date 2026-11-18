@@ -28,7 +28,7 @@ export { roomAt, setRooms, type VariableSet } from './setRoom';
 /** Gap between set 1 and the next set, and between sets. */
 const SET_GAP = 500;
 
-export const setName = (n: number) => t('Set {n}', { n });
+const setName = (n: number) => t('Set {n}', { n });
 
 /** How many of the variables have a value in the set, and the total. */
 export function setProgress(project: Project, set: VariableSet): { done: number; total: number } {

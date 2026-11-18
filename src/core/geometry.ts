@@ -9,6 +9,18 @@ const extent = (b: Box, a: Axis): [Mm, Mm] =>
 
 export const sizeOn = (b: Box, a: Axis): Mm => (a === 'x' ? b.w : a === 'y' ? b.h : b.d);
 
+/**
+ * The centre point of a box in mm, unrounded (w, h, d may be odd, so the centre can sit on a half mm). Callers round
+ * only where they need whole mm.
+ */
+export function boxCentre(b: Pick<Box, 'x' | 'y' | 'z' | 'w' | 'h' | 'd'>): {
+  x: number;
+  y: number;
+  z: number;
+} {
+  return { x: b.x + b.w / 2, y: b.y + b.h / 2, z: b.z + b.d / 2 };
+}
+
 /** Length of the open interval intersection on one axis (0 when they only touch). */
 const overlap1 = (a: [Mm, Mm], b: [Mm, Mm]) =>
   Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0]));
@@ -275,3 +287,13 @@ export function penetration(a: Box, b: Box): Mm {
     }
   return Math.ceil(least - 1e-6);
 }
+
+/** Swaps the x and z axes (a quarter turn about y); y stays. */
+export const swapXZ = (a: Axis): Axis => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
+
+/** The three axes in x, y, z order. */
+export const AXES: readonly Axis[] = ['x', 'y', 'z'];
+
+/** The smaller and larger halves of a whole-mm length (`halfLo + halfHi = g`). */
+export const halfLo = (g: Mm) => Math.floor(g / 2);
+export const halfHi = (g: Mm) => g - Math.floor(g / 2);

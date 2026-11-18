@@ -3,7 +3,7 @@
 // Starts from the bare app at 1440 and 390 px and finds everything by visible text: select a piece → Lock → dragging
 // it does not move it and "Locked" shows → Unlock → it moves. Desktop drags with the mouse; the phone with real touch
 // events (CDP). Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -11,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;
@@ -168,7 +165,17 @@ for (const width of [1440, 390]) {
       .getByRole('toolbar', { name: 'Place pieces in 3D' })
       .getByRole('button', { name: 'Move', exact: true });
     // The Simple look draws fast enough in a software-rendered browser (as tools/move-3d does).
-    await page.getByRole('radio', { name: 'Simple' }).click();
+    {
+      // The Options menu that holds the Look (on a phone the plan has its own Options menu too).
+      const menu = page
+        .locator('details.view-options')
+        .filter({ has: page.getByRole('radio', { name: 'Simple', includeHidden: true }) });
+      const inMenu = (await menu.count()) > 0;
+      if (inMenu && !(await menu.evaluate((d) => d.open)))
+        await menu.locator(':scope > summary').click();
+      await page.getByRole('radio', { name: 'Simple' }).click();
+      if (inMenu) await page.keyboard.press('Escape');
+    }
     await page.waitForTimeout(800);
     await click(move);
     const r = await canvas.boundingBox();

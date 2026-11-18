@@ -1,7 +1,8 @@
 // Find-it acceptance for edge band specs on boards (ADR-077, backlog N72), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/edge-band/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
+import { goBuild, openTab } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -9,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 1280, 390, 375]) {
   const phone = width < 500;
@@ -74,6 +72,25 @@ for (const width of [1440, 1280, 390, 375]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
 
+  // The chest's fronts and drawer boxes open on PAL 18 white now (ADR-163: the Material dialog); put the fronts on
+  // MDF 18 painted so the MDF board has the drawer fronts this script banded differently.
+  await page.getByRole('button', { name: 'Material', exact: true }).first().click();
+  const matDlg = page.getByRole('dialog', { name: 'Material' });
+  await matDlg.waitFor();
+  await matDlg.getByRole('button', { name: 'Fronts', exact: true }).click();
+  await matDlg
+    .getByLabel('Board', { exact: true })
+    .selectOption({ label: 'MDF 18 painted, 18 mm' });
+  await matDlg.getByRole('button', { name: 'Apply material' }).click();
+  // The drawer boxes were PAL 16 white: the same dialog, Drawer boxes instead of Fronts.
+  await matDlg.getByRole('button', { name: 'Fronts', exact: true }).click();
+  await matDlg.getByRole('button', { name: 'Drawer boxes', exact: true }).click();
+  await matDlg.getByLabel('Board', { exact: true }).selectOption({ label: 'PAL 16 white, 16 mm' });
+  await matDlg.getByRole('button', { name: 'Apply material' }).click();
+  // Apply keeps the dialog open: close it the way a user does.
+  await page.keyboard.press('Escape');
+  await matDlg.waitFor({ state: 'detached' }).catch(() => {});
+
   // 2. Settings → Boards, sheets and saw cut → each board has "Edge band" with a "Band type".
   await openBoards();
   const pal = band('PAL 18 white');
@@ -128,11 +145,8 @@ for (const width of [1440, 1280, 390, 375]) {
   await closeSettings();
 
   // 5. Build & Preview → Parts: each board header names its band.
-  await mode(/Build & Preview/).dispatchEvent('click');
-  {
-    const t = page.getByRole('tab', { name: /Parts/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
-  }
+  await goBuild(page);
+  await openTab(page, /Parts/);
   const parts = page.locator('#panel-parts');
   check(
     width,
@@ -159,10 +173,7 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('parts');
 
   // 6. Shopping list: one banding line per band, unnamed boards under To choose before buying.
-  {
-    const t = page.getByRole('tab', { name: 'Shopping list' });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
-  }
+  await openTab(page, 'Shopping list');
   const shop = page.locator('#panel-shopping');
   const banding = shop.getByRole('region', { name: 'Edge banding' });
   await banding.waitFor({ timeout: 10000 }).catch(() => {});
@@ -196,11 +207,8 @@ for (const width of [1440, 1280, 390, 375]) {
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '15');
   await closeSettings();
-  await mode(/Build & Preview/).dispatchEvent('click');
-  {
-    const t = page.getByRole('tab', { name: /Checks/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
-  }
+  await goBuild(page);
+  await openTab(page, /Checks/);
   check(
     width,
     'narrow band: error "… is narrower than the 18 mm board"',
@@ -211,10 +219,7 @@ for (const width of [1440, 1280, 390, 375]) {
       )
       .isVisible(),
   );
-  {
-    const t = page.getByRole('tab', { name: /Parts/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
-  }
+  await openTab(page, /Parts/);
   check(
     width,
     'narrow band: Download CSV blocked',
@@ -224,11 +229,8 @@ for (const width of [1440, 1280, 390, 375]) {
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '22');
   await closeSettings();
-  await mode(/Build & Preview/).dispatchEvent('click');
-  {
-    const t = page.getByRole('tab', { name: /Parts/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
-  }
+  await goBuild(page);
+  await openTab(page, /Parts/);
   check(
     width,
     'band fixed: Download CSV enabled again',

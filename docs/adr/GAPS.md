@@ -183,21 +183,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: User confirms: keep preset thickness list, carry over banding prices, keep the allowance per band.
 - Conflicts: none
 
-### G-043: Duplicate backlog id D02
-
-- Status: Open
-- Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
-- Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
-- Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
-- Questions: Renumber the later row to D03? (Ids are never renumbered, so this needs your decision.)
-- Suggested pick: Give the later row (“Built in the app”) D03 and fix every reference. (estimate: effort +1%, value bookkeeping)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
-- Fix: With the user's approval, give the later row D03 and update every reference.
-- Conflicts: none
-
 ### G-047: Nothing live-verified
 
 - Status: Open
@@ -1428,15 +1413,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a bug.
 - Suggested pick: Reproduce with the piece-safety script, find which unmount removes the node twice, and fix it. (estimate: effort +5 %, value +5 %)
 
-### G-471: Catalog page is taller than the 15000 px script limit
-
-- Status: Open
-- Origin: ADR-201 tests, 2026-11-06; agent found it
-- Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
-- Request: Not asked; the script's own limit.
-- Questions: Raise the limit to 16000 px, or shorten the catalog page?
-- Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
-
 ### G-472: Core-only test selection: saving unproven
 
 - Status: Open
@@ -1454,15 +1430,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
 - Questions: Make the outer reveal round symmetrically too, which changes the 1 mm position of such fronts in new mirrored copies only?
 - Suggested pick: Yes: apply the remainderFirst rounding to the outer reveal, for new mirrored copies only. (estimate: effort +5 %, value +4 %)
-
-### G-474: Settings dialog scrolls sideways at 375 and 390 px
-
-- Status: Open
-- Origin: ADR-202 tests, 2026-11-06; agent found it
-- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
-- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
-- Questions: None; it is a bug.
-- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
 
 ### G-475: Client sheet: occasional second page and table at the page edge
 
@@ -1492,16 +1459,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: You run it after the deploy and tell Claude; Claude records it in the backlog (estimate: effort +0 % for Claude, value +15 %: the only proof AR works)
 - Work: Low
 - Impact: Medium-high
-
-### G-483: Catalog cards: meta line still cut on most cards at 390 px
-
-- Status: Acknowledged (2026-11-07)
-- Origin: ADR-195 item 4, built 2026-11-06 (implementer could not meet the Done-when item; user not yet asked)
-- Missing: Done-when 'At 390 px under 30 % of cards show More' is not met. With Open under the picture (column 1, rows 3–4) the text column is 214 px at 390 px (281 px at 1280), not the ≈240 px the ADR estimated, and the meta line (kind chip + size · parts · checks) needs 272 px at the median and 292 px at the 70th percentile (measured by tools/catalog-flows/find-it.mjs on the production build). Result: 178 of 183 cards (97.3 %) still show More at 390 px (was 182), 91 of 183 at 1280 px (was 98). The page stays under 30 000 px (29 734 px) and every card keeps one meta line.
-- Request: Nearly every card is cut … Fix: Open under the picture (column 1, rows 3–4): ≈240 px for text, same height, one meta line (ADR-118), 'More' where still cut. Done when: At 390 px under 30 % of cards show 'More'; the page stays under 30 000 px; one meta line per card.
-- Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
-- Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
-- Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 
 ### G-484: Start from shows template sizes that differ from the row they sit under
 
@@ -1749,3 +1706,257 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split outside-room into outside-room and taller-than-room with repairs keyed on both, and room-island's rectangle and too-small cases, in a follow-up ADR (estimate: effort +10 %, value +3 %)
 - Work: Low
 - Impact: Low
+
+### G-507: Auto-merge not tried on this repo
+
+- Status: Open
+- Origin: Flow modes, 2026-11-15
+- Missing: The cloud landing path for ff and auto (ready PR plus auto-merge) was never run. Checked 2026-11-15 (enable_pr_auto_merge on PR #219): GitHub answered "Auto-merge is not enabled for this repository"; branch protection is unchecked. Checked again 2026-11-16 on PR #248 (ready, CI green): same answer; the user must turn on Settings → General → Pull Requests → Allow auto-merge. Burst automerge merged #248 by hand instead
+- Request: Suggest best approach to include a auto-pilot fast forward and the normal flow.
+- Questions: Is Allow auto-merge enabled on the repository, and which checks are required?
+- Suggested pick: Enable Allow auto-merge, then test on one ready docs-only PR (estimate: effort +5 %, value +10 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
+
+- Status: Open
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-517: The reply-length and id-collision hooks have bypasses
+
+- Status: Open
+- Origin: Behavior audit findings 1 and 2, 2026-11-16 (N315)
+- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes (kept as is, the suggested pick, 2026-11-16). The id check is now hard: the CI job `id-check` runs it on every pull request and the hook falls back to the last fetched origin/main offline (N316). Neither hook nor the CI job was observed catching a real collision.
+- Request: Enforce #1 and #2 now
+- Questions: Should the length hook also check the reply against the user's last message (a report was asked), and should the id check also run in CI against the merge ref?
+- Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Low
+
+### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
+
+- Status: Open
+- Origin: G-516 fix, 2026-11-16 (N324)
+- Missing: G-516 prints part labels in the print language. A piece name ({name}), a board name ({board}) and a hardware name inside a warning still print as the app made them: a piece name needs its Design (printPieceName), board and hardware names have no print entries.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should board and hardware names get Romanian, Russian and English print entries (a judgement on names, ADR-010)?
+- Suggested pick: Pass the Design with the warning and add print entries for built-in board and hardware names.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-523: Two backlog rows share id N326
+
+- Status: Open
+- Origin: Docs session 2026-11-16 (N327)
+- Missing: Two backlog rows share id N326 (More menu F-01/F-02 and disabled reasons F-04); ids are never renumbered, so the clash needs the user's decision
+- Request: Docs: mark fixed audit findings; F-11
+- Questions: Which N326 row keeps the id, or is a new id given to the second?
+- Suggested pick: Leave both as they are until the user decides
+- Work: Low
+- Impact: Low
+
+### G-527: Three more backlog ids shared by two rows
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 3
+- Missing: Backlog ids N164, N281 and N302 are each used by two rows (G-523 covers N326); ids are never renumbered, so the clash needs the user's decision
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Which row keeps each of N164, N281 and N302, or does the second get a new id?
+- Suggested pick: Leave the ids as they are and keep the listed exceptions in scripts/check-docs.py until the user decides
+
+### G-528: Live-verify blocked from the sandbox
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330)
+- Missing: Live-verify of the logged changes: the sandbox reaches the published site now (200, 2026-11-17, N333) and 21 rows are paid. 13 rows keep a marker (N274, N286, N287, N288, N311, N318, N319, N302, N324, N329, N326, N325, N326): their changes need a flow the live script does not drive (a project with pieces, the print preview, the wizard, the 3D view), so no visible text was found for them yet.
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
+- Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
+
+### G-529: Main CI red after the navbar change (234f34d)
+
+- Status: Open
+- Origin: Catch-up 2026-11-17 (N330), PR #281 CI
+- Missing: main commit 234f34d (Simplify the navbar: merge sync into Account, rename to Cut List, move Gaps to Information) made CI red on main: tests/find-it/accounts.test.tsx fails at 1280 and 390 px (no button named Your account, Uploading…, … In your account). The same failure is in PR #281 (test shard 3 and verify) although this PR does not touch it. The browser scripts were verified on d189439, before that commit, and were not re-run against it. Cost: M
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
+- Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
+
+### G-530: Value cycle build, variables, project in core
+
+- Status: Open
+- Origin: architect-review 2026-11-17
+- Missing: src/core/build.ts imports ./variables (build.ts:11), variables.ts:22 imports ./project, project.ts:8 imports ./build: a value-import cycle through a model file. ADR-219 and tests/core-boundary.test.ts only block a direct ./project import from model files, so the cycle passes. 20 more value cycles exist (14 around project.ts, i18n/print and ro, 5 in ui, Viewer3D and ViewerScene).
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: Break the cycle in the code (move the shared pieces out of variables.ts) or widen the ADR-219 rule to cover transitive imports?
+- Suggested pick: Decide with a new ADR; the model files are build.ts, cabinet.ts and the others listed in eslint.config.js
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+
+### G-534: Architecture checks the review could not cover
+
+- Status: Open
+- Origin: architect-review 2026-11-17
+- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Run each check and record its result in a dated report under docs/research
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-535: F-29 half fixed: the Gaps page marks no current place
+
+- Status: Open
+- Origin: Catch-up live-verify, 2026-11-17 (N333)
+- Missing: N319 says More is marked as the current place on Information and Gaps. On the live site, #info marks the More button (aria-current=page); #gaps does not (aria-current absent, and the More menu has no Gaps item), because App.tsx passes current only for the info page.
+- Request: Catch up
+- Questions: Which control marks the current place on the Gaps page, now that Gaps is reached from the Information page?
+- Suggested pick: Mark More as current on Gaps too and say it in the page's back link or heading context (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 H-1, .tmp/current/bug-hunting-report.md
+- Missing: CLAUDE.md network rule does not name the ADR-161 seller-picture exception; src/ui/ProductPicker.tsx:56 defaults pictures on
+- Request: Reconcile the rule with ADR-161 or change the default to off
+- Questions: Keep pictures on by default (ADR-161), or make them opt-in?
+- Suggested pick: ADR for the exception, or change the default (user decides)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-537: Print path does not translate built-in material name 'Worktop 38' (bug-hunt M-1 follow-up)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 M-1
+- Missing: Russian entry added for the UI (data-parts.ts). Print paths still show the English name: src/core/ro.ts:408, src/ui/PrintSheet.tsx:103,301,323, src/core/shopping.ts:162; print.ts:49-53 says print never looks up names
+- Request: Translate built-in material names on print
+- Questions: Translate built-in names in print and CSV, or keep them as stored?
+- Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
+
+- Status: Open
+- Origin: bug-hunt 2026-11-17 L-2
+- Missing: Not moved to boxCentre: Elevation.tsx:380-381, RoomDrawings.tsx:951, ViewerScene.tsx:486,581,807,824, AR.tsx:928, arPlace.ts:187,313; core call sites selectPath.ts, project.ts:1145, fusion.ts:68, selection.ts:136, snapshot.ts:242, projectProfiles.ts:176
+- Request: Move remaining centre arithmetic to boxCentre
+- Questions: Include core call sites in a follow-up?
+- Suggested pick: Follow-up change, each site checked for its formula
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-539: Russian key conflicts with different wording (reuse H1)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 H1, .tmp/current/reuse-hunting-report.md
+- Missing: 10 keys defined twice with different Russian values: width (editors.ts:300 vs project.ts:325), More 3D actions (prints.ts:27 vs surfaces.ts:39), and 8 data keys in data-parts, data-catalog, data-wizard
+- Request: Pick one Russian wording per key or use @@context keys
+- Questions: Which Russian wording for each conflicting key?
+- Suggested pick: User picks wording (excluded from the fix)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-540: Store and tool helper extractions skipped (reuse M2, M3)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 M2, M3
+- Missing: M2 createExternalValue not extracted: localStorage bodies differ (useLook width default, module-load reads). M3 find-it variants with failed++, ok:!!ok, ok+detail and string width not unified; closing summary in 4 wordings
+- Request: Extract the differing helpers
+- Questions: Accept a larger extraction under ADR-016?
+- Suggested pick: Decide per helper (user)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-541: Remaining duplicates skipped (reuse L5, L7, B1-B3)
+
+- Status: Open
+- Origin: reuse health 2026-11-18 L5, L7, boundary-blocked
+- Missing: L7: assistant.ts isInt and wallfill.ts whole differ from guards.ts; seller origin string in src/online and tools/sellers (tools cannot import src); test picture bases kept literal. B1: Deno assistant function copies cannot import src/. B2 Viewer3D FRONT now uses core panelRoles. B3 tools/sellers pictureExt standalone
+- Request: Consolidate where layers allow
+- Questions: Allow tools or Deno to import shared code?
+- Suggested pick: Keep duplicated (boundary)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-542: Picture and row validation on file import and restore (security M-1, M-4)
+
+- Status: Open
+- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
+- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
+- Request: Route file pictures through the decode/re-encode path; validate rows per table
+- Questions: Approach for stricter picture and row validation on import and restore?
+- Suggested pick: User approves approach (ADR-011 implication)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-543: Hosted Supabase auth settings: confirmations and password length (security M-5)
+
+- Status: Open
+- Origin: security health 2026-11-18 M-5
+- Missing: supabase/config.toml:227 enable_confirmations=false; line 183 minimum_password_length=6; assistant cost is per account
+- Request: Enable confirmations, raise password minimum, add account-independent assistant budget, check hosted project
+- Questions: Apply hosted settings in the Supabase dashboard?
+- Suggested pick: User decides (hosted change)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-544: Security low items: migration grants, workflow pins, dev dependency advisories, localhost redirect (security L-2, L-4, L-5, L-6)
+
+- Status: Open
+- Origin: security health 2026-11-18 L-2, L-4, L-5, L-6
+- Missing: L-2 records write grant (supabase/migrations/20261028000000_accounts.sql:100); L-4 workflow actions pinned to tags and CLI latest (.github/workflows/deploy-assistant.yml:34); L-5 dev-only advisories (see dependency health); L-6 localhost redirect in supabase/config.toml:164
+- Request: Route writes through save_record; pin actions to SHAs; upgrade dev deps; remove localhost redirect outside dev
+- Questions: Approve migration and workflow changes?
+- Suggested pick: User decides per item
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-545: Dependency upgrades deferred (health-deps): vitest 4, typescript 7, vite 8, three-mesh-bvh peer
+
+- Status: Open
+- Origin: dependency health 2026-11-18, .tmp/current/dependency-report.md and CHANGES
+- Missing: vitest 4.1.12 fails seller-pictures BASE_URL expectation (tests/find-it/seller-pictures.test.tsx); typescript 7.0.2 typecheck and build fail (src/core/account.ts:98, tests/helpers/warningKeys.ts compiler API); vite 8.3.8 emits a static import of react-three into the main bundle (tests/bundle-boundary.test.ts, ADR-222); three-gpu-pathtracer 0.0.28 wants three-mesh-bvh >=0.9.17 (installed 0.9.16)
+- Request: Fix each blocker, then upgrade
+- Questions: Which deferred upgrade should be done next, and does the three-mesh-bvh bump (not approved) go ahead?
+- Suggested pick: User decides order
+- Work: High
+- Impact: Medium
+- Necessity: Medium
+
+### G-546: MAX_SHELVES and MAX_DRAWERS have two values (dead-code finding, intent unconfirmed)
+
+- Status: Open
+- Origin: cleanup health 2026-11-18, .tmp/current/dead-code-report.md items 2-3
+- Missing: src/core/design.ts:755-757 exports MAX_SHELVES=50, MAX_DRAWERS=20; src/core/counts.ts:32-33 has private 12 and 10. Export removed only; values kept
+- Request: Confirm which limit each name means, then merge or rename
+- Questions: Are these two limits intended to differ (UI slider vs validation)?
+- Suggested pick: User decides
+- Work: Low
+- Impact: Low
+- Necessity: Low

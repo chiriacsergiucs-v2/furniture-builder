@@ -45,10 +45,6 @@ Everything written to the repo is in **English**, whatever language the conversa
    - `Design:` — `docs/ui-design.md` (with the section) for anything visible, or `n/a`.
    - `Backlog:` — the `docs/backlog.md` ids; add a new row there (next free `N` id, status
      `Not done`) if the work has none.
-   - `Research:` (optional, ADR-212) — when the ADR builds a feature of the research record, add
-     `- Research: <feature id>, …` under `- Backlog:`, naming its `ens.f.<slug>` ids from
-     `src/core/research/ensemble-2026-10-23.features.ts`. `pnpm docs:check` and `ship-adr.sh` reject an unknown
-     id, and `ship-adr` updates those rows when the ADR ships.
    - **Context** (the user's words), **Decision**, **Alternatives considered** (2–4 real
      options), **Scope**, **Consequences**.
    - **Done when** — verifiable items only (tests, diagnostics, visible text the find-it
@@ -60,7 +56,7 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Open questions** — ask only low-confidence choices that change what gets built, in one
      `AskUserQuestion` batch (at most ~4, short options, recommended one first, no estimates; user rule 2026-11-07).
      Decide the obvious ones and record them in the Decision as decided by Claude. Never invent hardware specs,
-     loads or supplier values (ADR-010). Gaps in `docs/adr/GAPS.md` are optional.
+     loads or supplier values (ADR-010). Unbuilt items are recorded in `docs/adr/GAPS.md` (required since 2026-11-15).
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
    - Size stays within ~110 lines, ~6.5 KB and 8 `Done when` items. If it would be bigger,

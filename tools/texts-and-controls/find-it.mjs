@@ -7,7 +7,7 @@
 // - Wizard Doors: a five-option segmented control, every label whole; two rows at 390 px, one at 1280 px (G-357);
 //   Review reads "Compartment widths: 0 mm" (G-360).
 // - Arrow keys on Editor mode (G-361).
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -15,10 +15,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** Overlaps between sibling fields of each Materials row, and fields running past their row. */
 const materialsLayout = (page) =>
@@ -95,32 +92,45 @@ for (const width of [375, 390, 1280]) {
         focus: r === document.activeElement,
       })),
     );
-  let ms = await modeState();
-  const at = ms.findIndex((r) => r.on);
-  check(
-    width,
-    'Editor mode: only the selected option is a Tab stop',
-    at >= 0 && ms.every((r, i) => r.stop === (i === at)),
-  );
-  await modes.getByRole('radio').nth(at).focus();
-  await page.keyboard.press('ArrowRight');
-  ms = await modeState();
-  const nx = (at + 1) % ms.length;
-  check(
-    width,
-    'Editor mode: → moves, selects and takes the Tab stop',
-    ms[nx].on && ms[nx].focus && ms.every((r, i) => r.stop === (i === nx)),
-  );
-  await page.keyboard.press('Home');
-  ms = await modeState();
-  check(width, 'Editor mode: Home goes to the first', ms[0].on && ms[0].focus);
-  await page.keyboard.press('End');
-  ms = await modeState();
-  check(
-    width,
-    'Editor mode: End goes to the last',
-    ms[ms.length - 1].on && ms[ms.length - 1].focus,
-  );
+  // ADR-241: the Editor mode row is hidden on a phone, where the Places nav in the bottom bar replaces it; the arrow-key
+  // checks need the row itself, so they run where it is shown.
+  if (await modes.isVisible()) {
+    let ms = await modeState();
+    const at = ms.findIndex((r) => r.on);
+    check(
+      width,
+      'Editor mode: only the selected option is a Tab stop',
+      at >= 0 && ms.every((r, i) => r.stop === (i === at)),
+    );
+    await modes.getByRole('radio').nth(at).focus();
+    await page.keyboard.press('ArrowRight');
+    ms = await modeState();
+    const nx = (at + 1) % ms.length;
+    check(
+      width,
+      'Editor mode: → moves, selects and takes the Tab stop',
+      ms[nx].on && ms[nx].focus && ms.every((r, i) => r.stop === (i === nx)),
+    );
+    await page.keyboard.press('Home');
+    ms = await modeState();
+    check(width, 'Editor mode: Home goes to the first', ms[0].on && ms[0].focus);
+    await page.keyboard.press('End');
+    ms = await modeState();
+    check(
+      width,
+      'Editor mode: End goes to the last',
+      ms[ms.length - 1].on && ms[ms.length - 1].focus,
+    );
+  } else {
+    check(
+      width,
+      'Editor mode row is hidden on a phone; the Places nav is there instead (ADR-241)',
+      await page
+        .getByRole('navigation', { name: 'Places' })
+        .getByRole('link', { name: 'Editor' })
+        .isVisible(),
+    );
+  }
 
   // 2. Settings › Boards, sheets and saw cut: the Materials rows.
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

@@ -116,10 +116,10 @@ def say(text):
 
 
 class HookTest(unittest.TestCase):
-    def run_hook(self, reply, changed=False, active=False):
+    def run_hook(self, reply, active=False):
         path = transcript({"type": "user", "message": {"content": "go"}}, say(reply))
         try:
-            return gaps_hook.decide({"transcript_path": path, "stop_hook_active": active}, lambda: changed)
+            return gaps_hook.decide({"transcript_path": path, "stop_hook_active": active})
         finally:
             pathlib.Path(path).unlink()
 
@@ -128,10 +128,26 @@ class HookTest(unittest.TestCase):
         self.assertEqual(out["decision"], "block")
         self.assertIn("pnpm gaps add", out["reason"])
 
-    def test_silent_when_the_ledger_changed_or_a_gap_is_cited(self):
+    def test_silent_only_when_a_gap_is_cited(self):
         reply = "**Skipped this iteration**\n- the 3D outline"
-        self.assertIsNone(self.run_hook(reply, changed=True))
         self.assertIsNone(self.run_hook(reply + " (G-012)"))
+        self.assertEqual(self.run_hook(reply)["decision"], "block")
+
+    def test_a_cited_id_must_exist_in_the_ledger(self):
+        reply = "**Skipped this iteration**\n- the 3D outline (G-999)"
+        path = transcript({"type": "user", "message": {"content": "go"}}, say(reply))
+        try:
+            data = {"transcript_path": path}
+            self.assertEqual(gaps_hook.decide(data, known={"G-001"})["decision"], "block")
+            self.assertIsNone(gaps_hook.decide(data, known={"G-001", "G-999"}))
+            self.assertIsNone(gaps_hook.decide(data))  # no ledger to compare with: any cited id counts
+        finally:
+            pathlib.Path(path).unlink()
+
+    def test_more_wordings_of_a_skip_are_caught(self):
+        for reply in ("Skipped: the outline. Cost: S.", "burst-skipped: lint (burst, 2026-11-16)",
+                      "Unblock: you enable it.", "The blocker is the repo setting."):
+            self.assertEqual(self.run_hook(reply)["decision"], "block", reply)
 
     def test_silent_on_a_plain_reply_and_on_the_second_stop(self):
         self.assertIsNone(self.run_hook("Merged PR #57."))
@@ -141,12 +157,12 @@ class HookTest(unittest.TestCase):
         path = transcript(say("Skipped this iteration: x"), {"type": "user", "message": {"content": "next"}},
                           say("All merged."))
         try:
-            self.assertIsNone(gaps_hook.decide({"transcript_path": path}, lambda: False))
+            self.assertIsNone(gaps_hook.decide({"transcript_path": path}))
         finally:
             pathlib.Path(path).unlink()
 
     def test_uses_last_assistant_message_when_given(self):
-        out = gaps_hook.decide({"last_assistant_message": "Out of scope: AR"}, lambda: False)
+        out = gaps_hook.decide({"last_assistant_message": "Out of scope: AR"})
         self.assertEqual(out["decision"], "block")
 
 
@@ -172,12 +188,13 @@ class HookGitTest(unittest.TestCase):
         self.assertEqual(out.returncode, 0)
         return json.loads(out.stdout) if out.stdout.strip() else None
 
-    def test_asks_while_the_ledger_is_unchanged_and_is_silent_once_it_changed(self):
+    def test_a_ledger_change_on_the_branch_does_not_silence_it(self):
         reply = "**Skipped this iteration**\n- the 3D outline"
         self.assertEqual(self.stop(reply)["decision"], "block")
         with (self.repo / gaps_hook.LEDGER).open("a") as f:
             f.write("\n")
-        self.assertIsNone(self.stop(reply))
+        self.assertEqual(self.stop(reply)["decision"], "block")
+        self.assertIsNone(self.stop(reply + " Recorded as G-001."))
 
     def test_silent_on_a_plain_reply_and_on_bad_input(self):
         self.assertIsNone(self.stop("Merged PR #57."))

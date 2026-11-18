@@ -2,15 +2,15 @@
 // change updates one place instead of every script that walks through it.
 
 /**
- * Show the results (ADR-241): the Build & Preview mode on a desktop, the Cut list place in the bottom nav on a phone
+ * Show the results (ADR-241): the Build & Preview mode (named Cut List since the navbar change 234f34d) on a desktop, the Cut list place in the bottom nav on a phone
  * (the mode row is hidden there).
  */
 export async function goBuild(page) {
-  const radio = page.getByRole('radio', { name: /Build & Preview/ });
+  const radio = page.getByRole('radio', { name: /Build & Preview|Cut List/ });
   if (await radio.isVisible().catch(() => false)) return radio.click();
   await page
     .getByRole('navigation', { name: 'Places' })
-    .getByRole('link', { name: /Cut list/ })
+    .getByRole('link', { name: /Cut list/i })
     .click();
 }
 
@@ -71,4 +71,13 @@ export async function openTab(page, name) {
   )
     return;
   await tab.click();
+}
+
+/**
+ * Open every page of the paged catalog lists (N311): tap each "Show … more" until none is left, so a script that measures
+ * every card sees them all. A script that measures the default page leaves the lists as they open.
+ */
+export async function showAllRows(page) {
+  const more = page.locator('.group-more button');
+  for (let guard = 0; guard < 200 && (await more.count()) > 0; guard++) await more.first().click();
 }

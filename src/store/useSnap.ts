@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { createListeners } from './deviceValue';
 
 /**
  * The plan's **Snap** toggle (ADR-070): on by default (open question in the ADR). Kept on this device only
@@ -6,7 +7,7 @@ import { useSyncExternalStore } from 'react';
  * whatever this says.
  */
 const KEY = 'fb:plan-snap';
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 /** Stored 'off' turns snapping off; anything else (nothing stored, unreadable) leaves it on. */
 function parseSnap(v: string | null): boolean {
@@ -32,12 +33,7 @@ function setSnap(v: boolean) {
   } catch {
     /* private mode: the choice lasts for this page only */
   }
-  listeners.forEach((f) => f());
-}
-
-function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => listeners.delete(l);
+  notify();
 }
 
 export function useSnap(): [boolean, (v: boolean) => void] {

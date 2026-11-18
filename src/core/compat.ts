@@ -9,7 +9,7 @@
  * checks (`compatChecks`, run by `buildProjectModel`) for pieces that touch side by side, where every failed rule is a
  * warning that never blocks export (ADR-008). Pure and deterministic.
  */
-import { t, tr } from './i18n';
+import { recordedMessage, recordText, t, tr } from './i18n';
 import {
   findFamily,
   ROOM_LABEL,
@@ -197,11 +197,7 @@ export function familyRooms(item: ProjectItem): { name: string; rooms: Room[] } 
 }
 
 /** Whether a rule's "applies to" covers a piece placed as `mount`. */
-export function appliesTo(
-  rule: CompatRule,
-  item: ProjectItem,
-  mount: Mount = mountOf(item),
-): boolean {
+function appliesTo(rule: CompatRule, item: ProjectItem, mount: Mount = mountOf(item)): boolean {
   const a = rule.appliesTo;
   if (a.productKinds && !a.productKinds.includes(item.design.product.kind)) return false;
   if (a.placements && !a.placements.includes(mount)) return false;
@@ -286,7 +282,7 @@ const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => st
   },
 };
 
-export interface Finding {
+interface Finding {
   rule: CompatRule;
   /** What the check found: "depth 560 vs 500". */
   reason: string;
@@ -294,12 +290,21 @@ export interface Finding {
   message: string;
 }
 
-const fill = (tpl: string, rule: CompatRule, c: JoinContext, reason: string) =>
-  tpl
-    .replace('{a}', c.a.design.name)
-    .replace('{b}', c.b?.design.name ?? '')
+const fill = (tpl: string, rule: CompatRule, c: JoinContext, reason: string) => {
+  const a = c.a.design.name;
+  const b = c.b?.design.name ?? '';
+  const text = tr(rule.text);
+  const message = tpl
+    .replace('{a}', a)
+    .replace('{b}', b)
     .replace('{reason}', reason)
-    .replace('{text}', tr(rule.text));
+    .replace('{text}', text);
+  // The message remembers its template and params, so the printed sheet can say it again in the print language (ADR-265).
+  const made = recordedMessage(tpl);
+  return made
+    ? recordText(message, made.key, { a, b, reason, text: recordText(text, rule.text) })
+    : message;
+};
 
 /**
  * Every rule that runs at `stage`, applies to the piece(s) and fails, in table order, with its message. The one

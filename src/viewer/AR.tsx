@@ -71,6 +71,7 @@ import {
 } from './arPlace';
 import { getStage, SHADOW_CATCHER } from './renderBridge';
 import { S } from './pieceDrag';
+import { createListeners } from '../store/deviceValue';
 
 /**
  * AR (ADR-208, G-008): View in AR with three's own WebXR support (`renderer.xr`; no `@react-three/xr`, no controller
@@ -176,12 +177,7 @@ const OFF: ARUi = {
 };
 let ui: ARUi = OFF;
 let supported: boolean | null = null;
-const listeners = new Set<() => void>();
-const emit = () => listeners.forEach((f) => f());
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe, notify: emit } = createListeners();
 function setUi(p: Partial<ARUi>) {
   if ((Object.keys(p) as (keyof ARUi)[]).every((k) => ui[k] === p[k])) return;
   ui = { ...ui, ...p };

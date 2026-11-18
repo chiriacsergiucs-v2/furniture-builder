@@ -1,7 +1,7 @@
 // Find-it acceptance for outside-in selection (ADR-083, backlog N78), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/drill-select/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -10,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [390, 1280]) {
   const phone = width < 500;
@@ -54,14 +51,14 @@ for (const width of [390, 1280]) {
   t = await said();
   ck(
     '2nd tap: the left bay',
-    phone ? t.includes('Selected: Divided space') : /Interior\s*\/?\s*Divided/.test(t),
-    t.slice(0, 80),
+    phone ? t.includes('Selected: Left: Divided space') : /Interior\s*\/?\s*Left: Divided/.test(t),
+    t.replace(/\n/g, ' | ').slice(0, 160),
   );
   await tap();
   t = await said();
   ck(
     '3rd tap: the hanging space',
-    phone ? t.includes('Selected: Hanging') : /Divided\s*\/?\s*Hanging/.test(t),
+    phone ? t.includes('Selected: Bottom: Hanging') : /Divided\s*\/?\s*Bottom: Hanging/.test(t),
     t.slice(0, 80),
   );
   ck('hanging space marked selected', (await hanging.getAttribute('aria-pressed')) === 'true');
@@ -127,10 +124,11 @@ for (const width of [390, 1280]) {
       green[1] > 0 && green[1] < green[0] && green[1] < green[2],
       green.join(' / '),
     );
-    // The tap before these left the right bay selected; the 1st 3D tap lands in the left bay.
+    // Names carry their path ("Left: Divided space", "Bottom: Hanging"). The tap before these left the right bay selected; the 1st 3D tap lands in the left bay.
     ck(
       '3D: taps at one spot drill in and wrap',
-      seen.join(' › ') === 'Divided space › Hanging › Whole cabinet › Divided space',
+      seen.join(' › ') ===
+        'Left: Divided space › Bottom: Hanging › Whole cabinet › Left: Divided space',
       seen.join(' › '),
     );
     await goCompose(page);

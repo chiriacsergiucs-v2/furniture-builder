@@ -19,14 +19,11 @@ import {
   type RunHandle,
 } from '../src/core/project';
 import { shoppingList } from '../src/core/shopping';
-import type { CabinetParams, Design, Panel } from '../src/core/types';
+import type { Design, Panel } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
+import { withCab as cab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const cab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 const drawers = () => cab(t('base-door'), { interior: { id: 'dr', kind: 'drawers', count: 3 } });
 
 /** Base units side by side on the floor, left to right. */

@@ -3,6 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/editor-modes/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -61,6 +62,9 @@ for (const [width, scheme] of [
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
   const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  // ADR-241: a phone has no mode row; its Editor and Cut list places in the bottom nav are the two modes.
+  const place = (name) =>
+    page.getByRole('navigation', { name: 'Places' }).getByRole('link', { name });
 
   // 1. A new piece from the bare app; the two modes are there, Configure is gone and Settings is in the app bar.
   await page.goto(url);
@@ -73,8 +77,12 @@ for (const [width, scheme] of [
   await page.locator('main.work').waitFor({ state: 'visible' });
   ck(
     width,
-    'modes Compose · Build & Preview visible',
-    (await mode('Compose').isVisible()) && (await mode(/Build & Preview/).isVisible()),
+    phone
+      ? "places Editor · Cut list visible (the phone's two modes, ADR-241)"
+      : 'modes Compose · Build & Preview visible',
+    phone
+      ? (await place('Editor').isVisible()) && (await place(/Cut list/).isVisible())
+      : (await mode('Compose').isVisible()) && (await mode(/Build & Preview/).isVisible()),
   );
   ck(
     width,
@@ -84,7 +92,7 @@ for (const [width, scheme] of [
   );
 
   // 2. Compose: tap a space; its editor has contents, doors and divide, and no whole-piece settings.
-  await mode('Compose').click();
+  await goCompose(page);
   if (phone)
     check(
       width,
@@ -163,7 +171,7 @@ for (const [width, scheme] of [
   await closeSettings();
 
   // 4. Build & Preview: 3D and the parts with Download CSV and Print; an error blocks both.
-  await mode('Build & Preview').click();
+  await goBuild(page);
   // Build & Preview opens in 2D (a phone since ADR-144): tap "3D" as a user would.
   {
     const three = page.getByRole('radio', { name: '3D', exact: true });
@@ -194,12 +202,17 @@ for (const [width, scheme] of [
   await w.fill('100');
   await w.press('Tab');
   await closeSettings();
-  await mode(/Build & Preview/).click();
+  await goBuild(page);
   await page.waitForTimeout(300);
   ck(
     width,
     'the mode names the problem ("1 problem")',
-    /1 problem/.test(await mode(/Build & Preview/).textContent()),
+    phone
+      ? // The Cut list place carries a badge "1", named "problem" for a screen reader.
+        (await place(/Cut list/)
+          .getByLabel('problem', { exact: true })
+          .textContent()) === '1'
+      : /1 problem/.test(await mode(/Build & Preview/).textContent()),
   );
   ck(
     width,
@@ -247,7 +260,7 @@ for (const [width, scheme] of [
 
   // 5. Desktop: Compose left, drawing centre, Build right.
   if (!phone) {
-    await mode('Compose').click();
+    await goCompose(page);
     const [a, b, c] = await Promise.all([
       box(side),
       box(page.locator('section.stage')),
@@ -264,7 +277,7 @@ for (const [width, scheme] of [
     .getByRole('button', { name: /Project with several pieces/ })
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await mode('Compose').click();
+  await goCompose(page);
   // The 3D view chosen above is kept: back to the plan ("2D"), as a user would.
   await page.getByRole('radio', { name: '2D', exact: true }).click();
   ck(
@@ -293,7 +306,9 @@ for (const [width, scheme] of [
   ck(
     width,
     'placing a piece switches to Compose',
-    (await mode('Compose').getAttribute('aria-checked')) === 'true' &&
+    (phone
+      ? (await place('Editor').getAttribute('aria-current')) === 'page'
+      : (await mode('Compose').getAttribute('aria-checked')) === 'true') &&
       (await page.getByText('Tap the plan to place').isVisible()),
   );
   ck(width, 'no sideways scroll (project)', await noSideScroll());

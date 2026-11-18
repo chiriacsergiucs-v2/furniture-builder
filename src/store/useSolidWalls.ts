@@ -1,11 +1,12 @@
 import { useSyncExternalStore } from 'react';
+import { createListeners } from './deviceValue';
 
 /**
  * Solid or see-through room walls in the 3D view (ADR-145, G-272): a view setting kept on this device only
  * (localStorage, no telemetry — ADR-002), not saved in the project. Starts see-through, as walls looked before.
  */
 const KEY = 'fb:solid-walls';
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 function stored(): boolean {
   try {
@@ -23,12 +24,7 @@ export function setSolidWalls(v: boolean) {
   } catch {
     /* private mode: the choice lasts for this page only */
   }
-  listeners.forEach((f) => f());
-}
-
-function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => listeners.delete(l);
+  notify();
 }
 
 export function useSolidWalls(): boolean {

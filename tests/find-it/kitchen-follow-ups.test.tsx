@@ -175,7 +175,7 @@ describe.each(WIDTHS)('ADR-209 kitchen run follow-ups at %ipx (find-it)', (width
     await user.click(within(settings).getByRole('button', { name: 'Done' }));
 
     // Build & Preview › Parts: the notes and the drilling guidance.
-    await user.click(screen.getByRole('radio', { name: /Build & Preview/ }));
+    await user.click(screen.getByRole('radio', { name: /Cut List/ }));
     const partsTab = screen.queryByRole('tab', { name: /^Parts/ });
     if (partsTab && partsTab.getAttribute('aria-selected') !== 'true') await user.click(partsTab);
     await waitFor(() =>

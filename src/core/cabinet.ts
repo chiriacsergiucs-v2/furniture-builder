@@ -1,6 +1,6 @@
 import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx, tr } from './i18n';
-import { box, distribute, equalParts } from './geometry';
+import { box, distribute, equalParts, halfHi, halfLo } from './geometry';
 import type {
   Box,
   CabinetParams,
@@ -100,8 +100,8 @@ export function slidingTrackDepth(s: Space): Mm {
   return s.kind === 'split' ? Math.max(own, ...s.children.map(slidingTrackDepth)) : own;
 }
 
-const lo = (g: Mm) => Math.floor(g / 2);
-const hi = (g: Mm) => g - Math.floor(g / 2);
+const lo = halfLo;
+const hi = halfHi;
 
 type HandlePosition = NonNullable<Handle['position']>;
 

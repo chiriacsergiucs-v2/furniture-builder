@@ -18,7 +18,7 @@ import type {
   SheetLayout,
   Unplaced,
 } from './types';
-import { validateNest } from './validate';
+import { int as isInt, validateNest } from './validate';
 
 type Slot = { node: INode };
 type INode =
@@ -66,7 +66,6 @@ interface Attempt {
   largest: number;
 }
 
-const isInt = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n);
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 /** xorshift32; never returns the zero state. */

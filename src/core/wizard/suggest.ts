@@ -8,7 +8,7 @@ import { boardsVersion, stepById } from './steps';
 import type { Answers, Generator as Family } from './types';
 
 const SUGGEST_CAP = 64;
-export const CARDS_FIRST = 6;
+export const CARDS_FIRST = 4;
 
 export interface Suggestion {
   /** Stable within one result: the candidate's axis picks. */

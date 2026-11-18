@@ -8,6 +8,9 @@ import { takePictures } from '../../persist/images';
 import { takeModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 
+/** The largest design, project or template file the importer reads. */
+export const MAX_IMPORT_BYTES = 20_000_000;
+
 export interface ImportResult {
   /** A design or project was saved as a new copy and is now open in the editor. */
   opened: boolean;
@@ -21,6 +24,12 @@ export interface ImportResult {
  * is stored as a template. One importer for every place that offers "Import a file" (ADR-078).
  */
 export async function importFile(f: File): Promise<ImportResult> {
+  // Refuse an oversized file before reading it into memory (security scan M-2).
+  if (f.size > MAX_IMPORT_BYTES)
+    return {
+      opened: false,
+      message: { ok: false, text: t('That file is too large to import (over 20 MB).') },
+    };
   let parsed: unknown;
   try {
     parsed = JSON.parse(await f.text());

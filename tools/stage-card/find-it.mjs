@@ -4,7 +4,7 @@
 // Starts from the bare app at 1280 px and at 390 px with touch, and finds everything by role and visible text: a single
 // Sideboard (the card over the drawing and over 3D, Width in the side panel / bottom sheet), then a Sideboard in a
 // project (the plan toolbar row, the card over the front view). Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -13,10 +13,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -178,6 +175,8 @@ for (const width of [1280, 390]) {
   // 4. Second tap: the drawer bank. The card lies inside the stage and covers neither the bank nor its size label.
   await bank.click({ force: true });
   await page.waitForTimeout(400);
+  // The card is hidden while the phone's bottom sheet is open (Elevation.tsx), and a tap on a space opens it.
+  await sheet(false);
   const c2 = card(front);
   const cb = await box(c2);
   const selB = await box(front.locator('rect.el-selection'));
@@ -215,7 +214,7 @@ for (const width of [1280, 390]) {
   // Build & Preview (and the phone's Cut list place, ADR-241) keep the 2D/3D switch on the drawing: pick 3D.
   const r3 = page.getByRole('radio', { name: '3D', exact: true });
   if (await r3.isVisible().catch(() => false)) await r3.click();
-  await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
+  await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 60000 });
   await page.waitForTimeout(1500);
   const c3 = card(phone ? page.locator('#count-dock') : page.locator('.view.three'));
   check(

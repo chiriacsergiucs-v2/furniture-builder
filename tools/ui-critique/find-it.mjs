@@ -1,7 +1,7 @@
 // Find-it acceptance for the UI critique fixes (backlog N82, 2026-10-26), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/ui-critique/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -10,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** Visible controls smaller than 44 × 44 px (checkboxes, radios and inline text links aside). */
 const smallTargets = (page) =>
@@ -137,9 +134,18 @@ for (const width of [390, 1280, 1600]) {
       'peek row reads "Selected: Interior"',
       (await peek.innerText()).includes('Selected: Interior'),
     );
+    // User 2026-11-14 (replaces the 2026-11-09 peek-only rule): choosing a space opens the sheet to half; the peek row
+    // folds it again, and then the drawing and its card are as the earlier rule asked.
     check(
       width,
-      'tapping a space leaves the sheet closed',
+      'tapping a space opens the sheet to half',
+      (await peek.getAttribute('aria-expanded')) === 'true',
+    );
+    await peek.click();
+    await page.waitForTimeout(500);
+    check(
+      width,
+      'the peek row folds the sheet',
       (await peek.getAttribute('aria-expanded')) === 'false',
     );
     const stage = await page.locator('.work .stage').boundingBox();

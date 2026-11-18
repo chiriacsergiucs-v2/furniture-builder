@@ -6,7 +6,8 @@
 // (listed under Checks), a service zone behind the chest is a warning, a chest over the desk makes the bodies an
 // error, and a wardrobe in a room lower than its diagonal warns, or errs once marked "Assembled lying down".
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
+import { goBuild, goCompose } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -14,10 +15,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 375]) {
   const phone = width < 500;
@@ -80,7 +78,13 @@ for (const width of [1440, 375]) {
   const type = async (label, v) => {
     await openSheet();
     await openGroup('Position');
-    await openGroup('Clearance');
+    await openGroup('More: clearance, merge');
+    // ADR-160: the room's fields sit in a closed "Room" fold; open it by its summary.
+    if (/^Room /.test(label)) {
+      const room = page.locator('details.room-fold');
+      if ((await room.count()) && !(await room.evaluate((el) => el.open)))
+        await room.locator('> summary').click();
+    }
     const f = field(label);
     await f.scrollIntoViewIfNeeded();
     await f.fill(String(v));
@@ -102,17 +106,13 @@ for (const width of [1440, 375]) {
     if ((await piece.getAttribute('aria-pressed')) !== 'true') await click(piece);
   };
   const toCompose = async () => {
-    if (
-      await mode('Compose')
-        .isVisible()
-        .catch(() => false)
-    )
-      await click(mode('Compose'));
+    // ADR-241: Compose on a desktop, the Editor place on a phone.
+    await goCompose(page);
     const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   };
   const checksText = async () => {
-    await click(mode(/Build & Preview/));
+    await goBuild(page);
     await page.waitForTimeout(300);
     {
       const t = page.getByRole('tab', { name: /Checks/ });
@@ -141,7 +141,7 @@ for (const width of [1440, 375]) {
 
   // 2. Chair space depth: empty until the user types it (no default), then a chair zone on the overlay.
   await openSheet();
-  await openGroup('Clearance');
+  await openGroup('More: clearance, merge');
   const chair = field('Chair space depth');
   check(
     width,
@@ -149,7 +149,17 @@ for (const width of [1440, 375]) {
     await chair.isVisible(),
   );
   check(width, 'the chair space depth has no default (empty)', (await chair.inputValue()) === '');
-  const toggle = page.getByRole('checkbox', { name: 'Clearances', exact: true });
+  // ADR-144, G-269: on a phone the clearances toggle sits behind the plan's "Options" button; open it when closed.
+  const clearancesToggle = async () => {
+    const options = plan.locator('details.view-options > summary:visible').first();
+    if (
+      (await options.isVisible().catch(() => false)) &&
+      !(await options.evaluate((el) => el.parentElement.open))
+    )
+      await options.click();
+    return page.getByRole('checkbox', { name: 'Clearances', exact: true });
+  };
+  const toggle = await clearancesToggle();
   check(width, 'the plan has a "Clearances" toggle, off', !(await toggle.isChecked()));
   await click(toggle);
   check(
@@ -194,7 +204,7 @@ for (const width of [1440, 375]) {
   // 3b. A service zone behind the chest, sized by the user: it reaches into the desk, so it is a warning.
   await pick(chest);
   await openSheet();
-  await openGroup('Clearance');
+  await openGroup('More: clearance, merge');
   await click(
     page.getByRole('radiogroup', { name: 'Service zone' }).getByRole('radio', { name: 'Back' }),
   );
@@ -245,8 +255,11 @@ for (const width of [1440, 375]) {
   await pick(wardrobe);
   await openSheet();
   const takes =
-    (await page.getByText(/^Takes \d+ × \d+ mm of floor, \d+ mm high\.$/).textContent()) ?? '';
-  const [, , wd, wh] = /Takes (\d+) × (\d+) mm of floor, (\d+) mm high/.exec(takes) ?? [];
+    (await page
+      .getByText(/^\d+ × \d+ mm of floor, \d+ mm high$/)
+      .first()
+      .textContent()) ?? '';
+  const [, , wd, wh] = /(\d+) × (\d+) mm of floor, (\d+) mm high/.exec(takes) ?? [];
   const diagonal = Math.ceil(Math.hypot(Number(wh), Number(wd)));
   await click(btn('Add the room'));
   await type('Room height', Number(wh) + 1);
@@ -261,7 +274,7 @@ for (const width of [1440, 375]) {
   );
   await pick(wardrobe);
   await openSheet();
-  await openGroup('Clearance');
+  await openGroup('More: clearance, merge');
   await click(page.getByRole('checkbox', { name: 'Assembled lying down', exact: true }));
   const te = await checksText();
   check(
@@ -273,7 +286,7 @@ for (const width of [1440, 375]) {
   await shot('installation');
 
   // 5. Off again hides the overlay.
-  await click(page.getByRole('checkbox', { name: 'Clearances', exact: true }));
+  await click(await clearancesToggle());
   check(width, 'Clearances off hides the zones', (await plan.locator('g.zone').count()) === 0);
 
   check(width, 'no sideways scroll', await noSideScroll());

@@ -55,7 +55,7 @@ import { Icon } from './icons';
 import { useUi, type WizardDraft } from '../store/uiStore';
 
 const picture = (model: FurnitureModel, materials: Material[], size: number) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(model, materials, size))}`;
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(model, materials, size, true))}`;
 
 /**
  * Whole-number input that hands every entry to the wizard, so out-of-range values show as problems instead of
@@ -1012,6 +1012,9 @@ function Wizard({
           )}
         </aside>
       </div>
+      {isReview && c.errors > 0 && (
+        <p className="hint warn wz-why">{t('Fix the problems listed under Checks first')}</p>
+      )}
       <div className="wizard-footer wz-footer">
         <button
           type="button"

@@ -32,6 +32,23 @@ Dexie storage, React UI, lazy three.js viewer.
 9. **Report:** symptom, root cause, fix, test added, similar risks elsewhere; update the
    backlog row if the bug belongs to one.
 
+## Flaky or order-dependent tests
+
+Adapted from the systematic-debugging skill of the MIT-licensed `maslennikov-ig/claude-code-orchestrator-kit`.
+
+- **A test leaves a file or folder behind** (or a test passes alone and fails in the suite because of one): run
+  `.claude/skills/debug/find-polluter.sh <path> ['tests/**/*.test.ts*']`. It runs each tracked test file alone and names
+  the first one that creates `<path>` (exit 1); exit 0 means none did. Fix the test to clean up (`afterEach`, a temp
+  dir), never the check that noticed.
+- **A test passes sometimes** and waits with a guessed delay (`await new Promise((r) => setTimeout(r, 50))`): wait for
+  the condition instead — `vi.waitFor(() => expect(x).toBe(y))` in plain Vitest tests, Testing Library's
+  `waitFor`/`findBy*` in jsdom tests. Keep a fixed delay only when the test is about timing itself (a debounce, a
+  throttle), after first waiting for the trigger, with a comment saying where the number comes from.
+- **Faked time:** prefer `vi.useFakeTimers()` and `vi.advanceTimersByTime()` over real waits; restore with
+  `vi.useRealTimers()` in `afterEach`.
+- Prove a flake fix: run the file 20 times before and after
+  (`for i in $(seq 20); do pnpm exec vitest run <file> || break; done`). Never use `--retry` to hide a flake.
+
 ## Rules
 
 - Change one thing at a time; re-run after each change.

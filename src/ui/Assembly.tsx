@@ -38,8 +38,8 @@ import { PieceElevation } from './Elevation';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
 import { captureStill, hasStill } from '../viewer/renderBridge';
+import { nextFrame } from '../shared/renderSupport';
 
-const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 /** A step's picture in the assembly print (ADR-206). */
 const stepPictureKey = (piece: string, step: string) => `${piece}:${step}`;
 import { useView } from '../store/useView';

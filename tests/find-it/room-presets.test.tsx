@@ -6,17 +6,9 @@
 // error (never prefilled).
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { openSheet, piecesList, renderApp, WIDTHS } from './setup';
+import { openSheet, piecesList, renderApp, startNew, WIDTHS } from './setup';
 
 afterEach(() => vi.unstubAllGlobals());
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function startNew(user: User) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  return screen.findByRole('dialog', { name: 'Start something new' });
-}
 
 describe.each(WIDTHS)('room presets and room-mix filters at %ipx (find-it, ADR-210)', (width) => {
   it('New… → Room preset → Home office opens a project with the desk and the bookcase; Add seller product', async () => {
@@ -56,7 +48,7 @@ describe.each(WIDTHS)('room presets and room-mix filters at %ipx (find-it, ADR-2
     expect(screen.getAllByText('Home office: desk and bookcase').length).toBeGreaterThan(0);
 
     // Shopping → Add seller product: enabled, with the project hint; the product lands on the project's list.
-    const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+    const build = screen.queryByRole('radio', { name: /Cut List/ });
     if (build) await user.click(build);
     await user.click(screen.getByRole('tab', { name: /Shopping/ }));
     const add = await screen.findByRole('button', { name: 'Add seller product' });

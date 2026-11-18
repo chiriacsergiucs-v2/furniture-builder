@@ -47,7 +47,16 @@ import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { RoomFeatures } from './RoomFeatures';
-import { FillFooter, Field, MixWarnings, Problems, ResultProblems, SaveError } from './fillParts';
+import {
+  FillFooter,
+  Field,
+  MixWarnings,
+  Problems,
+  ResultProblems,
+  SaveError,
+  num,
+  opt,
+} from './fillParts';
 
 type StepId = 'room' | 'walls' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -121,9 +130,6 @@ const START: Form = {
   // No prefilled walkway: the user's own size (ADR-010, ADR-073).
   walkway: '',
 };
-
-const num = (s: string) => Number(s.trim());
-const opt = (s: string) => (s.trim() === '' ? undefined : num(s));
 
 const sizesOf = (f: Form): ShapeSizes => ({
   width: num(f.width),
@@ -218,7 +224,7 @@ function toInput(f: Form, room: Room, walls: number[], extras?: Extras): RoomInp
 }
 
 const picture = (m: RoomMix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
 
 function MixCard({
   m,

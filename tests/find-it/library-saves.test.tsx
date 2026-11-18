@@ -5,22 +5,12 @@
 // Restore as a new project. Each saved name is then listed when the saved projects are read again from the device.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { projectWithTwoPieces, renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
+import { projectWithTwoPieces, renderApp, startNewWith as startNew, WIDTHS } from './setup';
 
 /** The names of the projects saved on this device, read again from storage. */
 async function savedNames(): Promise<string[]> {
   const { listProjects } = await import('../../src/persist/db');
   return (await listProjects()).map((r) => r.name);
-}
-
-async function startNew(user: User, row: RegExp, title: string) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  const start = await screen.findByRole('dialog', { name: 'Start something new' });
-  await user.click(within(start).getByRole('button', { name: row }));
-  return screen.findByRole('dialog', { name: title });
 }
 
 /** The one project saved since `before` (ids), which is the open one: its name is shown in a field. */

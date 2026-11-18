@@ -3,7 +3,7 @@
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/critique-bugs/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width (390 with touch, 1280 with a mouse) and finds everything by role and
 // visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -11,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** Height of each located element, rounded (multi-line text areas are tall anyway and are left out). */
 const heights = (loc) =>
@@ -140,12 +137,17 @@ for (const width of [390, 1280]) {
   await dlg.getByRole('button', { name: 'Next', exact: true }).waitFor();
   const steps = dlg.getByRole('list', { name: 'Wizard steps' }).getByRole('button');
   await tall('the wizard step buttons', steps);
+  // Choosing the type goes straight on to the Size step, where the Name input is.
   await dlg.getByRole('button', { name: /Cabinet \(closed box\)/ }).click();
-  await dlg.getByRole('button', { name: 'Next', exact: true }).click();
+  await dlg.getByLabel('Name', { exact: true }).waitFor();
   await tall('the wizard Name input', dlg.getByLabel('Name', { exact: true }));
   await shot('wizard');
   await page.keyboard.press('Escape');
-  if (await dlg.count()) await page.keyboard.press('Escape');
+  // Escape on the wizard asks "Close the wizard?": confirm with Close.
+  const confirm = page.locator('dialog[open][aria-label="Confirm"]');
+  await confirm.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+  if (await confirm.count())
+    await confirm.getByRole('button', { name: 'Close', exact: true }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
   // 5. Catalog: the sticky filter row stays below the app bar after scrolling.

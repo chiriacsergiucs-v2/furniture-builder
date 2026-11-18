@@ -28,7 +28,7 @@ describe.each(WIDTHS)('assembly steps re-check at %ipx (find-it, ADR-185, ADR-18
     await addPiece(user, /Chest of drawers/);
 
     if (width === PHONE_WIDTH) {
-      const build = screen.queryByRole('radio', { name: /Build & Preview/ });
+      const build = screen.queryByRole('radio', { name: /Cut List/ });
       if (build) await user.click(build);
     }
     await user.click(screen.getByRole('tab', { name: /^Assembly/ }));

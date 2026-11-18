@@ -12,13 +12,10 @@ import {
   type Project,
 } from '../src/core/project';
 import { cutlist } from '../src/core/cutlist';
-import type { CabinetParams, Design, Panel } from '../src/core/types';
+import type { CabinetParams, Panel } from '../src/core/types';
+import { withCab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const withCab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 /** Two base units side by side (the second placed at the first's right edge). */
 function pair(a: Partial<CabinetParams> = {}, b: Partial<CabinetParams> = {}): Project {
   let p = newProject('Common');

@@ -35,6 +35,7 @@ import {
 } from './model3d';
 import type { ItemZones } from './envelopes';
 import type { Design, Mm, SellerItem } from './types';
+import { isObj, isInt } from './guards';
 
 interface TemplateItem {
   /** Id inside the template, so placements can point at their base. */
@@ -403,11 +404,6 @@ export function templateModels(
       : {}),
   }));
 }
-
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
-const isInt = (v: unknown, min = -1e7, max = 1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
 
 /** Problems of a template read from storage or a file; never throws (ADR-008). Empty = usable. */
 export function validateProjectTemplate(t: unknown): string[] {

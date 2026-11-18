@@ -50,7 +50,7 @@ import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from '../store/uiStore'
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
-import { AccountButton, AccountDialog, SyncStatus } from './Account';
+import { AccountButton, AccountDialog } from './Account';
 import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
 import { initAccount } from '../store/accountActions';
@@ -70,7 +70,6 @@ import {
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 // Pages opened on demand load on first use (ADR-222).
 const CatalogPage = lazy(() => import('./CatalogPage').then((m) => ({ default: m.CatalogPage })));
-const ResearchPage = lazy(() => import('./Research').then((m) => ({ default: m.ResearchPage })));
 const GapsPage = lazy(() => import('./Gaps').then((m) => ({ default: m.GapsPage })));
 const InfoPage = lazy(() => import('./Info').then((m) => ({ default: m.InfoPage })));
 const PageLoading = () => (
@@ -157,16 +156,15 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: t('Not saved — browser storage unavailable'),
 };
 
-type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps' | 'info';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps', 'info'];
+type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'gaps', 'info'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
     : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
- * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043) and #gaps the gaps ledger (ADR-101),
- * both reached from the ⋯ menu, and #info Information and guides (ADR-158).
+ * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, and #info Information and guides (ADR-158).
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -545,6 +543,11 @@ export function App() {
       // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
+        // An entered space (ADR-270) is left first; the selection stays.
+        if (useUi.getState().enteredId) {
+          useUi.getState().exitEntered();
+          return;
+        }
         // Inside a drilled project piece Esc also goes up one level; only the whole piece clears the selection (ADR-249).
         if (st.project && !st.editingItemId && st.drillItemId && st.selectedId !== null)
           st.select(parentOf(st.model, st.selectedId));
@@ -613,24 +616,6 @@ export function App() {
     <>
       <div className={`app page-${page}`}>
         <header className="bar" ref={barRef}>
-          {/* The mark goes to Projects, like the Projects place (G-059); on a phone it also names the app. */}
-          <a
-            className="brand"
-            href="#"
-            title={t('Projects')}
-            aria-label={t('Furniture Builder, go to Projects')}
-            onClick={(e) => {
-              e.preventDefault();
-              setPage('projects');
-            }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <line x1="3" y1="15.5" x2="21" y2="15.5" />
-            </svg>
-            <span className="brand-name">Furniture Builder</span>
-          </a>
           <nav className="pages places" aria-label={t('Places')} ref={navRef}>
             {PLACES.map((p) => (
               <a
@@ -668,7 +653,7 @@ export function App() {
                 }}
               >
                 <Icon name="layers" className="sm" />
-                <span>{t('Cut list')}</span>
+                <span>{t('Cut List')}</span>
                 {(errors || warnings) > 0 && (
                   <span className={`badge ${errors ? 'error' : 'warning'}`} aria-label={buildMeta}>
                     {errors || warnings}
@@ -767,7 +752,6 @@ export function App() {
             </span>
           )}
           {page === 'editor' && !phone && <EstimateChip />}
-          <SyncStatus />
           <div className="bar-tools">
             {page === 'editor' && (
               <>
@@ -838,9 +822,8 @@ export function App() {
             <MoreMenu
               onNew={() => setDialog('new')}
               onOpened={() => setPage('editor')}
-              onResearch={() => setPage('research')}
-              onGaps={() => setPage('gaps')}
               onInfo={() => setPage('info')}
+              current={page === 'info' ? 'info' : undefined}
             />
           </div>
         </header>
@@ -903,11 +886,14 @@ export function App() {
               onNewPiece={() => openWizard(null)}
             />
           )}
-          {page === 'research' && (
-            <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
-          )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
-          {page === 'info' && <InfoPage onDone={() => setPage('editor')} designOpen={designOpen} />}
+          {page === 'info' && (
+            <InfoPage
+              onDone={() => setPage('editor')}
+              designOpen={designOpen}
+              onGaps={() => setPage('gaps')}
+            />
+          )}
         </Suspense>
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}

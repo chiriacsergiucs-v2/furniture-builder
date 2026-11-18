@@ -2,7 +2,8 @@
 // backlog N117; ADR-119 at every width, N118) and the wizard's form first, run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/catalog-compact/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by role and visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
+import { showAllRows } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -10,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390]) {
   const phone = width < 500;
@@ -66,6 +64,8 @@ for (const width of [1280, 390]) {
   );
 
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  // The catalog is paged (N311): the height above is the page as it opens; the card checks below measure every card.
+  await showAllRows(page);
   const firstFamily = page.getByRole('article').first();
   const about = firstFamily.getByRole('button', { name: 'About this family' });
   const structure = firstFamily.getByText('Default structure:');
@@ -100,7 +100,8 @@ for (const width of [1280, 390]) {
     const bad = [];
     for (const c of cards) {
       const meta = c.querySelector('.item-meta');
-      const ts = [...c.querySelectorAll('.tag, .kind')];
+      // The "default" tag of a family's first card sits on the picture (user decision 2026-11-07), not on the meta line.
+      const ts = meta ? [...meta.querySelectorAll('.tag, .kind')] : [];
       if (!meta || !ts.length) {
         bad.push(`${c.querySelector('.item-name')?.textContent}: no meta line`);
         continue;

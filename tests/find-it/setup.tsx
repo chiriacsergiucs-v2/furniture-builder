@@ -7,7 +7,8 @@
 // - Find by role, accessible name and visible text (`getByRole`, `within`, `getByText`), never by class name:
 //   `querySelector` and `querySelectorAll` are refused by ESLint under `tests/find-it/`. When a thing has no role or
 //   name, give the component an accessible name (through `t()`, with its Russian entry) instead.
-// - Shared steps (`addPiece`, `projectWithTwoPieces`, `selectRows`, `openMore`, `openMenu`, `openSheet`) live here;
+// - Shared steps (`addPiece`, `projectWithTwoPieces`, `selectRows`, `openMore`, `openMenu`, `openSheet`, `startNew`,
+//   `startNewWith`, `retype`, `step`, `openCatalog`) live here;
 //   import them instead of copying them into a test file.
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
@@ -147,6 +148,38 @@ export async function addPiece(
   if (place) await user.click(place);
 }
 
+/** ⋯ › New…: opens the "Start something new" dialog. */
+export async function startNew(user: User) {
+  await user.click(screen.getByLabelText('More'));
+  await user.click(await screen.findByRole('button', { name: /New…/ }));
+  return screen.findByRole('dialog', { name: 'Start something new' });
+}
+
+/** ⋯ › New… › the row matching `row`: opens the dialog named `title`. */
+export async function startNewWith(user: User, row: RegExp, title: string) {
+  const start = await startNew(user);
+  await user.click(within(start).getByRole('button', { name: row }));
+  return screen.findByRole('dialog', { name: title });
+}
+
+/** The dialog's field with this label, typed over. */
+export async function retype(user: User, dlg: HTMLElement, label: string, value: string) {
+  const input = within(dlg).getByLabelText(label);
+  await user.clear(input);
+  if (value) await user.type(input, value);
+  return input as HTMLInputElement;
+}
+
+/** The button `name` in the dialog's step list `list`. */
+export const step = (dlg: HTMLElement, list: string, name: string) =>
+  within(within(dlg).getByRole('list', { name: list })).getByRole('button', { name });
+
+/** The top bar's Catalog tab. */
+export async function openCatalog(user: User) {
+  await user.click((await screen.findAllByRole('link', { name: /^(Catalog|Каталог)/ }))[0]);
+  return screen.findByRole('heading', { level: 1, name: /^(Catalog|Каталог)$/ });
+}
+
 /** Bare app → ⋯ › New… › Project with several pieces → Compose, with two base cabinets. */
 export async function projectWithTwoPieces(user: User) {
   await user.click(screen.getByLabelText('More'));
@@ -225,6 +258,15 @@ export async function projectWithRoom(user: User, search = 'Sideboard') {
 /** Opens the app's More menu (⋯), or the control labelled `name`. */
 export async function openMore(user: User, name: RegExp | string = /^More$/) {
   await user.click(screen.getByLabelText(name));
+}
+
+/** Goes ⋯ › Information and guides › Gaps (the Gaps page is reached from Information) and returns the Gaps page. */
+export async function openGaps(user: User) {
+  await openMore(user);
+  await user.click(screen.getByRole('button', { name: /^Information and guides/ }));
+  const info = await screen.findByRole('main', { name: 'Information and guides' });
+  await user.click(within(info).getByRole('button', { name: /^Gaps/ }));
+  return screen.findByRole('main', { name: 'Gaps' });
 }
 
 /** Opens a card's More actions menu and returns it. */

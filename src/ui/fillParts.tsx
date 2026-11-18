@@ -139,3 +139,7 @@ export function FillFooter({
     </div>
   );
 }
+
+/** A form string as a number; empty = absent for `opt`. The core reports what is wrong with a bad value. */
+export const num = (s: string) => Number(s.trim());
+export const opt = (s: string) => (s.trim() === '' ? undefined : num(s));

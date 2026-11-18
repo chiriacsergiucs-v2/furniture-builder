@@ -6,6 +6,7 @@
 import { defaultMaterials, defaultSheetFor, fr, mm, newId } from '../design';
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
 import { boardLabel } from '../boards';
+import { MAX_DIVIDERS } from '../counts';
 import { materialKey } from '../project';
 import { t, type Key } from '../i18n';
 import type {
@@ -21,14 +22,13 @@ import type {
 } from '../types';
 import type { Answers, Compartment, Option, StepDef } from './types';
 
-export const MAX_DIVIDERS = 7;
 const MAX_COMP_SHELVES = 20;
 
 // ---------------------------------------------------------------------------
 // Reading answers
 // ---------------------------------------------------------------------------
 
-export const num = (a: Answers, k: string, d = 0): number =>
+const num = (a: Answers, k: string, d = 0): number =>
   typeof a[k] === 'number' ? (a[k] as number) : d;
 export const str = (a: Answers, k: string, d = ''): string =>
   typeof a[k] === 'string' ? (a[k] as string) : d;

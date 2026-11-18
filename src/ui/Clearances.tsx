@@ -11,6 +11,7 @@ import {
   type ItemZones,
   type ServiceSide,
 } from '../core/envelopes';
+import { boxCentre } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { isWallHung, type ProjectItem } from '../core/project';
 import { useDesign } from '../store/designStore';
@@ -256,8 +257,8 @@ export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number 
             </rect>
             {(z.kind === 'chair' || z.kind === 'service') && (
               <text
-                x={z.box.x + z.box.w / 2}
-                y={z.box.z + z.box.d / 2}
+                x={boxCentre(z.box).x}
+                y={boxCentre(z.box).z}
                 fontSize={Math.min(fs * 0.8, z.box.w / 6, z.box.d / 1.5)}
                 textAnchor="middle"
                 dominantBaseline="middle"

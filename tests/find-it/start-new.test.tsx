@@ -7,7 +7,7 @@
 // several pieces" is said in the dialog and opens nothing.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { renderApp, retype, startNew, step, WIDTHS } from './setup';
 
 // The device storage refuses a save while `failSave` is set (a full or blocked browser storage).
 const store = vi.hoisted(() => ({ failSave: false }));
@@ -19,25 +19,6 @@ vi.mock('../../src/persist/db', async (orig) => {
       store.failSave ? Promise.reject(new Error('QuotaExceededError')) : real.saveProject(...a),
   };
 });
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function startNew(user: User) {
-  await user.click(screen.getByLabelText('More'));
-  await user.click(await screen.findByRole('button', { name: /New…/ }));
-  return screen.findByRole('dialog', { name: 'Start something new' });
-}
-
-/** The dialog's field with this label, typed over. */
-async function retype(user: User, dlg: HTMLElement, label: string, value: string) {
-  const input = within(dlg).getByLabelText(label);
-  await user.clear(input);
-  if (value) await user.type(input, value);
-  return input as HTMLInputElement;
-}
-
-const step = (dlg: HTMLElement, list: string, name: string) =>
-  within(within(dlg).getByRole('list', { name: list })).getByRole('button', { name });
 
 describe.each(WIDTHS)('start something new at %ipx (find-it, ADR-193)', (width) => {
   it('New… rows; Fill a wall: a wrong width is named under the field; Refine → Back shows cards', async () => {
@@ -64,7 +45,7 @@ describe.each(WIDTHS)('start something new at %ipx (find-it, ADR-193)', (width) 
     expect(within(dlg).getByRole('heading', { name: 'Refine' })).toBeTruthy();
     await user.click(within(dlg).getByRole('button', { name: 'Back' }));
     expect(
-      await within(dlg).findByText('2400 mm wall · best 4, each checked for problems'),
+      await within(dlg).findByText('2400 mm wall · best 2, each checked for problems'),
     ).toBeTruthy();
     expect(within(dlg).getAllByRole('button', { name: 'Use this mix' }).length).toBeGreaterThan(0);
     expect(within(dlg).queryByRole('alert')).toBeNull();
@@ -100,7 +81,7 @@ describe.each(WIDTHS)('start something new at %ipx (find-it, ADR-193)', (width) 
     expect(
       (await within(dlg).findAllByRole('button', { name: 'Use this mix' })).length,
     ).toBeGreaterThan(0);
-    expect(within(dlg).getByText('4 walls · best 4, each checked for problems')).toBeTruthy();
+    expect(within(dlg).getByText('4 walls · best 2, each checked for problems')).toBeTruthy();
     expect(within(dlg).getAllByText(/^Wall 1: .*; Wall 2: /).length).toBeGreaterThan(0);
 
     // U (8 walls), one wall unticked → Rectangle → Show suggestions gives cards.

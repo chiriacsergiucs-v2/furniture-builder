@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-online
 dev-dist
 *.local
 .DS_Store
@@ -10,3 +11,8 @@ playwright-report
 __pycache__
 .claude/worktrees/
 .eslintcache
+regress-report
+.tmp/
+/*-report.md
+/*-hunting-report.md
+/*-fixes-implemented.md

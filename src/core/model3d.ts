@@ -7,6 +7,7 @@
 import { t } from './i18n';
 import { overlaps } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
+import { isObj, isInt } from './guards';
 
 /** Default limits (ADR-076, open question: the user may change them). */
 export const MODEL_LIMITS = { bytes: 30 * 1024 * 1024, triangles: 500_000 } as const;
@@ -213,8 +214,6 @@ const NEEDS_DECODER: Record<string, string> = {
   KHR_texture_basisu: t('Basis Universal textures'),
 };
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /** The name shown for a model: the file name without its extension, at most 80 characters. */
@@ -345,9 +344,6 @@ export function checkGltf(
 // ---------------------------------------------------------------------------
 // Validation and checks
 // ---------------------------------------------------------------------------
-
-const isInt = (v: unknown, min = -1e7) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
 /** Problems with a project's `models` list; `ids` are the piece ids already taken (ids are unique across both). */
 export function validateModelItems(list: unknown, ids: Set<string>): string[] {

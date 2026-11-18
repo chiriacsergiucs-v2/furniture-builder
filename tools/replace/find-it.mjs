@@ -2,7 +2,8 @@
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/replace/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at 1440 and 390 px and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
+import { showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -10,10 +11,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1440, 390]) {
   const phone = width < 500;
@@ -78,12 +76,15 @@ for (const width of [1440, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addPiece('Base cabinet', /Base cabinet, doors: 1 door \+ shelf/);
   await addPiece('Base cabinet', /Base cabinet, doors: 1 door \+ shelf/);
+  await showPieces(page);
   await click(pieces.nth(1).getByRole('button'));
   await page.waitForTimeout(150);
   const name0 = await pieceName();
   const x0 = await fromLeft();
 
   // 2. "Replace…" is found in the selected-piece card and lists only same-width items.
+  // ADR-160: Replace… is in the selected piece's ⋯ (More actions) menu.
+  await click(card.getByRole('button', { name: 'More actions' }).first());
   const replace = card.getByRole('button', { name: 'Replace…', exact: true });
   check(width, '"Replace…" is found in the selected-piece card', await replace.isVisible());
   await click(replace);
@@ -139,7 +140,11 @@ for (const width of [1440, 390]) {
   await openSheet();
   const name1 = await pieceName();
   check(width, 'the selected piece is now the picked item', name1 !== name0, `${name0} → ${name1}`);
+  await showPieces(page);
   check(width, 'still two pieces', (await pieces.count()) === 2);
+  // All pieces cleared the selection (ADR-160): select the replaced piece again.
+  await click(pieces.nth(1).getByRole('button'));
+  await openSheet();
   check(width, 'it stays in place (From left unchanged)', (await fromLeft()) === x0, `${x0}`);
   check(
     width,
@@ -161,6 +166,7 @@ for (const width of [1440, 390]) {
   await openGroup('Position');
   await click(card.getByRole('radio', { name: 'On a piece', exact: true }));
   await page.waitForTimeout(150);
+  await click(card.getByRole('button', { name: 'More actions' }).first());
   await click(replace);
   await dlg.waitFor({ state: 'visible' });
   const stackedSizes = await rows.locator('.sub.num').allTextContents();

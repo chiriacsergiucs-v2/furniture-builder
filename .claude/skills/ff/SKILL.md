@@ -1,37 +1,18 @@
 ---
 name: ff
-description: Fast-forward workflow — implement exactly what the user asked, with light acceptance and no tests, then push straight to main once the user approves a list of what changed. No ADR, no branch, no pull request. Use when the user says "ff", "fast forward" or "/ff" for a request, and only then. Do not use when the user did not say "ff" (use build) or when the work is a pending ADR (use next-adr).
+description: Fast-forward mode of the build flow — implement exactly what the user asked, light checks and no tests, then land on main once the user approves a list of what changed (push where allowed, else pull request with auto-merge). No ADR. Use when the user says "ff", "fast forward" or "/ff" for a request, and only then. Do not use when the user did not say "ff" (use build) or when the work is a pending ADR (use next-adr).
 ---
 
 # ff — fast forward
 
-A short path for small, clear requests (user rule 2026-10-27). It replaces the ADR lifecycle, the branch per ADR
-and the pull request for that one request. Every hard rule in `CLAUDE.md` (Engineering conventions) still holds.
+Run the `build` skill in mode `ff` for this request only (user rule 2026-10-27, mode rules 2026-11-15). Gates: questions
+only on low confidence; light checks (`pnpm format`, `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, no tests); the
+user approves the change list before landing. Steps, landing and stop conditions are in `build` and in _Flow modes_ in
+`CLAUDE.md`; every hard rule there still holds. End with **Decided** and **Skipped this iteration**.
 
-## Steps
+## Burst mode
 
-1. **Understand.** Write the request down in the user's words. Ask only when confidence is low (one batch, `build`
-   skill step 3); decide the obvious and list it under **Decided**.
-2. **Start from main.** `git fetch origin main` and work on a local copy of `origin/main`
-   (`git checkout -B <session branch> origin/main`).
-3. **Implement** the smallest change that does what was asked. No refactors or polish beyond it.
-4. **Bookkeeping, same change:**
-   - one row in `docs/backlog.md` (next free `N` id), status `Partially done`, the request in the user's words,
-     and the gap `find-it pending (light, ADR-066)` naming the visible text a later find-it should look for.
-     No ADR or gap entry is written (gaps optional, user 2026-11-07).
-5. **Checks:** run only `pnpm typecheck` and `pnpm build` (main deploys once CI on main passes, ADR-197; a broken build must not land).
-   Run `pnpm format` so CI's format check passes, and `pnpm docs:check` for the bookkeeping. Do not run
-   `pnpm test`, lint or any find-it. If typecheck or build fails, fix the cause; never push red.
-6. **Commit** locally with a clear message. Do not push yet.
-7. **Ask for approval.** List what changed: each file with a one-line summary, the visible changes (text, controls,
-   layout), the backlog row and any G ids, and that tests and find-it were not run. Ask: "Push to main?"
-8. **Push only on explicit approval:** `git push origin HEAD:main` (fast-forward only; if main moved, rebase the
-   local commit on `origin/main`, re-run typecheck and build, and ask again). Never force-push main.
-9. **Report:** the commit sha on main and the `CI` and `Deploy GitHub Pages` run ids once they appear. Pushed ≠
-   deployed ≠ live-verified; say which is true. End with **Decided** and **Skipped this iteration**.
-
-## Not in ff
-
-- Changes to `src/core/types.ts`, the design document, the model shape, the Dexie schema or the network
-  boundary: these need an ADR (ADR-011, ADR-012, ADR-002). Say so and use `new-adr` instead.
-- Anything that deletes or rewrites saved designs.
+`ff` already skips tests and find-it. While the `burst` toggle in `CLAUDE.md` is **on**, also log each skipped item
+(related tests, lint, full suite, fuzz, find-it, live-verify) on the backlog row as
+`burst-skipped: <item> (burst, YYYY-MM-DD)`, so the `catch-up` skill can pay it. Prefer `auto`, which keeps related
+tests and fuzz.

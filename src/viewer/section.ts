@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '../core/i18n';
+import { createListeners } from '../store/deviceValue';
 
 /** A room axis the section cuts across: x along the wall (width), y up (height), z out from the wall (depth). */
 export type SectionAxis = 'x' | 'y' | 'z';
@@ -18,15 +19,11 @@ interface SectionState {
 }
 
 let now: SectionState = { on: false, axis: 'z', at: null, isolate: false };
-const listeners = new Set<() => void>();
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe, notify } = createListeners();
 
 export function setSection(patch: Partial<SectionState>) {
   now = { ...now, ...patch };
-  listeners.forEach((f) => f());
+  notify();
 }
 
 /** The Section and Isolate settings. */

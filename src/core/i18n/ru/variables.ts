@@ -88,7 +88,6 @@ export const ru_variables = {
   'Value of {name}': 'Значение {name}',
   'used by {n|# piece|# pieces}': 'используют {n|# изделие|# изделия|# изделий}',
   'not used': 'не используется',
-  'Delete {name}': 'Удалить {name}',
   'New variable': 'Новая переменная',
   'e.g. bottom height': 'например, высота низа',
   'Value or formula': 'Значение или формула',

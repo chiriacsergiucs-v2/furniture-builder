@@ -1,7 +1,7 @@
 // Find-it acceptance for the app shell (ADR-078, backlog N73), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/shell/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { openPieceEditor, showPieces } from '../lib/steps.mjs';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -10,10 +10,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 for (const width of [1280, 390, 360]) {
   const phone = width < 500;
@@ -231,6 +228,8 @@ for (const width of [1280, 390, 360]) {
   await page.locator('ul.pieces > li').first().getByRole('button').click();
   await openPieceEditor(page);
   const back = page.getByRole('button', { name: 'Back to project Shell test' });
+  // The editor screen mounts a moment after the click: wait for the crumb instead of reading it at once.
+  await back.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
   check(
     width,
     'app bar shows ‹ Shell test › piece',
@@ -276,27 +275,27 @@ for (const width of [1280, 390, 360]) {
     })(),
   );
 
-  // 9. Feature Research from ⋯; old links still open their pages.
+  // 9. The Feature Research page was removed (N281, user: "Delete any research files and research related info, we
+  //    are done with it"): ⋯ no longer lists it, and an old #research link falls back to Projects; the other links
+  //    still open their pages.
   await more.click();
-  await menu.getByRole('button', { name: /Feature Research/ }).click();
-  // The page is a lazy chunk: wait for its heading before checking it.
-  await page
-    .getByRole('heading', { name: /Feature Research/ })
-    .waitFor({ timeout: 10000 })
-    .catch(() => {});
   check(
     width,
-    'Feature Research opens from ⋯',
-    await page.getByRole('heading', { name: /Feature Research/ }).isVisible(),
+    'Feature Research is no longer listed in ⋯',
+    (await menu.getByRole('button', { name: /Feature Research/ }).count()) === 0,
   );
+  await more.click();
   for (const [hash, test] of [
     ['#editor', () => page.locator('main.work').isVisible()],
     ['#catalog', () => page.getByRole('searchbox', { name: 'Search the catalog' }).isVisible()],
-    ['#research', () => page.getByRole('heading', { name: /Feature Research/ }).isVisible()],
+    [
+      '#research',
+      () => page.getByRole('button', { name: 'Create a new project', exact: true }).isVisible(),
+    ],
   ]) {
     await page.goto(url + hash);
     await page.waitForTimeout(500);
-    check(width, `${hash} still opens its page`, await test());
+    check(width, `${hash} still opens a page`, await test());
   }
   check(width, 'no page errors', errors.length === 0, errors.join(' / '));
   await ctx.close();

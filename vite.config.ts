@@ -10,11 +10,6 @@ const VENDOR_CHUNKS: [RegExp, string][] = [
   [/[\\/]node_modules[\\/]@react-three[\\/]/, 'react-three'],
   [/[\\/]node_modules[\\/]dexie[\\/]/, 'dexie'],
   [/[\\/]node_modules[\\/]@supabase[\\/]/, 'supabase'],
-  // The shipped research papers, reached only through `import()` (researchStore).
-  [
-    /[\\/]src[\\/]core[\\/]research[\\/](index|ensemble-[^/\\]*(?<!\.app))\.ts$|[\\/]docs[\\/]research[\\/]/,
-    'research',
-  ],
 ];
 
 /** The CSP meta tag (ADR-131), first in <head>, with this build's backend origin. */

@@ -14,6 +14,7 @@ import {
   type CatalogVariant,
   type Capability,
 } from './types';
+import { isObj } from '../guards';
 
 interface LocalVariant extends Omit<CatalogVariant, 'create'> {
   design?: Design;
@@ -47,7 +48,7 @@ export interface ViewFamily extends CatalogFamily {
   own?: boolean;
 }
 
-export function toLocal(f: CatalogFamily): LocalFamily {
+function toLocal(f: CatalogFamily): LocalFamily {
   const { variants, ...rest } = f;
   return {
     ...structuredClone(rest),
@@ -165,8 +166,6 @@ export const templateOrigin = (
   takenAt: now,
 });
 
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 const isStr = (v: unknown, max = 500) => typeof v === 'string' && v.length > 0 && v.length <= max;
 const CAPS = new Set<string>([
   ...BUILT_CAPABILITIES,

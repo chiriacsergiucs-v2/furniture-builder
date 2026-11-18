@@ -5,6 +5,7 @@ import { t } from '../core/i18n';
 import type { LocalTable } from '../core/sync';
 import { buildModel } from '../core/build';
 import { cutlist, hardwareSummary } from '../core/cutlist';
+import { applyOwned } from '../core/owned';
 import { kerfOf, newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import { frontSvg } from '../core/snapshot';
@@ -165,6 +166,12 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
         : null,
   );
   const [show3d, setShow3d] = useState(false);
+  // Retry (audit F-28): a failed fetch is tried again without opening the link anew.
+  const [attempt, setAttempt] = useState(0);
+  const retry = () => {
+    setState(null);
+    setAttempt((n) => n + 1);
+  };
   useEffect(() => {
     if (opening === 'invalid' || offline) return;
     let live = true;
@@ -175,18 +182,21 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
     return () => {
       live = false;
     };
-  }, [opening, offline]);
+  }, [opening, offline, attempt]);
   const design = useMemo(() => (state?.item ? previewDesign(state.item) : null), [state]);
   const view = useMemo((): ViewData | null => {
     if (!design) return null;
     const model = buildModel(design);
+    const rows = cutlist(model, design.materials);
     return {
       mode: 'design',
       title: `shared:${design.id}`,
       model,
       pieces: [model.panels],
       materials: design.materials,
-      rows: cutlist(model, design.materials),
+      rows,
+      cutRows: rows,
+      owned: applyOwned(rows, undefined, design.materials),
       hardware: hardwareSummary(model),
       diagnostics: model.diagnostics,
       kerf: kerfOf(design),
@@ -233,6 +243,11 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
           <button type="button" className="btn ghost" onClick={close}>
             {t('Cancel')}
           </button>
+          {state?.error && opening !== 'invalid' && !offline && (
+            <button type="button" className="btn primary" onClick={retry}>
+              {t('Try again')}
+            </button>
+          )}
           {state?.item && view && (
             <button type="button" className="btn primary" onClick={() => void open()}>
               {t('Open a copy')}

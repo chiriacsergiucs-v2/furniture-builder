@@ -9,7 +9,6 @@
   rows until they are Done (ADR-066);
 - docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 to ADR-218 cites a gap for each
   out-of-scope line and open question (ADR-082);
-- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212);
 - no tracked file names a retired third-party agent tool, in its path or content (user decision 2026-11-10).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
@@ -57,6 +56,13 @@ backlog = {m.group(1): (m.group(2).strip(), m.group(3))
            for m in re.finditer(r"^\| ([FND]\d{2,}) +\|[^|\n]*\|([^|\n]*)\|?(.*)$",
                                 (REPO / "docs/backlog.md").read_text(), re.M)}
 
+# A backlog id names one row (G-526; G-523 and G-527 hold the clashes that need the user). These four were each used twice before the check existed, and ids
+# are never renumbered (CLAUDE.md), so they are listed here; any other repeated id fails.
+KNOWN_DUPLICATE_BACKLOG_IDS = {"N164", "N281", "N302", "N326"}
+_backlog_ids = re.findall(r"^\| ([FND]\d{2,}) +\|", (REPO / "docs/backlog.md").read_text(), re.M)
+for _id in sorted({i for i in _backlog_ids if _backlog_ids.count(i) > 1} - KNOWN_DUPLICATE_BACKLOG_IDS):
+    errors.append(f"docs/backlog.md: backlog id {_id} is used by more than one row")
+
 # Index rows: | [ADR-NNN](link) | title | depends | status |
 index = (ADR / "README.md").read_text()
 rows = re.findall(r"^\| \[ADR-(\d{3})\]\(([^)]+)\)\s*\|.*\| ([^|]+) \|$", index, re.M)
@@ -76,28 +82,8 @@ for num in adrs:
     if seen.get(num) != 1:
         errors.append(f"docs/adr/README.md: ADR-{num} listed {seen.get(num, 0)} times")
 
-# Research features an ADR names (ADR-212): "- Research: ens.f.<slug>, …" (or the bare slug).
-RESEARCH = REPO / "src/core/research/ensemble-2026-10-23.features.ts"
-research_ids = set(re.findall(r"\bF\('([a-z0-9-]+)'", RESEARCH.read_text())) if RESEARCH.exists() else set()
-
-
-def research_problems(text):
-    """Unknown research feature ids named on the ADR's '- Research:' line."""
-    line = re.search(r"^- Research: (.+)$", text, re.M)
-    if not line:
-        return []
-    out = []
-    for rid in (s.strip() for s in line.group(1).split(",")):
-        if rid and rid.removeprefix("ens.f.") not in research_ids:
-            out.append(f"unknown research feature '{rid}' (not in {RESEARCH.relative_to(REPO)})")
-    return out
-
-
 # Header references inside each ADR.
 for num, (path, status) in adrs.items():
-    # A shipped ADR deletes the features it built, so only pending ADRs are checked.
-    if path.parent == ADR:
-        errors += [f"{path.relative_to(REPO)}: {e}" for e in research_problems(path.read_text())]
     text, rel = path.read_text(), path.relative_to(REPO)
     deps = re.search(r"^- Depends on: (.+)$", text, re.M)
     for d in re.findall(r"ADR-(\d{3})", deps.group(1) if deps else ""):

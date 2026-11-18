@@ -25,7 +25,16 @@ import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
-import { FillFooter, Field, MixWarnings, Problems, ResultProblems, SaveError } from './fillParts';
+import {
+  FillFooter,
+  Field,
+  MixWarnings,
+  Problems,
+  ResultProblems,
+  SaveError,
+  num,
+  opt,
+} from './fillParts';
 
 type StepId = 'wall' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -82,8 +91,6 @@ const START: Form = {
 const WALL_STEP: WallIssue['field'][] = ['width', 'depth', 'height', 'tallDepth'];
 
 /** Empty = any (absent); anything else goes to the core as a number, which reports what is wrong with it. */
-const num = (s: string) => Number(s.trim());
-const opt = (s: string) => (s.trim() === '' ? undefined : num(s));
 
 function toInput(f: Form): WallInput {
   return {
@@ -108,7 +115,7 @@ function toInput(f: Form): WallInput {
 
 /** A whole-mm answer kept as typed (ADR-008); shared with Fill the room. */
 const picture = (m: Mix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
 
 function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
   const src = useMemo(() => picture(m), [m]);

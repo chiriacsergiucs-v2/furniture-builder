@@ -491,6 +491,21 @@ highest id in either file.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: 2026-11-06: ADR-202 takes over only the fastener CSV and print text (pt()); the project-level fasteners panel and drilling positions moved to G-380.
 
+### G-043: Duplicate backlog id D02
+
+- Status: Done (N299)
+- Origin: Backlog, 2026-10-25 06:52 UTC; agent scoped it out
+- Missing: Two backlog rows share the id D02: ADR-029, and “Built in the app”. Still not fixed on main.
+- Request: Ids are never renumbered (CLAUDE.md) (context, not a quote)
+- Questions: Renumber the later row to D03? (Ids are never renumbered, so this needs your decision.)
+- Suggested pick: Give the later row (“Built in the app”) D03 and fix every reference. (estimate: effort +1%, value bookkeeping)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Two backlog rows share id D02, so references to D02 are ambiguous.
+- Fix: With the user's approval, give the later row D03 and update every reference.
+- Conflicts: none
+
 ### G-044: Catalog feed and brand filter
 
 - Status: Done (ADR-210)
@@ -3376,6 +3391,25 @@ highest id in either file.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
 
+### G-471: Catalog page is taller than the 15000 px script limit
+
+- Status: Done (N322)
+- Origin: ADR-201 tests, 2026-11-06; agent found it
+- Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
+- Request: Not asked; the script's own limit.
+- Questions: Raise the limit to 16000 px, or shorten the catalog page?
+- Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
+- Fix: Stale; the Catalog is paged (N311). Ran 2026-11-16 on the production build (`pnpm build:ci`, preview, Playwright, light theme): `tools/catalog-compact/find-it.mjs` passes 'Catalog page under 15000 px tall' at 1280 px (8455 px) and 'under 30000 px' at 390 px (15994 px). No limit changed.
+
+### G-474: Settings dialog scrolls sideways at 375 and 390 px
+
+- Status: Done (N322)
+- Origin: ADR-202 tests, 2026-11-06; agent found it
+- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
+- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
+- Questions: None; it is a bug.
+- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
+
 ### G-477: AR corner snap does not detect walls automatically
 
 - Status: Done (ADR-218)
@@ -3430,3 +3464,232 @@ highest id in either file.
 - Suggested pick: Leave out (user picked overall W x H x D, 2026-11-07; estimate: work +30 %, value +10 %)
 - Work: Medium
 - Impact: Low
+
+### G-483: Catalog cards: meta line still cut on most cards at 390 px
+
+- Status: Done (N322)
+- Origin: ADR-195 item 4, built 2026-11-06 (implementer could not meet the Done-when item; user not yet asked)
+- Missing: Done-when 'At 390 px under 30 % of cards show More' is not met. With Open under the picture (column 1, rows 3–4) the text column is 214 px at 390 px (281 px at 1280), not the ≈240 px the ADR estimated, and the meta line (kind chip + size · parts · checks) needs 272 px at the median and 292 px at the 70th percentile (measured by tools/catalog-flows/find-it.mjs on the production build). Result: 178 of 183 cards (97.3 %) still show More at 390 px (was 182), 91 of 183 at 1280 px (was 98). The page stays under 30 000 px (29 734 px) and every card keeps one meta line.
+- Request: Nearly every card is cut … Fix: Open under the picture (column 1, rows 3–4): ≈240 px for text, same height, one meta line (ADR-118), 'More' where still cut. Done when: At 390 px under 30 % of cards show 'More'; the page stays under 30 000 px; one meta line per card.
+- Questions: Which change brings the meta line under ≈214 px: (a) a shorter facts line (for example size without ' mm' and the parts count moved to More), (b) the meta line on its own row under the picture and Open (the ADR's rejected alternative, ≈+24 px per card, page over 30 000 px), or (c) a smaller kind chip (no border, shorter words)? Or should the 30 % target change?
+- Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
+- Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
+- Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
+
+### G-506: Duplicate backlog id D02
+
+- Status: Done (N299)
+- Origin: UI audit, 2026-11-15
+- Missing: docs/backlog.md has two rows with id D02 (the ADR-029 row and the Built in the app row)
+- Request: Highlight full list of things out of place from claude.md or settings
+- Questions: Which row keeps D02 and which gets the next free D id, given the never-renumber rule?
+- Suggested pick: Give the Built in the app row the next free D id and update its citations (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-508: UI flow audit report not written
+
+- Status: Done (N301)
+- Origin: UI audit prompt, 2026-11-14
+- Missing: The full UI/UX flow-mapping report (architecture, layout at 390 and 1280 px, component positions, flows, findings rated against WCAG 2.2 AA and Nielsen heuristics) was not produced; the capture tool is ready
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report ... to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Report location: repo file, Doc, or Artifact for the auditors?
+- Suggested pick: Repo file under docs/research with the capture screenshots committed (estimate: effort +100 %, value +40 %)
+- Work: High
+- Impact: Medium
+- Necessity: Medium
+
+### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
+
+- Status: Done (N321)
+- Origin: ADR-272 to ADR-278, user 2026-11-16: "create a fixing plan of batches of adrs"
+- Missing: The 38 browser find-it scripts that fail in pnpm regress are not fixed; the seven ADRs only plan the fixes.
+- Request: For all failures, no skipping, all, create a fixing plan of batches of adrs; 6 per adr, all adrs in 1 pr, merged.
+- Questions: none
+- Suggested pick: Build ADR-272 to ADR-278 one after another with next-adr, each verified with pnpm regress at --jobs=1
+- Work: High
+- Impact: Medium
+- Necessity: Medium
+- Note: 2026-11-16: found already built. ADR-272 to ADR-278 shipped with PRs #257 to #264, each run `--jobs=1` (backlog N304 to N310, evidence from documents, not re-run in full today). Re-run today on a fresh `pnpm build:ci`: `pnpm regress tools/arrange/ tools/catalog-compact/ tools/count-stepper/ tools/critique-bugs/` 4/4 scripts passed.
+
+### G-511: Catalog Brands and Saved lists are not paginated
+
+- Status: Done (N311)
+- Origin: Catalog pagination, 2026-11-15
+- Missing: Only the Templates source is paginated; the Brands decor list and the Saved list render every row.
+- Request: 1 yes (paginate the Catalog page in the app)
+- Questions: Do the Brands and Saved lists need pagination too, or are they short enough?
+- Suggested pick: Measure their length with a seeded device first; paginate only if long (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-512: tools/catalog-compact has 6 failing checks on main
+
+- Status: Done (N313)
+- Origin: Catalog paging baseline run, 2026-11-16 (N311)
+- Missing: tools/catalog-compact/find-it.mjs fails 6 checks on main and on the paged catalog alike: item card tags on one meta line, unclipped (183 cards, 64 off on main), and cards whose More/Less text no longer matches after a resize and whose cut lines do not read in full after More, at 390 and 1280 px. ADR-272 (Pending), batch 1 of 7, also repairs this script; check it before building a second fix.
+- Request: Implement f9 fulkly, you pick numbers
+- Questions: Are these three checks still the intended rule, or did a later card layout change make them stale?
+- Suggested pick: Check each against the current card layout and fix the cards or the script (estimate: effort +15 %, value +10 %)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
+### G-513: Catalog pagination at 12 families per group does not shorten the page
+
+- Status: Done (N311)
+- Origin: Catalog pagination, 2026-11-15 (F-09)
+- Missing: Per-group Show more at 12 families keeps the Catalog page at 27,738 px (390 px) and 14,151 px (1280 px, was 15,128): most groups have 12 or fewer families and the height comes from their variant cards (27 to 44 cards in a group of 12). The code, Russian text and 8 find-it tests are committed on the session branch but not merged.
+- Request: 1 yes (paginate the Catalog page in the app, per-group Show more)
+- Questions: Page size per group: 4 families (about 45 % shorter, estimate), 6 (about 30 %), or drop the change?
+- Suggested pick: 4 families per group, then measure the page height again (estimate: effort +10 %, value +30 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-514: The gaps Stop hook can still be passed by citing any G id
+
+- Status: Done (N318)
+- Origin: Gaps hook skip-vector review, 2026-11-16 (N312)
+- Missing: After N312 a reply that lists skips passes the hook if it contains any G-NNN token, even an old or unrelated one, or none of the trigger wordings; the hook also stays silent on any error and blocks only once per stop (stop_hook_active).
+- Request: Fix the gaps force skip vector
+- Questions: Should the hook check that each skip in the reply cites a G id that exists in docs/adr/GAPS.md or GAPS-archive.md and was added in this session?
+- Suggested pick: Check that every G id cited exists in the ledger or archive; keep the one-block rule (estimate: effort +10 %, value +10 %)
+- Work: Low
+
+### G-515: Find-it tests for ADR-265, 268, 269, 270 (burst debt)
+
+- Status: Done (N320)
+- Origin: Burst run 2026-11-16 (ADR-265, 268, 269, 270)
+- Missing: No find-it test was written for the four ADRs: the cut-sheet warning list, the Structure tree, hover/Ctrl-click/pin, and enter/focus (browser script for ADR-270).
+- Request: Build ADR-265, 268, 269 and 270 in burst mode, which skips find-it tests.
+- Questions: None: say catch up to pay the debt.
+- Suggested pick: Run the catch-up skill: jsdom find-it for 265, 268, 269 and tools/*/find-it.mjs for 270.
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-516: Warnings on the cut sheet: free-text data words stay in the app language
+
+- Status: Done (N324, branch fix-g516)
+- Origin: ADR-265 D18-F6 build 2026-11-16
+- Missing: Data words inside a warning (hardware names, family names, the what param of hardware-to-choose) go through tr() and stay in the app language; a warning text built outside t()/tx() with a literal key is not caught by the key scan.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should hardware and family names get print-language entries?
+- Suggested pick: Add print entries for the named data words and extend the scan to dynamic sites.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-518: Audit pass 3 findings F-24 to F-30 not fixed
+
+- Status: Done (N319)
+- Origin: UI audit pass 3, 2026-11-16 (G-509, N317)
+- Missing: Findings of docs/research/2026-11-15-ui-flow-audit.md section 12 still reported, not fixed: F-26 5-6 px plan labels at 390 px, F-27 signed-out Assistant flow, F-28 no Retry on a failed share link, F-29 no current place on Information and Gaps, F-30 3D tool row wraps over the scene. F-24 and F-25 are fixed (N318).
+- Request: Parallel execution of G-517, G-509, G-507
+- Questions: Which findings to fix, and in what order?
+- Suggested pick: Fix F-24 first (same fix as F-20), then F-25 and F-29
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-519: Esc in the Save as project template form also closes Settings on a phone
+
+- Status: Done (N318)
+- Origin: ADR-275, 2026-11-16, found while repairing tools/project-actions/find-it.mjs
+- Missing: At 390 px one Escape in the Save as project template form closes the form and the Settings dialog behind it; the script expected Settings to stay open, as it does after Cancel. Not checked on a desktop width in a browser (unverified).
+- Request: Repair browser find-it scripts, batch 4 of 7 (user 2026-11-16)
+- Questions: Should Esc close only the form, as Cancel does?
+- Suggested pick: Close only the form
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-520: ADR-265 is oversized and needs a split before it can be built
+
+- Status: Done (withdrawn 2026-11-16: ADR-265 was already built with every Done-when item ticked; it only needed `ship-adr`, run in the same change)
+- Origin: Burst run of the pending ADRs, 2026-11-16
+- Missing: ADR-265 (UI audit, Language) is 120 lines and 14515 bytes with 8 Done-when items, over the 110-line and 6.5 KB limit (OVERSIZED=1). Splitting into more ADRs needs the user's explicit approval (CLAUDE.md, General conduct 5), so it was not built.
+- Request: Proceed with sequential burst execution of all next adrs
+- Questions: Split ADR-265 into smaller ADRs, and into how many?
+- Suggested pick: Split into 2 ADRs by area
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-522: F-04 Move and Adjust reasons not proved in a real browser
+
+- Status: Done (N329)
+- Origin: N326 (audit F-04), burst
+- Missing: The 3D toolbar lines 'Turn off Exploded 3D to move pieces' and '...to adjust a wall picture' are proved only on src/viewer/ExplodedWhy.tsx in jsdom (the viewer is stubbed); not found in the real 3D view at 390 and 1280 px.
+- Request: Prove each with a jsdom find-it test that fails before the fix (the reason is found by visible text at 390 and 1280 px).
+- Questions: None.
+- Suggested pick: Add tools/<area>/find-it.mjs against the production build in Chromium: turn on Exploded 3D, find the two lines by text at 390 and 1280 px; also check the added line does not overflow the toolbar. Effort Low-medium, value Low-medium.
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low
+
+### G-524: verify.sh fails two Commands rows
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330)
+- Missing: verify.sh could not run the Related tests and Test rows: it kept the text after the closing backtick of a Commands cell, and did not fill <changed files>
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: Read the first code span of the cell and fill <changed files> from git diff against origin/main (built, commit fd36837)
+
+### G-525: Browser scripts stale after N318 and N319
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 2
+- Missing: Four of the 84 browser scripts failed after later UI changes: home and project-actions raced the page under load, look-render and wall-picture-fit followed an Options menu and a tool row that N318 and N319 changed
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: Wait for the element in the two racing scripts, follow the new Options menu and compare the scene below the tool row in the other two (built, commit fd36837)
+
+### G-526: docs:check allows repeated backlog ids
+
+- Status: Done (fd36837)
+- Origin: Catch-up 2026-11-17 (N330), skip-review gap 3
+- Missing: docs:check did not reject a backlog id used by two rows
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: none
+- Suggested pick: A repeated id fails docs:check except N164, N281, N302 and N326, which are listed (built, commit fd36837)
+
+### G-531: Stale numbers and line references in architecture.md
+
+- Status: Done (b0f19100)
+- Origin: architect-review 2026-11-17
+- Missing: docs/architecture.md:19 says Dexie v1 (code: versions 1 to 12, src/persist/db.ts:96-208); :58-59 says src/core has 158 files (recursive count 149); the Shell section cites App.tsx modes 851-870 and main 912-914 (now 831 and 898) and styles.css:4992 and 5063-5065 (places nav is now at 4843).
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Correct the three statements and the stale line references in one docs change (built, commit b0f19100)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-532: CLAUDE.md layout omits src/shared
+
+- Status: Done (b0f19100)
+- Origin: architect-review 2026-11-17
+- Missing: The Repository layout in CLAUDE.md lists src/core, store, persist, ui, viewer and online but not src/shared (planDrag.ts, renderSupport.ts), which ui and viewer import and the ADR-219 test covers.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Add one layout line for src/shared to CLAUDE.md and the architecture diagram (built, commit b0f19100)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-533: react-hooks warning at Gaps.tsx:108
+
+- Status: Done (b0f19100)
+- Origin: architect-review 2026-11-17
+- Missing: pnpm lint exits 0 with one warning: src/ui/Gaps.tsx:108 useEffect has a missing dependency 'write'.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Add write to the dependency array or make it stable, then run pnpm lint (built, commit b0f19100)
+- Work: Low
+- Impact: Low
+- Necessity: Low

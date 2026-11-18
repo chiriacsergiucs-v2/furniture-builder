@@ -25,20 +25,20 @@ const FILE_FAILED = () =>
 
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
- * the clean-up of unused pictures since G-059), Feature Research and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
+ * the clean-up of unused pictures since G-059), and Information and guides. The Gaps page (ADR-101) is reached from
+ * the Information page. Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
  */
 export function MoreMenu({
   onNew,
   onOpened,
-  onResearch,
-  onGaps,
   onInfo,
+  current,
 }: {
   onNew: () => void;
   onOpened: () => void;
-  onResearch: () => void;
-  onGaps: () => void;
   onInfo: () => void;
+  /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
+  current?: 'info';
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -52,17 +52,41 @@ export function MoreMenu({
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
   const [roomFill, setRoomFill] = useState(false);
-  const close = () => ref.current?.removeAttribute('open');
+  // With focusButton, focus goes to the More button: closing hides the entry that had it, and a dialog that opens
+  // next restores focus there (audit F-02).
+  const close = (focusButton?: boolean) => {
+    ref.current?.removeAttribute('open');
+    if (focusButton) ref.current?.querySelector('summary')?.focus();
+  };
   const [codeOpen, setCodeOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && ref.current?.open) {
+      if (!ref.current?.open) return;
+      if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         close();
-        ref.current?.querySelector('summary')?.focus();
+        ref.current.querySelector('summary')?.focus();
+        return;
       }
+      // Arrow keys, Home and End move through the entries (audit F-02); the menu stays a disclosure.
+      const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End'];
+      if (!keys.includes(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
+      const items = Array.from(
+        ref.current.querySelectorAll<HTMLElement>(
+          '.menu-items button:not(:disabled), .menu-items input[type="file"]',
+        ),
+      );
+      if (!items.length) return;
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      let next: number;
+      if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = items.length - 1;
+      else if (e.key === 'ArrowDown') next = at < 0 ? 0 : (at + 1) % items.length;
+      else next = at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length;
+      e.preventDefault();
+      items[next].focus();
     };
     const onClick = (e: MouseEvent) => {
       if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
@@ -107,14 +131,20 @@ export function MoreMenu({
   };
 
   const run = (fn: () => void | Promise<void>) => () => {
-    close();
+    // Closing hides the entry that had focus, so focus goes to the More button first; a dialog that opens next
+    // then restores focus there when it closes (audit F-02).
+    close(true);
     void fn();
   };
 
   return (
     <>
       <details className="menu more" ref={ref}>
-        <summary aria-label={t('More')} title={t('New, files and Feature Research')}>
+        <summary
+          aria-label={t('More')}
+          aria-current={current ? 'page' : undefined}
+          title={t('New and files')}
+        >
           <Icon name="more" />
         </summary>
         <div className="menu-items">
@@ -272,17 +302,13 @@ export function MoreMenu({
           <span className="menu-sep" aria-hidden="true" />
           <LanguageMenu />
           <span className="menu-sep" aria-hidden="true" />
-          <button type="button" onClick={run(onInfo)}>
+          <button
+            type="button"
+            aria-current={current === 'info' ? 'page' : undefined}
+            onClick={run(onInfo)}
+          >
             <Icon name="info" />
             {t('Information and guides')} <small>{t('every feature, by domain')}</small>
-          </button>
-          <button type="button" onClick={run(onResearch)}>
-            <Icon name="search" />
-            {t('Feature Research')} <small>{t('papers and decisions')}</small>
-          </button>
-          <button type="button" onClick={run(onGaps)}>
-            <Icon name="alert-triangle" />
-            {t('Gaps')} <small>{t('what is not built yet')}</small>
           </button>
         </div>
       </details>

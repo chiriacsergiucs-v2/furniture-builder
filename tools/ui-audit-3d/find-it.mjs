@@ -10,7 +10,7 @@
 // - ADR-259: the 3D view's one ⋯ "More 3D actions" menu holds Export for AR (.usdz), Export scene (.glb) and View in
 //   AR (a stand-in WebXR that offers immersive AR), and Export for AR says "Saved ….usdz.".
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir, WIDTHS } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, WIDTHS, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -19,10 +19,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 /** A device that offers immersive AR: View in AR shows (the session itself is not started here). */
 function xrOffered() {

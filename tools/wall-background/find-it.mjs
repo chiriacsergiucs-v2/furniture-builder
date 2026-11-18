@@ -5,7 +5,7 @@
 // whole wall (ADR-146 replaced the repeat size); Wall 4 gets a Colour. The 3D view shows the picture
 // and the colour on the walls; "Solid walls" makes them opaque; the front view fills the back wall behind the piece.
 // Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -13,10 +13,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 // Share of pixels in a PNG that pass `test` ('blue': blue well above red; 'green': green well above red and blue),
 // counted in the page. Hue tests, so the 3D lighting may darken or lighten the colour.
 const share = (page, png, test) =>
@@ -83,6 +80,10 @@ for (const width of [1280, 390]) {
   await sheet(true);
 
   // Room editor: Wall 1 → Picture.
+  // ADR-160: the room's fields sit in a closed "Room" fold; open it by its summary.
+  const roomFold = page.locator('details.room-fold');
+  if ((await roomFold.count()) && !(await roomFold.evaluate((el) => el.open)))
+    await roomFold.locator('> summary').click();
   const bg1 = page.getByLabel('Wall 1 background', { exact: true });
   await bg1.scrollIntoViewIfNeeded();
   check(width, 'Settings › Room shows "Wall 1 background"', await bg1.isVisible());

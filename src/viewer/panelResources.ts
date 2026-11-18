@@ -14,6 +14,8 @@ import {
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { boxCentre } from '../core/geometry';
+import { FOCUS_OPACITY } from '../core/selectPath';
 import { finishLook } from '../core/surface';
 import type { BoardFinish, Panel } from '../core/types';
 import { S } from './pieceDrag';
@@ -57,6 +59,8 @@ export interface BoardLook {
   color: string;
   map: Texture | null;
   faded: boolean;
+  /** The opacity of a faded board (FOCUS_OPACITY, ADR-270); the default is ADR-087's look. */
+  fadeOpacity?: number;
   side: Side;
   /** A back panel is slightly see-through in the Simple look. */
   back: boolean;
@@ -64,14 +68,14 @@ export interface BoardLook {
 }
 
 /** The translucency of everything outside a selected space or lit step (ADR-087, ADR-174). */
-const FADED = 0.28;
+const FADED = FOCUS_OPACITY.fade;
 
 /** The key one shared material is kept under: equal keys draw the same. */
 export function lookKey(l: BoardLook): string {
   const map = l.map ? l.map.uuid : 'plain';
   return l.realistic
-    ? `p|${l.color}|${map}|${l.faded ? 1 : 0}|${l.finish ?? ''}|${l.side}`
-    : `s|${l.color}|${map}|${l.faded ? 1 : 0}|${l.back ? 1 : 0}|${l.side}`;
+    ? `p|${l.color}|${map}|${l.faded ? (l.fadeOpacity ?? FADED) : 1}|${l.finish ?? ''}|${l.side}`
+    : `s|${l.color}|${map}|${l.faded ? (l.fadeOpacity ?? FADED) : 1}|${l.back ? 1 : 0}|${l.side}`;
 }
 
 /** A new material for a look (the same values the per-panel JSX materials had). */
@@ -83,7 +87,7 @@ export function makeMaterial(l: BoardLook): Material {
       metalness: 0,
       ...finishLook(l.finish),
       transparent: l.faded,
-      opacity: l.faded ? FADED : 1,
+      opacity: l.faded ? (l.fadeOpacity ?? FADED) : 1,
       depthWrite: !l.faded,
       side: l.side,
     });
@@ -93,7 +97,7 @@ export function makeMaterial(l: BoardLook): Material {
     roughness: 0.78,
     metalness: 0,
     transparent: l.back || l.faded,
-    opacity: l.faded ? FADED : l.back ? 0.92 : 1,
+    opacity: l.faded ? (l.fadeOpacity ?? FADED) : l.back ? 0.92 : 1,
     depthWrite: !l.faded,
     side: l.side,
   });
@@ -133,7 +137,8 @@ export function panelMatrix(p: Panel, centred: boolean): Matrix4 {
       .multiply(new Matrix4().makeRotationY((y.deg * Math.PI) / 180))
       .multiply(new Matrix4().makeTranslation(-y.cx * S, 0, -y.cz * S));
   if (!centred) return m;
-  const c = [b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2];
+  const k = boxCentre(b);
+  const c = [k.x, k.y, k.z];
   const s = p.shape;
   if (s?.kind !== 'tilt')
     return m.multiply(new Matrix4().makeTranslation(c[0] * S, c[1] * S, c[2] * S));
@@ -155,6 +160,8 @@ export interface EdgeItem {
   /** The selected space's own panels (or a tinted piece) have thicker edges in the selection colour. */
   selected: boolean;
   faded: boolean;
+  /** The opacity of faded edges (ADR-270); the default is ADR-087's look. */
+  fadeOpacity?: number;
 }
 
 const EDGE = '#3b403c';
@@ -191,17 +198,17 @@ export class MergedEdges {
     this.deps = deps;
     const groups = new Map<string, EdgeItem[]>();
     for (const it of items()) {
-      const k = `${it.selected ? 1 : 0}${it.faded ? 1 : 0}`;
+      const k = `${it.selected ? 1 : 0}${it.faded ? (it.fadeOpacity ?? FADED) : 1}`;
       groups.set(k, [...(groups.get(k) ?? []), it]);
     }
     this.lines = [...groups.values()].map((g) => {
-      const { selected, faded } = g[0];
+      const { selected, faded, fadeOpacity } = g[0];
       const geometry = new LineSegmentsGeometry().setPositions(mergeEdges(g));
       const material = new LineMaterial({
         color: new Color(selected ? SELECT : EDGE).getHex(),
         linewidth: selected ? 1.6 : 1,
         transparent: faded,
-        opacity: faded ? FADED : 1,
+        opacity: faded ? (fadeOpacity ?? FADED) : 1,
       });
       const line = new LineSegments2(geometry, material);
       line.computeLineDistances();

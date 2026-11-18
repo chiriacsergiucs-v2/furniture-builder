@@ -278,7 +278,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-214](../adr-done/ADR-214-place-ar-furniture-by-a-corner-or-into-a-room-corner.md) | Place AR furniture by a corner or into a room corner | ADR-208, ADR-213 | ✅ Implemented |
 | [ADR-215](../adr-done/ADR-215-fine-tune-ar-placement-and-show-its-dimensions.md) | Fine-tune AR placement and show its dimensions | ADR-208, ADR-213 | ✅ Implemented |
 | [ADR-216](../adr-done/ADR-216-fill-l-and-u-room-corners-and-show-template-descriptions-in.md) | Fill L and U room corners and show template descriptions in Start from | ADR-032, ADR-173, ADR-177, ADR-193, ADR-196 | ✅ Implemented |
-| [ADR-217](ADR-217-add-a-rejected-status-and-close-the-four-won-t-do-adrs.md) | Add a Rejected status and close the four won't-do ADRs | ADR-050, ADR-082 | Pending |
+| [ADR-217](../adr-done/ADR-217-add-a-rejected-status-and-close-the-four-won-t-do-adrs.md) | Add a Rejected status and close the four won't-do ADRs | ADR-050, ADR-082 | ✅ Implemented |
 | [ADR-218](../adr-done/ADR-218-ar-walls-wall-gap-occlusion-light-finger-drag-and-per-piece.md) | AR walls, wall gap, occlusion, light, finger drag and per-piece sizes | ADR-213, ADR-214, ADR-215 | ✅ Implemented |
 | [ADR-219](../adr-done/ADR-219-enforce-layer-boundaries-with-lint-rules-and-a-source-scan-t.md) | Enforce layer boundaries with lint rules and a source-scan test | — | ✅ Implemented |
 | [ADR-220](../adr-done/ADR-220-turn-on-incremental-type-checking-and-cache-its-state-in-ci.md) | Turn on incremental type-checking and cache its state in CI | ADR-197 | ✅ Implemented |
@@ -326,5 +326,17 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-262](../adr-done/ADR-262-ui-audit-catalog-keep-edits-name-every-button.md) | UI audit — Catalog and templates: an import never loses an edit, every failure and button is named | — | ✅ Implemented |
 | [ADR-263](../adr-done/ADR-263-ui-audit-saving-every-failure-said-nothing-lost.md) | UI audit — Saving, backup and sharing: every failure said, nothing lost, one tap one copy | — | ✅ Implemented |
 | [ADR-264](../adr-done/ADR-264-ui-audit-account-failures-said-sync-kept-running.md) | UI audit — Account: a failed account action is said, and uploads keep running | — | ✅ Implemented |
-| [ADR-265](ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | Pending |
+| [ADR-265](../adr-done/ADR-265-ui-audit-language-one-language-per-screen-and-sheet.md) | UI audit — Language: one language per screen and per printed sheet | — | ✅ Implemented |
 | [ADR-266](../adr-done/ADR-266-ui-audit-information-honest-pages-and-banners.md) | UI audit — Information: the pages say only what is true and offer only what works | — | ✅ Implemented |
+| [ADR-267](../adr-done/ADR-267-keep-the-drawer-still-named-path-fixed-shell-change-cue.md) | Keep the drawer still: named path, fixed shell, change cue | ADR-083, ADR-087, ADR-203, ADR-211 | ✅ Implemented |
+| [ADR-268](../adr-done/ADR-268-show-the-piece-as-a-structure-tree-that-follows-the-selectio.md) | Show the piece as a structure tree that follows the selection | ADR-267 | ✅ Implemented |
+| [ADR-269](../adr-done/ADR-269-preview-on-hover-jump-deep-with-a-key-pin-the-drawer.md) | Preview on hover, jump deep with a key, pin the drawer | ADR-267, ADR-268 | ✅ Implemented |
+| [ADR-270](../adr-done/ADR-270-enter-a-container-to-edit-inside-it-stronger-focus-on-the-re.md) | Enter a container to edit inside it; stronger focus on the rest | ADR-267, ADR-269 | ✅ Implemented |
+| [ADR-271](../adr-done/ADR-271-mark-cut-list-parts-as-already-owned.md) | Mark cut-list parts as already owned | ADR-011, ADR-012 | ✅ Implemented |
+| [ADR-272](../adr-done/ADR-272-repair-browser-find-it-scripts-batch-1-of-7.md) | Repair browser find-it scripts, batch 1 of 7 | — | ✅ Implemented |
+| [ADR-273](../adr-done/ADR-273-repair-browser-find-it-scripts-batch-2-of-7.md) | Repair browser find-it scripts, batch 2 of 7 | — | ✅ Implemented |
+| [ADR-274](../adr-done/ADR-274-repair-browser-find-it-scripts-batch-3-of-7.md) | Repair browser find-it scripts, batch 3 of 7 | — | ✅ Implemented |
+| [ADR-275](../adr-done/ADR-275-repair-browser-find-it-scripts-batch-4-of-7.md) | Repair browser find-it scripts, batch 4 of 7 | — | ✅ Implemented |
+| [ADR-276](../adr-done/ADR-276-repair-browser-find-it-scripts-batch-5-of-7.md) | Repair browser find-it scripts, batch 5 of 7 | — | ✅ Implemented |
+| [ADR-277](../adr-done/ADR-277-repair-browser-find-it-scripts-batch-6-of-7.md) | Repair browser find-it scripts, batch 6 of 7 | — | ✅ Implemented |
+| [ADR-278](../adr-done/ADR-278-repair-browser-find-it-scripts-batch-7-of-7.md) | Repair browser find-it scripts, batch 7 of 7 | — | ✅ Implemented |

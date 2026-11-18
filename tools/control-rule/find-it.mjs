@@ -5,7 +5,7 @@
 // Build & Preview, a single piece and a project) and Settings. In every state it measures each visible button, tab
 // and segmented label against its line height (one line each), and each control's height: 38 px with a mouse, 30 in
 // toolbars and tables (`--control-h`, `--control-h-sm`), and at least 44 × 44 with touch. Not part of `pnpm test`.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
+import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, showPieces } from '../lib/steps.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -14,10 +14,7 @@ const out = outDir();
 mkdirSync(out, { recursive: true });
 const browser = await launchBrowser();
 const results = [];
-const check = (width, name, ok, detail = '') => {
-  results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
-};
+const { check } = makeChecker(results);
 
 // Every visible button, tab and segmented option in the page (or under `scope`): its label lines and its size. A
 // label wraps when one of its text runs breaks over two line boxes (a `.sub` line under a name is a second run, not

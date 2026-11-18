@@ -83,6 +83,8 @@ function Chat() {
   const busy = useAssistant((s) => s.busy);
   const send = useAssistant((s) => s.send);
   const signedIn = useAccount((s) => !!s.user);
+  const setDialog = useAccount((s) => s.setDialog);
+  const setOpen = useAssistant((s) => s.setOpen);
   const [text, setText] = useState('');
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -116,13 +118,28 @@ function Chat() {
         </p>
       )}
       <PreviewCard />
-      {!signedIn && <p className="hint">{t('Sign in to use the assistant.')}</p>}
+      {!signedIn && (
+        <div className="row">
+          <p className="hint">{t('Sign in to use the assistant.')}</p>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => {
+              setOpen(false);
+              setDialog('sign-in');
+            }}
+          >
+            {t('Sign in')}
+          </button>
+        </div>
+      )}
       <form className="assistant-input" onSubmit={submit}>
         <label htmlFor="assistant-text">{t('Your request')}</label>
         <textarea
           id="assistant-text"
           className="input"
           rows={2}
+          disabled={!signedIn}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {

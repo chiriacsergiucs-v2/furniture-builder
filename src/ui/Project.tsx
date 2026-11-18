@@ -1,5 +1,7 @@
 import { isSizeLocked, lockedAxes } from '../core/sizeLock';
+import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { RoomFront, RoomPlan } from './RoomDrawings';
+import { boxCentre } from '../core/geometry';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
@@ -35,7 +37,7 @@ import {
   wallsOf,
 } from '../core/connections';
 import { selectionBox } from '../core/selectPath';
-import type { Design, Diagnostic, Panel } from '../core/types';
+import type { Design, Diagnostic } from '../core/types';
 import {
   listDesigns,
   listProjectTemplates,
@@ -595,8 +597,7 @@ export function TurnHandle({
   onCancel: () => void;
 }) {
   const b = pc.bounds;
-  const cx = b.x + b.w / 2,
-    cz = b.z + b.d / 2;
+  const { x: cx, z: cz } = boxCentre(b);
   const [fx1, fz1, fx2, fz2] = pc.front;
   const mx = (fx1 + fx2) / 2,
     mz = (fz1 + fz2) / 2;
@@ -1438,13 +1439,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
   );
 }
 
-export const FRONTS = new Set<Panel['role']>(['door', 'drawer-front']);
-export const DRAWER_BOX = new Set<Panel['role']>([
-  'drawer-side',
-  'drawer-back',
-  'drawer-inner-front',
-  'drawer-bottom',
-]);
+export const FRONTS = FRONT_ROLES;
+export const DRAWER_BOX = DRAWER_BOX_ROLES;
 
 export const onKey = (f: () => void) => (e: KeyboardEvent) => {
   if (e.key === 'Enter' || e.key === ' ') {

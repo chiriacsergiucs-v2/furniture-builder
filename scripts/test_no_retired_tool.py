@@ -1,13 +1,12 @@
 """Tests for the retired agent-tool guard in scripts/check-docs.py (user decision 2026-11-10). Run by pnpm docs:check.
 
-The checker runs on a throwaway copy of the docs, the scripts and the research record (a fresh git repository in a
+The checker runs on a throwaway copy of the docs, the scripts (a fresh git repository in a
 temporary folder), so the real repository is never touched. The sample name is built from parts so this file never
 matches the guard itself.
 """
 import pathlib, shutil, subprocess, tempfile, unittest
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-RESEARCH = "src/core/research/ensemble-2026-10-23.features.ts"
 SAMPLE = "Claude" + "-" + "Flow"
 SHORT = "Ru" + "flo"
 
@@ -17,8 +16,6 @@ class RetiredToolGuardTest(unittest.TestCase):
         self.tmp = pathlib.Path(tempfile.mkdtemp(prefix="retired-tool-"))
         shutil.copytree(REPO / "docs", self.tmp / "docs")
         shutil.copytree(REPO / "scripts", self.tmp / "scripts", ignore=shutil.ignore_patterns("__pycache__"))
-        (self.tmp / RESEARCH).parent.mkdir(parents=True)
-        shutil.copy(REPO / RESEARCH, self.tmp / RESEARCH)
         subprocess.run(["git", "init", "-q"], cwd=self.tmp, check=True)
         subprocess.run(["git", "add", "-A"], cwd=self.tmp, check=True)
 

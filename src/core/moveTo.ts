@@ -22,7 +22,7 @@ import {
   type ProjectItem,
   type QuarterTurn,
 } from './project';
-import { roomConnectors } from './snap';
+import { roomConnectors, type Axis } from './snap';
 import type { Box, Mm } from './types';
 
 export const MOVE_TO_ACTIONS = [
@@ -74,7 +74,6 @@ export const MOVE_TO_LABELS: Record<MoveToAction, { label: string; title: string
 };
 
 type Dir = 'left' | 'right' | 'back';
-type Axis = 'x' | 'z';
 /** A direction on the plan: the room axis and its sign. */
 interface Way {
   axis: Axis;

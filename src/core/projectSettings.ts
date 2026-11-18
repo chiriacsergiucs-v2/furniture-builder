@@ -9,6 +9,7 @@ import { newId } from './design';
 import { roleBoard } from './finish';
 import { materialKey, type Project, type ProjectItem, type ProjectSettings } from './project';
 import type { Design, FrontStyle, Handle, Material, Mm } from './types';
+import { isObj } from './guards';
 
 export type SettingKey = keyof ProjectSettings;
 export const SETTING_KEYS: SettingKey[] = [
@@ -27,9 +28,6 @@ export const SETTING_LABEL: Record<SettingKey, string> = {
   frontStyle: t('Front overlay'),
   plinthHeight: t('Plinth height'),
 };
-
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === 'object' && !Array.isArray(v);
 
 /** A board as one value: name, thickness, grain, picture and banding (its id does not count). */
 const boardKey = (m: Material) =>
@@ -53,7 +51,7 @@ function handleHolders(v: unknown, out: Record<string, unknown>[] = []): Record<
 }
 
 /** The piece's value for a setting, or undefined when it has no such part (a bed has no fronts). */
-export function settingOf(d: Design, key: SettingKey): unknown {
+function settingOf(d: Design, key: SettingKey): unknown {
   const p = d.product;
   const boardOf = (id: string | null) => {
     const m = id ? d.materials.find((x) => x.id === id) : undefined;

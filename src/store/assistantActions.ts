@@ -445,6 +445,7 @@ export const CATALOG: Record<string, Entry> = {
  */
 export const EXCLUDED: Record<string, string> = {
   load: 'opens a saved design',
+  setOwnedParts: 'keyed by a cut-list row key the user marks on the Parts tab (ADR-271)',
   openProject: 'opens a saved project',
   replaceDesign: 'replaces the whole document',
   updateProject: 'replaces the whole project (a function argument)',

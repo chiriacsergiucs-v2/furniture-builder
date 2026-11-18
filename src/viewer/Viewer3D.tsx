@@ -53,6 +53,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { explode } from '../core/explode';
+import { FRONT_ROLES } from '../core/panelRoles';
 import { t } from '../core/i18n';
 import { setPictureFit, useAdjustMode, useAdjustWall } from './wallPictureDrag';
 import { inPlaneAxes, union } from '../core/geometry';
@@ -69,11 +70,12 @@ import { useSnap } from '../store/useSnap';
 import { SELECT } from './panelResources';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useMoveMode } from './pieceDrag';
+import { ExplodedWhy } from './ExplodedWhy';
 import { ARBridge, useARState } from './AR';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import type { MaterialImage, Panel } from '../core/types';
 
-export const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
+export const FRONT = FRONT_ROLES;
 export const HIGHLIGHT = '#f2c230';
 
 const geoCache = new WeakMap<Panel, ExtrudeGeometry>();
@@ -633,6 +635,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
               {t('Move')}
             </button>
           )}
+          {hasPieces && <ExplodedWhy tool="move" />}
           {hasPieces && (
             <button
               type="button"
@@ -665,6 +668,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
               {t('Adjust wall picture')}
             </button>
           )}
+          {hasPicture && <ExplodedWhy tool="picture" />}
           {adjusting && adjustWall !== null && (
             <button
               type="button"

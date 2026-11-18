@@ -12,6 +12,7 @@
  */
 // Type only (ADR-229): the Russian dictionary is a lazy chunk, loaded by `loadDictionary` before the app's modules.
 import type { ru } from './ru';
+import { WARNING_RO } from './warning-text';
 
 export type Lang = 'en' | 'ru';
 export const LANGS: Lang[] = ['en', 'ru'];
@@ -84,14 +85,43 @@ export function format(text: string, params: Params | undefined, l: Lang = lang)
 }
 
 /** The English text of a key: the key without its `@@context`. */
-export function english(key: string): string {
+function english(key: string): string {
   const at = key.indexOf('@@');
   return at < 0 ? key : key.slice(0, at);
 }
 
+/**
+ * The messages of warnings (ADR-265): the text `t` gave for a key listed in `WARNING_RO`, by that text, with the key and
+ * the params. The printed sheet looks a warning up by its message and prints it again in the print language. Bounded:
+ * the oldest message goes when there are too many.
+ */
+const recorded = new Map<string, { key: string; params?: Params }>();
+const RECORDED_MAX = 5000;
+export function recordText(text: string, key: string, params?: Params): string {
+  recorded.delete(text);
+  recorded.set(text, params ? { key, params } : { key });
+  if (recorded.size > RECORDED_MAX) recorded.delete(recorded.keys().next().value as string);
+  return text;
+}
+/** The key and params a message was made from, when it is a warning text (ADR-265). */
+export function recordedMessage(text: string): { key: string; params?: Params } | undefined {
+  return recorded.get(text);
+}
+
+/**
+ * The English text of each data text `tr` translated, by the translated text (ADR-265, G-516): the printed sheet takes
+ * the words inside a warning (part names) back to English and prints them in the print language. Bounded like
+ * `recorded`.
+ */
+const dataOriginal = new Map<string, string>();
+export function dataSource(text: string): string {
+  return dataOriginal.get(text) ?? text;
+}
+
 /** The text in the current language. */
 export function t(key: Key, params?: Params): string {
-  return format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
+  const text = format((lang === 'ru' ? RU[key] : undefined) ?? english(key), params);
+  return Object.hasOwn(WARNING_RO, key) ? recordText(text, key, params) : text;
 }
 
 const NUM = /\d+(?:[.,]\d+)?/g;
@@ -165,7 +195,15 @@ function trLoose(text: string): string | undefined {
 export function tr(text: string, params?: Params): string {
   if (lang === 'ru') {
     const v = RU_ALL[text] ?? (params ? undefined : trLoose(text));
-    if (v !== undefined) return format(v, params);
+    if (v !== undefined) {
+      const out = format(v, params);
+      if (!params && out !== text) {
+        dataOriginal.set(out, text);
+        if (dataOriginal.size > RECORDED_MAX)
+          dataOriginal.delete(dataOriginal.keys().next().value as string);
+      }
+      return out;
+    }
   }
   return format(text, params);
 }

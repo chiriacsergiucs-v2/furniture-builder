@@ -1,12 +1,10 @@
 // Production acceptance for ADR-200. IndexedDB failure switches simulate quota failures, never delete test data.
-import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { launchBrowser, previewUrl, outDir, projectSchema } from '../lib/harness.mjs';
+import { mkdirSync } from 'node:fs';
 const url = previewUrl('http://127.0.0.1:4173/furniture-builder/');
 const out = outDir('/tmp/furniture-project-acceptance');
 mkdirSync(out, { recursive: true });
-const schema = Number(
-  /PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1],
-);
+const schema = projectSchema();
 const browser = await launchBrowser({
   args: process.env.CHROMIUM_PATH
     ? ['--disable-gpu', '--disable-software-rasterizer', '--use-gl=disabled']
@@ -119,7 +117,10 @@ try {
     settings = page.getByRole('dialog', { name: /^Settings:/ });
     await settings.getByRole('button', { name: 'Save as project template', exact: true }).click();
     await page.keyboard.press('Escape');
-    await settings.getByRole('button', { name: 'Done', exact: true }).click();
+    await page.waitForTimeout(300);
+    // On a phone the Escape also closes Settings behind the form (G-519); close it when it is still open.
+    if (await settings.isVisible().catch(() => false))
+      await settings.getByRole('button', { name: 'Done', exact: true }).click();
     await place('Projects');
     await page
       .getByRole('heading', { name: 'Create from a project template', exact: true })
@@ -179,6 +180,8 @@ try {
     });
     await page.getByRole('button', { name: 'Save a version', exact: true }).click();
     await page.getByText('Version saved.', { exact: true }).waitFor();
+    // The saved version's row renders a moment after the notice; a count taken at once raced it under CPU load.
+    await page.getByRole('button', { name: 'Restore', exact: true }).first().waitFor();
     check(
       'version retry succeeds',
       (await page.getByRole('button', { name: 'Restore', exact: true }).count()) === 1,

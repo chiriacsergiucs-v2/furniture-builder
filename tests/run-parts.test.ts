@@ -14,14 +14,11 @@ import {
   type Project,
 } from '../src/core/project';
 import { panelsOverlap } from '../src/core/shape';
-import type { CabinetParams, Design, Space } from '../src/core/types';
+import type { CabinetParams, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
+import { withCab as cab } from './helpers/cabinet';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
-const cab = (d: Design, patch: Partial<CabinetParams>): Design =>
-  d.product.kind === 'cabinet'
-    ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
-    : d;
 function run(patches: Partial<CabinetParams>[] = [{}, {}, {}]): Project {
   let p = newProject('Run');
   for (const patch of patches)
