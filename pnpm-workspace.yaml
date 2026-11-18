@@ -2,3 +2,9 @@
 allowBuilds:
   # Vite's bundler: its install script picks the platform binary.
   esbuild: true
+
+# Advisory overrides for transitive dev and build-time packages only.
+overrides:
+  glob@<14.0.2: '>=14.0.2'
+  minimatch@<11.0.1: '>=11.0.1'
+  serialize-javascript: '>=7.1.3'

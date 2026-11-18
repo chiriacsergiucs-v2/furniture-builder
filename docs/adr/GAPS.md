@@ -1936,3 +1936,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+
+### G-545: Dependency upgrades deferred (health-deps): vitest 4, typescript 7, vite 8, three-mesh-bvh peer
+
+- Status: Open
+- Origin: dependency health 2026-11-18, .tmp/current/dependency-report.md and CHANGES
+- Missing: vitest 4.1.12 fails seller-pictures BASE_URL expectation (tests/find-it/seller-pictures.test.tsx); typescript 7.0.2 typecheck and build fail (src/core/account.ts:98, tests/helpers/warningKeys.ts compiler API); vite 8.3.8 emits a static import of react-three into the main bundle (tests/bundle-boundary.test.ts, ADR-222); three-gpu-pathtracer 0.0.28 wants three-mesh-bvh >=0.9.17 (installed 0.9.16)
+- Request: Fix each blocker, then upgrade
+- Questions: Which deferred upgrade should be done next, and does the three-mesh-bvh bump (not approved) go ahead?
+- Suggested pick: User decides order
+- Work: High
+- Impact: Medium
+- Necessity: Medium
