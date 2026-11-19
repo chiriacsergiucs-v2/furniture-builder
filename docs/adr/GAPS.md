@@ -2030,3 +2030,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-553: Live-verify for the Common thickness picker (N350)
+
+- Status: Open
+- Origin: N350, burst 2026-11-19
+- Missing: live-verify after merge (find-it paid: tests/find-it/common-thickness.test.tsx)
+- Request: Add 16 and 22 mm PAL thickness choices
+- Questions: None
+- Suggested pick: open the live URL after merge and find "Common thickness (mm)"
+- Work: Low
+- Impact: Low
+- Necessity: Medium
