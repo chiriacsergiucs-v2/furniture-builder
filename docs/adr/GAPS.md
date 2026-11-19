@@ -2054,3 +2054,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Medium
+
+### G-555: Catalog tiles: layout not seen in a browser
+
+- Status: Open
+- Origin: N352, user request 2026-11-19 (catalog redesign)
+- Missing: 2 columns at 390 px, 4 at 1280 px, 120 px picture height and no sideways scroll were not measured; tools/catalog-flows, shapes, template-revision, editor-modes, ui-polish were edited but not run
+- Request: Run pnpm regress catalog (and the edited scripts) and a screenshot at 390 and 1280 px; live-verify the Wardrobe tiles after merge
+- Questions: none
+- Suggested pick: Run pnpm regress when the user asks (browser-on-demand)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
