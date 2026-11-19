@@ -2,7 +2,7 @@
 import { useState, type FormEvent } from 'react';
 import { t } from '@furniture-builder/i18n';
 import { useAccount } from '../store/accountStore';
-import { useAssistant } from '../store/assistantStore';
+import { ASSISTANT_MAX_TEXT, useAssistant } from '../store/assistantStore';
 import { Dialog } from './Dialogs';
 
 function Consent() {
@@ -139,6 +139,7 @@ function Chat() {
           id="assistant-text"
           className="input"
           rows={2}
+          maxLength={ASSISTANT_MAX_TEXT}
           disabled={!signedIn}
           value={text}
           onChange={(e) => setText(e.target.value)}

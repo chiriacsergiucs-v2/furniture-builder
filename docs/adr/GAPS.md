@@ -2090,3 +2090,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low-medium
 - Necessity: Low
+
+### G-558: Assistant 8000-character cap: user feedback in the chat
+
+- Status: Open
+- Origin: Bug health check round 1, 2026-11-19 (M1)
+- Missing: The textarea stops typing at 8000 characters (maxLength) with no message, and a long assistant reply in history is cut to 8000 characters when resent
+- Request: /health-bugs, loop prompt; user approved Medium (client cap only)
+- Questions: Show a counter or message near 8000? New text needs t() and a Russian entry
+- Suggested pick: Add a short counter under the textarea (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low

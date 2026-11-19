@@ -11,6 +11,10 @@ import { actionSpecs } from './assistantActions';
 import { applyPlan, previewPlan, type Preview } from './assistantRun';
 import { useDesign } from './designStore';
 
+/** The assistant function's limits (supabase/functions/assistant/index.ts): the newest turns it reads, and the longest text. */
+export const ASSISTANT_HISTORY_TURNS = 20;
+export const ASSISTANT_MAX_TEXT = 8000;
+
 const ON_KEY = 'fb:assistant';
 const CONSENT_KEY = 'fb:assistant-consent';
 const readFlag = (k: string) => {
@@ -97,7 +101,11 @@ export const useAssistant = create<AssistantState>((set, get) => ({
     }
     const history: ChatTurn[] = st.lines
       .filter((l) => l.role !== 'error')
-      .map((l) => ({ role: l.role as ChatTurn['role'], text: l.text }));
+      .slice(-ASSISTANT_HISTORY_TURNS)
+      .map((l) => ({
+        role: l.role as ChatTurn['role'],
+        text: l.text.slice(0, ASSISTANT_MAX_TEXT),
+      }));
     say({ role: 'user', text });
     set({ busy: true, preview: null, summary: '' });
     try {
