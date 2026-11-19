@@ -1,4 +1,4 @@
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 
 /**

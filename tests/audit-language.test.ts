@@ -2,7 +2,7 @@
 // language; a name the user typed stays as typed.
 import 'fake-indexeddb/auto';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { loadDictionary, setLang, tr } from '../src/core/i18n';
+import { loadDictionary, setLang, tr } from '@furniture-builder/i18n';
 import { templates } from '../src/core/design';
 import { makeItem, newProject, pieceName } from '../src/core/project';
 

@@ -4,7 +4,7 @@
 // the Doors control wrapping) is checked in the browser by `tools/texts-and-controls/find-it.mjs`.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ru_catalog } from '../../src/core/i18n/ru/catalog';
+import { ru_catalog } from '@furniture-builder/i18n/ru/catalog';
 import { renderApp, WIDTHS } from './setup';
 
 const BRANDS_EMPTY =

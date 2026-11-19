@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { bedSizeFields, sizeFields, type SizeField } from '../core/pieceSize';
 import type { Product } from '../core/types';
 import { axesText, SIZE_LOCKED_HINT } from '../core/sizeLock';

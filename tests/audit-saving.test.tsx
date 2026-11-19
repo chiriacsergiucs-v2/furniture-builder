@@ -183,7 +183,7 @@ describe('ADR-263 saving, backup and sharing', () => {
   });
 
   it('English plurals: 1 day, 1 error', async () => {
-    const { t } = await import('../src/core/i18n');
+    const { t } = await import('@furniture-builder/i18n');
     expect(t('Last backup: {n|# day|# days} ago.', { n: 1 })).toBe('Last backup: 1 day ago.');
     expect(t('It has problems to fix: {n|# error|# errors}.', { n: 1 })).toBe(
       'It has problems to fix: 1 error.',

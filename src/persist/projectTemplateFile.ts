@@ -8,7 +8,7 @@ import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTe
 import { db } from './db';
 import { takePictures, withPictures } from './images';
 import { takeModels, withModels } from './models';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * The template as a file: the template plus `pictures` and, for its 3D models (ADR-208), `models3d` (when they are

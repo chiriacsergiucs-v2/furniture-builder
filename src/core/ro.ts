@@ -4,7 +4,8 @@
  * functions, no UI imports.
  */
 import { baseLabel, boardBandText, type CutRow } from './cutlist';
-import { getPrintLang, pt, type PrintKey } from './i18n/print';
+import { dataSource, recordedMessage } from '@furniture-builder/i18n';
+import { getPrintLang, pt, WARNING_RO, type PrintKey } from '@furniture-builder/i18n/print';
 import { tenthsText } from './materials';
 import type { EdgeBand, EdgeBandKind, HardwareItem } from './types';
 
@@ -418,4 +419,39 @@ export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, st
     ]),
   ];
   return '﻿' + lines.map((l) => l.map(esc).join(';')).join('\r\n') + '\r\n';
+}
+
+/**
+ * The params that hold a message of the core, not a name the user typed: a reason, a kind, a word, a rule text, a face
+ * of a piece (and the two sides of the "cannot join" messages). Names are never looked up, so a piece called "top"
+ * stays "top".
+ */
+const MESSAGE_PARAMS = new Set(['reason', 'kind', 'what', 'text', 'face']);
+const JOIN_KEYS = new Set(['a {a} cannot join a {b}; only sides join', 'a {a} cannot join a {b}']);
+const isMessageParam = (key: string, name: string): boolean =>
+  MESSAGE_PARAMS.has(name) || (JOIN_KEYS.has(key) && (name === 'a' || name === 'b'));
+
+/**
+ * A warning's message in the print language (ADR-265, D18-F6). The message was made by `t()` from a key in
+ * `WARNING_RO`; its key and params are looked up and the Romanian text for that key is printed with the params, a
+ * param that is itself such a message (a reason) the same way, and a data word (a part label) is taken back to its
+ * English text and printed in the print language (G-516). A message with no entry is printed as it is, in the
+ * app language; `tests/warning-print.test.ts` keeps that from happening for the warnings the core makes.
+ */
+export function warningText(message: string): string {
+  const rec = recordedMessage(message);
+  if (!rec || !Object.hasOwn(WARNING_RO, rec.key)) return message;
+  const params = rec.params
+    ? Object.fromEntries(
+        Object.entries(rec.params).map(([k, v]) => [
+          k,
+          typeof v !== 'string'
+            ? v
+            : isMessageParam(rec.key, k)
+              ? warningText(v)
+              : partRo(dataSource(v)),
+        ]),
+      )
+    : undefined;
+  return pt(WARNING_RO[rec.key as keyof typeof WARNING_RO], params);
 }

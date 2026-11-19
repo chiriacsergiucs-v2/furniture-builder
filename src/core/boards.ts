@@ -3,7 +3,7 @@
  * outside a project the piece's own boards), then the user's decor list (ADR-049). The built-in boards are offered
  * only when there is nothing else (a new piece outside a project).
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { defaultMaterials } from './design';
 import { projectBoards } from './finish';
 import { decorPatch, type Decor } from './materials';

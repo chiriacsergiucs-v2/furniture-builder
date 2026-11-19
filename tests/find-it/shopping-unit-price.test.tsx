@@ -5,7 +5,7 @@
 // "All headers via print language").
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { setPrintLang } from '../../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import { addPiece, openSheet, renderApp, WIDTHS } from './setup';
 
 afterEach(() => {

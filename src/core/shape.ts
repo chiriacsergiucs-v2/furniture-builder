@@ -3,7 +3,7 @@
  * millimetres that the cut list, nesting and integer checks use. `shape` only says how the blank is placed (tilt) or
  * cut (profile). Floating point appears here only, for drawing and the oriented overlap test; never in sizes.
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { AXES, box, enclosing, inPlaneAxes, overlaps } from './geometry';
 import type { Axis, Box, Panel, PanelShape } from './types';
 

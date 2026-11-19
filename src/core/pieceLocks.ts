@@ -3,7 +3,7 @@
  * boards and edge bands, or its construction choices, until unlocked. Its size and place still change (other locks).
  * Checked wherever the size locks are (`resizeBlocked`, `sizeLockBlocked`). Pure.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import type { Project, ProjectItem } from './project';
 import type { Design, Product } from './types';
 

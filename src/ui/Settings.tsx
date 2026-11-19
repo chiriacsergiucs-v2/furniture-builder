@@ -1,5 +1,5 @@
 import { useMediaQuery } from '../store/useMediaQuery';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip } from './controls';
 import { Dialog, MaterialsPanel } from './Dialogs';

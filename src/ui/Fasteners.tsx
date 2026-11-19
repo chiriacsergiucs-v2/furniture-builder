@@ -10,7 +10,7 @@ import {
   type FastenerCount,
   type JointInfo,
 } from '../core/fasteners';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerList } from '../store/fastenerStore';
 import { GuidanceTip, Group, InfoTip } from './controls';

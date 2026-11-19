@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { commonPanelCheck } from '../core/common';
 import { sharedSideCheck } from '../core/shared';
 import { connectionCheck, isConnected } from '../core/connections';

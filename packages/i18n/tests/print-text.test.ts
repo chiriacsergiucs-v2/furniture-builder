@@ -1,7 +1,7 @@
 // ADR-260 and ADR-265: print text in the three print languages (the Client sheet's plural, the printed front view's
 // space labels, the Shopping estimate).
 import { afterEach, describe, expect, it } from 'vitest';
-import { pt, setPrintLang } from '../src/core/i18n/print';
+import { pt, setPrintLang } from '../src/print';
 
 afterEach(() => setPrintLang('ro'));
 

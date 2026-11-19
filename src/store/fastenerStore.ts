@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import type { FastenerChoice, JointType } from '../core/fasteners';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { deleteFastener, listFasteners, saveFastener } from '../persist/db';
 
 /**

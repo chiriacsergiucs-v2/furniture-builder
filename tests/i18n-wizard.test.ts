@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { hasRu, loadDictionary } from '../src/core/i18n';
+import { hasRu, loadDictionary } from '@furniture-builder/i18n';
 import { CONSTRUCTION_TYPES } from '../src/core/wizard/registry';
 import { STEPS } from '../src/core/wizard/steps';
 

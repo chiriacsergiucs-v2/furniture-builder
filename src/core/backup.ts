@@ -2,7 +2,7 @@ import { newId, validateDesign } from './design';
 import { validateProject, type Project } from './project';
 import { templateProblemTexts, validateLocalTemplate, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * Folder backup of everything saved on this device (ADR-133). Pure: the persist layer reads the tables and writes

@@ -22,7 +22,7 @@ import {
   usesPedestal,
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import {
   KIND_LABEL,
   WHOLE_LABEL as WHOLE,

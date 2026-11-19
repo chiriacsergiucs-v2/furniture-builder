@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { getLang, LANG_NAME, LANGS, t, type Lang } from '../../core/i18n';
+import { getLang, LANG_NAME, LANGS, t, type Lang } from '@furniture-builder/i18n';
 import {
   getPrintLang,
   PRINT_LANG_NAME,
   PRINT_LANGS,
   setPrintLang,
   type PrintLang,
-} from '../../core/i18n/print';
+} from '@furniture-builder/i18n/print';
 import { LANG_KEY, PRINT_LANG_KEY } from '../../langInit';
 
 /** The page reload, replaceable in tests (jsdom cannot reload). */

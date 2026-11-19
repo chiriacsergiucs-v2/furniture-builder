@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { MOVE_TO_ACTIONS, MOVE_TO_LABELS, moveToOptions, type MoveToAction } from '../core/moveTo';
 import { useDesign } from '../store/designStore';
 

@@ -11,7 +11,7 @@ import { cutlist } from '../src/core/cutlist';
 import { templates, SCHEMA_VERSION, upgradeDesign, validateDesign } from '../src/core/design';
 import { distribute, penetration } from '../src/core/geometry';
 import { snapWallHeight } from '../src/core/height';
-import { setPrintLang } from '../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import {
   buildProjectModel,
   cutoutOutlines,

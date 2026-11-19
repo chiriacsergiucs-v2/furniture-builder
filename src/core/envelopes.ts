@@ -5,7 +5,7 @@
  * The chair depth and the service zone size come from the user (ADR-010): nothing here has a default.
  */
 import type { DiagnosticCode } from './diagnosticCodes';
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import { overlaps, union } from './geometry';
 import { rectInside, type Room } from './room';

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useUi } from '../store/uiStore';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import {
   BAND_COLUMNS,
   DECOR_COLUMNS,

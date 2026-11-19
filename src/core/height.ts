@@ -4,7 +4,7 @@
  * into millimetres along the vertical axis; this module turns that into the piece's new hanging height, whole mm. Below
  * the floor is refused with the reason, never clamped (ADR-008); a locked piece stays (ADR-095).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   isWallHung,
   moveBlocked,

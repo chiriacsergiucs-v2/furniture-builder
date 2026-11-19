@@ -30,7 +30,7 @@ import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
 import { useMediaQuery } from '../../store/useMediaQuery';
-import { t, tr } from '../../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */
 const NARROW = '(max-width: 520px)';

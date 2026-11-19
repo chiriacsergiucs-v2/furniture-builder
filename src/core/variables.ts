@@ -7,7 +7,7 @@
  * (ADR-008): the bound fields keep their numbers and export is blocked. Integer millimetres: a non-whole result is
  * rounded to the nearest mm and the unrounded value is shown beside it. Pure TypeScript, no UI.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { mapProductSpace, newId, setProductParams } from './design';
 import {
   REQUEST_RANGE,

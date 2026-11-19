@@ -15,7 +15,7 @@ import {
   validateDesign,
   wrap,
 } from '../src/core/design';
-import { loadDictionary, setLang } from '../src/core/i18n';
+import { loadDictionary, setLang } from '@furniture-builder/i18n';
 import { nestingJobs } from '../src/core/nesting/fromDesign';
 import { overlaps } from '../src/core/geometry';
 import type {

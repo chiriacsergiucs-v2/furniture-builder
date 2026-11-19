@@ -1988,7 +1988,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
-- Missing: Only the nesting engine is a package. Not extracted, in order: i18n (bottom), kernel, catalog, model (design, cabinet, desk, build), cutlist, hardware, room, shopping, persist, online, viewer
+- Missing: The nesting engine and i18n (ADR-280) are packages. Not extracted, in order: kernel, catalog, model (design, cabinet, desk, build), cutlist, hardware, room, shopping, persist, online, viewer
 - Request: Suggest a way to have multiple packages, each managed on its own, which are then reused / used, integrated into the main app with the full functionality
 - Questions: One ADR per package in the order above?
 - Suggested pick: One ADR per package in the order above, each following the ADR-279 recipe (estimate: effort +10 % per package, value +5 % each)

@@ -26,7 +26,7 @@ import {
 import { applyStyle } from '../core/styles';
 import { planRuns, requestKey, type Project, type WorktopJoint } from '../core/project';
 import type { Design } from '../core/types';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { State, StoreHelpers } from './designState';
 
 type RunActions = Pick<

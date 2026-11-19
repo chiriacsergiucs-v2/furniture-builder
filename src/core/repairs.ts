@@ -11,7 +11,7 @@
  * planned with the run parts, so automatic refresh keeps it and the repair is offered with refresh on too.
  */
 import { carryUnits } from './connections';
-import { t as tx } from './i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import { propagateLinks } from './linked';
 import { resizeProduct } from './pieceSize';
 import { isAxisLocked } from './sizeLock';

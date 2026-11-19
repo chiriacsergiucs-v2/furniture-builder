@@ -17,7 +17,7 @@ import { askConfirm } from './Confirm';
 import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
 import { Icon } from './icons';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** A failed write keeps the name and room choice available for retry (ADR-200). */
 function TemplateNameDialog({

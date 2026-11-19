@@ -2,7 +2,7 @@
  * The user's own price list (ADR-062): kept on this device, never fetched or invented. Amounts are whole minor units
  * (bani, cents) so sums are exact. A missing price is listed by name and the total is marked incomplete.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import type { ShopLine, ShopUnit } from './shopping-types';
 import type { SellerPrice } from './sellers';
 import type { ProductRef } from './types';

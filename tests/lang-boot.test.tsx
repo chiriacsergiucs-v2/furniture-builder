@@ -58,7 +58,7 @@ describe('language boot (ADR-229)', () => {
   });
 
   it('the Russian dictionary is not imported at run time by the i18n core', () => {
-    const src = readFileSync(join(__dirname, '..', 'src', 'core', 'i18n', 'index.ts'), 'utf8');
+    const src = readFileSync(join(__dirname, '..', 'packages', 'i18n', 'src', 'index.ts'), 'utf8');
     expect(src).not.toMatch(/^import \{[^}]*\} from '\.\/ru'/m);
     expect(src).toMatch(/^import type \{[^}]*\} from '\.\/ru'/m);
   });

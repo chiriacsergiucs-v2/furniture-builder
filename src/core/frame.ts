@@ -1,5 +1,5 @@
 import type { DiagnosticCode } from './diagnosticCodes';
-import { t as tx } from './i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import type { PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
 import type { Axis, Box, Face, FrameParams, Material, Mm, Panel, PanelRole } from './types';

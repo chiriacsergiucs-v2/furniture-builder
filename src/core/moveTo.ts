@@ -5,7 +5,7 @@
  * slides until it touches the first room wall or piece whose outline overlaps its path in plan and in height; there is
  * no distance limit. Nothing is clamped silently: an action that cannot move the piece is disabled with its reason.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { movingSet } from './connections';
 import { carryGroups, withGroups } from './groupMove';
 import {

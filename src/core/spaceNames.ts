@@ -1,4 +1,4 @@
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { findInProduct, parentOf } from './design';
 import type { Product, Space, SpaceKind } from './types';
 

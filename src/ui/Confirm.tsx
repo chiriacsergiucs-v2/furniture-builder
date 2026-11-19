@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { useAsk } from '../store/confirmStore';
 

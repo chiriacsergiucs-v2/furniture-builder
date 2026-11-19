@@ -14,7 +14,7 @@ beforeEach(() => {
   });
 });
 // The app's modules are loaded again for each render (renderApp), so the print language is set on that copy.
-afterEach(async () => (await import('../../src/core/i18n/print')).setPrintLang('ro'));
+afterEach(async () => (await import('@furniture-builder/i18n/print')).setPrintLang('ro'));
 
 describe.each(WIDTHS)('cut-sheet warnings at %ipx (find-it, ADR-265)', (width) => {
   it('Parts → Print lists the shelf-span warning in Romanian, Russian and English by the print language', async () => {
@@ -24,7 +24,7 @@ describe.each(WIDTHS)('cut-sheet warnings at %ipx (find-it, ADR-265)', (width) =
       within(await screen.findByRole('dialog')).getAllByRole('button', { name: /Sideboard/ })[0],
     );
     const { useDesign } = await import('../../src/store/designStore');
-    const { setPrintLang } = await import('../../src/core/i18n/print');
+    const { setPrintLang } = await import('@furniture-builder/i18n/print');
     act(() => useDesign.getState().resizePiece('width', 2600));
     if (width === PHONE_WIDTH) {
       const build = screen.queryByRole('radio', { name: /Cut List/ });

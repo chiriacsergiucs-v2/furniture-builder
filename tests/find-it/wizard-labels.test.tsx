@@ -5,7 +5,7 @@
 // "@@context" marker is ever visible (labels tagged @@wizard show the text before the marker).
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { data_wizard } from '../../src/core/i18n/ru/data-wizard';
+import { data_wizard } from '@furniture-builder/i18n/ru/data-wizard';
 import { renderApp, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];

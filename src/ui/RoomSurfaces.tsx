@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { floorRect, wallBands, type FloorFinish, type Room, type WallFinish } from '../core/room';
 import { newPlanPicture, planPictureRect, planScale, type PlanPicture } from '../core/planPicture';
 import { topBoard } from '../core/roomSurfaces';

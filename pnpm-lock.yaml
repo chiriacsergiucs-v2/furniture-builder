@@ -183,6 +183,9 @@ importers:
       '@fontsource/fira-sans-condensed':
         specifier: 5.3.0
         version: 5.3.0
+      '@furniture-builder/i18n':
+        specifier: workspace:*
+        version: link:packages/i18n
       '@furniture-builder/nesting':
         specifier: workspace:*
         version: link:packages/nesting
@@ -289,6 +292,18 @@ importers:
       workbox-window:
         specifier: 7.4.1
         version: 7.4.1
+
+  packages/i18n:
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@24.19.2)(jsdom@31.0.1)(lightningcss@1.33.0)(terser@5.51.2)
 
   packages/nesting:
     devDependencies:

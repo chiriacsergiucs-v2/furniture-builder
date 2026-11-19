@@ -6,7 +6,7 @@
 // draft (Continue where you left off / Start over, ADR-211), a reopened piece asks "Discard the answers?".
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ru_shell } from '../../src/core/i18n/ru/shell';
+import { ru_shell } from '@furniture-builder/i18n/ru/shell';
 import { renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('New-piece wizard at %ipx (find-it, ADR-191)', (width) => {

@@ -1,5 +1,5 @@
 import { rolesOf } from './roles';
-import { t as tx, tr } from './i18n';
+import { t as tx, tr } from '@furniture-builder/i18n';
 import { buildCabinet, slidingTrackDepth } from './cabinet';
 import { buildCorner } from './corner';
 import { buildDesk } from './desk';

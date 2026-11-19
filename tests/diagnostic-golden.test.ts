@@ -10,7 +10,7 @@ import { buildModel } from '../src/core/build';
 import { catalogFamilies, insertVariant } from '../src/core/catalog';
 import { localClearances } from '../src/core/clearance';
 import { templates } from '../src/core/design';
-import { loadDictionary, setLang, type Lang } from '../src/core/i18n';
+import { loadDictionary, setLang, type Lang } from '@furniture-builder/i18n';
 import { buildProjectModel, type Project } from '../src/core/project';
 import type { RoomFeature } from '../src/core/room';
 import type { Design, Diagnostic } from '../src/core/types';

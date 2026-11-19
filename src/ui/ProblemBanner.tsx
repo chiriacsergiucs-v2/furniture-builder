@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
 import { applicable, mayRepair, type Repair } from '../core/repairs';
 import { useDesign } from '../store/designStore';
 import type { FocusedProblem } from '../store/focusedProblem';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { useProblem } from '../store/problemStore';
 import { useUi } from '../store/uiStore';

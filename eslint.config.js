@@ -25,13 +25,18 @@ const CORE = [
 // prettier-ignore
 const MODEL = ['geometry', 'cabinet', 'build', 'panel', 'panelset', 'frame', 'shape', 'corner', 'desk', 'rules', 'clearance', 'cutlist', 'materials'];
 const MODEL_UP = (design) => ({
-  regex: `^\\./(project|room|i18n/print${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)|^@furniture-builder/nesting(/|$)`,
+  regex: `^\\./(project|room${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)|^@furniture-builder/(nesting(/|$)|i18n/print$)`,
   message: 'The model files import only the document, i18n and each other (ADR-219).',
 });
 // @furniture-builder/nesting declares no dependencies: its files import only each other (ADR-219, ADR-279).
 const NESTING = {
   regex: '^(?!\\./)',
   message: 'The nesting package imports nothing outside its own files (ADR-219, ADR-279).',
+};
+// @furniture-builder/i18n is the bottom package: its files import only each other (ADR-279, ADR-280).
+const I18N = {
+  regex: '^(?!\\./)',
+  message: 'The i18n package imports nothing outside its own files (ADR-279, ADR-280).',
 };
 const APP = [DEEP];
 // The 3D viewer imports nothing from src/ui (ADR-230): ui pieces come in as render props.
@@ -61,6 +66,7 @@ export default tseslint.config(
   // Allowance: desk.ts → ./design until diagnostics leave the model (G-491).
   { files: ['src/core/desk.ts'], rules: restrict([...CORE, MODEL_UP(false)]) },
   { files: ['packages/nesting/src/**/*.ts'], rules: restrict([NESTING]) },
+  { files: ['packages/i18n/src/**/*.ts'], rules: restrict([I18N]) },
   // The app outside core, including src/main.tsx and src/langInit.ts (ADR-228).
   {
     files: ['src/*.{ts,tsx}', 'src/{ui,store,persist,viewer,online}/**/*.{ts,tsx}'],

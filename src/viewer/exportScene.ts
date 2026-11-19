@@ -1,6 +1,6 @@
 import { Mesh, type Object3D } from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { nextFrame } from '../shared/renderSupport';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
 

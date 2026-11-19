@@ -7,7 +7,7 @@
  * family rule refuse a candidate; depth and height differences are allowed but named. Into an inside corner: the back
  * against one wall and a side against the other. A turned piece's faces are turned with it.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { evaluate, mountOf, type Mount } from './compat';
 import {
   DRAG_STEP,

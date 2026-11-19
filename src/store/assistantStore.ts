@@ -5,7 +5,7 @@
  */
 import { create } from 'zustand';
 import { parseReply, type AssistantRequest, type ChatTurn } from '../core/assistant';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { backendConfigured, online, useAccount } from './accountStore';
 import { actionSpecs } from './assistantActions';
 import { applyPlan, previewPlan, type Preview } from './assistantRun';

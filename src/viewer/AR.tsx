@@ -31,7 +31,7 @@ import {
   type Texture,
   type WebGLRenderer,
 } from 'three';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { Box } from '../core/types';
 import {
   cornerPlacement,

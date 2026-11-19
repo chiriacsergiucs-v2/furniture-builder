@@ -8,7 +8,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { templates } from '../src/core/design';
-import { t } from '../src/core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { db, saveDesign } from '../src/persist/db';
 import { fakeBackend, fakeServer, type FakeServer } from '../src/online/fake';
 import * as client from '../src/online/client';

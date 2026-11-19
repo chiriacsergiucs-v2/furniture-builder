@@ -1,4 +1,4 @@
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { inPlaneAxes } from './geometry';
 import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types';
 

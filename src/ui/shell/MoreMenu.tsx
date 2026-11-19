@@ -18,7 +18,7 @@ import { backendConfigured, useAccount } from '../../store/accountStore';
 import { useAssistant } from '../../store/assistantStore';
 import { useUi } from '../../store/uiStore';
 import { LanguageMenu } from './LanguageMenu';
-import { t } from '../../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 const FILE_FAILED = () =>
   t('The file could not be made: pictures or 3D models could not be read from this browser.');

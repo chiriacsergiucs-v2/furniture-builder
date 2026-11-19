@@ -60,11 +60,14 @@ Checked in `src/ui/App.tsx`, `src/ui/SheetHandle.tsx`, `src/ui/shell/*`, `src/st
 Decided 2026-11-19: the domains below become pnpm workspace packages `@furniture-builder/<name>` in `packages/`,
 private and consumed as TypeScript source; the app stays at the root and depends on them as `workspace:*`. A
 package imports only its own files and the packages its `package.json` declares (`tests/core-boundary.test.ts`,
-`pnpm lint`). `@furniture-builder/i18n` will be the bottom package.
+`pnpm lint`). `@furniture-builder/i18n` is the bottom package.
 
 - Built: `nesting` (`place`, `validate`, `types`, `worker`; `index` exports the engine, `client` exports
   `createNestWorker`). `src/core/nesting` keeps the cut-list bridge (`jobsFromCutlist`, `nestingJobs`).
-- Next, one ADR each (G-549): i18n, kernel (after the `types.ts` and `project.ts` split, G-548), catalog, model,
+- Built: `i18n` (ADR-280): `.` exports `t`, `tr` and the UI language, `./print` exports `pt`, the print language
+  and the print and warning tables, `./ru/*` exports one Russian table. `warningText` stays in `src/core/ro.ts`
+  next to `partRo`, so the package imports nothing from the app.
+- Next, one ADR each (G-549): kernel (after the `types.ts` and `project.ts` split, G-548), catalog, model,
   cutlist, hardware, room, shopping, then persist, online and viewer.
 
 ## Domains (proposed 2026-11-15; ADR-279 turns them into packages)
@@ -85,7 +88,7 @@ domains (`shopping`, `connections`, `rules`, `gaps`, `variables`) are settled fr
 8. **templates**: `template`, `templateRevision`, `insertTemplate`, `wizard/*`
 9. **shopping**: `shopping`, `shopping-types`, `prices`, `sellers/*`
 10. **catalog**: `catalog/*`
-11. **i18n**: `i18n/*`
+11. **i18n**: `packages/i18n` (ADR-280)
 12. **assistant, account**: `assistant`, `account`
 
 `src/ui` and `src/store` follow the same domains: design/editing (`Elevation`, `Inspector`, `Selection`, `Editors`,

@@ -2,7 +2,7 @@
  * Quick counts for the selected space (ADR-084): which counts apply to it, and one step up or down.
  * Pure: the stepper over the drawing and the 3D view only renders these rows and applies `stepCount`.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   findInProduct,
   fr,

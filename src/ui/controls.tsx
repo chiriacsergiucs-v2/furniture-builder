@@ -7,7 +7,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
 

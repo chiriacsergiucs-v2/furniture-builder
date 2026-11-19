@@ -21,7 +21,7 @@ import { planPictureProblems } from './planPicture';
 import type {} from './nesting';
 import {} from './nesting';
 import type {} from '@furniture-builder/nesting';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { validOwned } from './owned';
 
 import {

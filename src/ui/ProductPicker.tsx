@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { formatMoney } from '../core/prices';
 import {
   hostedPicture,

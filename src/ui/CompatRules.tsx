@@ -1,6 +1,6 @@
 import { FUNCTION_LABEL } from '../core/catalog';
 import { COMPAT_RULES, type CompatRule } from '../core/compat';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { InfoTip } from './controls';
 
 const KIND_LABEL: Record<string, string> = {

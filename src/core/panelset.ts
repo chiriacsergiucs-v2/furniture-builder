@@ -1,4 +1,4 @@
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import type { PartialModel } from './cabinet';
 import { box } from './geometry';
 import type { Box, LoosePanel, Material, Panel, PanelLie, PanelSetParams } from './types';

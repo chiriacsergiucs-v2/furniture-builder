@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { nextFocusLook, type FocusLook } from '../core/selectPath';
 import type { Answers } from '../core/wizard/types';
 

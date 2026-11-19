@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import { deleteTemplate, listTemplates, saveTemplate } from '../persist/db';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { useDesign } from './designStore';
 
 /** Templates edited on this device (ADR-034), loaded once and kept in step with IndexedDB. */

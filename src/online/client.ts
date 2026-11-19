@@ -8,7 +8,7 @@ import {
   type SharedItem,
 } from '../core/account';
 import { decodeRow, encodeRow } from '../core/backup';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';

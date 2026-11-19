@@ -4,7 +4,7 @@
  * every following piece and no other. Pieces stay full copies (ADR-022): following is read from their values, so a
  * piece edited on its own simply stops following, and "Follow project" puts the project's value back.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
 import { roleBoard } from './finish';
 import { materialKey, type Project, type ProjectItem, type ProjectSettings } from './project';

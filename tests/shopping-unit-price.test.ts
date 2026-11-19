@@ -1,7 +1,7 @@
 // ADR-181: each priced Shopping list row shows the unit price its total comes from; the CSV and the printed list
 // have a Unit price column, and every header in the print language (ro, ru, en).
 import { afterEach, describe, expect, it } from 'vitest';
-import { setPrintLang } from '../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import { linePrice, unitPrice, type PriceEntry, type SellerLookup } from '../src/core/prices';
 import {
   shopSectionPrint,

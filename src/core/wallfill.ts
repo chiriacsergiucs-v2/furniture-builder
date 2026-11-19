@@ -8,7 +8,7 @@
  * the shared width), and carcasses of 3 or 4 equal fronts.
  */
 import { errorDiag as err, warnDiag as info, type DiagnosticCode } from './diagnosticCodes';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import {
   KITCHEN_BASE,

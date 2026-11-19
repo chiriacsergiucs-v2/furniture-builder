@@ -16,7 +16,7 @@ import type {
 import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { MATERIAL_ROLES } from './roles';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';

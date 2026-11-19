@@ -12,7 +12,7 @@ import {
   tenthsText,
   type Band,
 } from '../core/materials';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import type { EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { Segmented, Select, Toggle } from './controls';

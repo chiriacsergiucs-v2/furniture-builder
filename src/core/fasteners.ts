@@ -4,8 +4,8 @@
  * length, spacing or load (ADR-010). What the user fixes each joint type with, and how many per joint, is the
  * user's own fastener list, saved on this device. Every line is labelled guidance.
  */
-import { t } from './i18n';
-import { pt, type PrintKey } from './i18n/print';
+import { t } from '@furniture-builder/i18n';
+import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping-types';

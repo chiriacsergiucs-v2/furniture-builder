@@ -6,7 +6,7 @@
  * that room. A complete set can be saved as a separate project: the whole project at the set's values, the set's
  * values becoming set 1. Pure TypeScript, no UI.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
 import {
   placedBounds,

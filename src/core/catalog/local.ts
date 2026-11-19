@@ -4,7 +4,7 @@
  * data, so a local template is self-contained and survives app updates; nothing is replaced without the user's say.
  */
 import { newId, validateDesign } from '../design';
-import { t as tx } from '../i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import type { CatalogMeta, Design } from '../types';
 import {
   BUILT_CAPABILITIES,

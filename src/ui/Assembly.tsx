@@ -26,8 +26,8 @@ import {
   type StepPart,
 } from '../core/assembly';
 import type { FastenerChoice } from '../core/fasteners';
-import { t, tr } from '../core/i18n';
-import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
+import { t, tr } from '@furniture-builder/i18n';
+import { getPrintLang, PRINT_DATE_LOCALE, pt } from '@furniture-builder/i18n/print';
 import type { AssemblyEdit, Design, FurnitureModel, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { printPieceName } from '../core/catalog/printName';

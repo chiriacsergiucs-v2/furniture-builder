@@ -8,7 +8,7 @@
  * is always the one kept and the desk leaves its gable out. L-shape and diagonal corners, pedestal ends and two desks
  * are refused with the reason.
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { placeItem, type Project, type ProjectItem, type SharedSides } from './project';
 import type { Design, Diagnostic, Panel, PinRows } from './types';
 

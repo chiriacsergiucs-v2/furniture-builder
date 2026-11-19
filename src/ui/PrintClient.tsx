@@ -1,7 +1,7 @@
 import { printPieceName } from '../core/catalog/printName';
 import { useMemo } from 'react';
-import { t } from '../core/i18n';
-import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
+import { t } from '@furniture-builder/i18n';
+import { getPrintLang, PRINT_DATE_LOCALE, pt } from '@furniture-builder/i18n/print';
 import { formatMoney } from '../core/prices';
 import { useDesign } from '../store/designStore';
 import { PieceElevation } from './Elevation';

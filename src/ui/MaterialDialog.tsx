@@ -14,7 +14,7 @@ import {
   type MaterialScope,
   type RunRole,
 } from '../core/finish';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { BAND_KINDS, bandProblems, bandText, parseTenths, type Decor } from '../core/materials';
 import { bandFromOffer, bandOffers, loadSellerCatalogs, type SellerCatalog } from '../core/sellers';
 import { materialKey, runOf } from '../core/project';

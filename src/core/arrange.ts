@@ -3,7 +3,7 @@
  * nothing stored changes shape, every result is whole millimetres and quarter turns, and overlaps that result are left
  * to the usual diagnostics (ADR-008).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId, SCHEMA_VERSION } from './design';
 import { overlaps } from './geometry';
 import {

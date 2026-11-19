@@ -4,7 +4,7 @@
  * copy carrying the old piece's boards by part role (as finish scope applies them, ADR-055). Run parts and checks
  * follow in the store's commit (ADR-061); nothing stored changes shape (ADR-011).
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import { insertable, insertVariant, startFamilies } from './catalog';
 import type { CatalogFamily, CatalogVariant } from './catalog/types';

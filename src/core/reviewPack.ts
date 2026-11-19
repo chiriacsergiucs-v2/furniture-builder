@@ -3,7 +3,7 @@
  * and its `buildProjectModel()` (ADR-004). The printed summary and the parts CSV are in the print language (Romanian
  * by default, ADR-020, ADR-157); the problems keep the app's own words. Pure: the caller saves or shares the bytes; the app sends nothing (ADR-002).
  */
-import { getPrintLang, pt } from './i18n/print';
+import { getPrintLang, pt } from '@furniture-builder/i18n/print';
 import { snapshotSvg } from './snapshot';
 import { cutlistCsvRo } from './ro';
 import { printPieceNames } from './catalog/printName';

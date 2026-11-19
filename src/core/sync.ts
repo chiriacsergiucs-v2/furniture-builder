@@ -1,5 +1,5 @@
 import type { RecordKind, RemoteRecord } from './account';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * What a sync does, decided from three lists: the items saved on this device, the account's records and the links

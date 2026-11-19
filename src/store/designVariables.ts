@@ -1,6 +1,6 @@
 import { followProject, SETTING_LABEL } from '../core/projectSettings';
 import { requestKey } from '../core/project';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { addSet, removeSet, updateSet } from '../core/sets';
 import {
   addDesignVariable,

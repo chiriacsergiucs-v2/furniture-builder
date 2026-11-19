@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** A split or drawer size draft stays visible until valid or explicitly cancelled (ADR-199). */
 export function SizeShareField({

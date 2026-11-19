@@ -381,7 +381,7 @@ describe('ADR-260 shopping and the client sheet', () => {
     expect(qty.getAttribute('aria-invalid')).toBe('true');
     expect(screen.getByText('Whole number from 0 to 9999.')).toBeTruthy();
 
-    const i18n = await import('../src/core/i18n');
+    const i18n = await import('@furniture-builder/i18n');
     await i18n.loadDictionary('ru');
     i18n.setLang('ru');
     try {

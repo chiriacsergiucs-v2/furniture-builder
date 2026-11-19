@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { wallFinish, type Room, type WallFinish } from '../core/room';
 import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage } from '../persist/images';

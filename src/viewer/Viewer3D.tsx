@@ -54,7 +54,7 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { explode } from '../core/explode';
 import { FRONT_ROLES } from '../core/panelRoles';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { setPictureFit, useAdjustMode, useAdjustWall } from './wallPictureDrag';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';

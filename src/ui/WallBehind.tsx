@@ -1,5 +1,5 @@
 import { useId, useMemo } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { placeItem } from '../core/project';
 import type { WallFinish } from '../core/room';
 import { wallBehind } from '../core/roomSurfaces';

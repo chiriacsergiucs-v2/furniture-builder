@@ -8,7 +8,7 @@ import { saveItemToCatalog, type CatalogMetaInput, type SaveResult } from '../st
 import { useCatalog } from './Catalog';
 import { Select } from './controls';
 import { Dialog } from './Dialogs';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 
 /**
  * "Save to catalog" on the selected project piece (ADR-107): name, room and type, then a new template on this device

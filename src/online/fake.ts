@@ -1,5 +1,5 @@
 import type { AccountUser, Backend, RemoteRecord, ShareLink, SharedItem } from '../core/account';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * An in-memory backend with the same rules as the Supabase migration (owner-only records, revision checks, Trash,

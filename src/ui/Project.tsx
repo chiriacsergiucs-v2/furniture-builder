@@ -2,7 +2,7 @@ import { isSizeLocked, lockedAxes } from '../core/sizeLock';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { RoomFront, RoomPlan } from './RoomDrawings';
 import { boxCentre } from '../core/geometry';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { tNode } from './i18n';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { bedSizeFields, sizeFields } from '../core/pieceSize';

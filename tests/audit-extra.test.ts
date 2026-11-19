@@ -3,7 +3,7 @@
 // ADR-259 (model arrow keys use the drag's path), ADR-265 (board names in Russian messages).
 import 'fake-indexeddb/auto';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { loadDictionary, setLang, t, tr } from '../src/core/i18n';
+import { loadDictionary, setLang, t, tr } from '@furniture-builder/i18n';
 import { makeSpace, splitSpace, templates } from '../src/core/design';
 import { stepDrops } from '../src/core/counts';
 import {
