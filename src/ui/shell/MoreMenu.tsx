@@ -32,13 +32,16 @@ export function MoreMenu({
   onNew,
   onOpened,
   onInfo,
+  onOptimizer,
   current,
 }: {
   onNew: () => void;
   onOpened: () => void;
   onInfo: () => void;
+  /** Opens the standalone cut list optimizer page. */
+  onOptimizer: () => void;
   /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
-  current?: 'info';
+  current?: 'info' | 'optimizer';
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -159,6 +162,15 @@ export function MoreMenu({
               {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
             </button>
           )}
+          {/* The standalone cut list optimizer: typed sizes and one board, no design needed. */}
+          <button
+            type="button"
+            aria-current={current === 'optimizer' ? 'page' : undefined}
+            onClick={run(onOptimizer)}
+          >
+            <Icon name="grid" />
+            {t('Cut list optimizer')} <small>{t('type sizes, see how many sheets')}</small>
+          </button>
           <p className="menu-head" id="menu-files">
             {t('Files')}
           </p>

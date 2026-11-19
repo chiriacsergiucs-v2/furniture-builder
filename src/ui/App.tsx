@@ -72,6 +72,7 @@ const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 const CatalogPage = lazy(() => import('./CatalogPage').then((m) => ({ default: m.CatalogPage })));
 const GapsPage = lazy(() => import('./Gaps').then((m) => ({ default: m.GapsPage })));
 const InfoPage = lazy(() => import('./Info').then((m) => ({ default: m.InfoPage })));
+const OptimizerPage = lazy(() => import('./Optimizer').then((m) => ({ default: m.OptimizerPage })));
 const PageLoading = () => (
   <p className="loading" role="status">
     {t('Loading…')}
@@ -156,15 +157,16 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: t('Not saved — browser storage unavailable'),
 };
 
-type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'gaps', 'info'];
+type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info' | 'optimizer';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'gaps', 'info', 'optimizer'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
     : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
- * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, and #info Information and guides (ADR-158).
+ * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, #info Information and guides (ADR-158)
+ * and #optimizer the standalone cut list optimizer.
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -823,7 +825,8 @@ export function App() {
               onNew={() => setDialog('new')}
               onOpened={() => setPage('editor')}
               onInfo={() => setPage('info')}
-              current={page === 'info' ? 'info' : undefined}
+              onOptimizer={() => setPage('optimizer')}
+              current={page === 'info' || page === 'optimizer' ? page : undefined}
             />
           </div>
         </header>
@@ -885,6 +888,9 @@ export function App() {
               designOpen={designOpen}
               onNewPiece={() => openWizard(null)}
             />
+          )}
+          {page === 'optimizer' && (
+            <OptimizerPage onDone={() => setPage('editor')} designOpen={designOpen} />
           )}
           {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
           {page === 'info' && (

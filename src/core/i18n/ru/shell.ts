@@ -393,4 +393,32 @@ export const ru_shell = {
   'Shared links could not be loaded.': 'Не удалось загрузить общие ссылки.',
   'The language could not be saved in this browser’s storage.':
     'Не удалось сохранить язык в хранилище этого браузера.',
+  // Cut list optimizer
+  'Cut list optimizer': 'Оптимизатор раскроя',
+  '{n|# sheet|# sheets}': '{n|# лист|# листа|# листов}',
+  'type sizes, see how many sheets': 'введите размеры — узнайте, сколько листов',
+  'Type the parts and the board size; the sheets are laid out as you type.':
+    'Введите детали и размер плиты — листы раскладываются по мере ввода.',
+  'Enter a value.': 'Введите значение.',
+  'Enter whole millimetres.': 'Введите целое число миллиметров.',
+  'Too small.': 'Слишком мало.',
+  'Sheet length (mm)': 'Длина листа (мм)',
+  'Sheet width (mm)': 'Ширина листа (мм)',
+  'Saw cut (mm)': 'Пропил (мм)',
+  'Trim per edge (mm)': 'Обрезка с каждой кромки (мм)',
+  'Grain locked: parts never turn (length along the sheet length)':
+    'Текстура зафиксирована: детали не поворачиваются (длина вдоль длины листа)',
+  'Part {n}': 'Деталь {n}',
+  'Length (mm)': 'Длина (мм)',
+  'Width (mm)': 'Ширина (мм)',
+  'Remove part {n}': 'Удалить деталь {n}',
+  'Add a part': 'Добавить деталь',
+  Result: 'Результат',
+  'Add at least one part with its length and width.':
+    'Добавьте хотя бы одну деталь с длиной и шириной.',
+  'Fix the fields marked above to lay out the sheets.':
+    'Исправьте отмеченные выше поля, чтобы разложить листы.',
+  '{used}% of the board used': 'использовано {used}% плиты',
+  '{n|# part not placed|# parts not placed}':
+    '{n|# деталь не размещена|# детали не размещены|# деталей не размещено}',
 } satisfies Record<string, string>;
