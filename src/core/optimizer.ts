@@ -27,7 +27,7 @@ export interface OptimizerInput {
 /** `required`: empty; `whole`: not a whole number; `min`: below the smallest allowed value. */
 export type OptimizerProblem = 'required' | 'whole' | 'min';
 
-export interface OptimizerCheck {
+interface OptimizerCheck {
   /** Null while any field has a problem or no part row is filled in. */
   job: NestJob | null;
   /** Keyed `sheetLength`, `sheetWidth`, `kerf`, `trim`, or `<part id>.length|width|quantity`. */
@@ -36,7 +36,7 @@ export interface OptimizerCheck {
   filled: number;
 }
 
-export const optimizerPartId = (): string => Math.random().toString(36).slice(2, 10);
+const optimizerPartId = (): string => Math.random().toString(36).slice(2, 10);
 
 export const emptyOptimizerPart = (): OptimizerPart => ({
   id: optimizerPartId(),
