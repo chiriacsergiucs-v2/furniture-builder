@@ -12,7 +12,7 @@ import { applyPlan, previewPlan, type Preview } from './assistantRun';
 import { useDesign } from './designStore';
 
 /** The assistant function's limits (supabase/functions/assistant/index.ts): the newest turns it reads, and the longest text. */
-export const ASSISTANT_HISTORY_TURNS = 20;
+const ASSISTANT_HISTORY_TURNS = 20;
 export const ASSISTANT_MAX_TEXT = 8000;
 
 const ON_KEY = 'fb:assistant';
