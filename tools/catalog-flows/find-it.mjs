@@ -90,110 +90,35 @@ try {
     const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     await showAllRows(page);
     const cards = await page.evaluate(() => {
-      const LINES = '.item-name, .sub, .item-meta, .item-meta .num';
       const list = [...document.querySelectorAll('.catalog-page li.item')];
-      let more = 0;
-      let metaTwoLines = 0;
-      let openUnder = 0;
-      let withPicture = 0;
-      let mismatch = 0;
-      for (const c of list) {
-        const b = [...c.querySelectorAll('button')].find((x) => x.textContent.trim() === 'More');
-        const cut = [...c.querySelectorAll(LINES)].some((el) => el.scrollWidth > el.clientWidth);
-        if (b) more++;
-        if (!!b !== cut) mismatch++;
-        const meta = c.querySelector('.item-meta');
-        const tags = [...c.querySelectorAll('.item-meta > *')];
-        if (
-          !meta ||
-          tags.some(
-            (t) =>
-              Math.abs(t.getBoundingClientRect().top - tags[0].getBoundingClientRect().top) > 2,
-          )
-        )
-          metaTwoLines++;
-        const pic = c.querySelector('img.snap');
-        if (pic) {
-          withPicture++;
-          const open = [...c.querySelectorAll(':scope > button')].at(-1);
-          const p = pic.getBoundingClientRect();
-          const o = open.getBoundingClientRect();
-          if (o.top >= p.bottom - 1 && o.left < p.right && o.right > p.left) openUnder++;
-        }
+      const tiles = list.filter((c) => c.querySelector('img.snap'));
+      let notOneButton = 0;
+      let leftovers = 0;
+      for (const c of tiles) {
+        if (c.querySelectorAll('button').length !== 1) notOneButton++;
+        if (/RO: |Interior only|\bparts?\b|^default$/.test(c.textContent ?? '')) leftovers++;
       }
-      const text = list
-        .find((c) => c.querySelector('img.snap'))
-        ?.querySelector('.item-name')
-        .getBoundingClientRect().width;
-      return {
-        n: list.length,
-        more,
-        mismatch,
-        metaTwoLines,
-        openUnder,
-        withPicture,
-        text: Math.round(text ?? 0),
-        height: document.documentElement.scrollHeight,
-      };
-    });
-    const pct = Math.round((cards.more / cards.n) * 1000) / 10;
-    check(
-      'Open sits under the picture on every card with a picture',
-      cards.withPicture > 100 && cards.openUnder === cards.withPicture,
-      `${cards.openUnder} of ${cards.withPicture}`,
-    );
-    check(
-      'text column beside the picture is wider than 200 px',
-      cards.text > 200,
-      `${cards.text} px`,
-    );
-    check('one meta line per card', cards.metaTwoLines === 0, `${cards.metaTwoLines} on two lines`);
-    // Nothing leaves the card (user decision 2026-11-07): parts on every buildable card's meta line, and "default"
-    // shown on every family's first card (on the picture, or on the meta line when there is no picture).
-    const facts = await page.evaluate(() => {
-      const families = [...document.querySelectorAll('.catalog-page article.family')];
-      let noDefault = 0;
-      let noParts = 0;
-      let buildable = 0;
-      for (const f of families) {
-        const first = f.querySelector('li.item');
-        const tag = [...(first?.querySelectorAll('.tag') ?? [])].find(
-          (x) => x.textContent.trim() === 'default',
-        );
-        const r = tag?.getBoundingClientRect();
-        if (!tag || !r || r.width === 0 || r.height === 0) noDefault++;
-      }
-      for (const c of document.querySelectorAll('.catalog-page li.item:has(img.snap)')) {
-        buildable++;
-        if (!/\d+ parts?\b/.test(c.querySelector('.item-meta .num')?.textContent ?? '')) noParts++;
-      }
-      return { families: families.length, noDefault, buildable, noParts };
+      const first = document.querySelector('.catalog-page ul.items');
+      const columns = first
+        ? new Set([...first.children].map((c) => Math.round(c.getBoundingClientRect().left))).size
+        : 0;
+      return { n: list.length, tiles: tiles.length, notOneButton, leftovers, columns };
     });
     check(
-      'every first card shows "default"; every buildable card keeps its parts count on the meta line',
-      facts.noDefault === 0 && facts.noParts === 0,
-      `${facts.families} families, ${facts.noDefault} without default; ${facts.buildable} buildable, ${facts.noParts} without parts`,
+      'every buildable item is one tile button with a picture; no RO line, kind chip, parts count or default tag',
+      cards.tiles > 100 && cards.notOneButton === 0 && cards.leftovers === 0,
+      `${cards.tiles} tiles, ${cards.notOneButton} with more than one button, ${cards.leftovers} with old text`,
     );
     check(
-      '"More" shows on exactly the cards with a cut line',
-      cards.mismatch === 0,
-      `${cards.mismatch} off`,
+      phone ? 'two tile columns on a phone' : 'four tile columns on a desktop',
+      cards.columns === (phone ? 2 : 4),
+      `${cards.columns} columns`,
     );
     if (phone) {
       check(
         'page under 17 000 px tall as it opens (paged, N311)',
         pageHeight < 17000,
         `${pageHeight} px`,
-      );
-      check(
-        // ADR-195 item 4 met by user decision 2026-11-07, "Accept 73.8%, ship": at most the measured 135 of 183.
-        '"More" on at most 73.8 % of cards (user-accepted, 2026-11-07)',
-        cards.more / cards.n <= 135 / 183,
-        `${cards.more} of ${cards.n} (${pct} %)`,
-      );
-    } else {
-      console.log(
-        `INFO ${width}px "More" on ${cards.more} of ${cards.n} cards (${pct} %), page ${pageHeight} px as it opens, ${cards.height} px with every card`,
       );
     }
     check('no horizontal page scroll (catalog)', await noSideScroll());
@@ -239,7 +164,7 @@ try {
     await bunk.getByRole('button', { name: 'I check it myself' }).click();
     check(
       '"I check it myself" enables Open and ticks the catalog switch',
-      (await bunk.getByRole('button', { name: 'Open' }).isEnabled()) &&
+      (await bunk.getByRole('button', { name: /^Open / }).isEnabled()) &&
         (await page
           .getByRole('checkbox', { name: 'I check safety-regulated items myself' })
           .isChecked()),

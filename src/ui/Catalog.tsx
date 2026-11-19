@@ -298,7 +298,7 @@ export function StartFrom({
 const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`;
 
 /**
- * An item's 3D picture (ADR-042 as answered 2026-10-23): the shipped file for shipped families; for families edited
+ * An item's 3D picture, doors off so the inside shows (ADR-042 as answered 2026-10-23): the shipped file for shipped families; for families edited
  * on this device, drawn in the browser from the built model with the same renderer.
  */
 export function ItemPicture({
@@ -321,7 +321,7 @@ export function ItemPicture({
     if (!local || !insertable(v)) return null;
     const d = insertVariant(f, v, '');
     return d
-      ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(buildModel(d), d.materials))}`
+      ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(buildModel(d), d.materials, 240, false, true))}`
       : null;
   }, [f, v, local]);
   if (!insertable(v) || (local && !drawn)) return null;

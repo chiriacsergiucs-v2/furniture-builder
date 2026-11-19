@@ -33,7 +33,7 @@ describe.each(WIDTHS)('catalog and template flows at %ipx (find-it, ADR-195)', (
     for (const chip of chips) {
       const [, label, n] = /^(.*) (\d+)$/.exec(chip.textContent!.trim())!;
       const section = screen.getByRole('region', { name: label });
-      const cards = within(section).getAllByRole('button', { name: 'Open' });
+      const cards = within(section).getAllByRole('listitem');
       expect(cards.length, label).toBe(Number(n));
       const heading = within(section).getByRole('heading', { level: 2 });
       expect(heading.textContent).toBe(`${label} ${n} ${n === '1' ? 'item' : 'items'}`);
@@ -223,9 +223,9 @@ describe.each(WIDTHS)('catalog and template flows at %ipx (find-it, ADR-195)', (
       within(card).getByText('Safety-regulated: you check it against the standards yourself'),
     ).toBeTruthy();
     expect(within(card).queryByText(/Not available yet/)).toBeNull();
-    expect(within(card).getByRole('button', { name: 'Open' })).toHaveProperty('disabled', true);
+    expect(within(card).queryByRole('button', { name: /^Open / })).toBeNull();
     await user.click(within(card).getByRole('button', { name: 'I check it myself' }));
-    expect(within(card).getByRole('button', { name: 'Open' })).toHaveProperty('disabled', false);
+    expect(await within(card).findByRole('button', { name: /^Open Standard/ })).toBeTruthy();
     await catalogActions(user, width);
     expect(
       screen.getByRole('checkbox', { name: 'I check safety-regulated items myself' }),

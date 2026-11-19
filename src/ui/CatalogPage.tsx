@@ -1,13 +1,5 @@
 // The Catalog page (ADR-027, ADR-032), split from Catalog.tsx so it loads on first use (ADR-222).
-import {
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import {
@@ -31,7 +23,6 @@ import {
   type LocalTemplate,
   type ViewFamily,
 } from '../core/catalog/local';
-import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
 import { newId } from '../core/design';
 import type { Design } from '../core/types';
@@ -557,19 +548,12 @@ export function CatalogPage({
   );
 }
 
-const SUPPORT_TEXT = {
-  ready: t('Ready'),
-  'needs-construction': t('Needs construction'),
-  safety: t('Safety-regulated'),
-  reference: t('Reference'),
-};
-
 /**
- * "1600 × 450 × 438 · 9 parts · 2 to check": an item's size, parts and checks in one line. The size has no " mm" on
- * the card (user decision 2026-11-07, ADR-195), so the line fits better beside the picture.
+ * "1600 × 450 × 438 · 2 to check": an item's size and, when there are any, its checks in one line. The size has no " mm"
+ * on the tile (user decision 2026-11-07, ADR-195).
  */
 const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
-  `${fx.w} × ${fx.h} × ${fx.d} · ${t('{n} parts', { n: fx.parts })}${
+  `${fx.w} × ${fx.h} × ${fx.d}${
     fx.errors
       ? ` · ${t('{n} problems', { n: fx.errors })}`
       : fx.warnings
@@ -577,33 +561,13 @@ const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
         : ''
   }`;
 
-/** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-118). */
-const CARD_LINES = '.item-name, .sub, .item-meta, .item-meta .num';
 /**
- * Whether any of a card's lines is cut: its text is wider than its box. The "More" button takes room beside the summary,
- * so it is taken out of the layout while measuring: the answer must not depend on whether the button shows now, or a card
- * measured early (before the web font) would keep its "More" for as long as the button itself made the summary too wide.
- */
-const cardCut = (card: HTMLElement) => {
-  const more = card.querySelector<HTMLElement>('.item-more');
-  const shown = more?.style.display ?? '';
-  if (more) more.style.display = 'none';
-  const cut = [...card.querySelectorAll<HTMLElement>(CARD_LINES)].some(
-    (el) => el.scrollWidth > el.clientWidth,
-  );
-  if (more) more.style.display = shown;
-  return cut;
-};
-
-/**
- * One item (variant) as a compact card: picture, name and summary beside Open, then one meta line (ADR-118). When a
- * line is cut, "More" shows the card's full text in place and "Less" folds it again (ADR-119); it is measured, so it
- * shows only when something is cut, and measured again when the card changes size.
+ * One item (variant) as a tile: the picture of its inside (doors off), its name and size. The whole tile is the button
+ * that adds it (or opens it, outside a project). A tile that cannot open yet is a plain box that says why.
  */
 function ItemCard({
   f,
   v,
-  isDefault,
   facts,
   toProject,
   onTake,
@@ -611,7 +575,6 @@ function ItemCard({
 }: {
   f: ViewFamily;
   v: CatalogVariant;
-  isDefault: boolean;
   facts: ReturnType<typeof itemFacts> | undefined;
   toProject: boolean;
   onTake: (d: Design) => void;
@@ -619,113 +582,75 @@ function ItemCard({
   onConfirmSafety: () => void;
 }) {
   const ok = insertable(v);
-  const ref = useRef<HTMLLIElement>(null);
-  const [open, setOpen] = useState(false);
-  const [cut, setCut] = useState(false);
   const nameId = useId();
-  useLayoutEffect(() => {
-    const card = ref.current;
-    if (!card || open) return;
-    const measure = () => setCut(cardCut(card));
-    measure();
-    // Text widths change once the web font has loaded, without the card changing size (ADR-120's RO line).
-    void document.fonts?.ready.then(measure);
-    if (typeof ResizeObserver === 'undefined') return;
-    const watch = new ResizeObserver(measure);
-    watch.observe(card);
-    return () => watch.disconnect();
-  }, [open]);
-  return (
-    <li ref={ref} className={`item compact ${ok ? '' : 'waits'} ${open ? 'open' : ''}`}>
-      {ok && (
-        <ItemPicture
-          f={f}
-          v={v}
-          className="snap"
-          width={96}
-          height={60}
-          alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
-        />
+  const size = facts ? factsLine(facts) : '';
+  const text = (
+    <>
+      <span className="item-name" id={nameId}>
+        <strong>{tr(v.name)}</strong>
+        {v.kind === 'construction' && (
+          <span className="kind construction" title={t('Needed new construction')}>
+            {t('New construction')}
+          </span>
+        )}
+      </span>
+      {size && <span className="sub num">{size}</span>}
+      {v.hardware && (
+        <span className="sub">{t('You choose: {hardware}', { hardware: tr(v.hardware) })}</span>
       )}
-      {/* On a card with a picture the "default" tag sits on the picture, off the meta line (user decision
-          2026-11-07, ADR-195); a card without one keeps it on the meta line. */}
-      {ok && isDefault && <span className="tag subtle item-default">{t('default')}</span>}
-      <div className="item-text">
-        <span className="item-name" id={nameId}>
-          <strong>{tr(v.name)}</strong>
-        </span>
-        <span className="summary-row">
-          <span className="sub summary">{tr(v.summary)}</span>
-          {(cut || open) && (
-            <button
-              type="button"
-              className="btn sm ghost item-more"
-              aria-expanded={open}
-              aria-describedby={nameId}
-              onClick={() => setOpen(!open)}
-            >
-              {open ? t('Less') : t('More')}
-            </button>
-          )}
-        </span>
-        <span className="item-meta">
-          {!ok && isDefault && <span className="tag subtle">{t('default')}</span>}
-          <span
-            className={`kind ${v.kind}`}
-            title={
-              v.kind === 'interior'
-                ? t('Interior-only: built on an existing product')
-                : t('Needed new construction')
-            }
-          >
-            {v.kind === 'interior' ? t('Interior only') : t('New construction')}
-          </span>
-          {facts && <span className="num">{factsLine(facts)}</span>}
-        </span>
-        {/* The Romanian name on its own line, not inside the English summary (ADR-120). */}
-        {VARIANT_RO[v.id] && (
-          <span className="sub ro-line" lang="ro">
-            RO: {VARIANT_RO[v.id]}
-          </span>
-        )}
-        {v.hardware && (
-          <span className="sub">{t('You choose: {hardware}', { hardware: tr(v.hardware) })}</span>
-        )}
-        {!ok && safetyOnly(v) && (
-          // Waits only for the user's own check (ADR-195): said as it is, with the switch at hand.
-          <span className="safety-gate">
-            <span className="sub waits-why">
-              {t('Safety-regulated: you check it against the standards yourself')}
+    </>
+  );
+  return (
+    <li className={`item ${ok ? '' : 'waits'}`}>
+      {ok ? (
+        <button
+          type="button"
+          className="tile"
+          aria-label={
+            toProject
+              ? t('Add {name}', { name: `${tr(v.name)} ${size}`.trim() })
+              : t('Open {name}', { name: `${tr(v.name)} ${size}`.trim() })
+          }
+          onClick={() => {
+            const d = insertVariant(f, v);
+            if (d) onTake(d);
+          }}
+        >
+          <ItemPicture
+            f={f}
+            v={v}
+            className="snap"
+            width={160}
+            height={120}
+            alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
+          />
+          {text}
+        </button>
+      ) : (
+        <div className="waits-body">
+          {text}
+          {safetyOnly(v) ? (
+            // Waits only for the user's own check (ADR-195): said as it is, with the switch at hand.
+            <span className="safety-gate">
+              <span className="sub waits-why">
+                {t('Safety-regulated: you check it against the standards yourself')}
+              </span>
+              <button
+                type="button"
+                className="btn sm"
+                aria-describedby={nameId}
+                onClick={onConfirmSafety}
+              >
+                {t('I check it myself')}
+              </button>
             </span>
-            <button
-              type="button"
-              className="btn sm"
-              aria-describedby={nameId}
-              onClick={onConfirmSafety}
-            >
-              {t('I check it myself')}
-            </button>
-          </span>
-        )}
-        {!ok && !safetyOnly(v) && (
-          <span className="sub waits-why">
-            {t('Not available yet: {why}', { why: waitsFor(v.requires) || t('no design') })}
-          </span>
-        )}
-      </div>
-      <button
-        type="button"
-        className="btn sm outline"
-        disabled={!ok}
-        // Says which item it opens, as More and I check it myself do (ADR-262).
-        aria-describedby={nameId}
-        onClick={() => {
-          const d = insertVariant(f, v);
-          if (d) onTake(d);
-        }}
-      >
-        {toProject ? t('Add') : t('Open')}
-      </button>
+          ) : (
+            <span className="sub waits-why">
+              {t('Not available yet: {why}', { why: waitsFor(v.requires) || t('no design') })}
+            </span>
+          )}
+        </div>
+      )}
     </li>
   );
 }
@@ -826,14 +751,7 @@ function FamilyBlock({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `safety` changes what `itemFacts` can build.
     [f, safety],
   );
-  const [about, setAbout] = useState(false);
-  const aboutId = useId();
   const headId = useId();
-  const aliases = f.aliases.length > 0 && (
-    <span className="aliases">
-      {t('also called {names}', { names: f.aliases.map((a) => tr(a)).join(', ') })}
-    </span>
-  );
   return (
     <article className={`family support-${f.support}`} aria-label={tr(f.name)} data-family={f.id}>
       <header className="family-head">
@@ -845,8 +763,6 @@ function FamilyBlock({
             {tr(f.name)} <span className="ro">{f.nameRo}</span>
           </h3>
           <p className="chips">
-            <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
-            <span className="chip">{tr(FUNCTION_LABEL[f.function as FunctionGroup])}</span>
             {f.localId && (
               <span className="chip edited">
                 {f.own ? t('Your template') : t('Edited on this device')}
@@ -862,56 +778,19 @@ function FamilyBlock({
         </div>
         <div className="family-tools">
           {f.localId && <AccountRowActions table="templates" id={f.localId} name={f.name} />}
-          <button
-            type="button"
-            className="btn sm ghost family-about"
-            aria-expanded={about}
-            aria-controls={aboutId}
-            aria-describedby={headId}
-            onClick={() => setAbout(!about)}
-          >
-            {t('About this family')}
-            <Icon name="chevron-down" className="sm" />
-          </button>
           <button type="button" className="btn sm" onClick={onEdit} aria-describedby={headId}>
             <Icon name="pencil" className="sm" />
             {t('Edit template')}
           </button>
         </div>
       </header>
-      {about && (
-        <div className="family-body" id={aboutId}>
-          {(f.rooms.length > 0 || aliases) && (
-            <p className="chips">
-              {f.rooms.map((r) => (
-                <span key={r} className="chip subtle">
-                  {tr(ROOM_LABEL[r as Room])}
-                </span>
-              ))}
-              {aliases}
-            </p>
-          )}
-          <p className="structure">
-            <strong>{t('Default structure:')}</strong> {tr(f.structure)}
-          </p>
-          <div className="configs">
-            <strong>{t('Configurations:')}</strong>
-            <ul>
-              {f.configurations.map((c) => (
-                <li key={c}>{tr(c)}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
       {f.shippedUpdated && <ShippedUpdated f={f} />}
       <ul className="items">
-        {items.map((v, i) => (
+        {items.map((v) => (
           <ItemCard
             key={v.id}
             f={f}
             v={v}
-            isDefault={i === 0 && f.variants[0].id === v.id}
             facts={facts.get(v.id)}
             toProject={toProject}
             onTake={onTake}

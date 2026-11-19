@@ -118,7 +118,7 @@ for (const width of [1440, 375]) {
       `${it.item}: listed in the Catalog with a picture`,
       (await card.isVisible()) && (await img.evaluate((i) => i.complete && i.naturalWidth > 0)),
     );
-    await tap(card.getByRole('button', { name: 'Open' }));
+    await tap(card.getByRole('button', { name: /^Open / }));
     await page.waitForTimeout(300);
     check(
       width,

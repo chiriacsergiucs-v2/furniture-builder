@@ -18,7 +18,7 @@ describe('catalog snapshots (ADR-042)', () => {
   it('every item that opens has a committed picture of its current design, and nothing else is there', () => {
     for (const { f, v } of shipped) {
       const d = insertVariant(f, v, '')!;
-      const svg = snapshotSvg(buildModel(d), d.materials);
+      const svg = snapshotSvg(buildModel(d), d.materials, 240, false, true);
       const file = new URL(`${v.id}.svg`, dir);
       if (process.env.WRITE_SNAPSHOTS) writeFileSync(file, svg);
       expect(existsSync(file), `${v.id}.svg missing: run npm run catalog:snapshots`).toBe(true);

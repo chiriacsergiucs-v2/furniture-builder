@@ -16,11 +16,6 @@ const ALLOW: { selector: string; prop: string; why: string }[] = [
     why: 'a tab overlaps the 1 px border under the list',
   },
   {
-    selector: '.item.compact .ro-line',
-    prop: 'margin-top',
-    why: 'a negative offset: the RO line tucks under the meta chips (ADR-120) instead of a full row gap',
-  },
-  {
     selector: '.label-row > .info-tip, .info-row > .info-tip',
     prop: 'margin-block',
     why: 'a negative offset: the 44 px info button does not make its title row taller',
