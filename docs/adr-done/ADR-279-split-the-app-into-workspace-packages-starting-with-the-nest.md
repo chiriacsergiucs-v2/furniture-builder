@@ -1,7 +1,8 @@
 # ADR-279: Split the app into workspace packages, starting with the nesting engine
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-19
+- Implemented: 2026-11-19 (Shipped by the catch-up of 2026-11-19: every Done when item met with evidence from commands run that day and the CI and Pages deploy runs on main baf7788)
 - Depends on: ADR-053, ADR-219
 - Design: n/a
 - Backlog: N346
@@ -75,12 +76,12 @@ Decided by Claude:
 
 ## Done when
 
-- [ ] `pnpm-workspace.yaml` lists `packages/*` and keeps its pnpm settings; `pnpm install --frozen-lockfile` passes
-- [ ] `packages/nesting` holds the four engine files and its test; no file under `src/` imports them by path
-- [ ] `pnpm --filter @furniture-builder/nesting test` and `typecheck` pass with nothing outside the package
-- [ ] Lint and `tests/core-boundary.test.ts` fail on a deep import and on an undeclared package import (tests)
-- [ ] `pnpm lint`, `format:check`, `typecheck`, `test`, `build` and `docs:check` pass; CI and the Pages deploy pass
-- [ ] The production build lays out a Sideboard's sheets in the package worker (`tools/nesting-package/find-it.mjs`)
-- [ ] `tests/bundle-boundary.test.ts` passes unchanged: the `index` chunk gains no module
-- [ ] `CLAUDE.md` repository layout, `docs/architecture.md` (Domains: decided, packages) and the GAPS rows G-548,
+- [x] `pnpm-workspace.yaml` lists `packages/*` and keeps its pnpm settings; `pnpm install --frozen-lockfile` passes
+- [x] `packages/nesting` holds the four engine files and its test; no file under `src/` imports them by path
+- [x] `pnpm --filter @furniture-builder/nesting test` and `typecheck` pass with nothing outside the package
+- [x] Lint and `tests/core-boundary.test.ts` fail on a deep import and on an undeclared package import (tests)
+- [x] `pnpm lint`, `format:check`, `typecheck`, `test`, `build` and `docs:check` pass; CI and the Pages deploy pass
+- [x] The production build lays out a Sideboard's sheets in the package worker (`tools/nesting-package/find-it.mjs`)
+- [x] `tests/bundle-boundary.test.ts` passes unchanged: the `index` chunk gains no module
+- [x] `CLAUDE.md` repository layout, `docs/architecture.md` (Domains: decided, packages) and the GAPS rows G-548,
       G-549 are updated in the same change
