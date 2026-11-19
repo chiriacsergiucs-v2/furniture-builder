@@ -1,6 +1,6 @@
 // The account dialog's states (ADR-136), split from Account.tsx so they load on first use (ADR-222).
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { t, type Key } from '../core/i18n';
+import { t, type Key } from '@furniture-builder/i18n';
 import {
   continueWithGoogle,
   createAccount,

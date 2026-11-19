@@ -5,7 +5,7 @@
 import { buildModel } from '../build';
 import { newId, validateDesign } from '../design';
 import type { Design, FurnitureModel, Severity, WizardAnswers } from '../types';
-import { t as tt, tr } from '../i18n';
+import { t as tt, tr } from '@furniture-builder/i18n';
 import { CONSTRUCTION_TYPES, typeById } from './registry';
 import {
   BASICS,

@@ -1,6 +1,6 @@
 import { parentOf, productRoots } from './design';
 import { WHOLE_LABEL, spaceName } from './spaceNames';
-import { tr } from './i18n';
+import { tr } from '@furniture-builder/i18n';
 import type { Product, SpaceKind } from './types';
 
 /** One row of the structure tree (ADR-268). `id` is `null` for the whole piece. */

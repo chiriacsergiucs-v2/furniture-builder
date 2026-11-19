@@ -4,7 +4,7 @@ import { applyLayout, layoutPresets } from '../core/catalog/presets';
 import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet';
 import { RULE_DEFAULTS } from '../core/rules';
 import { seatingDefaults } from '../core/frame';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { holdsSomething } from '../core/design';
 import { askConfirm } from './Confirm';
 import { boardLabel } from '../core/boards';

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FinishScope } from '../core/finish';
-import { getLang, t, tr } from '../core/i18n';
+import { getLang, t, tr } from '@furniture-builder/i18n';
 import { VERSION_KIND_TEXT, type ProjectVersion } from '../core/projectVersion';
 import { builtInStyles, HANDLE_NAMES, yourStyles, type Style } from '../core/styles';
 import {

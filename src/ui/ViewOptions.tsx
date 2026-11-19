@@ -1,5 +1,5 @@
 import { Children, useEffect, useRef, type ReactNode } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 
 /**

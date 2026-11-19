@@ -4,7 +4,7 @@
  * room and the checks on that box. Model items are never cut, priced, bought or nested: they live in
  * `Project.models`, apart from the pieces, so nothing that reads `Project.items` can reach them.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { overlaps } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
 import { isObj, isInt } from './guards';

@@ -13,7 +13,7 @@ import {
 import { useDesign } from '../store/designStore';
 import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
-import { t, t as tt, tr } from '../core/i18n';
+import { t, t as tt, tr } from '@furniture-builder/i18n';
 import { formatMoney } from '../core/prices';
 import { useEstimate } from './useEstimate';
 import { NewDialog } from './Dialogs';

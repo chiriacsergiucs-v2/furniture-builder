@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { SizeAxis } from '../core/project';
 import { axesText, isAxisLocked } from '../core/sizeLock';
 import { useDesign } from '../store/designStore';

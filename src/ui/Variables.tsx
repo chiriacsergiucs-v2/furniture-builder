@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import type { Project, ProjectItem, RequestTarget, RunRequest } from '../core/project';
 import type { Design, DesignVariable } from '../core/types';
 import { projectFromSet, setComplete, setProgress, type VariableSet } from '../core/sets';

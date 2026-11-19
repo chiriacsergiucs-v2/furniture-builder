@@ -57,7 +57,7 @@ function walkDir(dir: string, out: string[]): void {
   }
 }
 
-/** Every warning text site in `src/core` (outside `src/core/i18n`). */
+/** Every warning text site in `src/core` (the i18n package is outside it). */
 export function warningSites(root = 'src/core'): WarningSite[] {
   const files: string[] = [];
   walkDir(root, files);

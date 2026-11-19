@@ -1,5 +1,5 @@
 import type { DiagnosticCode } from './diagnosticCodes';
-import { t as tx, tr } from './i18n';
+import { t as tx, tr } from '@furniture-builder/i18n';
 import { box, distribute, equalParts, halfHi, halfLo } from './geometry';
 import type {
   Box,

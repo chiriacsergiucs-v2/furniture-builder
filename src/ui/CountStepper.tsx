@@ -1,7 +1,7 @@
 import { forwardRef, useMemo, useState, type CSSProperties } from 'react';
 import { countRows, countSubject, stepDrops, type CountKey } from '../core/counts';
 import { findInProduct } from '../core/design';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
 import { selectionLabel } from './Inspector';

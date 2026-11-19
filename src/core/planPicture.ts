@@ -5,7 +5,7 @@
  */
 import type { Pt } from './room';
 import type { Mm } from './types';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { isInt } from './guards';
 
 export interface PlanPicture {

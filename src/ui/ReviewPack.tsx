@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { pictureHolders } from '../core/project';
 import { reviewPackFiles, reviewPackZip, type PackFile } from '../core/reviewPack';
 import { withPictures } from '../persist/images';
@@ -9,7 +9,7 @@ import { Dialog } from './Dialogs';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { fileName } from './shell/files';
-import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
+import { getPrintLang, PRINT_DATE_LOCALE, pt } from '@furniture-builder/i18n/print';
 
 /** Save bytes as a file on the device. */
 function save(name: string, bytes: Uint8Array) {

@@ -6,7 +6,7 @@
  * the board itself (name, thickness, grain, picture, banding), so two copies of one template compare equal. A path
  * that the other design does not have, or that would make it invalid, is not carried; the caller lists it.
  */
-import { t as tx } from './i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import { insertable, insertVariant } from './catalog';
 import type { CatalogFamily } from './catalog/types';

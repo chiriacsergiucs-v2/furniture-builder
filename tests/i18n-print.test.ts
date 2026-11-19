@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { cutlist, hardwareSummary } from '../src/core/cutlist';
 import { templates } from '../src/core/design';
-import { PRINT_EN, PRINT_RU } from '../src/core/i18n/print-text';
-import { getPrintLang, setPrintLang } from '../src/core/i18n/print';
+import { PRINT_EN, PRINT_RU } from '@furniture-builder/i18n/print';
+import { getPrintLang, setPrintLang } from '@furniture-builder/i18n/print';
 import { CSV_HEADERS_RO, cutlistCsvRo, drillingRo, hardwareRo, partRo } from '../src/core/ro';
 
 const chestCsv = () => {

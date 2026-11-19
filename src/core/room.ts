@@ -8,7 +8,7 @@
 import { footprintOf } from './geometry';
 import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { isObj, isInt } from './guards';
 import type { Pt } from './outline';
 

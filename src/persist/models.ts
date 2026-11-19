@@ -4,7 +4,7 @@
  * any parser, nothing is executed, nothing is requested from the network, and every problem comes back as a message.
  */
 import { newId } from '../core/design';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   checkGltf,
   MODEL_LIMITS,

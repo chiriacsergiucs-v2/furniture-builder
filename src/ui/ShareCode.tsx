@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { codeLink, decodeCode, encodeCode, LINK_KEY } from '../core/shareCode';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';

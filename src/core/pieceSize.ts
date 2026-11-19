@@ -1,4 +1,4 @@
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import type { Mm, Product } from './types';
 
 /** One outside size of a whole piece that can be changed from its selection (ADR-106; height ADR-148). */

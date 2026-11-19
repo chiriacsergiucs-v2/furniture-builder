@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import type { RemoteRecord } from '../core/account';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { STATE_LABEL, type LocalTable } from '../core/sync';
 import { setDeviceOnly, syncNow } from '../store/accountActions';
 import { online, useAccount } from '../store/accountStore';

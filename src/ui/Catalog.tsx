@@ -21,7 +21,7 @@ import { templates } from '../core/design';
 import type { Design } from '../core/types';
 import { useTemplates } from '../store/templatesStore';
 import { rovingKeys, rovingTab } from './controls';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 
 type Grouping = 'room' | 'type';

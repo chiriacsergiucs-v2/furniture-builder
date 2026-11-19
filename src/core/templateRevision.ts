@@ -8,7 +8,7 @@
  * `catalogVersion`. A device edit that is deleted again falls back to the shipped version: pieces taken from the edit
  * then count as up to date (their revision is not lower).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import type { CatalogFamily } from './catalog/types';
 import { localRevision, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';

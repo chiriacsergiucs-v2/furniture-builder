@@ -1,6 +1,6 @@
 // The project's plan and room front view (ADR-022, ADR-056, ADR-059, ADR-065): moved out of Project.tsx unchanged (cleanup audit 2026-11-09, item 13).
 import { lockedAxes } from '../core/sizeLock';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import {
   useEffect,
   useId,

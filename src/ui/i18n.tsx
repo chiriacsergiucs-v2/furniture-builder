@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { t, type Key } from '../core/i18n';
+import { t, type Key } from '@furniture-builder/i18n';
 
 /**
  * A translated sentence with elements inside (ADR-153): `{name}` placeholders take React nodes, so

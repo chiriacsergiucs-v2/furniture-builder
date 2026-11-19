@@ -22,8 +22,8 @@ import {
   type JointType,
 } from './fasteners';
 import { cutDimensions } from './geometry';
-import { t, tr } from './i18n';
-import { pt, type PrintKey } from './i18n/print';
+import { t, tr } from '@furniture-builder/i18n';
+import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { hardwareRo, partRo } from './ro';
 import {
   isWallHung,

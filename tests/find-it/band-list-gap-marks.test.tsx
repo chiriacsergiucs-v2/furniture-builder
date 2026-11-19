@@ -10,8 +10,8 @@ import Dexie from 'dexie';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findFamily } from '../../src/core/catalog';
-import { setPrintLang } from '../../src/core/i18n/print';
-import { data_catalog } from '../../src/core/i18n/ru/data-catalog';
+import { setPrintLang } from '@furniture-builder/i18n/print';
+import { data_catalog } from '@furniture-builder/i18n/ru/data-catalog';
 import { openGaps, renderApp, WIDTHS } from './setup';
 
 const gap = (id: string, title: string) => `### ${id}: ${title}

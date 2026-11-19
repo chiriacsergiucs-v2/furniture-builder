@@ -45,7 +45,7 @@ import {
 } from '../core/wizard/steps';
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest';
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { listDecors, saveDesign } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';

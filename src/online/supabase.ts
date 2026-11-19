@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { AccountUser, Backend, RemoteRecord, SaveResult, ShareLink } from '../core/account';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * The Supabase backend (ADR-127): auth with Google and email/password, the `records` and `shares` tables and their

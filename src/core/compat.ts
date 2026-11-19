@@ -9,7 +9,7 @@
  * checks (`compatChecks`, run by `buildProjectModel`) for pieces that touch side by side, where every failed rule is a
  * warning that never blocks export (ADR-008). Pure and deterministic.
  */
-import { recordedMessage, recordText, t, tr } from './i18n';
+import { recordedMessage, recordText, t, tr } from '@furniture-builder/i18n';
 import {
   findFamily,
   ROOM_LABEL,

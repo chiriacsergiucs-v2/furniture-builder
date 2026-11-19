@@ -9,7 +9,7 @@ import { buildModel } from '../src/core/build';
 import { cutlist, hardwareSummary } from '../src/core/cutlist';
 import { shoppingList } from '../src/core/shopping';
 import { templates, upgradeDesign } from '../src/core/design';
-import { setPrintLang, type PrintLang } from '../src/core/i18n/print';
+import { setPrintLang, type PrintLang } from '@furniture-builder/i18n/print';
 import { makeItem, newProject } from '../src/core/project';
 import { withHardwareProduct } from '../src/core/sellers/choices';
 import { bytesToBase64 } from '../src/core/surface';

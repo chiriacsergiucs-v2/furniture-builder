@@ -10,7 +10,7 @@ import {} from './outline';
 import { overlapsBox } from './shape';
 import {} from './planPicture';
 import type { Axis, Box, CabinetParams, Diagnostic, Mm, PanelShape } from './types';
-import { t, type Key } from './i18n';
+import { t, type Key } from '@furniture-builder/i18n';
 
 import {
   FILLER_MAX_GAP,

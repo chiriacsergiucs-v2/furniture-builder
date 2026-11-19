@@ -7,7 +7,7 @@
  * `CompatRule.joins`) — and warned about when it no longer holds. Pieces connected to each other move together, as
  * grouped pieces do (ADR-148); a wall-connected piece slides along its wall. Pure: documents in, documents out.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
 import { evaluate, mountOf, sideJoin, touchSideBySide, type JoinKind } from './compat';
 import { carryGroups } from './groupMove';

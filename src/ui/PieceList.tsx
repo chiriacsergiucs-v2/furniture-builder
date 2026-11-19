@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';

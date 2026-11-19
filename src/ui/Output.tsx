@@ -6,7 +6,7 @@ import {
   boardBandText,
   lengthsList,
 } from '../core/cutlist';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import type { FixingPart } from '../core/fasteners';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';

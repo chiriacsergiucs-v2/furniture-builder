@@ -1,4 +1,4 @@
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** What the stage shows (ADR-081): the 2D drawing, the 3D view, or both side by side. */
 export type StageView = 'front' | '3d' | 'both';

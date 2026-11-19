@@ -7,7 +7,7 @@
  * (`sizeFields`), or for width turned off the wall's direction — keeps its size and is named. Problems refuse the
  * change with the reason, never a clamp (ADR-008). Pure.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { resizeProduct, sizeFields, type SizeField } from './pieceSize';
 import {
   pieceName,

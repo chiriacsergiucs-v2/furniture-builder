@@ -36,8 +36,8 @@ import {
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
-import { t, tr } from '../core/i18n';
-import { pt } from '../core/i18n/print';
+import { t, tr } from '@furniture-builder/i18n';
+import { pt } from '@furniture-builder/i18n/print';
 import { printPieceName } from '../core/catalog/printName';
 import { savePrices } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';

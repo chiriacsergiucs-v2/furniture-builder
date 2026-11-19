@@ -15,7 +15,7 @@ import { useCatalog, useLocalTemplates } from './Catalog';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { tNode } from './i18n';
 
 /**

@@ -19,7 +19,7 @@ import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
 import { db, getSetting, saveDesign, saveProject, savedRows, saveTemplate, setSetting } from './db';
 import { onSavedChange, takeDirty } from './events';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /**
  * Persistent storage and the folder backup (ADR-133). Browser APIs only: what to write and what to restore is decided

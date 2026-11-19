@@ -26,10 +26,10 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - The app UI is in English by default, Russian on request (More → Language, ADR-153). Printed sheets and the parts
   CSV are in Romanian by default, Russian or English on request (More → Print language, ADR-157).
 - **Translation rule (hard, user rule 2026-10-29, ADR-153):** every text added, changed or deleted in the app updates
-  its translations in the same change. Text written in code goes through `t()` (`src/core/i18n`) with its Russian
-  entry in `src/core/i18n/ru/<area>.ts` (a key without one fails `pnpm typecheck`); text from built-in data goes
-  through `tr()` with its entry in `src/core/i18n/ru/data-*.ts`; print and CSV text goes through `pt()` with its
-  Russian and English entries in `src/core/i18n/print-text.ts`. A deleted text deletes its entries. The feature tree
+  its translations in the same change. Text written in code goes through `t()` (`@furniture-builder/i18n`, `packages/i18n`) with its Russian
+  entry in `packages/i18n/src/ru/<area>.ts` (a key without one fails `pnpm typecheck`); text from built-in data goes
+  through `tr()` with its entry in `packages/i18n/src/ru/data-*.ts`; print and CSV text goes through `pt()` with its
+  Russian and English entries in `packages/i18n/src/print-text.ts`. A deleted text deletes its entries. The feature tree
   (`src/ui/info/features.ts`, ADR-158) is updated only when the user asks (user 2026-11-07). The Gaps page is not translated (user
   2026-10-29).
 
@@ -41,7 +41,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `packages/<name>` — workspace packages `@furniture-builder/<name>` (ADR-279): private, consumed as TypeScript
   source through their `exports`, each with its own `tests/`, `test` and `typecheck` scripts. A package imports
   only its own files and the packages its `package.json` declares; nobody imports a package's files
-  (`tests/core-boundary.test.ts`, `pnpm lint`). Today: `nesting` (the sheet placer, validator and worker).
+  (`tests/core-boundary.test.ts`, `pnpm lint`). Today: `i18n` (the bottom package: `t`, `tr`, `pt` and the text tables, ADR-280) and `nesting` (the sheet
+  placer, validator and worker).
 - `src/store` — Zustand store: design, derived model, selection, undo/redo
 - `src/persist` — IndexedDB (Dexie) storage
 - `src/ui` — React UI; `src/viewer` — lazy three.js preview

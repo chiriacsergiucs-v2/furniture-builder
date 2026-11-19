@@ -5,7 +5,7 @@
  * worked out in `src/core/roomfill.ts`; this file only collects the answers and shows the result.
  */
 import { useEffect, useId, useMemo, useState, type FormEvent } from 'react';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import {
   BASE_HEIGHT,
   TALL_HEIGHT,

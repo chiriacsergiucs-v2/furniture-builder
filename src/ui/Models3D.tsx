@@ -10,7 +10,7 @@ import {
 } from '../core/model3d';
 import { newId } from '../core/design';
 import { boxCentre, frontEdge } from '../core/geometry';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
 import {

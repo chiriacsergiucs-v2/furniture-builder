@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { createListeners } from '../store/deviceValue';
 
 /** A room axis the section cuts across: x along the wall (width), y up (height), z out from the wall (depth). */

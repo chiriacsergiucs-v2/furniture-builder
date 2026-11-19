@@ -12,7 +12,7 @@ import {
   validFastenerChoice,
   type FastenerChoice,
 } from '../src/core/fasteners';
-import { setPrintLang } from '../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import { insertTemplate } from '../src/core/insertTemplate';
 import {
   buildProjectModel,

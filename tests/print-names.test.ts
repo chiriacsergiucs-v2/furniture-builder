@@ -4,8 +4,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { findFamily, insertVariant } from '../src/core/catalog';
 import { printPieceName, printPieceNames } from '../src/core/catalog/printName';
-import { setPrintLang, type PrintLang } from '../src/core/i18n/print';
-import { data_catalog } from '../src/core/i18n/ru/data-catalog';
+import { setPrintLang, type PrintLang } from '@furniture-builder/i18n/print';
+import { data_catalog } from '@furniture-builder/i18n/ru/data-catalog';
 import {
   buildProjectModel,
   makeItem,

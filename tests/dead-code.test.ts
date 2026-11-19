@@ -61,7 +61,7 @@ describe('dead code guards (cleanup audit 2026-11-09)', () => {
     const code = SRC.filter((f) => !f.includes('/i18n/ru/'))
       .map((f) => text.get(f)!)
       .join('\n');
-    const dir = 'src/core/i18n/ru';
+    const dir = 'packages/i18n/src/ru';
     const orphans: string[] = [];
     for (const n of readdirSync(join(ROOT, dir))) {
       if (n.startsWith('data-') || n === 'index.ts') continue;

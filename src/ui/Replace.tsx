@@ -17,7 +17,7 @@ import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useProblem } from '../store/problemStore';
 import { useUi } from '../store/uiStore';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 
 /**
  * "Replace…" on the selected piece (ADR-098): the catalog items that stand the same way and have the same width;

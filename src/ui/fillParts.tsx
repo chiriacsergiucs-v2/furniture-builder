@@ -1,7 +1,7 @@
 // The parts Fill a wall (ADR-103/104) and Fill the room (ADR-173) share: a size field, the problems under a step, a
 // mix card's warnings, the result's problems, the save error and the footer (cleanup audit 2026-11-09, item 5).
 import { useId, type ReactNode } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { Diagnostic } from '../core/types';
 import { Icon } from './icons';
 

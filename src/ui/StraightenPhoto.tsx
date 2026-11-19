@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { isQuad, type Pt } from '../core/room';
 import { DEFAULT_CORNERS, PHOTO_UNITS } from '../core/wallPicture';
 import { Dialog } from './Dialogs';

@@ -21,7 +21,7 @@ import {
   templateFromProject,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
-import { setPrintLang } from '../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import { shoppingCsvRo, shoppingList } from '../src/core/shopping';
 import { shapeOutline } from '../src/core/room';
 import type { Design, Space } from '../src/core/types';

@@ -2,7 +2,7 @@
  * Finish scope (ADR-055): put one board on the fronts or the carcass of this piece, this run or the whole project.
  * A one-time change: every piece stays its own copy (ADR-022) and can be changed again on its own.
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import { newId, SCHEMA_VERSION } from './design';
 import {

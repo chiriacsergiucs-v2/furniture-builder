@@ -4,7 +4,7 @@
  * and translated once.
  */
 import { newId } from '../core/design';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { DEFAULT_OUTLET_ZONE, DEFAULT_PIPE_ZONE, type Room, type RoomFeature } from '../core/room';
 import { MmField, Select } from './controls';
 

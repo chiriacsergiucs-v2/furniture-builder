@@ -4,7 +4,7 @@
  * would resize it — an edit, a linked copy's change (ADR-111), Replace (ADR-098) — is refused with the piece's name.
  * Its boards, insides and place can still change. Pure; sizes come from the built model (ADR-004).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import {
   carriedBy,

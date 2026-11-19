@@ -4,7 +4,7 @@
  * the walls, the pieces' faces and the other models' sides within `SNAP_RANGE`. A model on a piece is lifted off to
  * the floor when dragged; one on the wall keeps its height. Pure; never throws, never clamps (ADR-008).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { modelBox, type ModelItem, type ModelPlacement } from './model3d';
 import { DRAG_STEP, type PlacedPiece, type Project } from './project';
 import { mountOf, pieceConnectors, roomConnectors, SNAP_RANGE, type Axis } from './snap';

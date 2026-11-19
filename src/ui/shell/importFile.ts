@@ -1,5 +1,5 @@
 import { newId, validateDesign } from '../../core/design';
-import { t } from '../../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { Design } from '../../core/types';
 import { validateProject, type Project } from '../../core/project';
 import { saveDesign, saveProject, saveProjectTemplate } from '../../store/libraryStore';

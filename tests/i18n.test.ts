@@ -12,7 +12,7 @@ import {
   setLang,
   t,
   tr,
-} from '../src/core/i18n';
+} from '@furniture-builder/i18n';
 
 // The Russian dictionary is a lazy chunk (ADR-229): loaded before the cases that switch to Russian.
 beforeAll(() => loadDictionary('ru'));

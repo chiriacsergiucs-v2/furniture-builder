@@ -5,7 +5,7 @@
  * one is a message. The caller validates the document before it is stored and gives it a new id (ADR-011).
  */
 
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** Codes start with this, so a pasted text is recognised (and a later format can take another prefix). */
 const CODE_PREFIX = 'FB1-';

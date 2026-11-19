@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { MmField } from '../src/ui/controls';
 import { PieceSize } from '../src/ui/PieceSize';
-import { loadDictionary, setLang, tr } from '../src/core/i18n';
+import { loadDictionary, setLang, tr } from '@furniture-builder/i18n';
 
 afterEach(() => {
   cleanup();

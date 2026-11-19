@@ -5,7 +5,7 @@
  * that rectangle. Pure: the viewer turns a pointer into a ray, this module turns it into a wall point and a dragged
  * rectangle (whole mm, edges snapping to the wall ends, floor and ceiling as pieces snap to walls, ADR-070).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { MAX_REACH, type Ray } from './drag3d';
 import {
   wallEnds,

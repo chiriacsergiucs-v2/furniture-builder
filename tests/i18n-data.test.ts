@@ -12,7 +12,7 @@ import { COMPAT_RULES } from '../src/core/compat';
 import { baseLabel } from '../src/core/cutlist';
 import { defaultMaterials, templates } from '../src/core/design';
 import { JOINTS } from '../src/core/fasteners';
-import { hasRu, loadDictionary, setLang, tr } from '../src/core/i18n';
+import { hasRu, loadDictionary, setLang, tr } from '@furniture-builder/i18n';
 import { BAND_KINDS, KINDS, MAKERS } from '../src/core/materials';
 import { sampleProjects } from './fixtures/mobila';
 import { builtInStyles, HANDLE_NAMES } from '../src/core/styles';

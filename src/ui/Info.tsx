@@ -1,5 +1,5 @@
 import { FEATURES, type FeatureDomain } from './info/features';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 

@@ -17,7 +17,7 @@
 import { errorDiag as err, warnDiag as note } from './diagnosticCodes';
 import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   buildProjectModel,
   isPieceWarning,

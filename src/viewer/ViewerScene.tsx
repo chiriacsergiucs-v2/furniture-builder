@@ -43,7 +43,7 @@ import { useFocusedProblem } from '../store/focusedProblem';
 import { useUi } from '../store/uiStore';
 import { connectionSeams } from '../core/connections';
 import { boxCentre } from '../core/geometry';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { FOCUS_OPACITY, hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
   floorRect,

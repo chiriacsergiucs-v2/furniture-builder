@@ -3,8 +3,8 @@
  * it came from, it prints in the print language: Romanian `{nameRo} — {VARIANT_RO}`, Russian its `ru/data-catalog.ts`
  * entry (read directly, whatever the UI language), English the name. A renamed piece prints as typed (G-304).
  */
-import { getPrintLang } from '../i18n/print';
-import { data_catalog } from '../i18n/ru/data-catalog';
+import { getPrintLang } from '@furniture-builder/i18n/print';
+import { data_catalog } from '@furniture-builder/i18n/ru/data-catalog';
 import type { Design } from '../types';
 import { findFamily } from './index';
 import { VARIANT_RO } from './ro';

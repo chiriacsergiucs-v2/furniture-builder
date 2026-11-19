@@ -1,5 +1,5 @@
 import { newId } from '../core/design';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   base64ToBytes,
   bytesToBase64,

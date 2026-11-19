@@ -9,7 +9,7 @@ import type { FunctionGroup, Room } from '../core/catalog/types';
 import type { Design } from '../core/types';
 import { useDesign } from './designStore';
 import { useTemplates } from './templatesStore';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 export interface CatalogMetaInput {
   name: string;

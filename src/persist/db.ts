@@ -13,7 +13,7 @@ import { validateVersion, type ProjectVersion } from '../core/projectVersion';
 import type { BackupTable } from '../core/backup';
 import { emitSavedChange } from './events';
 import type { AccountLink } from '../core/sync';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** A device setting kept in IndexedDB (ADR-133): values that localStorage cannot hold, like a folder handle. */
 interface SettingRow {

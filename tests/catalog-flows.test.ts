@@ -12,7 +12,7 @@ import {
   type TemplateProblemCode,
 } from '../src/core/catalog/local';
 import { templates } from '../src/core/design';
-import { loadDictionary, setLang } from '../src/core/i18n';
+import { loadDictionary, setLang } from '@furniture-builder/i18n';
 import * as db from '../src/persist/db';
 import { useDesign } from '../src/store/designStore';
 import { saveDesignToCatalog } from '../src/store/saveToCatalog';
@@ -231,7 +231,7 @@ describe('template problems are codes with user sentences, in English and Russia
   });
 
   it('the shipped text of a template saved from a design has Russian entries', async () => {
-    const { tr } = await import('../src/core/i18n');
+    const { tr } = await import('@furniture-builder/i18n');
     setLang('ru');
     expect(tr(t.family.structure)).not.toBe(t.family.structure);
     expect(tr(t.family.configurations[0])).not.toBe(t.family.configurations[0]);

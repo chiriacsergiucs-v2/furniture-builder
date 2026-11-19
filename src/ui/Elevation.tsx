@@ -10,8 +10,8 @@ import {
 import { findInProduct, productRoots } from '../core/design';
 import { boxCentre } from '../core/geometry';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
-import { pt } from '../core/i18n/print';
-import { t } from '../core/i18n';
+import { pt } from '@furniture-builder/i18n/print';
+import { t } from '@furniture-builder/i18n';
 import {
   FOCUS_OPACITY,
   deepestAt,

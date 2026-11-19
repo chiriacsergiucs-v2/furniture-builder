@@ -8,6 +8,9 @@
       "path": "./tsconfig.node.json"
     },
     {
+      "path": "./packages/i18n"
+    },
+    {
       "path": "./packages/nesting"
     }
   ]

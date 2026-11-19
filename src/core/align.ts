@@ -7,7 +7,7 @@
  * the first piece's top or underside by changing how high they hang; a piece standing on the floor stays and the result
  * says why (user answer 2026-10-27 "Accept default": skip floor pieces, never resize them).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { groupOf, movedTo } from './selection';
 import { moveBlocked, boundsOf, pieceName, type Project, type ProjectItem } from './project';
 import type { Box } from './types';

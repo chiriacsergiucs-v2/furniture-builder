@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import {
   bandFromOffer,
   bandOffers,

@@ -4,7 +4,7 @@
  * The mixes are worked out in `src/core/wallfill.ts`; this file only collects the answers and shows the result.
  */
 import { useId, useMemo, useState, type FormEvent } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,

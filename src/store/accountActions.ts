@@ -1,5 +1,5 @@
 import type { AccountUser, AuthResult } from '../core/account';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { LocalTable } from '../core/sync';
 import { online, rememberAccount, useAccount } from './accountStore';
 

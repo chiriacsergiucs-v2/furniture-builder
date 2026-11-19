@@ -110,7 +110,7 @@ describe('Lock menu (ADR-253)', () => {
 
 describe('Russian texts of the audit hints and errors (ADR-251, ADR-254, ADR-257, ADR-262)', () => {
   it('each text has a Russian entry', async () => {
-    const i18n = await import('../src/core/i18n');
+    const i18n = await import('@furniture-builder/i18n');
     await i18n.loadDictionary('ru');
     const keys = [
       // ADR-251: the two hints that name Move alone.

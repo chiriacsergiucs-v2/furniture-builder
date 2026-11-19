@@ -3,7 +3,7 @@
  * of the project document at one moment, saved on the device in its own table (Dexie v10). Versions are kept until
  * the user deletes them (G-156): nothing removes them automatically, and restoring never rewrites one.
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
 import { validateProject, type Project } from './project';
 

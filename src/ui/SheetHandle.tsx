@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 
 /** The phone Compose sheet's three stops (ADR-211, G-027): the 56 px peek row, today's half sheet, the full screen. */
 export type SheetStop = 'peek' | 'half' | 'full';

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { ancestorIds, structureRows } from '../core/spaceTree';
 import { useDesign } from '../store/designStore';
 import { useUi } from '../store/uiStore';

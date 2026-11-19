@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { sheetOf } from '../core/design';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import type { NestJob, NestResult, SheetLayout } from '@furniture-builder/nesting';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';

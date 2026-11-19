@@ -46,7 +46,7 @@ import { askConfirm } from './Confirm';
 import { Dialog } from './Dialogs';
 import { CatalogSaveForm } from './SaveToCatalog';
 import { InfoTip, rovingKeys, rovingTab } from './controls';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { tNode } from './i18n';
 import { Icon } from './icons';
 import { AccountBadge, AccountRowActions } from './Account';

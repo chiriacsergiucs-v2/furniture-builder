@@ -12,7 +12,7 @@ import {
   type ServiceSide,
 } from '../core/envelopes';
 import { boxCentre } from '../core/geometry';
-import { t, tr } from '../core/i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { isWallHung, type ProjectItem } from '../core/project';
 import { useDesign } from '../store/designStore';
 import { GuidanceTip, Segmented, Toggle } from './controls';

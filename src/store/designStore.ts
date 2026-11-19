@@ -88,7 +88,7 @@ import {
   setTurnLocked,
 } from '../core/project';
 import type { Design, Product } from '../core/types';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { syncSets } from '../core/sets';
 import {
   applyBindings,

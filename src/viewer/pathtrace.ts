@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { GradientEquirectTexture, WebGLPathTracer } from 'three-gpu-pathtracer';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { nextFrame, type RenderEngineName } from '../shared/renderSupport';
 
 /**

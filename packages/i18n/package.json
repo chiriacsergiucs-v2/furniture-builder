@@ -1,0 +1,22 @@
+{
+  "name": "@furniture-builder/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "UI, data and print text in English, Russian and Romanian: t, tr, pt and the text tables (ADR-153, ADR-157, ADR-280).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./print": "./src/print.ts",
+    "./ru/*": "./src/ru/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

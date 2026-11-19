@@ -3,7 +3,7 @@
  * layout, or m² / metres), edge banding, scheduled hardware, run parts — plus what is still to choose before buying.
  * Screws, dowels and cams are counted only as joints of the model, as guidance; the fastener is the user's (ADR-074).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
 import type { RunPart } from './project';
@@ -13,7 +13,7 @@ import {
   type FastenerChoice,
   type FastenerCount,
 } from './fasteners';
-import { pt, type PrintKey } from './i18n/print';
+import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
 import { materialKey } from './project';
 import type { ShopLine, ShopSection, ShopUnit } from './shopping-types';

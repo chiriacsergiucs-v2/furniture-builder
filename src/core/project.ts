@@ -96,7 +96,7 @@ import type {
   Space,
   Yaw,
 } from './types';
-import { t, tr, type Key } from './i18n';
+import { t, tr, type Key } from '@furniture-builder/i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 

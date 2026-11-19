@@ -4,7 +4,7 @@
  * kept; the common panel takes the leftmost member's top (bottom) board. A link that no longer fits is not built and
  * warned about, and the members get their own panels back.
  */
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import { bounds2, footprint, isRect, rectOf, sharedLength, unionOutline, type Pt } from './outline';
 import { placeItem, type CommonPanel, type Project } from './project';
 import type { Design, Diagnostic, Face, Panel } from './types';

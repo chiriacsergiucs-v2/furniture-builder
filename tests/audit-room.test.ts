@@ -2,7 +2,7 @@
 // number, a repeated corner tap adds no wall, and a same-point scale tap keeps Set the scale on.
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadDictionary, setLang } from '../src/core/i18n';
+import { loadDictionary, setLang } from '@furniture-builder/i18n';
 import { buildProjectModel, newProject } from '../src/core/project';
 import { outlineIssues, shapeOutline } from '../src/core/room';
 import { newPlanPicture } from '../src/core/planPicture';

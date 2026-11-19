@@ -11,7 +11,7 @@ import {
   wrap,
 } from '../src/core/design';
 import { kitchen } from '../src/core/catalog/kitchen';
-import { setPrintLang } from '../src/core/i18n/print';
+import { setPrintLang } from '@furniture-builder/i18n/print';
 import { buildProjectModel, isWallHung, makeItem, newProject } from '../src/core/project';
 import { hardwareRo } from '../src/core/ro';
 import { shoppingList } from '../src/core/shopping';

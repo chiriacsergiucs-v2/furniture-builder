@@ -26,7 +26,7 @@ import {
 } from '../persist/backup';
 import { countDesigns, countProjects, getSetting, setSetting } from '../store/libraryStore';
 import { onSavedChange } from '../persist/events';
-import { getLang, t } from '../core/i18n';
+import { getLang, t } from '@furniture-builder/i18n';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useAccount } from '../store/accountStore';

@@ -9,7 +9,7 @@ import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from
 import { newId } from '../core/design';
 import { projectBoards, roleBoard } from '../core/finish';
 import { boxCentre } from '../core/geometry';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import {
   BAR_SPACINGS,
   cutoutOutlines,

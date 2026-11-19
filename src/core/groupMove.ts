@@ -5,7 +5,7 @@
  * locked (ADR-095), or stands on the floor and would have to go up or down — refuses the whole change with the reason
  * (ADR-008). Pure; positions come from the placements (ADR-031).
  */
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 import { groupOf, movedTo } from './selection';
 import {
   moveBlocked,

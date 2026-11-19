@@ -8,7 +8,7 @@ import {
   type SettingKey,
 } from '../core/projectSettings';
 import type { FrontStyle, Handle } from '../core/types';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip, MmField, Select, Toggle } from './controls';
 import { Icon } from './icons';

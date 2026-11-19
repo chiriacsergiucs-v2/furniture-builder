@@ -4,7 +4,7 @@
  * (`design.settings.rules`); every rule is a warning or a hardware reminder, never an error.
  */
 import type { DiagnosticCode } from './diagnosticCodes';
-import { t, tr } from './i18n';
+import { t, tr } from '@furniture-builder/i18n';
 import type {
   Design,
   Diagnostic,

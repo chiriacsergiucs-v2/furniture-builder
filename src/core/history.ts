@@ -4,7 +4,7 @@
  * states. Pure: compares documents only.
  */
 import type { Project, ProjectItem } from './project';
-import { t } from './i18n';
+import { t } from '@furniture-builder/i18n';
 
 const pieces = (n: number) => t('{n|# piece|# pieces}', { n });
 /** "Base 600" for one piece, "3 pieces" for more. */

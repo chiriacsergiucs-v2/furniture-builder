@@ -1,5 +1,5 @@
 import type { DiagnosticCode } from './diagnosticCodes';
-import { t as tx } from './i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import {
   attachHandle,
   buildCabinet,

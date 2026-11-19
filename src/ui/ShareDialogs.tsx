@@ -1,7 +1,7 @@
 // The share link and shared item dialogs (ADR-138, ADR-143), split from Share.tsx so they load on first use (ADR-222).
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { shareLink, type SharedItem, type ShareLink } from '../core/account';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import type { LocalTable } from '../core/sync';
 import { buildModel } from '../core/build';
 import { cutlist, hardwareSummary } from '../core/cutlist';

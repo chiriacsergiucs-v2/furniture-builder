@@ -4,7 +4,7 @@
  * each piece's interior (with its own fronts) becomes one part of a left→right split. Everything else must already be
  * the same; otherwise the merge is refused with the reasons, never guessed.
  */
-import { t as tx } from './i18n';
+import { t as tx } from '@furniture-builder/i18n';
 import { fr, mm, newId, SCHEMA_VERSION } from './design';
 import { mergeConnections } from './connections';
 import {

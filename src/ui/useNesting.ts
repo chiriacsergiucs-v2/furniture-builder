@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CutRow } from '../core/cutlist';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { nest } from '../core/nesting';
 import type { NestJob, NestResult } from '@furniture-builder/nesting';
 import { createNestWorker, type NestResponse } from '@furniture-builder/nesting/client';

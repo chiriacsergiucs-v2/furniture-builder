@@ -1,6 +1,6 @@
 // The assistant dialog (ADR-239, ADR-240): the switch, the consent, the chat, the preview and Apply / Discard.
 import { useState, type FormEvent } from 'react';
-import { t } from '../core/i18n';
+import { t } from '@furniture-builder/i18n';
 import { useAccount } from '../store/accountStore';
 import { useAssistant } from '../store/assistantStore';
 import { Dialog } from './Dialogs';

@@ -12,7 +12,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 function specifiers(text: string): string[] {
   const out: string[] = [];
   for (const re of [
-    /\b(?:import|export)\s[^;]*?\bfrom\s*['"]([^'"]+)['"]/g,
+    /\b(?:import|export)\s[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g,
     /^\s*import\s*['"]([^'"]+)['"]/gm,
     /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
   ])
@@ -38,7 +38,7 @@ const MODEL = [
 const CORE_PACKAGE = /^(react|react-dom|three|dexie|zustand)(\/|$)|^@react-three\/|^@supabase\//;
 const APP = /^src\/(store|ui|persist|viewer|online)(\/|$)/;
 const MODEL_UP =
-  /^src\/core\/(project|room|design|i18n\/print)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)|^@furniture-builder\/nesting(\/|$)/;
+  /^src\/core\/(project|room|design)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)|^@furniture-builder\/(nesting(\/|$)|i18n\/print$)/;
 // ADR-279: a workspace package is reached by its name and exports, never by its files.
 const DEEP = /^@furniture-builder\/[^/]+\/(src|tests)(\/|$)|(^|\/)packages\//;
 // Allowance: src/ui/Gaps.tsx reads the gaps ledger as text (G-503).
@@ -96,10 +96,13 @@ describe('layer boundaries (ADR-219)', () => {
     ).toEqual(['./y', './z.css', 'dexie']);
     expect(violation('src/core/a.ts', 'react')).not.toBeNull();
     expect(violation('src/core/a.ts', 'three')).not.toBeNull();
-    expect(violation('src/core/i18n/b.ts', 'three/examples/jsm/x.js')).not.toBeNull();
+    expect(violation('src/core/x/b.ts', 'three/examples/jsm/x.js')).not.toBeNull();
     expect(violation('src/core/a.ts', 'dexie')).not.toBeNull();
     expect(violation('src/core/a.ts', '../ui/x')).not.toBeNull();
-    expect(violation('src/core/i18n/ru/a.ts', '../../../store/designStore')).not.toBeNull();
+    expect(violation('src/core/x/y/a.ts', '../../../store/designStore')).not.toBeNull();
+    expect(violation('src/core/cabinet.ts', '@furniture-builder/i18n/print')).not.toBeNull();
+    expect(violation('src/core/cabinet.ts', '@furniture-builder/i18n')).toBeNull();
+    expect(violation('src/core/ro.ts', '@furniture-builder/i18n/print')).toBeNull();
     expect(violation('src/core/cabinet.ts', './project')).not.toBeNull();
     expect(violation('src/core/cabinet.ts', './design')).not.toBeNull();
     expect(violation('src/core/desk.ts', './design')).toBeNull();
@@ -223,6 +226,21 @@ describe('workspace packages (ADR-279)', () => {
           await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`),
         ).toBeGreaterThan(0);
     }
+    // ADR-280: the i18n package is the bottom package.
+    for (const file of ['index', 'print', 'print-text', 'warning-text', 'ru/shell'].map(
+      (m) => `packages/i18n/src/${m}.ts`,
+    )) {
+      expect(await errors(file, "import { a } from './x';\nexport const b = a;\n")).toBe(0);
+      for (const spec of [
+        '../tests/x',
+        '../../../src/core/ro',
+        'react',
+        '@furniture-builder/nesting',
+      ])
+        expect(
+          await errors(file, `import { a } from '${spec}';\nexport const b = a;\n`),
+        ).toBeGreaterThan(0);
+    }
     for (const file of [
       'src/ui/a.tsx',
       'src/store/a.ts',
@@ -246,6 +264,18 @@ describe('workspace packages (ADR-279)', () => {
         "import { nest } from '@furniture-builder/nesting';\nexport const b = nest;\n",
       ),
     ).toBeGreaterThan(0);
+    expect(
+      await errors(
+        'src/core/cabinet.ts',
+        "import { pt } from '@furniture-builder/i18n/print';\nexport const b = pt;\n",
+      ),
+    ).toBeGreaterThan(0);
+    expect(
+      await errors(
+        'src/core/cabinet.ts',
+        "import { t } from '@furniture-builder/i18n';\nexport const b = t;\n",
+      ),
+    ).toBe(0);
     // ADR-230: the viewer imports nothing from src/ui.
     for (const [spec, n] of [
       ['../ui/CountStepper', 1],
