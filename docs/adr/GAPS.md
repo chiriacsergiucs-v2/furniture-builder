@@ -2054,3 +2054,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Medium
+
+### G-555: Cap file size in five text importers
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-1)
+- Missing: src/ui/Shopping.tsx:126, src/ui/Dialogs.tsx:545 and :573, src/ui/CatalogPage.tsx:255 and src/ui/Gaps.tsx:166 read a file with f.text() and no size cap; importFile already has MAX_IMPORT_BYTES
+- Request: /health-security, loop prompt: rotate the health skills until no high-priority issue; user approved Medium only
+- Questions: None; the cap value is MAX_IMPORT_BYTES
+- Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-556: Re-encode or sniff pictures inside imported files
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-2)
+- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
+- Request: /health-security, loop prompt; user approved Medium only
+- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
+- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-557: Pin GitHub Actions by commit SHA
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-4)
+- Missing: .github/workflows/ci.yml, deploy.yml and deploy-assistant.yml pin actions by tag; supabase/setup-cli runs with a secret (deploy-assistant.yml:20-21)
+- Request: /health-security, loop prompt; user approved Medium only
+- Questions: None
+- Suggested pick: Pin by SHA, verifying each SHA from the upstream release (Work Low, Value Low-medium)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
