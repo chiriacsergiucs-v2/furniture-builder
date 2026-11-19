@@ -50,6 +50,8 @@ const KIND_LABEL: Record<MaterialKind, string> = {
   worktop: t('Kitchen worktop'),
   other: t('Other'),
 };
+/** Quick picks for the usual PAL thicknesses; the Thickness field still takes any whole mm. */
+const COMMON_BOARD_THICKNESS = [16, 18, 22].map((v) => ({ value: v, label: String(v) }));
 const FINISH_OPTIONS = FINISHES.map((f) => ({ ...f, label: FINISH_LABEL[f.value] }));
 const MAKER_OPTIONS = MAKERS.map((m) => (m.value === 'other' ? { ...m, label: t('Other') } : m));
 const KIND_OPTIONS = KINDS.map((k) => ({ ...k, label: KIND_LABEL[k.value] }));
@@ -830,6 +832,12 @@ export function MaterialsPanel() {
               min={1}
               max={60}
               step={1}
+              onChange={(v) => update(m.id, { thickness: v })}
+            />
+            <Segmented
+              label={t('Common thickness (mm)')}
+              value={m.thickness}
+              options={COMMON_BOARD_THICKNESS}
               onChange={(v) => update(m.id, { thickness: v })}
             />
             <Toggle

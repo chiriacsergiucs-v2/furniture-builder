@@ -231,6 +231,7 @@ export const ru_shell = {
   '{name} colour': '{name}: цвет',
   Thickness: 'Толщина',
   'Has grain': 'Есть текстура',
+  'Common thickness (mm)': 'Обычная толщина (мм)',
   Finish: 'Отделка',
   Manufacturer: 'Производитель',
   'Decor from your list': 'Декор из вашего списка',
