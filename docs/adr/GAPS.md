@@ -2030,3 +2030,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-553: Find-it and live-verify for the Common thickness picker (N349)
+
+- Status: Open
+- Origin: N349, burst 2026-11-19
+- Missing: jsdom find-it test for 'Common thickness (mm)' and live-verify after merge
+- Request: Add 16 and 22 mm PAL thickness choices
+- Questions: None
+- Suggested pick: Write tests/find-it jsdom test; open live URL after merge
+- Work: Low
+- Impact: Low
+- Necessity: Medium
