@@ -99,7 +99,7 @@ function BuyList({ results, jobs }: { results: NestResult[]; jobs: NestJob[] }) 
   );
 }
 
-function MaterialSheets({
+export function MaterialSheets({
   result,
   job,
   color,
