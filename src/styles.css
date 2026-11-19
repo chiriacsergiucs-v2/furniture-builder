@@ -7325,3 +7325,47 @@ fieldset.group-locked {
 .wz-why {
   margin: var(--s-2) 0 0;
 }
+
+/* Cut list optimizer page */
+.optimizer-page section {
+  margin-block: 16px;
+}
+.opt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 12px;
+}
+.opt-parts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: grid;
+  gap: 8px;
+}
+.opt-parts li {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1.2fr)) minmax(0, 0.8fr) auto;
+  gap: 6px;
+  align-items: start;
+}
+.opt-parts li > .btn {
+  margin-top: 1.6rem;
+}
+.opt-parts li .field {
+  min-width: 0;
+}
+.opt-parts li input {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .opt-parts li {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  }
+  .opt-parts li .field:first-child {
+    grid-column: 1 / -1;
+  }
+}
+.opt-summary {
+  font-size: 1.1rem;
+}
