@@ -2042,3 +2042,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Medium
+
+### G-554: Live-verify the i18n package move (N351)
+
+- Status: Open
+- Origin: N351, ADR-280, burst 2026-11-19
+- Missing: Open the live URL after deploy and switch More › Language to Русский; check a printed sheet is Romanian
+- Request: Continue ADR-279 split
+- Questions: None
+- Suggested pick: Open the live URL after merge and switch the language
+- Work: Low
+- Impact: Low
+- Necessity: Medium

@@ -1,7 +1,8 @@
 # ADR-280: Extract the i18n package
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-19
+- Implemented: 2026-11-19 (Built and verified 2026-11-19 in the sandbox: pnpm typecheck, lint, format:check, docs:check, build and the full pnpm test (281 files, 2171 passed) passed; package test (6 passed) and typecheck pass alone)
 - Depends on: ADR-279
 - Design: n/a
 - Backlog: N351
@@ -62,12 +63,17 @@ Decided by Claude, following the ADR-279 recipe:
 
 ## Done when
 
-- [ ] `packages/i18n` exists with `src/`, `tests/`, `package.json` (`exports` `.` and `./print`) and `tsconfig.json`;
+- [x] `packages/i18n` exists with `src/`, `tests/`, `package.json` (`exports` `.` and `./print`) and `tsconfig.json`;
       `src/core/i18n` no longer exists.
-- [ ] No file under `packages/i18n/src` imports anything outside its own folder (lint block and
+- [x] No file under `packages/i18n/src` imports anything outside its own folder (lint block and
       `tests/core-boundary.test.ts`).
-- [ ] `warningText` lives in `src/core/ro.ts`; `tests/warning-print.test.tsx` passes.
-- [ ] `pnpm --filter @furniture-builder/i18n test` and `typecheck` pass alone.
-- [ ] A `t()` key with no Russian entry still fails `pnpm typecheck` (checked by adding one).
-- [ ] `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, `pnpm lint` and `pnpm test` pass.
-- [ ] The production build has the same chunks as before (no i18n text moved into another chunk).
+- [x] `warningText` lives in `src/core/ro.ts`; `tests/warning-print.test.tsx` passes.
+- [x] `pnpm --filter @furniture-builder/i18n test` and `typecheck` pass alone.
+- [x] A `t()` key with no Russian entry still fails `pnpm typecheck` (checked by adding one).
+- [x] `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, `pnpm lint` and `pnpm test` pass.
+- [x] The production build has the same chunks as before (no i18n text moved into another chunk).
+
+  Evidence (ran 2026-11-19): same 71 asset names as `main` 1160fe8; the print, warning and Russian texts sit in the
+  same chunks; the entry chunk is 33 KB smaller because `ro.ts` and the model files it imports (`cutlist`, `geometry`,
+  `materials`, `shape`) no longer load with it (they now load with `App`). A `t()` key with no Russian entry failed
+  `pnpm typecheck` with TS2345.
