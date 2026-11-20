@@ -270,21 +270,27 @@ function tint(c: string, f: number): string {
 
 /** Panel roles drawn see-through when `clearFronts` is on: what hides the inside of a cabinet. */
 const FRONT_ROLES: ReadonlySet<string> = new Set(['door', 'drawer-front']);
+/** Panel roles left out when `hideDoors` is on: the doors, so the inside of the cabinet shows (catalog pictures). */
+const DOOR_ROLES: ReadonlySet<string> = new Set(['door']);
 /** Fill opacity of a see-through front in a suggestion picture. */
 const CLEAR_FRONT = 0.28;
 
 /**
  * SVG picture of a model, `size` px on its longer side. Empty models give an empty picture. `clearFronts`: doors and
  * drawer fronts are drawn see-through so the shelves, dividers and drawers behind them show (suggestion cards).
+ * `hideDoors`: doors are left out and the picture is fitted to what remains, so every variant shows its inside (catalog
+ * tiles); a model made only of doors keeps them.
  */
 export function snapshotSvg(
   model: FurnitureModel,
   materials: Material[],
   size = 240,
   clearFronts = false,
+  hideDoors = false,
 ): string {
   const colour = new Map(materials.map((m) => [m.id, m.color]));
-  const panels = model.panels;
+  const open = hideDoors ? model.panels.filter((p) => !DOOR_ROLES.has(p.role)) : model.panels;
+  const panels = open.length ? open : model.panels;
   const pad = 6;
   if (!panels.length)
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"/>\n`;

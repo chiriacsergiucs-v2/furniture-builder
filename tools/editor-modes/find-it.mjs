@@ -300,7 +300,7 @@ for (const [width, scheme] of [
     .getByRole('link', { name: /Catalog/ })
     .click();
   await page.getByRole('searchbox', { name: 'Search the catalog' }).fill('Base cabinet');
-  await page.getByRole('button', { name: 'Add', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Add / }).first().click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await page.waitForTimeout(300);
   ck(
