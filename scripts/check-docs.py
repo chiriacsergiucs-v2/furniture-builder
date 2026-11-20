@@ -9,12 +9,19 @@
   rows until they are Done (ADR-066);
 - docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 to ADR-218 cites a gap for each
   out-of-scope line and open question (ADR-082);
-- no tracked file names a retired third-party agent tool, in its path or content (user decision 2026-11-10).
+- no tracked file names a retired third-party agent tool, in its path or content (user decision 2026-11-10);
+- the evidence gates in scripts/ledger_gates.py: no Done row that says it is unmerged or owes burst debt, no unchecked
+  Done-when item in an implemented ADR without a G id, and every burst-skipped marker names its blocker and cost
+  (retro 2026-11-20, P4 and P10).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
-import pathlib, re, subprocess, sys
+import importlib.util, pathlib, re, subprocess, sys
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
+# Loaded by path: python3 -I does not put this folder on sys.path.
+_spec = importlib.util.spec_from_file_location("ledger_gates", pathlib.Path(__file__).with_name("ledger_gates.py"))
+ledger_gates = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(ledger_gates)
 ADR, DONE = REPO / "docs/adr", REPO / "docs/adr-done"
 errors = []
 
@@ -40,6 +47,7 @@ for folder in (ADR, DONE):
         for key in ("Date", "Depends on", "Design"):
             if not re.search(rf"^- {key}: .+$", text, re.M):
                 errors.append(f"{rel}: missing '- {key}:' line")
+        errors += ledger_gates.adr_problems(rel, num, status, text)
         adrs[num] = (f, status)
 
 # The ledgers' tables stay unpadded (cleanup audit 2026-11-09, item 11): Prettier no longer formats them, and a cell
@@ -62,6 +70,11 @@ KNOWN_DUPLICATE_BACKLOG_IDS = {"N164", "N281", "N302", "N326"}
 _backlog_ids = re.findall(r"^\| ([FND]\d{2,}) +\|", (REPO / "docs/backlog.md").read_text(), re.M)
 for _id in sorted({i for i in _backlog_ids if _backlog_ids.count(i) > 1} - KNOWN_DUPLICATE_BACKLOG_IDS):
     errors.append(f"docs/backlog.md: backlog id {_id} is used by more than one row")
+
+# Evidence gates (retro 2026-11-20, P4 and P10); every row, so a repeated id is checked twice.
+errors += ledger_gates.backlog_problems(
+    [(m.group(1), m.group(2).strip(), m.group(3))
+     for m in re.finditer(r"^\| ([FND]\d{2,}) +\|[^|\n]*\|([^|\n]*)\|?(.*)$", (REPO / "docs/backlog.md").read_text(), re.M)])
 
 # Index rows: | [ADR-NNN](link) | title | depends | status |
 index = (ADR / "README.md").read_text()
