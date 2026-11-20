@@ -50,7 +50,10 @@ construction differs." This ADR replaces the limit (not the second sentence). AD
   resizes a piece by width only, so flaps, hardware choices and fixed-mm parts would be stretched out of their design.
   ADR-104 said "then the rest of the family"; this replaces that sentence.
 - The ADR-124 fuzz test draws from its own random sequence (as the edge bands do), so catalog edits no longer reseed
-  the tests after it. That exposed a latent mirror rounding bug, G-558 (not fixed here).
+  the tests after it. That exposed a latent mirror rounding bug (G-558). User decision 2026-11-20 ("Symmetric outer
+  limit"): a half-style cabinet's right outer reveal is its left one reflected (`x1 = W - lo(t) - hi(g)`, was
+  `W - hi(t) - lo(g)`), so a mirrored copy matches the original to the mm. With an odd board or gap the right outer
+  front is 1 mm wider; saved designs keep their parameters and rebuild with that size. Replaces ADR-024's right-hand rounding.
 - One ADR, one pull request, built family by family in separate commits.
 
 ## Alternatives considered
@@ -80,6 +83,7 @@ construction differs." This ADR replaces the limit (not the second sentence). AD
 - [ ] Every new variant has `VARIANT_RO`, a Russian entry and a committed picture (`tests/snapshots.test.ts`).
 - [ ] `docs/catalog.md` regenerated; `pnpm typecheck`, `pnpm build`, `pnpm docs:check` pass; fuzz run once.
 - [ ] Find-it (jsdom, 390 and 1280 px): the Wardrobe family shows 11 tiles; the editor says `Variants (1–12; …)`.
+- [ ] A half-style cabinet with an odd board and its mirror have equal front sizes (`FUZZ_N=30000` mirror fuzz passes).
 
 ## Open questions
 

@@ -494,7 +494,7 @@ function check(d: Design): string[] {
         : style === 'half'
           ? {
               x0: lo(t) + hi(g),
-              x1: W - t + lo(t) - lo(g),
+              x1: W - lo(t) - hi(g),
               y0: ph + lo(t) + hi(g),
               y1: H - t + lo(t) - lo(g),
             }

@@ -539,7 +539,8 @@ export function buildCabinet(
     style === 'half'
       ? {
           x0: lo(t) + hi(g),
-          x1: W - t + lo(t) - lo(g),
+          // The right reveal is the left one reflected (G-558): a mirrored copy then matches the original to the mm.
+          x1: W - lo(t) - hi(g),
           y0: ph + lo(t) + hi(g),
           y1: H - tt + lo(t) - lo(g),
         }
