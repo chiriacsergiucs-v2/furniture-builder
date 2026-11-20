@@ -67,13 +67,13 @@ describe.each(WIDTHS)('catalog at %ipx (find-it, ADR-262)', (width) => {
     ).toBeTruthy();
   });
 
-  it('each card’s Open button is described by its item', async () => {
+  it('each tile is one button whose name says the action and its item', async () => {
     const { user } = await renderApp(width);
     await toCatalog(user);
-    const open = (await screen.findAllByRole('button', { name: 'Open' }))[0];
-    const id = open.getAttribute('aria-describedby');
-    expect(id).toBeTruthy();
-    expect(document.getElementById(id!)?.textContent?.trim()).toBeTruthy();
+    const open = (await screen.findAllByRole('button', { name: /^Open / }))[0];
+    const named = /^Open (.+?) \d+ × \d+ × \d+/.exec(open.getAttribute('aria-label') ?? '');
+    expect(named).toBeTruthy();
+    expect(open.textContent).toContain(named![1]);
     const edit = screen.getAllByRole('button', { name: 'Edit template' })[0];
     expect(edit.getAttribute('aria-describedby')).toBeTruthy();
   });

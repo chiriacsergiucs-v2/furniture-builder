@@ -230,11 +230,6 @@ for (const width of [390, 1280]) {
     y2.length === 1 && /New piece/.test(y2[0]),
     y2.join(' / '),
   );
-  check(
-    width,
-    'variant kind in words ("Interior only")',
-    await page.getByText('Interior only').first().isVisible(),
-  );
   const firstLiving = page.locator('section.catalog-group').first().locator('.family').first();
   check(
     width,

@@ -77,7 +77,7 @@ for (const width of [1440, 390]) {
       .locator('article.family')
       .filter({ hasText: 'Base cabinet, doors' })
       .first()
-      .getByRole('button', { name: 'Open', exact: true })
+      .getByRole('button', { name: /^Open / })
       .first(),
   );
   await page.locator('main.work').waitFor({ state: 'visible' });

@@ -2055,7 +2055,19 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Medium
 
-### G-555: Cap file size in five text importers
+### G-555: Catalog tiles: layout not seen in a browser
+
+- Status: Open
+- Origin: N352, user request 2026-11-19 (catalog redesign)
+- Missing: 2 columns at 390 px, 4 at 1280 px, 120 px picture height and no sideways scroll were not measured; tools/catalog-flows, shapes, template-revision, editor-modes, ui-polish were edited but not run
+- Request: Run pnpm regress catalog (and the edited scripts) and a screenshot at 390 and 1280 px; live-verify the Wardrobe tiles after merge
+- Questions: none
+- Suggested pick: Run pnpm regress when the user asks (browser-on-demand)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-564: Cap file size in five text importers
 
 - Status: Open
 - Origin: Security health check round 1, 2026-11-19 (L-1)
@@ -2067,7 +2079,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-556: Re-encode or sniff pictures inside imported files
+### G-565: Re-encode or sniff pictures inside imported files
 
 - Status: Open
 - Origin: Security health check round 1, 2026-11-19 (L-2)
@@ -2079,7 +2091,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-557: Pin GitHub Actions by commit SHA
+### G-566: Pin GitHub Actions by commit SHA
 
 - Status: Open
 - Origin: Security health check round 1, 2026-11-19 (L-4)
@@ -2091,7 +2103,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-558: Assistant 8000-character cap: user feedback in the chat
+### G-567: Assistant 8000-character cap: user feedback in the chat
 
 - Status: Open
 - Origin: Bug health check round 1, 2026-11-19 (M1)
@@ -2103,7 +2115,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-559: Bump @supabase/supabase-js to 2.119.2 once the release ages in
+### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
 
 - Status: Open
 - Origin: Dependency health check round 1, 2026-11-19
@@ -2115,7 +2127,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-560: Share find-it helpers in tools/lib/harness.mjs
+### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
 - Origin: Reuse health check round 1, 2026-11-20 (H4); the user chose to stop the goal loop before it was built
@@ -2127,7 +2139,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low
 
-### G-561: Reuse findings M1 to M10
+### G-570: Reuse findings M1 to M10
 
 - Status: Open
 - Origin: Reuse health check round 1, 2026-11-20 (medium)
@@ -2139,7 +2151,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-562: Reuse findings L1 to L8
+### G-571: Reuse findings L1 to L8
 
 - Status: Open
 - Origin: Reuse health check round 1, 2026-11-20 (low)
@@ -2151,7 +2163,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-563: Low dev dependency updates
+### G-572: Low dev dependency updates
 
 - Status: Open
 - Origin: Dependency health check round 1, 2026-11-19
