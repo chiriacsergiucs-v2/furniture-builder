@@ -2179,7 +2179,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Retro 2026-11-20 (P4, P10); agent scoped it out: the gates exempt rows below N361/F19/D04 and ADRs numbered below 281
-- Missing: 86 Done backlog rows whose evidence says not merged, PR open, not shipped, not pushed or carries burst-skipped (N45 to N253); 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); 20 rows with bare burst-skipped markers (N274 to N359)
+- Note: 2026-11-20 (N362): the backlog part is done. All 86 old Done rows had merge evidence on main (a merged PR or the ADR's ship commit), so they stay Done with that evidence appended, the old wording reads "at build time", every old burst marker names its blocker and cost, and the backlog exemption is gone. Left: the ADR part.
+- Missing: 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); implemented ADRs are not edited, so they stay exempt (ADRs numbered below 281)
 - Request: User picked 'P4/P10 docs:check gates' from the retro 2026-11-20
 - Questions: Statuses change only with evidence: re-verify each row (merged PR, CI run) or turn it Partially done? Which ADR boxes get a G id versus a re-check?
 - Suggested pick: Check each row against git log for its merge commit; Done stays only with a merge sha, else Partially done; then drop the legacy cut-off

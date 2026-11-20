@@ -35,13 +35,13 @@ class BacklogGates(unittest.TestCase):
         evidence = GOOD_MARKER + "; burst-skipped: fuzz"
         self.assertEqual(len(gates.backlog_problems([("N400", "Partially done", evidence)])), 1)
 
-    def test_legacy_rows_are_exempt(self):
-        rows = [("N360", "Done", "not merged"), ("F18", "Done", "PR open"), ("D03", "Partially done", "burst-skipped: x")]
-        self.assertEqual(gates.backlog_problems(rows), [])
-
-    def test_first_new_ids_are_checked(self):
-        rows = [("N361", "Done", "not merged"), ("F19", "Done", "not merged"), ("D04", "Done", "not merged")]
+    def test_old_rows_are_checked_too(self):
+        rows = [("N45", "Done", "not merged"), ("F01", "Done", "PR open"), ("D01", "Partially done", "burst-skipped: x")]
         self.assertEqual(len(gates.backlog_problems(rows)), 3)
+
+    def test_build_time_wording_with_merge_evidence_passes(self):
+        evidence = "Unmerged at build time. Merged (G-573 check, 2026-11-20): PR #94 merged 2026-10-27."
+        self.assertEqual(gates.backlog_problems([("N101", "Done", evidence)]), [])
 
 
 class AdrGates(unittest.TestCase):
