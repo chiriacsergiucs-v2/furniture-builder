@@ -78,11 +78,11 @@ for (const [width, scheme] of [
   ck(
     width,
     phone
-      ? "places Editor · Cut list visible (the phone's two modes, ADR-241)"
-      : 'modes Compose · Build & Preview visible',
+      ? "places Editor · Cut List visible (the phone's two modes, ADR-241; renamed in 234f34d)"
+      : 'modes Compose · Cut List visible (Build & Preview, renamed in 234f34d)',
     phone
-      ? (await place('Editor').isVisible()) && (await place(/Cut list/).isVisible())
-      : (await mode('Compose').isVisible()) && (await mode(/Build & Preview/).isVisible()),
+      ? (await place('Editor').isVisible()) && (await place(/Cut list/i).isVisible())
+      : (await mode('Compose').isVisible()) && (await mode(/Build & Preview|Cut List/).isVisible()),
   );
   ck(
     width,
@@ -209,10 +209,10 @@ for (const [width, scheme] of [
     'the mode names the problem ("1 problem")',
     phone
       ? // The Cut list place carries a badge "1", named "problem" for a screen reader.
-        (await place(/Cut list/)
+        (await place(/Cut list/i)
           .getByLabel('problem', { exact: true })
           .textContent()) === '1'
-      : /1 problem/.test(await mode(/Build & Preview/).textContent()),
+      : /1 problem/.test(await mode(/Build & Preview|Cut List/).textContent()),
   );
   ck(
     width,

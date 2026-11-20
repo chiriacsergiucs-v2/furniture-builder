@@ -24,7 +24,7 @@ import {
   wallsOf,
 } from '../core/connections';
 import { applyStyle } from '../core/styles';
-import { planRuns, requestKey, type Project, type WorktopJoint } from '../core/project';
+import { planRuns, requestKey, runPartKey, type Project, type WorktopJoint } from '../core/project';
 import type { Design } from '../core/types';
 import { t } from '@furniture-builder/i18n';
 import type { State, StoreHelpers } from './designState';
@@ -87,7 +87,7 @@ export function runActions(h: StoreHelpers): RunActions {
       commitProject({
         ...p,
         runParts: (p.runParts ?? []).filter((r) => r.id !== id),
-        runPartsRemoved: [...(p.runPartsRemoved ?? []), rp.key ?? rp.id],
+        runPartsRemoved: [...(p.runPartsRemoved ?? []), runPartKey(rp)],
         ...(asked ? { runRequests: asked } : {}),
       });
     },

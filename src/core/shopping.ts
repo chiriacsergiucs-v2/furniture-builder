@@ -15,7 +15,7 @@ import {
 } from './fasteners';
 import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
-import { materialKey } from './project';
+import { materialKey, runPartKey } from './project';
 import type { ShopLine, ShopSection, ShopUnit } from './shopping-types';
 import type {
   Diagnostic,
@@ -29,7 +29,7 @@ import type {
 export type { ShopLine, ShopSection, ShopUnit } from './shopping-types';
 
 /** The key a run part's seller product is saved under (`Project.runProducts`, ADR-206). */
-export const runPartKey = (rp: Pick<RunPart, 'key' | 'id'>) => rp.key ?? rp.id;
+export { runPartKey };
 
 /**
  * The rows without the parts of run parts priced by their own product (ADR-206), so they are not bought twice: a row

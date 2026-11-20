@@ -6,7 +6,7 @@ description: Pay the debt logged while the `burst` toggle was on — find every 
 # Catch up after a burst
 
 Project: **Furniture Builder**. User rule 2026-11-15 (`CLAUDE.md` › Process › Burst mode). While `burst` is on, the
-`auto` path skips slow steps and logs each one as `burst-skipped: <item> (burst, YYYY-MM-DD)` on the backlog row it
+`auto` path skips slow steps and logs each one as `burst-skipped: <item> (burst, YYYY-MM-DD; blocker: <what blocks it>; cost: S|M|L)` on the backlog row it
 touched. This skill runs every logged item. Nothing logged may be dropped or relabelled (R2).
 
 ## Steps
