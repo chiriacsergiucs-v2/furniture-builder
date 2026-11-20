@@ -166,6 +166,8 @@ export const templateOrigin = (
   takenAt: now,
 });
 
+/** Most variants a family holds, shipped or the user's own (ADR-281; ADR-033 said 5). */
+export const MAX_VARIANTS = 12;
 const isStr = (v: unknown, max = 500) => typeof v === 'string' && v.length > 0 && v.length <= max;
 const CAPS = new Set<string>([
   ...BUILT_CAPABILITIES,
@@ -229,7 +231,7 @@ export function validateLocalTemplate(t: unknown): TemplateProblem[] {
   if (!Array.isArray(f.configurations) || !f.configurations.every((c) => isStr(c, 300)))
     add('bad-configurations');
   if (typeof f.structure !== 'string' || f.structure.length > 1000) add('bad-structure');
-  if (!Array.isArray(f.variants) || f.variants.length < 1 || f.variants.length > 5)
+  if (!Array.isArray(f.variants) || f.variants.length < 1 || f.variants.length > MAX_VARIANTS)
     return [...errs, { code: 'variant-count' }];
   const ids = new Set<string>();
   for (const v of f.variants) {
@@ -290,7 +292,7 @@ export function templateProblemText(p: TemplateProblem): string {
     case 'bad-structure':
       return tx('Shorten the default structure to 1000 characters or fewer.');
     case 'variant-count':
-      return tx('A template has 1 to 5 variants.');
+      return tx('A template has 1 to 12 variants.');
     case 'variant-name':
       return tx('Give every variant a name of up to 200 characters.');
     case 'bad-variant':

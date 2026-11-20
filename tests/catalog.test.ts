@@ -35,12 +35,12 @@ const EXTRA: Record<string, string[]> = {
 };
 
 describe('template catalog (ADR-032, ADR-033, ADR-039)', () => {
-  it('every family has 1–5 variants, known rooms and function, unique ids', () => {
+  it('every family has 1–12 variants, known rooms and function, unique ids', () => {
     const ids = new Set<string>(),
       vids = new Set<string>();
     for (const f of catalogFamilies) {
       expect(f.variants.length, f.id).toBeGreaterThanOrEqual(1);
-      expect(f.variants.length, f.id).toBeLessThanOrEqual(5);
+      expect(f.variants.length, f.id).toBeLessThanOrEqual(12);
       expect(FUNCTIONS).toContain(f.function);
       for (const r of f.rooms) expect(ROOMS).toContain(r);
       expect(ids.has(f.id)).toBe(false);

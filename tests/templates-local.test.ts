@@ -103,9 +103,16 @@ describe('editable templates on this device (ADR-034)', () => {
     expect(
       validateLocalTemplate({
         ...t,
-        family: { ...t.family, variants: Array(6).fill(t.family.variants[0]) },
+        family: { ...t.family, variants: Array(13).fill(t.family.variants[0]) },
       }),
     ).toContainEqual({ code: 'variant-count' });
+    // 6 to 12 variants are allowed (ADR-281): the only error is the repeated variant id of this copy-filled list.
+    expect(
+      validateLocalTemplate({
+        ...t,
+        family: { ...t.family, variants: Array(12).fill(t.family.variants[0]) },
+      }),
+    ).not.toContainEqual({ code: 'variant-count' });
     expect(validateLocalTemplate(null)).toEqual([{ code: 'not-object' }]);
   });
 });

@@ -2078,3 +2078,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+
+### G-557: Variants for sink-base, desk and chest
+
+- Status: Open
+- Origin: ADR-281, user 2026-11-20 (cut from the ADR)
+- Missing: No new shipped variants for sink-base, desk and chest: six truly different designs do not exist with today's generators (desk is gables or pedestals only; sink-base and chest differ by count and width)
+- Request: Add variants to these three families once a generator capability makes them genuinely different (e.g. new desk or sink options)
+- Questions: none
+- Suggested pick: Revisit when a new capability lands
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
+
+- Status: Open
+- Origin: ADR-281 build: tests/fuzz.test.ts mirror fuzz (ADR-205) failed after the catalog grew
+- Missing: A half-style cabinet with an odd body thickness (25 mm) and a mm-sized end part gives a front 242 mm wide, its mirror 241 mm: the outer reveals in cabinet.ts ownFront (lo(t)+hi(g) left, hi(t)+lo(g) right) are not swapped when a split is mirrored (remainderFirst). Seen on origin/main too: FUZZ_N=3200, 3600 and 4000 fail; 3000 and 30000 pass by chance. ADR-281 gave the ADR-124 fuzz test its own random sequence so catalog edits no longer reseed the tests after it; FUZZ_N=30000 on this branch now hits the bug
+- Request: Make mirrored and original fronts match to the mm for odd board thicknesses (mirror the outer reveal), keeping saved designs' cut sizes unchanged unless the user decides
+- Questions: Changing outer reveals changes front sizes by 1 mm on existing odd-thickness designs: is that allowed?
+- Suggested pick: Fix only for mirrored designs
+- Work: Medium
+- Impact: Low
+- Necessity: Low

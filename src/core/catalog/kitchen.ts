@@ -11,6 +11,7 @@ import {
   mm,
   panel,
   shelves,
+  splitX,
   splitY,
   tall,
   wallUnit,
@@ -92,6 +93,74 @@ export const kitchen: CatalogFamily[] = [
         requires: [],
         create: () => base('Base cabinet, open', {}, shelves(2)),
       },
+      {
+        id: 'base-narrow-300',
+        name: 'Narrow 300, 3 shelves',
+        summary: '300 wide',
+        kind: 'interior',
+        requires: [],
+        create: () => base('Base cabinet, narrow', { width: 300 }, shelves(3, door(1))),
+      },
+      {
+        id: 'base-divided',
+        name: 'Two sections, centre divider',
+        summary: '1000 wide, a door per section',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Base cabinet, divided',
+            { width: 1000 },
+            splitX(even(2), [shelves(2, door(1)), shelves(2, door(1))]),
+          ),
+      },
+      {
+        id: 'base-ledge-door',
+        name: 'Open ledge over a door',
+        summary: 'Open niche above a door',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Base cabinet, ledge over door',
+            {},
+            splitY([mm(200), fr()], [shelves(0), shelves(1, door(1))]),
+          ),
+      },
+      {
+        id: 'base-niche-door',
+        name: 'Open niche + door',
+        summary: '900 wide, niche beside a door',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Base cabinet, niche and door',
+            { width: 900 },
+            splitX([mm(300), fr()], [shelves(3), shelves(1, door(1))]),
+          ),
+      },
+      {
+        id: 'base-4-inner-drawers',
+        name: 'Two doors, 4 inner drawers',
+        summary: '1000 wide, two drawers behind each door',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Base cabinet, 4 inner drawers',
+            { width: 1000 },
+            splitX(even(2), [drawers(2, undefined, door(1)), drawers(2, undefined, door(1))]),
+          ),
+      },
+      {
+        id: 'base-bin',
+        name: 'Bin cabinet',
+        summary: '450 wide, empty behind a door',
+        kind: 'interior',
+        requires: [],
+        create: () => base('Base cabinet, bins', { width: 450 }, empty(door(1))),
+      },
     ],
   },
   {
@@ -154,6 +223,79 @@ export const kitchen: CatalogFamily[] = [
         requires: ['top:rails'],
         create: () =>
           base('Hob base', { topKind: 'rails' }, drawers(3, [fr(0.6), fr(1.5), fr(1.5)])),
+      },
+      {
+        id: 'drawers-1-deep',
+        name: 'One deep drawer',
+        summary: 'One full-height drawer',
+        kind: 'interior',
+        requires: [],
+        create: () => base('Drawer base, 1 deep drawer', {}, drawers(1)),
+      },
+      {
+        id: 'drawers-narrow-wide',
+        name: 'Narrow + wide stacks',
+        summary: '900 wide: 4 small drawers beside 2 deep',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Drawer base, narrow and wide stacks',
+            { width: 900 },
+            splitX([mm(300), fr()], [drawers(4), drawers(2)]),
+          ),
+      },
+      {
+        id: 'drawers-two-stacks',
+        name: 'Two stacks side by side',
+        summary: '1000 wide, 3 drawers in each',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Drawer base, two stacks',
+            { width: 1000 },
+            splitX(even(2), [drawers(3), drawers(3)]),
+          ),
+      },
+      {
+        id: 'drawers-niche',
+        name: 'Drawers beside an open niche',
+        summary: '900 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Drawer base, drawers and niche',
+            { width: 900 },
+            splitX([mm(600), fr()], [drawers(3, [fr(1), fr(1.5), fr(2)]), shelves(2)]),
+          ),
+      },
+      {
+        id: 'drawers-over-open',
+        name: 'Drawer over open space',
+        summary: 'Top drawer, open space below',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Drawer base, drawer over open space',
+            {},
+            splitY([mm(150), fr()], [drawers(1), shelves(1)]),
+          ),
+      },
+      {
+        id: 'drawers-2-over-door',
+        name: 'Two drawers over a door',
+        summary: '800 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          base(
+            'Drawer base, 2 drawers over door',
+            { width: 800 },
+            splitY([mm(330), fr()], [drawers(2), shelves(1, door(2))]),
+          ),
       },
     ],
   },
@@ -414,6 +556,79 @@ export const kitchen: CatalogFamily[] = [
         create: () =>
           wallUnit('Over-hood cabinet', { height: 360, bottom: 'none' }, empty(door(1))),
       },
+      {
+        id: 'wall-tall-door',
+        name: '1 door, 900 high',
+        summary: '600 × 900 × 320',
+        kind: 'interior',
+        requires: [],
+        create: () => wallUnit('Wall cabinet, tall', { height: 900 }, shelves(3, door(1))),
+      },
+      {
+        id: 'wall-3-sections',
+        name: '3 sections, 3 doors',
+        summary: '1200 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          wallUnit(
+            'Wall cabinet, 3 doors',
+            { width: 1200 },
+            splitX(even(3), [shelves(2, door(1)), shelves(2, door(1)), shelves(2, door(1))]),
+          ),
+      },
+      {
+        id: 'wall-open-over-doors',
+        name: 'Open niche over doors',
+        summary: '800 wide, 300 niche above a pair of doors',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          wallUnit(
+            'Wall cabinet, niche over doors',
+            { width: 800 },
+            splitY([mm(300), fr()], [shelves(1), shelves(1, door(2))]),
+          ),
+      },
+      {
+        id: 'wall-double-flap',
+        name: 'Two lift-up flaps',
+        summary: '1200 × 400, flaps open upwards',
+        kind: 'construction',
+        requires: ['front:flap', 'hardware:user'],
+        create: () =>
+          wallUnit(
+            'Wall cabinet, two flaps',
+            { width: 1200, height: 400 },
+            splitX(even(2), [empty(flap('up')), empty(flap('up'))]),
+          ),
+      },
+      {
+        id: 'wall-open-beside-door',
+        name: 'Open shelves beside a door',
+        summary: '900 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          wallUnit(
+            'Wall cabinet, open and door',
+            { width: 900 },
+            splitX([mm(300), fr()], [shelves(4), shelves(2, door(1))]),
+          ),
+      },
+      {
+        id: 'wall-doors-over-ledge',
+        name: 'Doors over an open ledge',
+        summary: '800 wide, 250 open ledge below',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          wallUnit(
+            'Wall cabinet, doors over ledge',
+            { width: 800 },
+            splitY([fr(), mm(250)], [shelves(2, door(2)), shelves(0)]),
+          ),
+      },
     ],
   },
   {
@@ -497,6 +712,75 @@ export const kitchen: CatalogFamily[] = [
         hardware: 'fridge — enter its niche size from the installation drawing',
         create: () =>
           tall('Fridge housing', {}, splitY([fr(), mm(1600)], [shelves(1, door(1)), empty()])),
+      },
+      {
+        id: 'tall-open',
+        name: 'Open shelves, no doors',
+        summary: 'Six open shelves',
+        kind: 'interior',
+        requires: [],
+        create: () => tall('Pantry, open shelves', {}, shelves(6)),
+      },
+      {
+        id: 'tall-drawer-tower',
+        name: 'Drawer tower',
+        summary: 'Five drawers, full height',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          tall('Drawer tower', {}, drawers(5, [fr(0.8), fr(1), fr(1), fr(1.2), fr(1.4)])),
+      },
+      {
+        id: 'tall-doors-drawers',
+        name: 'Doors over four drawers',
+        summary: '800 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          tall(
+            'Tall cabinet, doors over drawers',
+            { width: 800 },
+            splitY([fr(), mm(800)], [shelves(3, door(2)), drawers(4)]),
+          ),
+      },
+      {
+        id: 'tall-open-niche',
+        name: 'Open mid-height niche',
+        summary: 'Doors above and below a 500 open niche',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          tall(
+            'Tall cabinet, open niche',
+            {},
+            splitY([fr(), mm(500), fr()], [shelves(2, door(1)), empty(), shelves(2, door(1))]),
+          ),
+      },
+      {
+        id: 'tall-broom-bay',
+        name: 'Broom bay + shelves',
+        summary: '900 wide, a narrow bay beside the shelves',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          tall(
+            'Tall cabinet, broom bay',
+            { width: 900 },
+            splitX([mm(300), fr()], [empty(door(1)), shelves(5, door(1))]),
+          ),
+      },
+      {
+        id: 'tall-3-doors',
+        name: '3 stacked doors',
+        summary: 'Three tiers of shelves',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          tall(
+            'Tall cabinet, 3 stacked doors',
+            {},
+            splitY(even(3), [shelves(2, door(1)), shelves(2, door(1)), shelves(2, door(1))]),
+          ),
       },
     ],
   },

@@ -135,6 +135,92 @@ export const storage: CatalogFamily[] = [
             splitX(even(2), [hanging(), shelves(5)], sliding(2)),
           ),
       },
+      {
+        id: 'wardrobe-linen',
+        name: 'Linen tower, 1 door',
+        summary: '600 wide, six shelves',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Wardrobe, linen tower',
+            { width: 600, height: 2100, depth: 600, plinthHeight: 80 },
+            shelves(6, door(1)),
+          ),
+      },
+      {
+        id: 'wardrobe-open',
+        name: 'Open walk-in',
+        summary: '1800 wide, no doors',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Wardrobe, open walk-in',
+            { width: 1800, height: 2100, depth: 600, plinthHeight: 80 },
+            splitX(even(3), [
+              hanging(),
+              shelves(6),
+              splitY([fr(), mm(600)], [hanging(), drawers(3)]),
+            ]),
+          ),
+      },
+      {
+        id: 'wardrobe-sliding-3',
+        name: 'Sliding 3 doors',
+        summary: '2400 wide, doors on a track',
+        kind: 'construction',
+        requires: ['front:sliding'],
+        create: () =>
+          cab(
+            'Wardrobe, 3 sliding doors',
+            { width: 2400, height: 2100, depth: 600, plinthHeight: 80 },
+            splitX(
+              even(3),
+              [hanging(), shelves(5), splitY([fr(), mm(600)], [hanging(), shelves(2)])],
+              sliding(3),
+            ),
+          ),
+      },
+      {
+        id: 'wardrobe-drawer-tower',
+        name: 'Drawer tower + hanging',
+        summary: '1400 wide, six drawers beside a rail',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Wardrobe, drawer tower',
+            { width: 1400, height: 2100, depth: 600, plinthHeight: 80 },
+            splitX([mm(500), fr()], [drawers(6), hanging(door(2))]),
+          ),
+      },
+      {
+        id: 'wardrobe-long-hang',
+        name: 'Long hanging over shoes',
+        summary: '900 wide, a rail over two shoe shelves',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Wardrobe, long hanging',
+            { width: 900, height: 2100, depth: 600, plinthHeight: 80 },
+            splitY([fr(), mm(450)], [hanging(), shelves(2)], door(2)),
+          ),
+      },
+      {
+        id: 'wardrobe-lofts',
+        name: 'Hanging with top lofts',
+        summary: '900 wide, a cupboard above the rail',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Wardrobe, top lofts',
+            { width: 900, height: 2100, depth: 600, plinthHeight: 80 },
+            splitY([mm(450), fr()], [shelves(1, door(2)), hanging(door(2))]),
+          ),
+      },
     ],
   },
   {
@@ -481,6 +567,84 @@ export const storage: CatalogFamily[] = [
             'Media console, flaps',
             { width: 1600, height: 450, depth: 420, plinthHeight: 60 },
             splitX(even(2), [empty(flap('down')), empty(flap('down'))]),
+          ),
+      },
+      {
+        id: 'media-3-doors',
+        name: 'Three doors',
+        summary: '1750 × 450 × 420',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Media console, 3 doors',
+            { width: 1750, height: 450, depth: 420, plinthHeight: 60 },
+            splitX(even(3), [shelves(1, door(1)), shelves(1, door(1)), shelves(1, door(1))]),
+          ),
+      },
+      {
+        id: 'media-open-niches',
+        name: 'Four open niches',
+        summary: '2000 wide, no fronts',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Media console, open niches',
+            { width: 2000, height: 450, depth: 420, plinthHeight: 60 },
+            splitX(even(4), [empty(), empty(), empty(), empty()]),
+          ),
+      },
+      {
+        id: 'media-drawer-stacks',
+        name: 'Two drawer stacks',
+        summary: '1600 × 600 × 420',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Media console, drawer stacks',
+            { width: 1600, height: 600, depth: 420, plinthHeight: 60 },
+            splitX(even(2), [drawers(3), drawers(3)]),
+          ),
+      },
+      {
+        id: 'media-flaps-centre',
+        name: 'Flaps beside an open centre',
+        summary: '1800 wide, two bottom-hinged flaps',
+        kind: 'construction',
+        requires: ['front:flap', 'hardware:user'],
+        create: () =>
+          cab(
+            'Media console, flaps and open centre',
+            { width: 1800, height: 450, depth: 420, plinthHeight: 60 },
+            splitX([fr(), fr(1.4), fr()], [empty(flap('down')), empty(), empty(flap('down'))]),
+          ),
+      },
+      {
+        id: 'media-doors-drawers',
+        name: 'Doors outside, drawers inside',
+        summary: '2200 wide',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Media console, doors and drawers',
+            { width: 2200, height: 450, depth: 420, plinthHeight: 60 },
+            splitX(even(4), [shelves(1, door(1)), drawers(2), drawers(2), shelves(1, door(1))]),
+          ),
+      },
+      {
+        id: 'media-tower',
+        name: 'Media tower',
+        summary: '500 × 1100 × 400, shelves over a door',
+        kind: 'interior',
+        requires: [],
+        create: () =>
+          cab(
+            'Media tower',
+            { width: 500, height: 1100, depth: 400, plinthHeight: 60 },
+            splitY([fr(), mm(400)], [shelves(3), shelves(1, door(1))]),
           ),
       },
     ],
