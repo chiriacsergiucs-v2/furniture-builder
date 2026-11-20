@@ -12,7 +12,9 @@ describe.each(WIDTHS)('catalog item tiles at %ipx (find-it)', (width) => {
     const fam = (await screen.findAllByRole('article', { name: 'Wardrobe' }))[0];
     const tile = within(fam).getAllByRole('button', { name: /^Open / })[0];
     expect(within(tile).getByRole('img')).toBeTruthy();
-    expect(tile.querySelector('.item-name')?.textContent?.trim()).toBeTruthy();
+    const named = /^Open (.+?) \d+ × \d+ × \d+/.exec(tile.getAttribute('aria-label') ?? '');
+    expect(named).toBeTruthy();
+    expect(tile.textContent).toContain(named![1]);
     expect(tile.textContent).toMatch(/\d+ × \d+ × \d+/);
     // The tile is the only button of its item: no separate Add / Open button.
     expect(within(fam).queryByRole('button', { name: 'Open' })).toBeNull();

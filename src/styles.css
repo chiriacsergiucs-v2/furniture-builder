@@ -2902,17 +2902,6 @@ table.buy {
   font-size: var(--fs-sm);
   color: var(--ink-2);
 }
-.fam-card .configs summary {
-  cursor: pointer;
-  font-size: var(--fs-sm);
-  color: var(--link);
-}
-.fam-card .configs ul {
-  margin: var(--s-1) 0 0;
-  padding-left: var(--s-5);
-  font-size: var(--fs-sm);
-  color: var(--ink-2);
-}
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -3512,21 +3501,6 @@ table.buy {
   gap: var(--s-2);
   align-items: center;
   justify-content: flex-end;
-}
-/* Picture over Open in the first column; name, summary, the meta line (tags first) and the Romanian name in the second,
-   so the text has the card's width less the picture (ADR-195: ≈214 px at 390 instead of ≈150). The lines sit on their
-   16 px line height with no row gap, so the card stays as tall as before. */
-/* "default" on the picture's corner, over it (user decision 2026-11-07, ADR-195): the meta line keeps its width. */
-/* The summary, and "More" / "Less" at its end when a line is cut (ADR-119). */
-/* Its box reaches over the name and meta lines (above them, so it takes the taps) instead of making the row taller. */
-/* Open under the picture (column 1, rows 3–4, ADR-195). */
-/* A card without a picture (an item that cannot open yet) has nothing to put Open under: name and summary beside
-   Open, the lines below at full width, as before ADR-195. */
-.item.compact:not(:has(> .snap)) .item-meta,
-/* "Safety-regulated: …" and "I check it myself" (ADR-195): the reason wraps, the button keeps its size. */
-/* "RO: …" on its own short line under the English text (ADR-120), so the card grows little. */
-/* "More": every line of the card wraps to its full text (ADR-119). */
-@media (pointer: coarse) {
 }
 @media (max-width: 760px) {
   .catalog-page .catalog-toolbar {

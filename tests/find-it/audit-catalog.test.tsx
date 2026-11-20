@@ -71,9 +71,9 @@ describe.each(WIDTHS)('catalog at %ipx (find-it, ADR-262)', (width) => {
     const { user } = await renderApp(width);
     await toCatalog(user);
     const open = (await screen.findAllByRole('button', { name: /^Open / }))[0];
-    const name = open.querySelector('.item-name')?.textContent?.trim();
-    expect(name).toBeTruthy();
-    expect(open.getAttribute('aria-label')).toContain(name!);
+    const named = /^Open (.+?) \d+ × \d+ × \d+/.exec(open.getAttribute('aria-label') ?? '');
+    expect(named).toBeTruthy();
+    expect(open.textContent).toContain(named![1]);
     const edit = screen.getAllByRole('button', { name: 'Edit template' })[0];
     expect(edit.getAttribute('aria-describedby')).toBeTruthy();
   });
