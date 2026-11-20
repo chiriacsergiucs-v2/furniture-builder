@@ -98,9 +98,12 @@ try {
         if (c.querySelectorAll('button').length !== 1) notOneButton++;
         if (/RO: |Interior only|\bparts?\b|^default$/.test(c.textContent ?? '')) leftovers++;
       }
-      const first = document.querySelector('.catalog-page ul.items');
-      const columns = first
-        ? new Set([...first.children].map((c) => Math.round(c.getBoundingClientRect().left))).size
+      // The grid of the family with the most items (a family with one item shows one column).
+      const widest = [...document.querySelectorAll('.catalog-page ul.items')].sort(
+        (a, b) => b.children.length - a.children.length,
+      )[0];
+      const columns = widest
+        ? new Set([...widest.children].map((c) => Math.round(c.getBoundingClientRect().left))).size
         : 0;
       return { n: list.length, tiles: tiles.length, notOneButton, leftovers, columns };
     });
@@ -156,7 +159,7 @@ try {
     // 4. A safety-regulated card (item 7).
     const bunk = family('Bunk bed')
       .getByRole('listitem')
-      .filter({ hasText: 'Two 90 × 200 mattresses' });
+      .filter({ has: page.getByText('Standard', { exact: true }) });
     const reason = bunk.getByText('Safety-regulated: you check it against the standards yourself');
     check('safety-regulated card says so, not "Not available yet"', await reason.isVisible());
     await bunk.scrollIntoViewIfNeeded();

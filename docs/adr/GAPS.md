@@ -2059,10 +2059,22 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: N352, user request 2026-11-19 (catalog redesign)
-- Missing: 2 columns at 390 px, 4 at 1280 px, 120 px picture height and no sideways scroll were not measured; tools/catalog-flows, shapes, template-revision, editor-modes, ui-polish were edited but not run
-- Request: Run pnpm regress catalog (and the edited scripts) and a screenshot at 390 and 1280 px; live-verify the Wardrobe tiles after merge
+- Missing: live-verify only. Paid 2026-11-20 on the production build (Chromium): `pnpm regress catalog`, `shapes` and `template-revision` pass; 2 columns at 390 px, 4 at 1280 px, no sideways scroll; Wardrobe tiles seen in screenshots. Not done: the published URL
+- Request: After deploy, open the live Catalog and find the Wardrobe tiles (picture, name, size; no Add button)
 - Questions: none
 - Suggested pick: Run pnpm regress when the user asks (browser-on-demand)
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-556: Browser scripts editor-modes and ui-polish fail on main
+
+- Status: Open
+- Origin: N352, found by pnpm regress 2026-11-20
+- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
+- Request: Repair both scripts or the app, whichever is stale
+- Questions: none
+- Suggested pick: Repair the scripts against the current UI
+- Work: Medium
+- Impact: Low
+- Necessity: Low
