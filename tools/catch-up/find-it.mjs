@@ -10,6 +10,9 @@
 // From the bare app, by role and visible text, at 390, 1280 and 1600 px. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose } from '../lib/steps.mjs';
+
+/** The Account button is named "Account, <sync state>" once signed in (navbar change 234f34d, ADR-139). */
+const ACCOUNT = /^Account(, .+)?$/;
 import { mkdirSync } from 'node:fs';
 
 const url = previewUrl();
@@ -238,7 +241,7 @@ for (const width of [1280, 390, 1600]) {
   );
 
   // N136, N137: the sign-in screens.
-  await page.getByRole('button', { name: 'Account', exact: true }).click();
+  await page.getByRole('button', { name: ACCOUNT }).click();
   const signIn = dialog(page, 'Sign in');
   await signIn.waitFor();
   check(
@@ -281,7 +284,7 @@ for (const width of [1280, 390, 1600]) {
   const c = await context(width, { offline: true });
   await c.page.goto(url);
   await c.page.waitForTimeout(800);
-  const initial = await c.page.getByRole('button', { name: 'Account', exact: true }).innerText();
+  const initial = await c.page.getByRole('button', { name: ACCOUNT }).innerText();
   check(
     width,
     'N135 offline start shows the remembered account (initial "M") with no request',
@@ -294,15 +297,16 @@ for (const width of [1280, 390, 1600]) {
   const b = await context(width, { signedIn: true });
   await b.page.goto(url);
   await b.page.waitForTimeout(1500);
-  const status = b.page.locator('.sync-status');
+  // The sync status is the Account button's name, "Account, <state>" (navbar change 234f34d).
+  const status = b.page.getByRole('button', { name: /^Account, .+$/ });
   check(
     width,
     'N140 the sync status is in the top bar',
     await status.isVisible(),
-    await status.getAttribute('title'),
+    await status.getAttribute('aria-label'),
   );
   check(width, 'N140 no horizontal scroll', await noSideScroll(b.page));
-  await b.page.getByRole('button', { name: 'Account', exact: true }).click();
+  await b.page.getByRole('button', { name: ACCOUNT }).click();
   const acct = dialog(b.page, 'Account');
   await acct.waitFor();
   check(
@@ -386,6 +390,38 @@ for (const width of [1280, 390, 1600]) {
     b.errors.slice(0, 2).join(' | '),
   );
   await b.ctx.close();
+
+  // ---- N132 (ADR-131): sign-out clears the stored session; a reload shows signed out ---------------------------------
+  // The session is stored once here, not by an init script, so the reload after signing out does not put it back.
+  const d = await context(width);
+  await d.page.goto(url);
+  await d.page.evaluate(
+    ([key, session, user]) => {
+      localStorage.setItem(key, JSON.stringify(session));
+      localStorage.setItem(
+        'fb:account',
+        JSON.stringify({ id: user.id, email: user.email, provider: 'email' }),
+      );
+    },
+    ['sb-catchup-test-auth-token', SESSION, USER],
+  );
+  await d.page.reload();
+  await d.page.getByRole('button', { name: /^Account, .+$/ }).click();
+  await dialog(d.page, 'Account').getByRole('button', { name: 'Sign out' }).click();
+  // The confirmation is its own dialog, titled "Sign out".
+  await dialog(d.page, 'Sign out').getByRole('button', { name: 'Sign out', exact: true }).click();
+  await d.page.waitForTimeout(800);
+  const stored = await d.page.evaluate(() => localStorage.getItem('sb-catchup-test-auth-token'));
+  await d.page.reload();
+  await d.page.waitForTimeout(800);
+  const signedOut = await d.page.getByRole('button', { name: 'Account', exact: true }).isVisible();
+  check(
+    width,
+    'N132 Sign out clears the stored session; a reload shows signed out',
+    stored === null && signedOut,
+    `session ${stored === null ? 'cleared' : 'kept'}, button ${signedOut ? 'Account' : 'still signed in'}`,
+  );
+  await d.ctx.close();
 }
 
 await browser.close();
