@@ -8,7 +8,7 @@ import {
   type ModelItem,
   type ModelTurn,
 } from '../core/model3d';
-import { newId } from '../core/design';
+import { DEFAULT_MOUNT_HEIGHT, newId } from '../core/design';
 import { boxCentre, frontEdge } from '../core/geometry';
 import { t, tr } from '@furniture-builder/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
@@ -240,7 +240,7 @@ function ModelPlacementFields({ item }: { item: ModelItem }) {
     if (k === 'free') set(undefined);
     else if (k === 'floor') set({ kind: 'floor' });
     else if (k === 'wall')
-      set({ kind: 'wall', height: item.position.y > 0 ? item.position.y : 1450 });
+      set({ kind: 'wall', height: item.position.y > 0 ? item.position.y : DEFAULT_MOUNT_HEIGHT });
     else if (bases.length) set({ kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 });
   };
   return (

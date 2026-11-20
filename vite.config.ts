@@ -24,8 +24,11 @@ const csp = (mode: string): Plugin => ({
     ),
 });
 
+/** The deployed base path (GitHub Pages project site). */
+const BASE = process.env.BASE_PATH ?? '/furniture-builder/';
+
 export default defineConfig(({ mode }) => ({
-  base: process.env.BASE_PATH ?? '/furniture-builder/',
+  base: BASE,
   plugins: [
     react(),
     csp(mode),
@@ -68,6 +71,8 @@ export default defineConfig(({ mode }) => ({
   // Find-it tests (tests/find-it, ADR-108) walk the whole app in jsdom and need longer than the default 5 s.
   test: {
     environment: 'node',
+    // Vitest 4 forces Vite's `base` to '/' for its own server, so `import.meta.env.BASE_URL` would lose the deployed path.
+    env: { BASE_URL: BASE },
     include: ['tests/**/*.test.{ts,tsx}', 'packages/*/tests/**/*.test.{ts,tsx}'],
     testTimeout: 30000,
   },

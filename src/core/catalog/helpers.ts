@@ -10,6 +10,7 @@ import {
   panelDefaults,
   templates,
   wrap,
+  DEFAULT_MOUNT_HEIGHT,
 } from '../design';
 import type {
   CabinetParams,
@@ -107,7 +108,7 @@ export const KITCHEN_WALL: Partial<CabinetParams> = {
   height: 720,
   depth: 320,
   mount: 'wall',
-  mountHeight: 1450,
+  mountHeight: DEFAULT_MOUNT_HEIGHT,
   plinthHeight: 0,
   back: 'inset',
   backInset: 18,

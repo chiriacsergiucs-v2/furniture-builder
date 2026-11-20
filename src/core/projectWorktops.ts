@@ -44,7 +44,8 @@ interface WorktopCorner {
   joint?: WorktopJoint;
 }
 
-export const runPartKey = (rp: RunPart) => rp.key ?? rp.id;
+/** The key a run part is saved under: its own `key`, else its id. The one definition (shopping, replace, profiles, store use it). */
+export const runPartKey = (rp: Pick<RunPart, 'key' | 'id'>) => rp.key ?? rp.id;
 
 /** A side worktop faces +x (its back edge is its smaller x): its banded front edge says so. */
 export const facesPlusX = (b: RunPart) => !b.banded.includes('-x');

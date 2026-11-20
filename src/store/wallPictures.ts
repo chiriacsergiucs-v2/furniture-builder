@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { WallFinish, WallImage } from '../core/room';
 import { fitWithin } from '../core/surface';
 import { project, straightenMap } from '../core/wallPicture';
+import { refCountedUrls } from './refCountedUrls';
 import { imageKey, useImageUrls, type ImageUrl } from './useImageUrls';
 
 /**
@@ -13,35 +14,9 @@ export const pictureKey = (img: WallImage) =>
   img.straighten ? `${img.id}|${img.straighten.flat().join(',')}` : img.id;
 
 // One straightened picture per key, shared between the views and freed when no view uses it.
-const cache = new Map<string, { refs: number; url?: ImageUrl; wait: Promise<ImageUrl> }>();
-
-function acquire(key: string, src: string, img: WallImage): Promise<ImageUrl> {
-  const hit = cache.get(key);
-  if (hit) {
-    hit.refs++;
-    return hit.wait;
-  }
-  const entry: { refs: number; url?: ImageUrl; wait: Promise<ImageUrl> } = {
-    refs: 1,
-    wait: Promise.resolve('missing'),
-  };
-  entry.wait = straighten(src, img)
-    .catch(() => 'missing' as const)
-    .then((url) => {
-      entry.url = url;
-      if (entry.refs <= 0 && url !== 'missing') URL.revokeObjectURL(url);
-      return url;
-    });
-  cache.set(key, entry);
-  return entry.wait;
-}
-
-function release(key: string) {
-  const e = cache.get(key);
-  if (!e || --e.refs > 0) return;
-  cache.delete(key);
-  if (e.url && e.url !== 'missing') URL.revokeObjectURL(e.url);
-}
+const { acquire, release } = refCountedUrls((src: string, img: WallImage): Promise<ImageUrl> =>
+  straighten(src, img).catch(() => 'missing' as const),
+);
 
 /** The photo's part inside `img.straighten`, straightened into a rectangle (bilinear), as an object URL. */
 async function straighten(src: string, img: WallImage): Promise<ImageUrl> {

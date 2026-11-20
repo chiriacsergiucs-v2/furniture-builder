@@ -7,6 +7,7 @@ import { baseLabel, boardBandText, type CutRow } from './cutlist';
 import { dataSource, recordedMessage } from '@furniture-builder/i18n';
 import { getPrintLang, pt, WARNING_RO, type PrintKey } from '@furniture-builder/i18n/print';
 import { tenthsText } from './materials';
+import { csvCell } from './prices';
 import type { EdgeBand, EdgeBandKind, HardwareItem } from './types';
 
 /** Generated part names (English, as the generators name them) in Romanian. */
@@ -397,11 +398,6 @@ export function printedPartLabel(l: string, pieceNames?: ReadonlyMap<string, str
 
 export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, string>): string {
   const label = (l: string) => printedPartLabel(l, pieceNames);
-  const esc = (v: string | number) => {
-    const s = String(v);
-    const safe = /^[\t\r=+\-@]/.test(s) ? `'${s}` : s;
-    return /[";\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-  };
   const lines = [
     csvHeaders(),
     ...rows.map((r) => [
@@ -418,7 +414,7 @@ export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, st
       drillingRo(r.drilling),
     ]),
   ];
-  return '﻿' + lines.map((l) => l.map(esc).join(';')).join('\r\n') + '\r\n';
+  return '﻿' + lines.map((l) => l.map(csvCell).join(';')).join('\r\n') + '\r\n';
 }
 
 /**

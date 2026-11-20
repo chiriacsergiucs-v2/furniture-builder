@@ -3,7 +3,7 @@
  * writes its answers into model input (`apply`) and gives the short text used on cards (`summary`). Construction
  * types pick the steps they use; nothing here depends on a particular type.
  */
-import { defaultMaterials, defaultSheetFor, fr, mm, newId } from '../design';
+import { DEFAULT_MOUNT_HEIGHT, defaultMaterials, defaultSheetFor, fr, mm, newId } from '../design';
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
 import { boardLabel } from '../boards';
 import { MAX_DIVIDERS } from '../counts';
@@ -558,7 +558,7 @@ export const STEPS: StepDef[] = [
         visible: (a) => str(a, 'base') === 'plinth',
       },
       {
-        ...mmField('mountHeight', 'Underside above the floor', 1450, 0, 2500),
+        ...mmField('mountHeight', 'Underside above the floor', DEFAULT_MOUNT_HEIGHT, 0, 2500),
         visible: (a) => str(a, 'base') === 'wall',
       },
     ],
