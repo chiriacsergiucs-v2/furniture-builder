@@ -2174,3 +2174,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-573: Legacy rows and ADRs that fail the 2026-11-20 evidence gates
+
+- Status: Open
+- Origin: Retro 2026-11-20 (P4, P10); agent scoped it out: the gates exempt rows below N361/F19/D04 and ADRs numbered below 281
+- Missing: 86 Done backlog rows whose evidence says not merged, PR open, not shipped, not pushed or carries burst-skipped (N45 to N253); 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); 20 rows with bare burst-skipped markers (N274 to N359)
+- Request: User picked 'P4/P10 docs:check gates' from the retro 2026-11-20
+- Questions: Statuses change only with evidence: re-verify each row (merged PR, CI run) or turn it Partially done? Which ADR boxes get a G id versus a re-check?
+- Suggested pick: Check each row against git log for its merge commit; Done stays only with a merge sha, else Partially done; then drop the legacy cut-off
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+
+### G-574: CLAUDE.md rules without an incident citation
+
+- Status: Open
+- Origin: Retro 2026-11-20 (P7); agent scoped it out
+- Missing: Existing rules in CLAUDE.md and the skills do not name the incident they answer; the retro traced some (docs/retros/2026-11-20-recurring-patterns.md) and found none in the repo for 8 (translation rule, Gaps page untranslated, feature tree on request, no auto-babysit, sync pending only, regress on request, browser-on-demand, screenshots last)
+- Request: User picked 'P7 rules cite incidents' from the retro 2026-11-20
+- Questions: Annotate all rules now or as each is next changed? The 8 with no incident in the repo need the user's reason
+- Suggested pick: Cite as each rule is next changed (the rule says so); ask the user for the 8 reasons once
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low

@@ -39,9 +39,12 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    links across `docs/adr*/`, sets the README row to `✅ Implemented`, marks the gaps in
    `docs/adr/GAPS.md` that moved into this ADR `Done (ADR-NNN)` (ADR-082), and warns about
    unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
-   built is listed under **Skipped this iteration** (a gap only if the user asks), never a silent Done.
+   built is listed under **Skipped this iteration**, never a silent Done. Each `Done when` box left unchecked names
+   its G id on the same line (`pnpm gaps add`); `pnpm docs:check` fails an implemented ADR with an unchecked box and
+   no G id (retro 2026-11-20, P4: 38 unchecked items shipped in 23 ADRs).
 4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
-   Tick the `Done when` boxes you verified. Run `pnpm docs:check`, `pnpm format:check` and
+   Tick the `Done when` boxes you verified. Run `pnpm format` (the index and backlog tables you just edited; retro
+   2026-11-20, P2: 9 "format after shipping" commits), then `pnpm docs:check`, `pnpm format:check` and
    `pnpm exec vitest run tests/sync-pending.test.ts` (feature lines are optional after ADR-218).
 5. **Commit and push:**
    ```bash
@@ -57,4 +60,4 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 
 `burst` does not skip this skill (user 2026-11-16). Ship whenever every `Done when` item is met with evidence. Skip only
 when shipping needs the user's input or decision (an unmet item, an open question); then the backlog row gets
-`burst-skipped: ship ADR-NNN (burst, YYYY-MM-DD)` and the `catch-up` skill ships it after the burst.
+`burst-skipped: ship ADR-NNN (burst, YYYY-MM-DD; blocker: <what blocks it>; cost: S|M|L)` and the `catch-up` skill ships it after the burst.

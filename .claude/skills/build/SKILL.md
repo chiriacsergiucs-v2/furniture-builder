@@ -26,10 +26,10 @@ only set the mode and point here.
    (`git fetch origin main`, `git checkout -B <session branch> origin/main`). Hard rules in `CLAUDE.md` still apply
    (i18n `t()`/`tr()`/`pt()` with Russian entries, `buildModel()` projections, offline core, no silent clamping).
 5. **Check.**
-   - All checks (`normal`, `auto`): `pnpm format`, `pnpm typecheck`, `pnpm exec vitest related --run <changed files>`,
+   - All checks (`normal`, `auto`): `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest related --run <changed files>`,
      `pnpm build`, `pnpm docs:check`; plus `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after geometry changes.
      Anything visible gets or extends a jsdom find-it test (`tests/find-it/<area>.test.tsx`, R3).
-   - Light checks (`ff`): `pnpm format`, `pnpm typecheck`, `pnpm build`, `pnpm docs:check`. No tests, lint or find-it, so
+   - Light checks (`ff`): `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm docs:check`. No tests or find-it, so
      the backlog row is `Partially done` with the gap `find-it pending (light, ADR-066)` naming the visible text to find.
    - Fix causes, never checks. Never land red.
 6. **Backlog:** one row in `docs/backlog.md` (next free `N` id) with the evidence you ran. Status `Done` only for what
@@ -59,5 +59,5 @@ and its cause is not yours to fix; the push is refused; low confidence on what t
 ## Burst mode
 
 While the `burst` toggle in `CLAUDE.md` is **on**, follow `CLAUDE.md` › Process › Burst mode in every mode: skip the find-it
-test, local `pnpm format:check`, lint and the full suite, and log each skip as `burst-skipped: <item> (burst, YYYY-MM-DD)`
+test, local `pnpm format:check` and the full suite (still run `pnpm format` and `pnpm lint`), and log each skip as `burst-skipped: <item> (burst, YYYY-MM-DD; blocker: <what blocks it>; cost: S|M|L)`
 on the backlog row. `ff` and `auto` have their own short notes.

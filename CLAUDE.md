@@ -78,7 +78,7 @@ each check runs (_Verify before done_); the full table runs on request (`verify`
 | Check         | Command                                          | Runs in |
 | ------------- | ------------------------------------------------ | ------- |
 | Install       | `pnpm install --frozen-lockfile`                 | Sandbox |
-| Lint          | `pnpm lint`                                      | CI      |
+| Lint          | `pnpm lint`                                      | Sandbox |
 | Format        | `pnpm format:check`                              | Sandbox |
 | Type-check    | `pnpm typecheck`                                 | Sandbox |
 | Related tests | `pnpm exec vitest related --run <changed files>` | Sandbox |
@@ -98,9 +98,10 @@ reuses `dist/`, `--list` lists them; each failing check prints as it is found; l
 
 ## Verify before done
 
-Run these before saying work is done: `pnpm typecheck`, `pnpm format:check`,
-`pnpm exec vitest related --run <changed files>`, `pnpm build`, `pnpm docs:check` in the sandbox; the full suite and
-lint run in CI. Healthy output: every command exits 0. For anything visible, after merge open
+Run these before saying work is done: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`,
+`pnpm exec vitest related --run <changed files>`, `pnpm build`, `pnpm docs:check` in the sandbox; the full suite runs in
+CI. `pnpm lint` and `pnpm format` run before every push in every mode, burst included (retro 2026-11-20, P2: 10 lint and
+10 format fix-up commits came from skipping them). Healthy output: every command exits 0. For anything visible, after merge open
 https://chiriacsergiucs-v2.github.io/furniture-builder/ and find each change by its visible text (R3), then report
 where to click and whether it is live (R4).
 
@@ -200,14 +201,14 @@ One flow (the `build` skill), three modes. The modes differ only in their gates,
 picks a mode by writing its word in the request (`ff`, `auto`); the word applies to that one request only and the next
 request is `normal` again. Precedence: the user's mode word › _Always pick_ › the default.
 
-|                     | normal (default)                            | `ff` (`ff` skill)                                                | `auto` (`auto` skill)                     |
-| ------------------- | ------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- |
-| Questions           | only when confidence is low                 | only when confidence is low                                      | none; a stop condition instead            |
-| Checks              | _Verify before done_                        | `pnpm typecheck`, `pnpm build`, `pnpm format`, `pnpm docs:check` | _Verify before done_, fuzz after geometry |
-| Branch              | session branch                              | session branch                                                   | session branch                            |
-| Gate before landing | draft pull request                          | the user approves the list of changes                            | none                                      |
-| Landing on `main`   | on the user's instruction                   | after that approval                                              | automatic                                 |
-| Reply               | R4, **Decided**, **Skipped this iteration** | same                                                             | same                                      |
+|                     | normal (default)                            | `ff` (`ff` skill)                                                             | `auto` (`auto` skill)                     |
+| ------------------- | ------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------- |
+| Questions           | only when confidence is low                 | only when confidence is low                                                   | none; a stop condition instead            |
+| Checks              | _Verify before done_                        | `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm format`, `pnpm docs:check` | _Verify before done_, fuzz after geometry |
+| Branch              | session branch                              | session branch                                                                | session branch                            |
+| Gate before landing | draft pull request                          | the user approves the list of changes                                         | none                                      |
+| Landing on `main`   | on the user's instruction                   | after that approval                                                           | automatic                                 |
+| Reply               | R4, **Decided**, **Skipped this iteration** | same                                                                          | same                                      |
 
 - **Landing** (`ff` and `auto`): where the session may push to `main`, fast-forward only (`git push origin HEAD:main`),
   never force-push. Where it may push only to the session branch (cloud sessions), push the branch, open the pull
@@ -316,20 +317,20 @@ asks, never automatic.
   **on**): for a period of fast pushes, use the `auto` path and skip the slow steps below. A skip is never silent
   (R2): each one is logged as debt and listed under **Skipped this iteration**.
   - Skipped, each logged: writing and running find-it tests (jsdom or browser); `skip-review` stage 03; pick cards and
-    the Picks list; live-verify after deploy; local `pnpm format:check`, lint and
+    the Picks list; live-verify after deploy; local `pnpm format:check` and
     the full suite (run `pnpm format`; CI runs the rest); the full _Read first_ (grep the backlog row and the last id
     instead of reading `docs/backlog.md` whole).
   - `ship-adr` is not skipped (user 2026-11-16): it runs whenever every `Done when` item is met with evidence. It is
     skipped, and logged, only when shipping needs the user's input or decision (an unmet item, an open question).
-  - Still run: `pnpm typecheck`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
+  - Still run: `pnpm typecheck`, `pnpm lint`, `pnpm format`, `pnpm build`, `pnpm docs:check`, related tests, fuzz after geometry, the translation
     rule, every hard rule and stop condition.
   - Not checked in burst (user 2026-11-16: "remove checking main build and ci"): the `CI` and `Deploy GitHub Pages` runs on
     `main` after the merge. Do not wait for, poll or cite them; the reply says they were not checked.
   - Automerge (user 2026-11-16: "Burst also must include automerge"): while `burst` is on, merge the pull request as soon
     as every CI check on its head is green and it has no conflict, with no further instruction. A red check on the
     pull request head blocks the merge: report it and merge after it is fixed or the user says so. Every `auto` stop condition still applies. Never force-push `main`.
-  - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD)` to the gap text of the backlog row the work
-    touched, one per item; a find-it item names the visible text to find (as ADR-066 does). The row stays
+  - Debt record: append `burst-skipped: <item> (burst, YYYY-MM-DD; blocker: <what blocks it>; cost: S|M|L)` to the gap text of the backlog row the work
+    touched, one per item (`pnpm docs:check` fails a marker without its blocker and cost, retro 2026-11-20, P10); a find-it item names the visible text to find (as ADR-066 does). The row stays
     **Partially done**.
   - Paying the debt: the user says "burst off" or "catch up"; the `catch-up` skill runs every logged item and the row
     turns **Done** only with evidence that ran. "Catch up acceptance" (ADR-066) still pays the find-it items alone.
@@ -347,6 +348,11 @@ asks, never automatic.
   ("PICK 2 = B"). When none of those decide it, confidence is low: ask (_How we build_, step 1). There is no "else the
   recommendation" fallback. Always ask when the options differ in something hard to undo (deleting saved data or files,
   spending money, publishing, access, pushing or merging to `main` unless the user's mode word covers it, _Flow modes_).
+- Rules cite their incident (user pick 2026-11-20, retro 2026-11-20 P7: a revert removed 5 safeguards and 6 of the problems
+  they targeted came back; CLAUDE.md changed 83 times in four weeks). A rule added or changed in this file, a skill or a
+  hook names the incident or retro it answers (commit, PR, G id or retro file). Removing or loosening a rule names that
+  incident and says why it no longer applies, or that the user accepts it may come back. Rules written before 2026-11-20
+  without a citation get one when they are next changed (G-574).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
