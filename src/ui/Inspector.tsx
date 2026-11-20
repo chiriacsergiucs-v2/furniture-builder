@@ -20,6 +20,7 @@ import {
   unsplit,
   holdsSomething,
   usesPedestal,
+  DEFAULT_MOUNT_HEIGHT,
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '@furniture-builder/i18n';
@@ -1178,13 +1179,17 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           { value: 'wall', label: t('Wall brackets') },
         ]}
         onChange={(v) =>
-          set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })
+          set(
+            v === 'wall'
+              ? { mount: v, mountHeight: p.mountHeight ?? DEFAULT_MOUNT_HEIGHT }
+              : { mount: v },
+          )
         }
       />
       {p.mount === 'wall' && (
         <MmField
           label={t('Underside above the floor')}
-          value={p.mountHeight ?? 1450}
+          value={p.mountHeight ?? DEFAULT_MOUNT_HEIGHT}
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}
@@ -1660,13 +1665,17 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           { value: 'wall', label: t('Wall brackets') },
         ]}
         onChange={(v) =>
-          set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })
+          set(
+            v === 'wall'
+              ? { mount: v, mountHeight: p.mountHeight ?? DEFAULT_MOUNT_HEIGHT }
+              : { mount: v },
+          )
         }
       />
       {p.mount === 'wall' && (
         <MmField
           label={t('Underside above the floor')}
-          value={p.mountHeight ?? 1450}
+          value={p.mountHeight ?? DEFAULT_MOUNT_HEIGHT}
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}

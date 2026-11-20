@@ -1,3 +1,4 @@
+import { DEFAULT_MOUNT_HEIGHT } from '../core/design';
 import { isSizeLocked, lockedAxes } from '../core/sizeLock';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { RoomFront, RoomPlan } from './RoomDrawings';
@@ -1297,7 +1298,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     }
     if (next === 'floor') update(item.id, { placement: { kind: 'floor' } });
     else if (next === 'wall')
-      update(item.id, { placement: { kind: 'wall', height: pos.y > 0 ? pos.y : 1450 } });
+      update(item.id, {
+        placement: { kind: 'wall', height: pos.y > 0 ? pos.y : DEFAULT_MOUNT_HEIGHT },
+      });
     else if (bases.length)
       update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } });
   };

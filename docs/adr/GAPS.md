@@ -2066,3 +2066,111 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-564: Cap file size in five text importers
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-1)
+- Missing: src/ui/Shopping.tsx:126, src/ui/Dialogs.tsx:545 and :573, src/ui/CatalogPage.tsx:255 and src/ui/Gaps.tsx:166 read a file with f.text() and no size cap; importFile already has MAX_IMPORT_BYTES
+- Request: /health-security, loop prompt: rotate the health skills until no high-priority issue; user approved Medium only
+- Questions: None; the cap value is MAX_IMPORT_BYTES
+- Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-565: Re-encode or sniff pictures inside imported files
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-2)
+- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
+- Request: /health-security, loop prompt; user approved Medium only
+- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
+- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-566: Pin GitHub Actions by commit SHA
+
+- Status: Open
+- Origin: Security health check round 1, 2026-11-19 (L-4)
+- Missing: .github/workflows/ci.yml, deploy.yml and deploy-assistant.yml pin actions by tag; supabase/setup-cli runs with a secret (deploy-assistant.yml:20-21)
+- Request: /health-security, loop prompt; user approved Medium only
+- Questions: None
+- Suggested pick: Pin by SHA, verifying each SHA from the upstream release (Work Low, Value Low-medium)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
+
+### G-567: Assistant 8000-character cap: user feedback in the chat
+
+- Status: Open
+- Origin: Bug health check round 1, 2026-11-19 (M1)
+- Missing: The textarea stops typing at 8000 characters (maxLength) with no message, and a long assistant reply in history is cut to 8000 characters when resent
+- Request: /health-bugs, loop prompt; user approved Medium (client cap only)
+- Questions: Show a counter or message near 8000? New text needs t() and a Russian entry
+- Suggested pick: Add a short counter under the textarea (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
+
+- Status: Open
+- Origin: Dependency health check round 1, 2026-11-19
+- Missing: supabase-js 2.119.2 needs minimumReleaseAgeExclude for six @supabase/* packages in pnpm-workspace.yaml; the project stays on 2.119.0
+- Request: /health-deps, loop prompt; user approved Medium, then chose: drop the bump
+- Questions: None; do not add an exclusion
+- Suggested pick: Bump after the release passes the age policy, no exclusion (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-569: Share find-it helpers in tools/lib/harness.mjs
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (H4); the user chose to stop the goal loop before it was built
+- Missing: 85 tools/_/find-it_.mjs scripts copy noSideScroll (52 files), btn (34), shot (about 61), the closing summary and process.exit (71), pageerror and console collection (76) and the context setup (78); tools/lib/harness.mjs holds only makeChecker, launchBrowser, previewUrl, outDir
+- Request: /health-reuse, loop prompt; user picked H4 among the high items, then said to stop the goal after the push
+- Questions: Run pnpm regress after each batch (on request only per CLAUDE.md)? How many scripts per batch?
+- Suggested pick: Add noSideScroll, btn, shotter, finish and trackErrors to harness.mjs and convert a few scripts at a time (Work High, Value Medium)
+- Work: High
+- Impact: Medium
+- Necessity: Low
+
+### G-570: Reuse findings M1 to M10
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (medium)
+- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
+- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+
+### G-571: Reuse findings L1 to L8
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (low)
+- Missing: escapeHtml in two copies; inline clamp; SVG id sanitiser x7; position range -20000..20000 on about 22 fields; FRONTS and DRAWER_BOX aliases; area sum in shopping.ts; assistant model and request defaults in index.ts and assistant-eval.mjs; Pt tuple alias
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: None
+- Suggested pick: Fix with the medium group in one cleanup pass (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-572: Low dev dependency updates
+
+- Status: Open
+- Origin: Dependency health check round 1, 2026-11-19
+- Missing: @testing-library/user-event 14.6.8 to 14.6.13, fake-indexeddb 6.2.5 to 6.2.8, @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
+- Request: /health-deps, loop prompt; user approved Critical and Medium only
+- Questions: Bump the SDK in both places together (backend function)?
+- Suggested pick: Dev patches first, SDK separately with your yes (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low

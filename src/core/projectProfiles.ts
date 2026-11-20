@@ -210,7 +210,7 @@ export function planRepairFiller(r: RunRequest, byId: Map<string, PlacedPiece>):
  */
 export function refreshRunParts(project: Project): Project {
   if (!project.runSettings?.auto) return project;
-  const old = new Map((project.runParts ?? []).map((r) => [r.key ?? r.id, r]));
+  const old = new Map((project.runParts ?? []).map((r) => [runPartKey(r), r]));
   const ids = new Set(project.items.map((i) => i.id));
   const removed = (project.runPartsRemoved ?? []).filter((k) =>
     k

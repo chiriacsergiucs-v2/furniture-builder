@@ -41,7 +41,7 @@ import {
 import { setRooms, type VariableSet } from './setRoom';
 import { variableDiagnostics, type Binding, type ProjectVariable } from './variables';
 import { bandFor, bandText } from './materials';
-import { DEFAULT_KERF, newId, sheetOf, upgradeDesign } from './design';
+import { DEFAULT_KERF, DEFAULT_MOUNT_HEIGHT, newId, sheetOf, upgradeDesign } from './design';
 import {
   cutDimensions,
   enclosing,
@@ -572,8 +572,8 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
   const wall = isWallHung(d);
   const y = wall
     ? d.product.kind === 'cabinet' || d.product.kind === 'corner'
-      ? (d.product.params.mountHeight ?? 1450)
-      : 1450
+      ? (d.product.params.mountHeight ?? DEFAULT_MOUNT_HEIGHT)
+      : DEFAULT_MOUNT_HEIGHT
     : 0;
   const placement: Placement = wall ? { kind: 'wall', height: y } : { kind: 'floor' };
   return {

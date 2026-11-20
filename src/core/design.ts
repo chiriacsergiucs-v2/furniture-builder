@@ -38,6 +38,9 @@ export const renew = (s: Space): Space =>
 
 /** User's stock (2026-10-21): PAL and HDF 2800 × 2070, MDF 2440 × 1220, 10 mm trim per edge, 4 mm kerf. */
 export const DEFAULT_KERF = 4;
+
+/** Where a wall unit's underside sits above the floor when nothing else is chosen (mm); the default of `mountHeight`. */
+export const DEFAULT_MOUNT_HEIGHT = 1450;
 const DEFAULT_TRIM = 10;
 export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<Material['sheet']> {
   const mdf = /mdf/i.test(m.id) || /mdf/i.test(m.name);
@@ -438,7 +441,7 @@ export const templates: Template[] = [
           height: 720,
           depth: 320,
           mount: 'wall',
-          mountHeight: 1450,
+          mountHeight: DEFAULT_MOUNT_HEIGHT,
           plinthHeight: 0,
           back: 'inset',
           backInset: 18,

@@ -18,6 +18,13 @@ const CAP = Math.max(1, Number(Deno.env.get('ASSISTANT_DAILY_CAP') ?? '50') || 5
 const ORIGIN = Deno.env.get('ASSISTANT_ALLOWED_ORIGIN') ?? 'https://chiriacsergiucs-v2.github.io';
 /** The largest request body accepted, in characters (a big project is well under this). */
 const MAX_BODY = 600_000;
+/** The longest user message accepted, in characters. */
+const MAX_MESSAGE_CHARS = 8_000;
+/** The longest text of one history turn accepted, in characters. */
+const MAX_HISTORY_TEXT_CHARS = 8_000;
+/** The most history turns accepted in one request (the newest HISTORY_SENT are sent to the model). */
+const MAX_HISTORY_TURNS = 100;
+const HISTORY_SENT = 20;
 
 const cors = {
   'Access-Control-Allow-Origin': ORIGIN,
@@ -45,7 +52,16 @@ function valid(body: unknown): body is AssistantRequest {
     !!b &&
     typeof b.message === 'string' &&
     b.message.trim().length > 0 &&
+    b.message.length <= MAX_MESSAGE_CHARS &&
     Array.isArray(b.history) &&
+    b.history.length <= MAX_HISTORY_TURNS &&
+    b.history.every(
+      (h) =>
+        !!h &&
+        (h.role === 'user' || h.role === 'assistant') &&
+        typeof h.text === 'string' &&
+        h.text.length <= MAX_HISTORY_TEXT_CHARS,
+    ) &&
     !!b.document &&
     (b.document.kind === 'design' || b.document.kind === 'project') &&
     Array.isArray(b.actions)
@@ -65,6 +81,9 @@ Deno.serve(async (req) => {
   const { data: who } = await asUser.auth.getUser();
   if (!who.user) return json(401, { error: 'Sign in first.' });
 
+  // Refuse a declared oversized body before reading it; the length of what was read is checked again below.
+  const declared = Number(req.headers.get('Content-Length'));
+  if (Number.isFinite(declared) && declared > MAX_BODY) return json(413, { error: 'Too large.' });
   const text = await req.text();
   if (text.length > MAX_BODY) return json(413, { error: 'Too large.' });
   let body: unknown;
@@ -86,7 +105,7 @@ Deno.serve(async (req) => {
   const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
   const messages = [
     ...openingTurns(body.document, body.selection, body.actions),
-    ...body.history.slice(-20).map((h) => ({ role: h.role, content: h.text })),
+    ...body.history.slice(-HISTORY_SENT).map((h) => ({ role: h.role, content: h.text })),
     { role: 'user' as const, content: body.message },
   ];
 

@@ -13,6 +13,7 @@ import { putRoleBoard, roleBoard, type FinishRole } from './finish';
 import {
   isWallHung,
   placedOutline,
+  runPartKey,
   type Project,
   type ProjectItem,
   type ProjectModel,
@@ -217,12 +218,11 @@ export function replaceReport(
     if (w0 !== w1)
       lines.push(t('{name} {a} → {b} mm wide', { name: now.design.name, a: w0, b: w1 }));
   }
-  const keyOf = (r: { key?: string; id: string }) => r.key ?? r.id;
-  const old = new Map((before.runParts ?? []).map((r) => [keyOf(r), r]));
-  const kept = new Set((after.runParts ?? []).map(keyOf));
+  const old = new Map((before.runParts ?? []).map((r) => [runPartKey(r), r]));
+  const kept = new Set((after.runParts ?? []).map(runPartKey));
   for (const r of after.runParts ?? []) {
-    if (!old.has(keyOf(r))) lines.push(t('{name} added', { name: tr(r.label) }));
-    else if (r.changed && JSON.stringify(old.get(keyOf(r))!.box) !== JSON.stringify(r.box))
+    if (!old.has(runPartKey(r))) lines.push(t('{name} added', { name: tr(r.label) }));
+    else if (r.changed && JSON.stringify(old.get(runPartKey(r))!.box) !== JSON.stringify(r.box))
       lines.push(`${tr(r.label)} ${r.changed}`);
   }
   for (const [k, r] of old)
