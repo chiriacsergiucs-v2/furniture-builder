@@ -2059,13 +2059,49 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: N352, user request 2026-11-19 (catalog redesign)
-- Missing: 2 columns at 390 px, 4 at 1280 px, 120 px picture height and no sideways scroll were not measured; tools/catalog-flows, shapes, template-revision, editor-modes, ui-polish were edited but not run
-- Request: Run pnpm regress catalog (and the edited scripts) and a screenshot at 390 and 1280 px; live-verify the Wardrobe tiles after merge
+- Missing: live-verify only. Paid 2026-11-20 on the production build (Chromium): `pnpm regress catalog`, `shapes` and `template-revision` pass; 2 columns at 390 px, 4 at 1280 px, no sideways scroll; Wardrobe tiles seen in screenshots. Not done: the published URL
+- Request: After deploy, open the live Catalog and find the Wardrobe tiles (picture, name, size; no Add button)
 - Questions: none
 - Suggested pick: Run pnpm regress when the user asks (browser-on-demand)
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-556: Browser scripts editor-modes and ui-polish fail on main
+
+- Status: Open
+- Origin: N352, found by pnpm regress 2026-11-20
+- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
+- Request: Repair both scripts or the app, whichever is stale
+- Questions: none
+- Suggested pick: Repair the scripts against the current UI
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-557: Variants for sink-base, desk and chest
+
+- Status: Open
+- Origin: ADR-281, user 2026-11-20 (cut from the ADR)
+- Missing: No new shipped variants for sink-base, desk and chest: six truly different designs do not exist with today's generators (desk is gables or pedestals only; sink-base and chest differ by count and width)
+- Request: Add variants to these three families once a generator capability makes them genuinely different (e.g. new desk or sink options)
+- Questions: none
+- Suggested pick: Revisit when a new capability lands
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
+
+- Status: Open
+- Origin: ADR-281 build: tests/fuzz.test.ts mirror fuzz (ADR-205) failed after the catalog grew
+- Missing: A half-style cabinet with an odd body thickness (25 mm) and a mm-sized end part gives a front 242 mm wide, its mirror 241 mm: the outer reveals in cabinet.ts ownFront (lo(t)+hi(g) left, hi(t)+lo(g) right) are not swapped when a split is mirrored (remainderFirst). Seen on origin/main too: FUZZ_N=3200, 3600 and 4000 fail; 3000 and 30000 pass by chance. ADR-281 gave the ADR-124 fuzz test its own random sequence so catalog edits no longer reseed the tests after it; FUZZ_N=30000 on this branch now hits the bug
+- Request: Make mirrored and original fronts match to the mm for odd board thicknesses (mirror the outer reveal), keeping saved designs' cut sizes unchanged unless the user decides. Tried 2026-11-20 and reverted: swapping the outer reveal only for mirrored copies makes the sizes match but puts a front 1 mm past the independent limit in `tests/fuzz.test.ts` (`x1 = W - hi(t) - lo(g)`, ADR-006/024), because that limit is itself asymmetric for odd boards. Needs a decision: relax the limit to a symmetric one (fronts 1 mm wider on one side of existing odd-board designs) or accept 1 mm size difference in mirrored copies
+- Questions: Changing outer reveals changes front sizes by 1 mm on existing odd-thickness designs: is that allowed?
+- Suggested pick: Decide between a symmetric outer limit (1 mm wider fronts on one side of existing odd-board designs) and accepting a 1 mm size difference in mirrored copies
+- Work: Medium
+- Impact: Low
+- Necessity: Low
 
 ### G-564: Cap file size in five text importers
 

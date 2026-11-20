@@ -342,3 +342,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-278](../adr-done/ADR-278-repair-browser-find-it-scripts-batch-7-of-7.md) | Repair browser find-it scripts, batch 7 of 7 | — | ✅ Implemented |
 | [ADR-279](../adr-done/ADR-279-split-the-app-into-workspace-packages-starting-with-the-nest.md) | Split the app into workspace packages, starting with the nesting engine | ADR-053, ADR-219 | ✅ Implemented |
 | [ADR-280](../adr-done/ADR-280-extract-the-i18n-package.md) | Extract the i18n package | ADR-279 | ✅ Implemented |
+| [ADR-281](ADR-281-raise-the-family-variant-cap-to-12-and-add-six-variants-to-n.md) | Raise the family variant cap to 12 and add six variants to six families | ADR-033 | Pending |

@@ -636,13 +636,16 @@ function equalBays(k: number, make: (bays: () => Space) => Design): Design {
 // Wall row (ADR-104)
 // ---------------------------------------------------------------------------
 
-/** Wall-cabinet variants dealt left to right, in the order the user named them; then the rest of the family. */
+/**
+ * The wall-cabinet variants a wall row deals left to right, in the order the user named them (ADR-104). A list of ids,
+ * not "the rest of the family": a piece is resized by width only, so a variant with its own fixed sizes, flaps or a
+ * hardware choice (the ones ADR-281 added to the catalog) would be stretched out of its design in a suggested row.
+ */
 const WALL_ORDER = ['wall-1-door', 'wall-open', 'wall-flap', 'wall-cabinet', 'wall-hood'];
 const wallFamily = kitchen.find((f) => f.id === 'wall-cabinet')!;
-export const WALL_VARIANTS = [
-  ...WALL_ORDER.map((id) => wallFamily.variants.find((v) => v.id === id)).filter((v) => !!v),
-  ...wallFamily.variants.filter((v) => !WALL_ORDER.includes(v.id)),
-].filter(insertable);
+export const WALL_VARIANTS = WALL_ORDER.map((id) => wallFamily.variants.find((v) => v.id === id))
+  .filter((v) => !!v)
+  .filter(insertable);
 
 /** Best number of equal pieces for a stretch of wall: round widths near 600 first, then no odd mm, then fewer. */
 function bestSplit(S: Mm, min: Mm, max: Mm): number | null {

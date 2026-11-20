@@ -3312,12 +3312,11 @@ table.buy {
 }
 .item .tile {
   display: grid;
-  grid-template-rows: auto auto auto;
   align-content: start;
   gap: var(--s-1);
   width: 100%;
   min-height: var(--control-h);
-  padding: var(--s-2);
+  padding: var(--s-1);
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -3331,7 +3330,7 @@ table.buy {
 }
 .item .snap {
   width: 100%;
-  height: 120px;
+  height: 96px;
   object-fit: contain;
   border-radius: calc(var(--r) - 2px);
   background: var(--surface);
@@ -3345,6 +3344,10 @@ table.buy {
   font-size: var(--fs-sm);
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+.item .item-name strong {
+  font-size: var(--fs-sm);
+  line-height: 1.25;
 }
 .item .sub {
   display: block;

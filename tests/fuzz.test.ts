@@ -792,6 +792,15 @@ it(
   'template references rebuild the same piece; carried edits never make a design invalid (seeded fuzz, ADR-124)',
   () => {
     const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 10);
+    // Draws from its own sequence, like the edge bands above: how many numbers a round takes depends on the catalog
+    // item picked, so with the shared sequence every catalog change re-seeded all the tests after this one.
+    let ownSeed = 124;
+    const rnd = () => {
+      ownSeed = (ownSeed * 1103515245 + 12345) & 0x7fffffff;
+      return ownSeed / 0x7fffffff;
+    };
+    const ri = (a: number, b: number) => a + Math.floor(rnd() * (b - a + 1));
+    const pick = <T>(xs: T[]): T => xs[ri(0, xs.length - 1)];
     const variants = catalogFamilies.flatMap((f) =>
       f.variants.filter(insertable).map((v) => ({ f, v })),
     );

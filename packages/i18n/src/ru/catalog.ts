@@ -92,7 +92,7 @@ export const ru_catalog = {
   'Rooms (the first ticked is the main one)': 'Комнаты (первая отмеченная — основная)',
   'Default structure': 'Структура по умолчанию',
   'What can be changed (one per line)': 'Что можно изменить (по одному в строке)',
-  'Variants (1–5; the first is the default)': 'Варианты (1–5; первый — по умолчанию)',
+  'Variants (1–12; the first is the default)': 'Варианты (1–12; первый — по умолчанию)',
   'Move up': 'Переместить вверх',
   'Move down': 'Переместить вниз',
   'Edit design': 'Изменить проект',
@@ -271,7 +271,7 @@ export const ru_catalog = {
     'Каждая строка «что можно изменить» должна быть длиной 1–300 символов.',
   'Shorten the default structure to 1000 characters or fewer.':
     'Сократите структуру по умолчанию до 1000 символов.',
-  'A template has 1 to 5 variants.': 'В шаблоне от 1 до 5 вариантов.',
+  'A template has 1 to 12 variants.': 'В шаблоне от 1 до 12 вариантов.',
   'Give every variant a name of up to 200 characters.':
     'Дайте каждому варианту название длиной до 200 символов.',
   'A variant could not be read.': 'Не удалось прочитать вариант.',

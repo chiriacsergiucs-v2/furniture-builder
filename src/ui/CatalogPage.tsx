@@ -17,6 +17,7 @@ import {
   type Room,
 } from '../core/catalog';
 import {
+  MAX_VARIANTS,
   shadowOf,
   templateProblemTexts,
   validateLocalTemplate,
@@ -1258,7 +1259,7 @@ function TemplateEditor({
         />
       </div>
       <div className="field">
-        <span className="field-label">{t('Variants (1–5; the first is the default)')}</span>
+        <span className="field-label">{t('Variants (1–12; the first is the default)')}</span>
         <ul className="variant-edit">
           {f.variants.map((v, i) => (
             // Each row's controls are named with the row (ADR-262).
@@ -1305,7 +1306,7 @@ function TemplateEditor({
                 <button
                   type="button"
                   className="btn sm"
-                  disabled={f.variants.length >= 5 || !v.design}
+                  disabled={f.variants.length >= MAX_VARIANTS || !v.design}
                   onClick={() =>
                     setF({
                       variants: [
