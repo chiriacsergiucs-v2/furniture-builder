@@ -2114,3 +2114,51 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-560: Share find-it helpers in tools/lib/harness.mjs
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (H4); the user chose to stop the goal loop before it was built
+- Missing: 85 tools/_/find-it_.mjs scripts copy noSideScroll (52 files), btn (34), shot (about 61), the closing summary and process.exit (71), pageerror and console collection (76) and the context setup (78); tools/lib/harness.mjs holds only makeChecker, launchBrowser, previewUrl, outDir
+- Request: /health-reuse, loop prompt; user picked H4 among the high items, then said to stop the goal after the push
+- Questions: Run pnpm regress after each batch (on request only per CLAUDE.md)? How many scripts per batch?
+- Suggested pick: Add noSideScroll, btn, shotter, finish and trackErrors to harness.mjs and convert a few scripts at a time (Work High, Value Medium)
+- Work: High
+- Impact: Medium
+- Necessity: Low
+
+### G-561: Reuse findings M1 to M10
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (medium)
+- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
+- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+
+### G-562: Reuse findings L1 to L8
+
+- Status: Open
+- Origin: Reuse health check round 1, 2026-11-20 (low)
+- Missing: escapeHtml in two copies; inline clamp; SVG id sanitiser x7; position range -20000..20000 on about 22 fields; FRONTS and DRAWER_BOX aliases; area sum in shopping.ts; assistant model and request defaults in index.ts and assistant-eval.mjs; Pt tuple alias
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: None
+- Suggested pick: Fix with the medium group in one cleanup pass (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-563: Low dev dependency updates
+
+- Status: Open
+- Origin: Dependency health check round 1, 2026-11-19
+- Missing: @testing-library/user-event 14.6.8 to 14.6.13, fake-indexeddb 6.2.5 to 6.2.8, @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
+- Request: /health-deps, loop prompt; user approved Critical and Medium only
+- Questions: Bump the SDK in both places together (backend function)?
+- Suggested pick: Dev patches first, SDK separately with your yes (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low

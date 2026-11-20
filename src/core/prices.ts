@@ -199,8 +199,9 @@ export function validatePrice(p: unknown): string[] {
 const KIND_PREFIX: Record<string, string> = { board: 'board:', band: 'band:', hardware: 'hw:' };
 
 /** Cells starting with = + - @ tab or CR are prefixed with ' so a spreadsheet does not run them as formulas (like the Parts CSV). */
-export function csvCell(v: string): string {
-  const safe = /^[\t\r=+\-@]/.test(v) ? `'${v}` : v;
+export function csvCell(v: string | number): string {
+  const s = String(v);
+  const safe = /^[\t\r=+\-@]/.test(s) ? `'${s}` : s;
   return /[";\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
