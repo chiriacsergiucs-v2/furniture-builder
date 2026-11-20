@@ -2093,7 +2093,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
-- Status: Open
+- Status: ADR-281
 - Origin: ADR-281 build: tests/fuzz.test.ts mirror fuzz (ADR-205) failed after the catalog grew
 - Missing: A half-style cabinet with an odd body thickness (25 mm) and a mm-sized end part gives a front 242 mm wide, its mirror 241 mm: the outer reveals in cabinet.ts ownFront (lo(t)+hi(g) left, hi(t)+lo(g) right) are not swapped when a split is mirrored (remainderFirst). Seen on origin/main too: FUZZ_N=3200, 3600 and 4000 fail; 3000 and 30000 pass by chance. ADR-281 gave the ADR-124 fuzz test its own random sequence so catalog edits no longer reseed the tests after it; FUZZ_N=30000 on this branch now hits the bug
 - Request: Make mirrored and original fronts match to the mm for odd board thicknesses (mirror the outer reveal), keeping saved designs' cut sizes unchanged unless the user decides. Tried 2026-11-20 and reverted: swapping the outer reveal only for mirrored copies makes the sizes match but puts a front 1 mm past the independent limit in `tests/fuzz.test.ts` (`x1 = W - hi(t) - lo(g)`, ADR-006/024), because that limit is itself asymmetric for odd boards. Needs a decision: relax the limit to a symmetric one (fronts 1 mm wider on one side of existing odd-board designs) or accept 1 mm size difference in mirrored copies

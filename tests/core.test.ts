@@ -602,7 +602,8 @@ describe('front styles and handles (ADR-024)', () => {
     expect(m.diagnostics.filter((x) => x.severity === 'error')).toEqual([]);
     const doors = role(m.panels, 'door').sort((a, b) => a.box.x - b.box.x);
     expect(doors[0].box.x).toBe(9 + 2); // lo(18) + hi(3)
-    expect(doors[1].box.x + doors[1].box.w).toBe(cab(d).width - 18 + 9 - 1);
+    // The right reveal is the left one reflected (G-558, ADR-281): lo(18) + hi(3) from the right edge.
+    expect(doors[1].box.x + doors[1].box.w).toBe(cab(d).width - (9 + 2));
   });
   it('bar handles: centred on drawer fronts, on the opening edge of doors, one per front in the hardware list', () => {
     const d = withCab(byTemplate('sideboard'), {});
