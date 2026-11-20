@@ -2179,7 +2179,9 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Retro 2026-11-20 (P4, P10); agent scoped it out: the gates exempt rows below N361/F19/D04 and ADRs numbered below 281
-- Missing: 86 Done backlog rows whose evidence says not merged, PR open, not shipped, not pushed or carries burst-skipped (N45 to N253); 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); 20 rows with bare burst-skipped markers (N274 to N359)
+- Note: 2026-11-20 (N362): the backlog part is done. All 86 old Done rows had merge evidence on main (a merged PR or the ADR's ship commit), so they stay Done with that evidence appended, the old wording reads "at build time", every old burst marker names its blocker and cost, and the backlog exemption is gone. Left: the ADR part.
+- Note: 2026-11-20 (N363, user pick "Re-check each box"): 22 of the 35 boxes are met by runs today; the per-box record is `docs/research/2026-11-20-g573-adr-box-recheck.md`. The 13 left: ADR-080 popovers close on outside tap or Esc, plan and front view both visible at 390 px in a project, a Width change redraws, a Settings-for change shows after reopening, "not clamped"; ADR-081 the switch in a project, Front removes the canvas; ADR-129 the first-sign-in question; ADR-137 "Save to account"; ADR-142 switch account and back (each needs a new check, cost S); ADR-201 needs the first core-only pull request; ADR-208 needs a browser with a WebGPU adapter, and the user's phones for AR.
+- Missing: 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); implemented ADRs are not edited, so they stay exempt (ADRs numbered below 281)
 - Request: User picked 'P4/P10 docs:check gates' from the retro 2026-11-20
 - Questions: Statuses change only with evidence: re-verify each row (merged PR, CI run) or turn it Partially done? Which ADR boxes get a G id versus a re-check?
 - Suggested pick: Check each row against git log for its merge commit; Done stays only with a merge sha, else Partially done; then drop the legacy cut-off
@@ -2190,6 +2192,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 ### G-574: CLAUDE.md rules without an incident citation
 
 - Status: Open
+- Note: 2026-11-20, user pick "When next changed": a rule gets its citation when it is next changed (the CLAUDE.md rule "Rules cite their incident"); the 8 rules with no incident in the repo wait for the user's reasons.
 - Origin: Retro 2026-11-20 (P7); agent scoped it out
 - Missing: Existing rules in CLAUDE.md and the skills do not name the incident they answer; the retro traced some (docs/retros/2026-11-20-recurring-patterns.md) and found none in the repo for 8 (translation rule, Gaps page untranslated, feature tree on request, no auto-babysit, sync pending only, regress on request, browser-on-demand, screenshots last)
 - Request: User picked 'P7 rules cite incidents' from the retro 2026-11-20
