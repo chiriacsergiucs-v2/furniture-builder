@@ -433,6 +433,21 @@ interface SplitSpace extends SpaceBase {
    * mirrored copies so the remainder stays on the same physical part. Absent = the last.
    */
   remainderFirst?: true;
+  /**
+   * Staggered rows (ADR-282, schemaVersion 10), stacked splits only: each row is divided side by side with spans of
+   * the rule's three widths, one span taking the rest; the rows are written from the rule, not generated in memory.
+   */
+  stagger?: StaggerRule;
+}
+
+/** The rule of a staggered split (ADR-282). */
+export interface StaggerRule {
+  /** Three clear span widths, mm. */
+  widths: [Mm, Mm, Mm];
+  /** The seed of the last Randomize: the same seed gives the same rows. */
+  seed: number;
+  /** Rows (top = 0) the user keeps as set by hand: the rule leaves them as they are. Absent = none. */
+  kept?: number[];
 }
 
 export type Space = EmptySpace | ShelvesSpace | HangingSpace | DrawersSpace | SplitSpace;
@@ -760,7 +775,7 @@ export interface Design {
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
    * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   id: string;
   name: string;
   createdAt: string;

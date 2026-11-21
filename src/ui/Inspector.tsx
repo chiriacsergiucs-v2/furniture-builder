@@ -32,6 +32,7 @@ import {
   spacePlace,
 } from '../core/spaceNames';
 import { StructureTree } from './StructureTree';
+import { DEFAULT_STAGGER_WIDTHS, newSeed } from '../core/stagger';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { BAR_SPACINGS, materialKey, runHandleFor, type RunHandle } from '../core/project';
@@ -53,6 +54,7 @@ import type {
   Space,
   SpaceKind,
   SplitSize,
+  StaggerRule,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { DimensionField } from './DimensionField';
@@ -1087,6 +1089,7 @@ function SplitEditor({
           })}
         </ul>
       </div>
+      {space.axis === 'y' && <StaggerEditor space={space} onChange={onChange} />}
       <button
         type="button"
         className="danger-link"
@@ -1107,6 +1110,81 @@ function SplitEditor({
         {t('Remove dividers')}
       </button>
     </>
+  );
+}
+
+/**
+ * Staggered rows (ADR-282): each row of a stacked split divided with spans of three widths, the dividers of
+ * neighbouring rows not lining up. The rows are written by the store from the rule; a row kept by hand is left alone.
+ */
+function StaggerEditor({
+  space,
+  onChange,
+}: {
+  space: Extract<Space, { kind: 'split' }>;
+  onChange: (fn: (s: Space) => Space) => void;
+}) {
+  const rule = space.stagger;
+  const setRule = (patch: Partial<StaggerRule> | null) =>
+    onChange((s) => {
+      if (s.kind !== 'split') return s;
+      if (!patch) {
+        const { stagger: _off, ...rest } = s;
+        void _off;
+        return rest;
+      }
+      return {
+        ...s,
+        stagger: {
+          widths: [...DEFAULT_STAGGER_WIDTHS],
+          seed: newSeed(),
+          ...s.stagger,
+          ...patch,
+        },
+      };
+    });
+  if (!rule)
+    return (
+      <div className="field">
+        <button type="button" className="btn outline" onClick={() => setRule({})}>
+          {t('Stagger the rows')}
+        </button>
+      </div>
+    );
+  const kept = rule.kept ?? [];
+  const setWidth = (i: number, v: number) =>
+    setRule({ widths: rule.widths.map((w, j) => (j === i ? v : w)) as StaggerRule['widths'] });
+  return (
+    <Group title={t('Staggered rows')}>
+      {rule.widths.map((w, i) => (
+        <MmField
+          key={i}
+          label={t('Span width {n}', { n: i + 1 })}
+          value={w}
+          min={50}
+          max={2000}
+          onChange={(v) => setWidth(i, v)}
+        />
+      ))}
+      <button type="button" className="btn" onClick={() => setRule({ seed: newSeed() })}>
+        {t('Randomize')}
+      </button>
+      {space.children.map((c, i) => (
+        <Toggle
+          key={c.id}
+          label={t('Row {n}: set by hand', { n: i + 1 })}
+          checked={kept.includes(i)}
+          onChange={(on) =>
+            setRule({
+              kept: on ? [...kept, i].sort((a, b) => a - b) : kept.filter((k) => k !== i),
+            })
+          }
+        />
+      ))}
+      <button type="button" className="danger-link" onClick={() => setRule(null)}>
+        {t('Stop staggering')}
+      </button>
+    </Group>
   );
 }
 

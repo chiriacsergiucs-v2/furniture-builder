@@ -3,6 +3,8 @@
  * `PRINT_EN` has the same keys as `PRINT_RU`, so a Romanian text without both fails the type check.
  */
 export const PRINT_RU = {
+  'Un despărțitor din rândul {i} este aliniat cu unul din rândul de deasupra.':
+    'Перегородка в ряду {i} совпадает с перегородкой в ряду выше.',
   // Units and the parts CSV (src/core/ro.ts)
   mm: 'мм',
   Denumire: 'Наименование',
@@ -542,6 +544,8 @@ export const PRINT_RU = {
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
+  'Un despărțitor din rândul {i} este aliniat cu unul din rândul de deasupra.':
+    'A divider in row {i} lines up with one in the row above.',
   mm: 'mm',
   Denumire: 'Part',
   Material: 'Material',

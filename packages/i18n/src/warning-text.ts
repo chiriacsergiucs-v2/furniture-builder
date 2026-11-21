@@ -10,6 +10,8 @@
 import type { PrintKey } from './print';
 
 export const WARNING_RO = {
+  'A divider in row {i} lines up with one in the row above.':
+    'Un despărțitor din rândul {i} este aliniat cu unul din rândul de deasupra.',
   '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
     '{n|O piesă cu cant propriu nu mai există|# piese cu cant propriu nu mai există} (piesa s-a schimbat); cantul nu este folosit. Ștergeți-l la „Material” → „Part”.',
   'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Material → Part.':

@@ -693,4 +693,10 @@ export const ru_core2 = {
   'Invalid catalog origin rooms': 'Неверные комнаты происхождения из каталога',
   'Piece variables need schemaVersion 9': 'Переменные изделия требуют schemaVersion 9',
   'Invalid piece bindings': 'Неверные привязки изделия',
+  'Invalid staggered rows': 'Неверные смещённые ряды',
+  'Staggered rows need schemaVersion 10': 'Смещённые ряды требуют schemaVersion 10',
+  'Row {i} does not follow the widths {a}, {b} and {c} mm: no mix of them fills {w} mm. Change the widths, or keep the row as set by hand.':
+    'Ряд {i} не соответствует ширинам {a}, {b} и {c} мм: никакое их сочетание не заполняет {w} мм. Измените ширины или оставьте ряд заданным вручную.',
+  'A divider in row {i} lines up with one in the row above.':
+    'Перегородка в ряду {i} совпадает с перегородкой в ряду выше.',
 } satisfies Record<string, string>;
