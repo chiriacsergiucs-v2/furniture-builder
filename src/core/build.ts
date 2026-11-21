@@ -9,6 +9,7 @@ import { buildPanel } from './panel';
 import { bandFor, bandText } from './materials';
 import { runRules } from './rules';
 import { designVariableDiagnostics } from './variables';
+import { staggerDiagnostics } from './stagger';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';
 import { FRONT_WITH_BLIND_ROLES } from './panelRoles';
@@ -265,6 +266,8 @@ export function buildModel(design: Design): FurnitureModel {
   const ruled = runRules(design, model, materials);
   // The piece's own variables and bindings (ADR-210): a problem is an error and blocks export (ADR-008).
   model.diagnostics.push(...designVariableDiagnostics(design));
+  // Staggered rows (ADR-282): checked from the saved rows, independently of the generator.
+  model.diagnostics.push(...staggerDiagnostics(design.product, model));
   model.diagnostics.push(...ruled.diagnostics);
   model.hardware.push(...ruled.hardware);
   return model;

@@ -1,3 +1,4 @@
+import { hasStagger, refreshStagger } from '../core/stagger';
 import { turnModelItem } from '../core/model3d';
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
@@ -162,7 +163,11 @@ export const useDesign = create<State>((rawSet, get) => {
       bound.catalog?.brand && bound.catalog.origin
         ? { ...bound, catalog: { ...bound.catalog, brand: undefined } }
         : bound;
-    const stamped = { ...debranded, updatedAt: new Date().toISOString() };
+    // Staggered rows (ADR-282) are written from their rule for the size the piece has now.
+    const ruled = hasStagger(debranded.product)
+      ? refreshStagger(debranded, buildModel(debranded))
+      : debranded;
+    const stamped = { ...ruled, updatedAt: new Date().toISOString() };
     // Edited from the project editor (ADR-088): each change is one project undo step (ADR-051), and the piece keeps
     // no history of its own (ADR-231).
     const drilling = !!(p0 && !get().editingItemId && get().drillItemId);

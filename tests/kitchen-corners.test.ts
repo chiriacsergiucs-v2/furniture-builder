@@ -940,7 +940,7 @@ describe('mirrored copies match to the mm (ADR-205, G-032)', () => {
 
 describe('documents (ADR-011, ADR-205)', () => {
   it('design schemaVersion 9 stores remainderFirst; version 8 without it still loads, with it is refused', () => {
-    expect(SCHEMA_VERSION).toBe(9);
+    expect(SCHEMA_VERSION).toBe(10);
     const d = t('base-door');
     const m = mirrorDesign({
       ...d,
@@ -976,7 +976,7 @@ describe('documents (ADR-011, ADR-205)', () => {
     const v8 = { ...d, schemaVersion: 8 as const };
     expect(validateDesign(v8)).toEqual([]);
     const up = upgradeDesign(v8);
-    expect(up.schemaVersion).toBe(9);
+    expect(up.schemaVersion).toBe(10);
     expect(buildModel(up).panels).toEqual(buildModel(v8).panels);
     // Only `true` is stored.
     const bad = JSON.parse(

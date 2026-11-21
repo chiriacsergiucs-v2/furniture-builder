@@ -2225,3 +2225,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low-medium
 - Necessity: Low
+
+### G-575: Extending and L-corner bookcase not modelled
+
+- Status: Open
+- Origin: ADR-282 (user 2026-11-21)
+- Missing: Telescoping two-part carcass (60–120 cm) and the L-shaped corner layout of the reference bookcase
+- Request: I would like to build a cabinet with a few shelves which are connected between each other with dividers, and they go at random distances
+- Questions: Wanted later? How is the sliding overlap fixed?
+- Suggested pick: Not now (user answer: 'No, dividers only')
+- Work: High
+- Impact: Low-medium
+- Necessity: Low
+
+### G-576: Staggered rows not refreshed on project-level resizes
+
+- Status: Open
+- Origin: ADR-282
+- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
+- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
+- Questions: Rewrite staggered rows on project-level resizes too?
+- Suggested pick: Yes, apply refreshStagger in the project commit
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium

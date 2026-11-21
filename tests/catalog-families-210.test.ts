@@ -140,11 +140,11 @@ describe('own families keep their rooms (ADR-210, G-103)', () => {
     expect(upgradeDesign(structuredClone(before)).catalog?.origin?.rooms).toBeUndefined();
   });
 
-  it(`origin.rooms needs schemaVersion ${SCHEMA_VERSION} and known rooms; files 1–${SCHEMA_VERSION} still load`, () => {
+  it(`origin.rooms needs schemaVersion 9 and known rooms; files 1–${SCHEMA_VERSION} still load`, () => {
     const d = own(['bedroom']);
     expect(d.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(validateDesign({ ...d, schemaVersion: SCHEMA_VERSION - 1 })).toContain(
-      `Catalog origin rooms need schemaVersion ${SCHEMA_VERSION}`,
+    expect(validateDesign({ ...d, schemaVersion: 8 })).toContain(
+      'Catalog origin rooms need schemaVersion 9',
     );
     const withRooms = (rooms: unknown) => ({
       ...d,
@@ -242,8 +242,8 @@ describe('variables in a piece (ADR-210, G-335)', () => {
   it('validation: version, targets (no positions) and names', () => {
     const d = bound('500');
     expect(validateDesign(d)).toEqual([]);
-    expect(validateDesign({ ...d, schemaVersion: SCHEMA_VERSION - 1 })).toContain(
-      `Piece variables need schemaVersion ${SCHEMA_VERSION}`,
+    expect(validateDesign({ ...d, schemaVersion: 8 })).toContain(
+      'Piece variables need schemaVersion 9',
     );
     for (const target of ['x', 'position.x', 'rotationY', 'split:a'])
       expect(validateDesign({ ...d, bindings: [{ target, expr: '1' }] }), target).toContain(
