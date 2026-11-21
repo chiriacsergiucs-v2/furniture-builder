@@ -52,16 +52,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207)
+ * The document shape this app writes: 10 adds a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
- * mount (ADR-177); 6 added role boards (ADR-163); 1 to 8 still load.
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 9 still load.
  */
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 /**
- * Older versions → 9 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
+ * Older versions → 10 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
  * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
- * frame ends, a split's remainder order), so nothing else changes.
+ * frame ends, a split's remainder order, staggered rows), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -1008,6 +1008,18 @@ function validateRules(s: unknown, errs: string[]) {
       errs.push(t('Invalid rule setting {k}', { k }));
 }
 
+const validStagger = (r: unknown, rows: number) =>
+  isObj(r) &&
+  Array.isArray(r.widths) &&
+  r.widths.length === 3 &&
+  r.widths.every((w) => isInt(w, 1) && (w as number) <= MAX_MM) &&
+  isInt(r.seed) &&
+  (r.seed as number) < 2 ** 32 &&
+  (r.kept === undefined ||
+    (Array.isArray(r.kept) &&
+      r.kept.length <= rows &&
+      r.kept.every((i) => isInt(i) && (i as number) < rows)));
+
 function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0) {
   if (depth > 12) {
     errs.push(t('Space tree is too deep'));
@@ -1094,6 +1106,12 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
       // ADR-205: only `true` is stored; its schemaVersion is checked in `validateDesign`.
       if (s.remainderFirst !== undefined && s.remainderFirst !== true)
         errs.push(t('Invalid split'));
+      // ADR-282: stacked splits only; its schemaVersion is checked in `validateDesign`.
+      if (
+        s.stagger !== undefined &&
+        (s.axis !== 'y' || !validStagger(s.stagger, s.children.length))
+      )
+        errs.push(t('Invalid staggered rows'));
       for (const c of s.children) validateSpace(c, errs, seen, depth + 1);
       return;
     default:
@@ -1104,8 +1122,11 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
+  // Staggered rows (ADR-282) came with schemaVersion 10.
+  if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))
+    errs.push(t('Staggered rows need schemaVersion 10'));
   // A split's remainder order (ADR-205) came with schemaVersion 9.
   if (
     (d.schemaVersion as number) < 9 &&

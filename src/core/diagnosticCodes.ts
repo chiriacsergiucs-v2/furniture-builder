@@ -154,6 +154,8 @@ export const DIAGNOSTIC_CODES = [
   'split-fit',
   'split-resized',
   'split-shape',
+  'stagger-aligned',
+  'stagger-fill',
   'stretcher-height',
   'thickness',
   'tilt-up',
