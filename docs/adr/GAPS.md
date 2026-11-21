@@ -2249,3 +2249,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low-medium
 - Impact: Low-medium
 - Necessity: Low-medium
+
+### G-577: Canvas-native editor: slices 2-7 have no ADR yet
+
+- Status: Open
+- Origin: ADR-283 (N366), design spec 2026-11-22
+- Missing: ADRs for size tags and the mm bar, split bars and + divide handles, in-space picks, problem pins, output lenses, Find + coach marks + removing the phone sheet
+- Request: User 2026-11-22: new mobile editor inside the canvas with 100% of current flows; picked 'Add ADR-283 to repo'
+- Questions: Write the six follow-up ADRs now or after ADR-283 ships?
+- Suggested pick: After ADR-283 ships (scope: user asked for ADR-283 only)
+- Work: Medium
+- Impact: High
+- Necessity: Medium-high
+
+### G-578: ADR-283 canvas editor frame not built
+
+- Status: Open
+- Origin: ADR-283 (N366)
+- Missing: Flag fb:canvasEditor, selection ladder, chip rail, lens card, re-framing, sections split into mountable parts
+- Request: User 2026-11-22 picked 'Add ADR-283 to repo' (ADR only, not the build)
+- Questions: Build ADR-283 next with next-adr?
+- Suggested pick: Wait for the user's go (scope)
+- Work: High
+- Impact: High
+- Necessity: Medium-high
+
+### G-579: Canvas-native editor study: device and user checks not run
+
+- Status: Open
+- Origin: Design spec 2026-11-22 (N366)
+- Missing: 30 fps orbit on a mid-range phone; 5-user usability test; keyboard docking on iOS Safari installed PWA; multi-select and loading mockups not drawn
+- Request: Prompt defaults: fps target, 5-user test, mockups of all states
+- Questions: Run them on ADR-283's build or before it?
+- Suggested pick: On ADR-283's build (blocker: no device or test users in the session)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
