@@ -32,6 +32,7 @@ import {
   spacePlace,
 } from '../core/spaceNames';
 import { StructureTree } from './StructureTree';
+import { openLens } from './CanvasEditor';
 import { DEFAULT_STAGGER_WIDTHS, newSeed } from '../core/stagger';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
@@ -524,6 +525,12 @@ function SpaceEditor({
   const allDiags = useDesign((s) => s.model.diagnostics);
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
   const set = (fn: (s: Space) => Space) => update(space.id, fn);
+  // The Divide block goes away once the space is split: the canvas card follows to Division and shows the drawing,
+  // or it fell back to the overview and the split looked like nothing happened (Android report 2026-11-22).
+  const divide = (axis: 'x' | 'y') => {
+    set((s) => splitSpace(s, axis, 2));
+    openLens({ tab: t('Division'), showDrawing: true });
+  };
   const parent = parentOf(root, space.id);
   // A run handle reaching this project piece (ADR-125) sets its handles: shown read-only (ADR-203, G-211).
   const project = useDesign((s) => s.project);
@@ -610,18 +617,10 @@ function SpaceEditor({
       {space.kind !== 'split' && (
         <Section title={t('Divide this space')}>
           <div className="split-actions">
-            <button
-              type="button"
-              className="btn outline"
-              onClick={() => set((s) => splitSpace(s, 'x', 2))}
-            >
+            <button type="button" className="btn outline" onClick={() => divide('x')}>
               {t('Side by side')}
             </button>
-            <button
-              type="button"
-              className="btn outline"
-              onClick={() => set((s) => splitSpace(s, 'y', 2))}
-            >
+            <button type="button" className="btn outline" onClick={() => divide('y')}>
               {t('Stacked')}
             </button>
           </div>
