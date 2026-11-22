@@ -183,7 +183,8 @@ function ProjectOrder({ stages }: { stages: ProjectStage[] }) {
 
 export function Assembly() {
   // Printing is blocked while there is an error, as the parts and sheets are (ADR-008, ADR-260).
-  const blocked = useView().diagnostics.some((d) => d.severity === 'error');
+  const mainView = useView();
+  const blocked = mainView.diagnostics.some((d) => d.severity === 'error');
   const pieces = usePieceSteps();
   const order = useProjectOrder();
   const setLit = useDesign((s) => s.setLit);
@@ -254,6 +255,16 @@ export function Assembly() {
         }
       }}
     >
+      {blocked && (
+        <p className="alert error blocked">
+          <Icon name="alert-circle" className="sm" />
+          <span>
+            {mainView.mode === 'project'
+              ? t('This project has problems (see Checks). Fix them before cutting.')
+              : t('This design has problems (see Checks). Fix them before cutting.')}
+          </span>
+        </p>
+      )}
       <div className="out-actions">
         <button
           type="button"
@@ -363,7 +374,7 @@ export function Assembly() {
                       onClick={async () => {
                         const name = await askText(
                           t('Name of the step (empty: the generated title “{title}”)', {
-                            title: s.title,
+                            title: stepTitle(s, 'app'),
                           }),
                           stepTitle(s, 'app'),
                         );

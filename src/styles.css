@@ -21,6 +21,7 @@
   --primary-soft: #dbe7e1; /* selection tint */
   --on-primary: #ffffff;
   --link: #2d5b4c; /* text links */
+  --room-window: #4a8fc4; /* plan: windows and pipes */
   --accent: #f2c230; /* tape-measure yellow: dimensions, main call to action */
   --accent-hover: #ebb81c;
   --accent-soft: #fdf3cf; /* parts-row highlight */
@@ -124,6 +125,7 @@
     --primary-hover: #44826e;
     --primary-soft: #24403a;
     --link: #8fc7b2;
+    --room-window: #7fb6e6;
     --accent-soft: #3d3415;
     --error: #ff9a90;
     --error-soft: #3a1f1d;
@@ -160,6 +162,7 @@
     --primary-hover: #44826e;
     --primary-soft: #24403a;
     --link: #8fc7b2;
+    --room-window: #7fb6e6;
     --accent-soft: #3d3415;
     --error: #ff9a90;
     --error-soft: #3a1f1d;
@@ -548,6 +551,9 @@ select,
 .field > input,
 .parts-sizes input,
 .parts-sizes select,
+.variable-row input,
+.set-head input,
+.shopping .price-edit input,
 .mat-name {
   min-height: var(--control-h);
   border: 1px solid var(--line);
@@ -563,6 +569,9 @@ select,
 .input:hover,
 select:hover,
 .field > input:hover,
+.variable-row input:hover,
+.set-head input:hover,
+.shopping .price-edit input:hover,
 .mat-name:hover {
   border-color: var(--ink-3);
 }
@@ -571,6 +580,9 @@ select:focus,
 .field > input:focus,
 .parts-sizes input:focus,
 .parts-sizes select:focus,
+.variable-row input:focus,
+.set-head input:focus,
+.shopping .price-edit input:focus,
 .mat-name:focus {
   outline: none;
   border-color: var(--link);
@@ -1157,7 +1169,7 @@ table.cut td {
   vertical-align: middle;
 }
 table.cut td.num,
-table.cut th:nth-child(-n + 3) {
+table.cut th.num {
   text-align: right;
 }
 table.cut td.num {
@@ -3045,6 +3057,9 @@ table.buy {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
 }
+.run-parts > .card-title {
+  margin-bottom: var(--s-2);
+}
 .run-list {
   list-style: none;
   margin: 0;
@@ -4242,7 +4257,7 @@ button.tile:hover {
 }
 .plan .place-ghost {
   fill: none;
-  stroke: var(--accent, #c80);
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-dasharray: 6 4;
   vector-effect: non-scaling-stroke;
@@ -4269,7 +4284,7 @@ button.tile:hover {
 }
 .plan .room-window {
   fill: var(--surface);
-  stroke: #4a8fc4;
+  stroke: var(--room-window);
   stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
@@ -4299,7 +4314,7 @@ button.tile:hover {
 }
 .plan .room-pipe rect,
 .plan .room-front .room-pipe {
-  stroke: #4a8fc4;
+  stroke: var(--room-window);
 }
 .plan .room-outlet rect,
 .plan .room-front .room-outlet {
@@ -5686,8 +5701,34 @@ p > .info-tip {
   .steps button,
   .wizard .field > input,
   .template-editor .field > input,
-  .variant-edit input {
+  .variant-edit input,
+  .info-domain > summary,
+  .account-links .btn.link,
+  .account-known .btn.link,
+  .account-switch .btn.link,
+  .account-form .btn.link {
     min-height: 44px;
+  }
+  .info-domain > summary {
+    display: flex;
+    align-items: center;
+  }
+  .account-links .btn.link,
+  .account-known .btn.link,
+  .account-switch .btn.link,
+  .account-form .btn.link {
+    display: inline-flex;
+    align-items: center;
+  }
+  .materials input[type='color'] {
+    width: 44px;
+    height: 44px;
+  }
+  .materials li {
+    grid-template-columns: 44px 1fr 150px auto;
+  }
+  .side .materials li {
+    grid-template-columns: 44px minmax(0, 1fr);
   }
   .segmented button,
   .segmented.small button,
@@ -5731,6 +5772,11 @@ p > .info-tip {
   }
   .mm .step {
     min-height: 44px;
+  }
+}
+@media (pointer: coarse) and (max-width: 760px) {
+  .materials li {
+    grid-template-columns: 44px 1fr;
   }
 }
 /* Quick counts over 3D fold to one row on a phone (G-058); wide screens never show the fold button. */
@@ -5824,20 +5870,20 @@ p > .info-tip {
 }
 /* Hardware on a phone: the item gets the room, the note takes what is left (G-059). */
 @media (max-width: 600px) {
-  .hardware table.cut {
+  .hardware table.cut.items {
     table-layout: fixed;
     width: 100%;
   }
-  .hardware table.cut th:nth-child(1) {
+  .hardware table.cut.items th:nth-child(1) {
     width: 2.5em;
   }
-  .hardware table.cut th:nth-child(2) {
+  .hardware table.cut.items th:nth-child(2) {
     width: 42%;
   }
-  .hardware table.cut th:nth-child(3) {
+  .hardware table.cut.items th:nth-child(3) {
     width: 4.5em;
   }
-  .hardware table.cut td {
+  .hardware table.cut.items td {
     overflow-wrap: anywhere;
   }
 }
@@ -6063,6 +6109,11 @@ p > .info-tip {
   width: 100%;
 }
 .gaps-toolbar .search:focus-within {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.catalog-toolbar .search:focus-within,
+.start-from .search:focus-within {
   outline: 2px solid var(--link);
   outline-offset: 2px;
 }
@@ -6804,6 +6855,9 @@ ul.plain {
   white-space: nowrap;
 }
 .variable-row .result.error {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  grid-column: 1 / -1;
   color: var(--error);
 }
 .variable-row .hint {
@@ -7619,7 +7673,7 @@ fieldset.group-locked {
   fill: var(--warn);
 }
 .problem-pin text {
-  fill: #fff;
+  fill: var(--on-primary);
   font-weight: 700;
 }
 .problem-pin:focus {

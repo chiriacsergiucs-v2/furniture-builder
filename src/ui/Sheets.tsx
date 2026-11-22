@@ -75,10 +75,16 @@ function BuyList({ results, jobs }: { results: NestResult[]; jobs: NestJob[] }) 
       </caption>
       <thead>
         <tr>
-          <th scope="col">{t('Qty')}</th>
+          <th scope="col" className="num">
+            {t('Qty')}
+          </th>
           <th scope="col">{t('Board')}</th>
-          <th scope="col">{t('Sheet')}</th>
-          <th scope="col">{t('Used')}</th>
+          <th scope="col" className="num">
+            {t('Sheet')}
+          </th>
+          <th scope="col" className="num">
+            {t('Used')}
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -175,6 +181,23 @@ export function MaterialSheets({
   );
 }
 
+/**
+ * Whether a label drawn on a board colour reads better in light or dark text (WCAG relative luminance, contrast
+ * against white versus black); 'dark' for anything that is not a 3- or 6-digit hex colour.
+ */
+export function textOnColor(hex: string): 'light' | 'dark' {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return 'dark';
+  const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join('') : m[1];
+  const lin = (i: number) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const lum = 0.2126 * lin(0) + 0.7152 * lin(2) + 0.0722 * lin(4);
+  // Contrast with white is 1.05 / (lum + 0.05); with black (lum + 0.05) / 0.05.
+  return 1.05 / (lum + 0.05) > (lum + 0.05) / 0.05 ? 'light' : 'dark';
+}
+
 export function SheetSvg({
   sheet,
   color,
@@ -187,6 +210,8 @@ export function SheetSvg({
   onHover: (ids: string[]) => void;
 }) {
   const fs = Math.max(sheet.length, sheet.width) / 26;
+  const textStyle =
+    textOnColor(color) === 'light' ? { fill: 'var(--on-primary, #fff)' } : undefined;
   const placements = useMemo(
     () => sheet.placements.map((p) => ({ ...p, info: labelOf(p.key) })),
     [sheet, labelOf],
@@ -218,9 +243,14 @@ export function SheetSvg({
             <g
               key={`${p.key}-${p.instance}`}
               className="sh-part"
+              tabIndex={0}
               onMouseEnter={() => onHover(p.info?.panelIds ?? [])}
               onMouseLeave={() => onHover([])}
+              onFocus={() => onHover(p.info?.panelIds ?? [])}
+              onBlur={() => onHover([])}
+              onClick={() => onHover(p.info?.panelIds ?? [])}
             >
+              <title>{label ? `${label} ${dims}` : dims}</title>
               <rect x={p.x} y={p.y} width={p.length} height={p.width} style={{ fill: color }} />
               {big && (
                 <text
@@ -228,6 +258,7 @@ export function SheetSvg({
                   y={p.y + p.width / 2 - fs * 0.3}
                   fontSize={fs}
                   textAnchor="middle"
+                  style={textStyle}
                 >
                   {dims}
                 </text>
@@ -239,6 +270,7 @@ export function SheetSvg({
                   y={p.y + p.width / 2 + fs}
                   fontSize={fs * 0.8}
                   textAnchor="middle"
+                  style={textStyle}
                 >
                   {label}
                 </text>
