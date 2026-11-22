@@ -2273,3 +2273,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-582: Regression guard: phone default path untested in CI
+
+- Status: Open
+- Origin: Stacked bug N374 (2026-11-22), user: investigate why skipped
+- Missing: CI tests only the sheet on phones (tests/find-it/setup.tsx:92 forces canvas off) while the canvas editor is the phone default since ADR-290; canvas browser scripts are not in CI; no cross-flow test (project Edit this piece + canvas lens)
+- Request: Apl how tobprevent regression bugs? Investigate why skipped
+- Questions: Which guard to build: jsdom canvas-default find-it, browser scripts in CI, or both?
+- Suggested pick: Run a jsdom find-it set with the canvas editor on at 390 px in CI, starting with the project Edit this piece path
+- Work: Medium
+- Impact: High
+- Necessity: High
