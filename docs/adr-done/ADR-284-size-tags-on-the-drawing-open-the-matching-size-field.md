@@ -1,7 +1,8 @@
 # ADR-284: Size tags on the drawing open the matching size field
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-283
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 2: size tags and the mm bar)
 - Backlog: N367
