@@ -278,4 +278,15 @@ export const ru_catalog = {
   'Two variants share one id (“{name}”).': 'У двух вариантов один идентификатор («{name}»).',
   'The design of variant “{name}” could not be read.':
     'Не удалось прочитать проект варианта «{name}».',
+  // Catalog finder (ADR-291).
+  'Catalog actions': 'Действия каталога',
+  Filters: 'Фильтры',
+  'All rooms': 'Все комнаты',
+  'All types': 'Все типы',
+  'Ready to open': 'Готовые к открытию',
+  'Nothing matches these filters.': 'Ничего не подходит под эти фильтры.',
+  'Clear filters': 'Сбросить фильтры',
+  Families: 'Семейства',
+  '{n|# opens right away|# open right away}':
+    '{n|# открывается сразу|# открываются сразу|# открываются сразу}',
 } satisfies Record<string, string>;

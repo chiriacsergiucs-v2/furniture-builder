@@ -7797,6 +7797,134 @@ fieldset.group-locked {
   gap: var(--s-2);
 }
 
+/* The catalog finder (ADR-291): search first, one row of filters, a flat grid of families, a family sheet. */
+.catalog-page.finder .finder-head {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.catalog-page.finder .finder-head h1 {
+  margin: 0;
+}
+.catalog-page.finder .finder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  padding: var(--s-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.catalog-page.finder .finder-actions[hidden] {
+  display: none;
+}
+.catalog-page.finder .finder-actions > .hint {
+  flex-basis: 100%;
+  margin: 0;
+}
+/* Also a .catalog-toolbar: its sticky offset and search field are the grouped page's own. */
+.catalog-page.finder .finder-bar {
+  display: grid;
+  background: var(--bg);
+}
+.catalog-page.finder .finder-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.catalog-page.finder .finder-head > .btn {
+  flex: none;
+}
+.catalog-page.finder .finder-filters {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.catalog-page.finder .finder-filters > * {
+  flex: none;
+}
+.catalog-page.finder .finder-filters select,
+.chip-toggle {
+  min-height: var(--control-h);
+  padding-inline: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.catalog-page.finder .finder-filters select.on,
+.chip-toggle.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.chip-toggle:focus-visible,
+.catalog-page.finder .finder-filters select:focus-visible,
+.finder-tile:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.catalog-page.finder .finder-count {
+  margin: 0;
+}
+.finder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.finder-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--s-1);
+  width: 100%;
+  height: 100%;
+  min-height: var(--control-h);
+  padding: var(--s-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.finder-tile:hover {
+  border-color: var(--line);
+}
+.finder-tile .snap {
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+}
+.finder-tile .sub {
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+.finder-tile .chip {
+  justify-self: start;
+}
+.item .tile .verb {
+  justify-self: start;
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.finder-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+
 /* Appearance dialog: one row per theme variable (label, value, reset, slider). */
 .appearance-group {
   border: 0;

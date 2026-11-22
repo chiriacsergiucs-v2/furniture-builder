@@ -12,6 +12,9 @@ import type { SellerProduct } from '../core/sellers/types';
 import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
 import { Icon } from './icons';
+import { useCatalogFinder } from '../store/useCatalogFinder';
+import { offerKinds, offersOfKind } from './catalogFinder';
+import type { ProductKind } from '../core/sellers/types';
 
 // Seller pictures come from the seller's site: shown by default, the user's exception to ADR-126 (ADR-161); off when
 // switched off on this device.
@@ -25,6 +28,23 @@ const PER: Record<SellerProduct['u'], string> = {
   pack: t('per pack'),
   set: t('per set'),
 };
+/** The finder's kind chips (ADR-291). */
+const KIND: Record<ProductKind, string> = {
+  board: t('Boards'),
+  worktop: t('Worktops'),
+  'edge-band': t('Edge bands'),
+  hinge: t('Hinges'),
+  runner: t('Runners'),
+  'push-latch': t('Push latches'),
+  'flap-stay': t('Flap stays'),
+  'shelf-pin': t('Shelf pins'),
+  'wall-bracket': t('Wall brackets'),
+  handle: t('Handles'),
+  leg: t('Legs'),
+  other: t('Other'),
+};
+/** How many products the finder lists first, and how many each "Show more" adds (ADR-291). */
+const PICKER_PAGE = 30;
 const STOCK: Record<SellerProduct['s'], string> = {
   in: t('In stock'),
   out: t('Out of stock'),
@@ -107,10 +127,22 @@ export function ProductPicker({
   const cats = useSellerCatalogs(open);
   const [query, setQuery] = useState('');
   const [pictures, setPictures] = useState(readPictures);
-  const list = useMemo(
+  const [finder] = useCatalogFinder();
+  const [kind, setKind] = useState<ProductKind | ''>('');
+  const [limit, setLimit] = useState({ key: '', n: PICKER_PAGE });
+  const all = useMemo(
     () => (cats && cats !== 'error' && open ? offers(cats, query) : []),
     [cats, offers, query, open],
   );
+  // The finder (ADR-291): kind chips over the caller's list, a count, and one page at a time; a new search or kind
+  // starts at the first page again (state that follows its inputs, adjusted while rendering).
+  const kinds = useMemo(() => (finder ? offerKinds(all) : []), [finder, all]);
+  const activeKind = kind && kinds.includes(kind) ? kind : '';
+  const matching = finder ? offersOfKind(all, activeKind) : all;
+  const pageKey = `${query}|${activeKind}`;
+  if (finder && limit.key !== pageKey) setLimit({ key: pageKey, n: PICKER_PAGE });
+  const shownN = limit.key === pageKey ? limit.n : PICKER_PAGE;
+  const list = finder ? matching.slice(0, shownN) : matching;
   const setPics = (v: boolean) => {
     setPictures(v);
     try {
@@ -119,6 +151,14 @@ export function ProductPicker({
       // Not remembered on this device; the choice still holds while the page is open.
     }
   };
+  const pictureToggle = (
+    <>
+      <Toggle label={t('Show seller pictures (online)')} checked={pictures} onChange={setPics} />
+      {pictures && (
+        <p className="hint">{t('Pictures load from the seller’s site while this is on.')}</p>
+      )}
+    </>
+  );
   return (
     <Dialog open={open} onClose={onClose} title={title} wide>
       <div className="product-picker">
@@ -132,9 +172,26 @@ export function ProductPicker({
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        <Toggle label={t('Show seller pictures (online)')} checked={pictures} onChange={setPics} />
-        {pictures && (
-          <p className="hint">{t('Pictures load from the seller’s site while this is on.')}</p>
+        {!finder && pictureToggle}
+        {finder && kinds.length > 1 && (
+          <div className="chips finder-kinds" role="group" aria-label={t('Product kind')}>
+            {(['', ...kinds] as const).map((k) => (
+              <button
+                key={k || 'all'}
+                type="button"
+                className={`chip-toggle ${activeKind === k ? 'on' : ''}`}
+                aria-pressed={activeKind === k}
+                onClick={() => setKind(k)}
+              >
+                {k ? KIND[k] : t('All kinds')}
+              </button>
+            ))}
+          </div>
+        )}
+        {finder && cats && cats !== 'error' && matching.length > 0 && (
+          <p className="hint" aria-live="polite">
+            {t('{n|# product|# products}', { n: matching.length })}
+          </p>
         )}
         {cats === null && open && <p role="status">{t('Loading seller products…')}</p>}
         {cats === 'error' && (
@@ -143,7 +200,7 @@ export function ProductPicker({
             <span>{t('Seller products could not be loaded.')}</span>
           </p>
         )}
-        {cats && cats !== 'error' && !list.length && (
+        {cats && cats !== 'error' && !matching.length && (
           <p role="status">{t('No product matches.')}</p>
         )}
         <ul className="products" aria-label={t('Seller products')}>
@@ -193,6 +250,16 @@ export function ProductPicker({
             </li>
           ))}
         </ul>
+        {finder && matching.length > list.length && (
+          <button
+            type="button"
+            className="btn outline"
+            onClick={() => setLimit({ key: pageKey, n: shownN + PICKER_PAGE })}
+          >
+            {t('Show {n} more', { n: Math.min(PICKER_PAGE, matching.length - list.length) })}
+          </button>
+        )}
+        {finder && pictureToggle}
       </div>
     </Dialog>
   );

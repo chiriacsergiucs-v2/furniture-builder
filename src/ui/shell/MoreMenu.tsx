@@ -18,6 +18,7 @@ import { backendConfigured, useAccount } from '../../store/accountStore';
 import { useAssistant } from '../../store/assistantStore';
 import { useUi } from '../../store/uiStore';
 import { useCanvasEditor } from '../../store/useCanvasEditor';
+import { useCatalogFinder } from '../../store/useCatalogFinder';
 import { LanguageMenu } from './LanguageMenu';
 import { AppearanceDialog } from '../Appearance';
 import { t } from '@furniture-builder/i18n';
@@ -46,6 +47,7 @@ export function MoreMenu({
   current?: 'info' | 'optimizer';
 }) {
   const [canvasEditor, setCanvasEditor] = useCanvasEditor();
+  const [catalogFinder, setCatalogFinder] = useCatalogFinder();
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
   const model = useDesign((s) => s.model);
@@ -326,6 +328,18 @@ export function MoreMenu({
             {t('Canvas editor (preview)')}{' '}
             <small>
               {canvasEditor ? t('on: edit on the drawing') : t('off: the editor sheet')}
+            </small>
+          </button>
+          {/* The catalog finder, a preview behind a device flag (ADR-291). */}
+          <button
+            type="button"
+            aria-pressed={catalogFinder}
+            onClick={run(() => setCatalogFinder(!catalogFinder))}
+          >
+            <Icon name="search" />
+            {t('Catalog finder (preview)')}{' '}
+            <small>
+              {catalogFinder ? t('on: search and filters') : t('off: the grouped catalog')}
             </small>
           </button>
           <span className="menu-sep" aria-hidden="true" />

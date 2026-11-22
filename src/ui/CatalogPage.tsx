@@ -31,6 +31,7 @@ import { listDecors, listDesigns, type StoredDesign } from '../store/libraryStor
 import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
 import { kindName, type Decor } from '../core/materials';
 import { useDesign } from '../store/designStore';
+import { useCatalogFinder } from '../store/useCatalogFinder';
 import { saveRevision, useTemplates } from '../store/templatesStore';
 import { saveDesignToCatalog } from '../store/saveToCatalog';
 import { ProjectTemplateList } from './ProjectTemplates';
@@ -57,6 +58,13 @@ import {
   waitsFor,
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
+import {
+  finderFamilies,
+  finderRooms,
+  finderTypes,
+  NO_FILTER,
+  type FinderFilter,
+} from './catalogFinder';
 /**
  * Paging (N311). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
  * lists its first GROUP_PAGE families and each tap adds GROUP_STEP; a flat list (saved designs, a brand's decors and
@@ -101,6 +109,7 @@ export function CatalogPage({
   designOpen?: boolean;
 }) {
   const families = useCatalog();
+  const [finder] = useCatalogFinder();
   const phone = useMediaQuery(PHONE);
   const [grouping, setGrouping] = useGrouping();
   const [source, setSource] = useState<Source>('templates');
@@ -294,6 +303,203 @@ export function CatalogPage({
       setMsg(t('That file could not be read as a templates file.'));
     }
   };
+  const safetyToggle = (
+    <>
+      <span className="info-row">
+        <label className="toggle small">
+          <input
+            type="checkbox"
+            checked={safety}
+            onChange={(e) => toggleSafety(e.target.checked)}
+          />
+          <span>{t('I check safety-regulated items myself')}</span>
+        </label>
+        <InfoTip label={t('About safety-regulated items')} align="start">
+          {t(
+            'Safety-regulated items (bunk bed, cradle): you check them against the standards yourself.',
+          )}
+        </InfoTip>
+      </span>
+    </>
+  );
+  const filesMenu = (
+    <>
+      <details className="menu catalog-files">
+        <summary aria-label={t('Template files')} title={t('Export or import your own templates')}>
+          <Icon name="more" className="sm" />
+          <span>{t('Template files')}</span>
+        </summary>
+        <div className="menu-items">
+          <button
+            type="button"
+            onClick={exportLocal}
+            disabled={!useTemplates.getState().locals.length}
+          >
+            <Icon name="download" />
+            {t('Export my templates')}
+          </button>
+          <label className="menu-file">
+            <Icon name="upload" />
+            {t('Import templates')}
+            <input
+              type="file"
+              accept="application/json,.json"
+              aria-label={t('Import templates')}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importLocal(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+      </details>
+    </>
+  );
+  const alerts = (
+    <>
+      {storageError && (
+        <p className="alert error" role="alert" ref={errorRef}>
+          <Icon name="alert-circle" className="sm" />
+          <span>{storageError}</span>
+          <button
+            type="button"
+            className="btn sm ghost"
+            onClick={() => useTemplates.getState().clearError()}
+          >
+            {t('Dismiss')}
+          </button>
+        </p>
+      )}
+      {msg && (
+        <p className="alert info" role="status">
+          <Icon name="info" className="sm" />
+          <span>{msg}</span>
+        </p>
+      )}
+      {savedFamily && (
+        <p className="alert info" role="status">
+          <Icon name="check" className="sm" />
+          <span>
+            {t('Saved to the catalog.')}{' '}
+            <a
+              href={`#fam-${savedFamily.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                jumpTo(savedFamily.id);
+              }}
+            >
+              {t('Show “{name}”', { name: savedFamily.name })}
+            </a>
+          </span>
+        </p>
+      )}
+    </>
+  );
+  const templateEditor = editing && (
+    <>
+      <TemplateEditor
+        key={editing.id}
+        draft={editing}
+        onDone={(m) => {
+          setEditing(null);
+          if (m) setMsg(m);
+        }}
+        onEditDesign={(tpl, vid) => {
+          useDesign.getState().editTemplateVariant(tpl, vid);
+          onDone();
+        }}
+      />
+    </>
+  );
+  const savedBlock = (
+    <>
+      <>
+        <SavedList onTake={take} />
+        {/* The project templates list reports its own read failure. */}
+        <ProjectTemplateList manage onOpened={onDone} />
+      </>
+    </>
+  );
+  const brandsBlock = (
+    <>
+      <DecorBrandList onTake={take}>
+        {brandEntries.length > 0 && (
+          <ul className="template-list template-grid">
+            {brandEntries.map((e) => (
+              <li key={e.catalogId}>
+                <button
+                  type="button"
+                  className="row-btn"
+                  onClick={() => take(copyBrandEntry(e, newId()))}
+                >
+                  <span className="glyph">
+                    <Icon name={templateGlyph(e.design.product.kind)} />
+                  </span>
+                  <span>
+                    <strong>
+                      {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
+                    </strong>
+                    <span className="sub">
+                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
+                      {e.design.catalog!.articleNumber
+                        ? ` · ${e.design.catalog!.articleNumber}`
+                        : ''}
+                    </span>
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </DecorBrandList>
+    </>
+  );
+  // The catalog finder (ADR-291): the same pieces, laid out search first, behind the More switch.
+  if (finder)
+    return (
+      <FinderPage
+        families={families}
+        source={source}
+        sources={sources}
+        search={search}
+        query={query}
+        total={all.length}
+        ready={ready}
+        toProject={toProject}
+        safety={safety}
+        editing={!!editing}
+        jump={jump}
+        onConfirmSafety={() => toggleSafety(true)}
+        onTake={take}
+        onEdit={startEdit}
+        actions={
+          <>
+            {onNewPiece && (
+              <button type="button" className="btn primary" onClick={onNewPiece}>
+                <Icon name="plus" className="sm" />
+                {t('New piece')}
+              </button>
+            )}
+            {designOpen && (
+              <button type="button" className="btn outline" onClick={onDone}>
+                <Icon name="chevron-left" className="sm" />
+                {t('Back to the editor')}
+              </button>
+            )}
+            {designOpen && <SaveAsTemplate onSaved={setSavedFamily} />}
+            {filesMenu}
+            {safetyToggle}
+          </>
+        }
+      >
+        {alerts}
+        {source === 'templates' && editing && templateEditor}
+        {source === 'saved' && savedBlock}
+        {source === 'brands' && brandsBlock}
+      </FinderPage>
+    );
   return (
     <main className="catalog-page" aria-label={t('Catalog')}>
       <header className="catalog-head">
@@ -341,108 +547,14 @@ export function CatalogPage({
       {source === 'templates' && <div className="catalog-toolbar">{search}</div>}
       {source === 'templates' && (
         <CatalogActions phone={phone}>
-          <span className="info-row">
-            <label className="toggle small">
-              <input
-                type="checkbox"
-                checked={safety}
-                onChange={(e) => toggleSafety(e.target.checked)}
-              />
-              <span>{t('I check safety-regulated items myself')}</span>
-            </label>
-            <InfoTip label={t('About safety-regulated items')} align="start">
-              {t(
-                'Safety-regulated items (bunk bed, cradle): you check them against the standards yourself.',
-              )}
-            </InfoTip>
-          </span>
+          {safetyToggle}
           {/* Only when a design is open to save (ADR-195). */}
           {designOpen && <SaveAsTemplate onSaved={setSavedFamily} />}
-          <details className="menu catalog-files">
-            <summary
-              aria-label={t('Template files')}
-              title={t('Export or import your own templates')}
-            >
-              <Icon name="more" className="sm" />
-              <span>{t('Template files')}</span>
-            </summary>
-            <div className="menu-items">
-              <button
-                type="button"
-                onClick={exportLocal}
-                disabled={!useTemplates.getState().locals.length}
-              >
-                <Icon name="download" />
-                {t('Export my templates')}
-              </button>
-              <label className="menu-file">
-                <Icon name="upload" />
-                {t('Import templates')}
-                <input
-                  type="file"
-                  accept="application/json,.json"
-                  aria-label={t('Import templates')}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void importLocal(f);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            </div>
-          </details>
+          {filesMenu}
         </CatalogActions>
       )}
-      {storageError && (
-        <p className="alert error" role="alert" ref={errorRef}>
-          <Icon name="alert-circle" className="sm" />
-          <span>{storageError}</span>
-          <button
-            type="button"
-            className="btn sm ghost"
-            onClick={() => useTemplates.getState().clearError()}
-          >
-            {t('Dismiss')}
-          </button>
-        </p>
-      )}
-      {msg && (
-        <p className="alert info" role="status">
-          <Icon name="info" className="sm" />
-          <span>{msg}</span>
-        </p>
-      )}
-      {savedFamily && (
-        <p className="alert info" role="status">
-          <Icon name="check" className="sm" />
-          <span>
-            {t('Saved to the catalog.')}{' '}
-            <a
-              href={`#fam-${savedFamily.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                jumpTo(savedFamily.id);
-              }}
-            >
-              {t('Show “{name}”', { name: savedFamily.name })}
-            </a>
-          </span>
-        </p>
-      )}
-      {source === 'templates' && editing && (
-        <TemplateEditor
-          key={editing.id}
-          draft={editing}
-          onDone={(m) => {
-            setEditing(null);
-            if (m) setMsg(m);
-          }}
-          onEditDesign={(tpl, vid) => {
-            useDesign.getState().editTemplateVariant(tpl, vid);
-            onDone();
-          }}
-        />
-      )}
+      {alerts}
+      {source === 'templates' && editing && templateEditor}
       {source === 'templates' &&
         !editing &&
         (groups.length === 0 ? (
@@ -504,47 +616,8 @@ export function CatalogPage({
             />
           </section>
         ))}
-      {source === 'saved' && (
-        <>
-          <SavedList onTake={take} />
-          {/* The project templates list reports its own read failure. */}
-          <ProjectTemplateList manage onOpened={onDone} />
-        </>
-      )}
-      {source === 'brands' && (
-        <DecorBrandList onTake={take}>
-          {brandEntries.length > 0 && (
-            <ul className="template-list template-grid">
-              {brandEntries.map((e) => (
-                <li key={e.catalogId}>
-                  <button
-                    type="button"
-                    className="row-btn"
-                    onClick={() => take(copyBrandEntry(e, newId()))}
-                  >
-                    <span className="glyph">
-                      <Icon name={templateGlyph(e.design.product.kind)} />
-                    </span>
-                    <span>
-                      <strong>
-                        {e.design.catalog!.brand}{' '}
-                        {e.design.catalog!.productName ?? tr(e.design.name)}
-                      </strong>
-                      <span className="sub">
-                        {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
-                        {e.design.catalog!.articleNumber
-                          ? ` · ${e.design.catalog!.articleNumber}`
-                          : ''}
-                      </span>
-                    </span>
-                    <Icon name="chevron-right" className="chev sm" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </DecorBrandList>
-      )}
+      {source === 'saved' && savedBlock}
+      {source === 'brands' && brandsBlock}
     </main>
   );
 }
@@ -573,9 +646,12 @@ function ItemCard({
   toProject,
   onTake,
   onConfirmSafety,
+  verb,
 }: {
   f: ViewFamily;
   v: CatalogVariant;
+  /** Show the tile's verb on it (ADR-291); the label already says it. */
+  verb?: boolean;
   facts: ReturnType<typeof itemFacts> | undefined;
   toProject: boolean;
   onTake: (d: Design) => void;
@@ -626,6 +702,11 @@ function ItemCard({
             alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
           />
           {text}
+          {verb && (
+            <span className="verb" aria-hidden="true">
+              {toProject ? t('Add') : t('Open')}
+            </span>
+          )}
         </button>
       ) : (
         <div className="waits-body">
@@ -734,9 +815,12 @@ function FamilyBlock({
   onConfirmSafety,
   onTake,
   onEdit,
+  verbs,
 }: {
   f: ViewFamily;
   also?: boolean;
+  /** The finder's family sheet (ADR-291): each tile shows its verb (Add or Open) as well as saying it. */
+  verbs?: boolean;
   q: string;
   toProject: boolean;
   /** The safety switch: safety-regulated items build once it is on, so their facts are worked out again. */
@@ -796,6 +880,7 @@ function FamilyBlock({
             toProject={toProject}
             onTake={onTake}
             onConfirmSafety={onConfirmSafety}
+            verb={verbs}
           />
         ))}
       </ul>
@@ -1363,5 +1448,239 @@ function TemplateEditor({
         </button>
       </div>
     </section>
+  );
+}
+
+/** How many families the finder's grid shows first, and how many each "Show more" adds (ADR-291). */
+const FINDER_PAGE = 24;
+
+/**
+ * The catalog finder (ADR-291): one title row with a Catalog actions button, the search and one row of filters that stay
+ * at the top, then each family once in a flat grid. A family opens in a sheet with its items, each with its verb, and its
+ * template tools. The other sources and the template editor are the grouped page's own pieces, passed in.
+ */
+function FinderPage({
+  families,
+  source,
+  sources,
+  search,
+  query,
+  total,
+  ready,
+  toProject,
+  safety,
+  editing,
+  jump,
+  onConfirmSafety,
+  onTake,
+  onEdit,
+  actions,
+  children,
+}: {
+  families: ViewFamily[];
+  source: Source;
+  sources: ReactNode;
+  search: ReactNode;
+  query: string;
+  total: number;
+  ready: number;
+  toProject: boolean;
+  safety: boolean;
+  editing: boolean;
+  jump: { id: string } | null;
+  onConfirmSafety: () => void;
+  onTake: (d: Design) => void;
+  onEdit: (f: ViewFamily) => void;
+  actions: ReactNode;
+  children: ReactNode;
+}) {
+  const [filter, setFilter] = useState<Omit<FinderFilter, 'q'>>(NO_FILTER);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [showActions, setShowActions] = useState(false);
+  const [pageState, setPageState] = useState({ key: '', n: FINDER_PAGE });
+  // "Show “name”" after a save: every filter off and that family's sheet open (a new jump object each tap; state
+  // adjusted while rendering, as React documents for state that follows a prop).
+  const [seenJump, setSeenJump] = useState(jump);
+  if (jump !== seenJump) {
+    setSeenJump(jump);
+    if (jump) {
+      setFilter(NO_FILTER);
+      setOpenId(jump.id);
+    }
+  }
+  const q = query.trim().toLowerCase();
+  const shown = useMemo(() => finderFamilies(families, { ...filter, q }), [families, filter, q]);
+  const rooms = useMemo(() => finderRooms(families), [families]);
+  const types = useMemo(() => finderTypes(families), [families]);
+  // A new search or filter starts at the first page again (state that follows its inputs, adjusted while rendering).
+  const key = `${q}|${filter.room}|${filter.fn}|${filter.ready}`;
+  if (pageState.key !== key) setPageState({ key, n: FINDER_PAGE });
+  const limit = pageState.key === key ? pageState.n : FINDER_PAGE;
+  const items = shown.reduce((n, f) => n + f.variants.filter((v) => matches(f, v, q)).length, 0);
+  const open = openId ? families.find((f) => f.id === openId) : undefined;
+  const filtered = !!(q || filter.room || filter.fn || filter.ready);
+  const actionsId = useId();
+  return (
+    <main className="catalog-page finder" aria-label={t('Catalog')}>
+      <header className="finder-head">
+        <div>
+          <h1>{t('Catalog')}</h1>
+          <p className="hint">
+            {tNode('{items} in {families} · {ready} open right away.', {
+              items: <strong className="num">{t('{n} items', { n: total })}</strong>,
+              families: t('{n} families', { n: families.length }),
+              ready: String(ready),
+            })}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn outline"
+          aria-expanded={showActions}
+          aria-controls={actionsId}
+          onClick={() => setShowActions((v) => !v)}
+        >
+          <Icon name="more" className="sm" />
+          {t('Catalog actions')}
+        </button>
+      </header>
+      <div className="finder-actions" id={actionsId} hidden={!showActions}>
+        <p className="hint">
+          {toProject
+            ? t('Pick one to add it to the open project.')
+            : t('Pick one to open your own copy in the editor.')}
+        </p>
+        {actions}
+      </div>
+      <div className="catalog-toolbar finder-bar">
+        {source === 'templates' && search}
+        <div className="finder-filters" role="group" aria-label={t('Filters')}>
+          {sources}
+          {source === 'templates' && (
+            <>
+              <select
+                className={filter.room ? 'on' : ''}
+                aria-label={t('Room')}
+                value={filter.room}
+                onChange={(e) => setFilter({ ...filter, room: e.target.value as Room | '' })}
+              >
+                <option value="">{t('All rooms')}</option>
+                {rooms.map((r) => (
+                  <option key={r} value={r}>
+                    {tr(ROOM_LABEL[r])}
+                  </option>
+                ))}
+              </select>
+              <select
+                className={filter.fn ? 'on' : ''}
+                aria-label={t('Type')}
+                value={filter.fn}
+                onChange={(e) => setFilter({ ...filter, fn: e.target.value as FunctionGroup | '' })}
+              >
+                <option value="">{t('All types')}</option>
+                {types.map((fn) => (
+                  <option key={fn} value={fn}>
+                    {tr(FUNCTION_LABEL[fn])}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className={`chip-toggle ${filter.ready ? 'on' : ''}`}
+                aria-pressed={filter.ready}
+                onClick={() => setFilter({ ...filter, ready: !filter.ready })}
+              >
+                {t('Ready to open')}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      {children}
+      {source === 'templates' && !editing && (
+        <>
+          <p className="hint finder-count" aria-live="polite">
+            {t('{n} families', { n: shown.length })} · {t('{n|# item|# items}', { n: items })}
+          </p>
+          {shown.length === 0 ? (
+            <div className="empty center">
+              <Icon name="search" />
+              <p>
+                {q
+                  ? t('Nothing matches “{query}”.', { query })
+                  : t('Nothing matches these filters.')}
+              </p>
+              {filtered && (
+                <button type="button" className="btn outline" onClick={() => setFilter(NO_FILTER)}>
+                  {t('Clear filters')}
+                </button>
+              )}
+            </div>
+          ) : (
+            <ul className="finder-grid" aria-label={t('Families')}>
+              {shown.slice(0, limit).map((f) => (
+                <FinderTile key={f.id} f={f} q={q} onOpen={() => setOpenId(f.id)} />
+              ))}
+            </ul>
+          )}
+          <ShowMore
+            families
+            shown={Math.min(shown.length, limit)}
+            total={shown.length}
+            first={FINDER_PAGE}
+            step={FINDER_PAGE}
+            onMore={(n) => setPageState({ key, n: limit + n })}
+          />
+        </>
+      )}
+      <Dialog
+        open={!!open && !editing}
+        onClose={() => setOpenId(null)}
+        title={open ? tr(open.name) : ''}
+        wide
+      >
+        {open && (
+          <FamilyBlock
+            f={open}
+            q={q}
+            toProject={toProject}
+            safety={safety}
+            verbs
+            onConfirmSafety={onConfirmSafety}
+            onTake={onTake}
+            onEdit={() => {
+              setOpenId(null);
+              onEdit(open);
+            }}
+          />
+        )}
+      </Dialog>
+    </main>
+  );
+}
+
+/** One family in the finder's grid: the picture of its first item, its name and how many items it has. */
+function FinderTile({ f, q, onOpen }: { f: ViewFamily; q: string; onOpen: () => void }) {
+  const items = f.variants.filter((v) => matches(f, v, q));
+  const first = items.find(insertable) ?? items[0];
+  const opens = items.filter(insertable).length;
+  return (
+    <li>
+      <button type="button" className="finder-tile" aria-haspopup="dialog" onClick={onOpen}>
+        <ItemPicture f={f} v={first} className="snap" width={160} height={120} alt="" />
+        <strong>{tr(f.name)}</strong>
+        <span className="sub">
+          {t('{n|# item|# items}', { n: items.length })}
+          {opens < items.length
+            ? ` · ${t('{n|# opens right away|# open right away}', { n: opens })}`
+            : ''}
+        </span>
+        {f.localId && (
+          <span className="chip edited">
+            {f.own ? t('Your template') : t('Edited on this device')}
+          </span>
+        )}
+      </button>
+    </li>
   );
 }
