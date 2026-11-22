@@ -1,4 +1,14 @@
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import type { Tab } from '../store/designState';
 import {
   lastDesignId,
   lastProjectId,
@@ -46,6 +56,7 @@ import {
   useKeyboardInset,
   useLensAnchor,
   useLensRequests,
+  setOutLens,
   useLensHeight,
   type Crumb,
 } from './CanvasEditor';
@@ -316,20 +327,38 @@ export function App() {
     };
     requestAnimationFrame(tryFocus);
   });
+  // Output lenses (ADR-288): the results shown as a card over the drawing, opened from chips after the blocks.
+  const [outOpen, setOutOpen] = useState(false);
+  const outLensOn = canvas && outOpen && mode === 'compose';
+  const resultsRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    resultsRef.current = workRef.current?.querySelector<HTMLElement>('.output') ?? null;
+  });
+  useLensHeight(resultsRef, workRef, outLensOn);
+  useEffect(() => setOutLens(outLensOn), [outLensOn]);
+  const outputs: [Tab, string][] = [
+    ['parts', t('Parts')],
+    ['sheets', t('Sheets')],
+    ['hardware', t('Hardware')],
+    ['assembly', t('Assembly')],
+    ['shopping', t('Shopping')],
+  ];
   // Esc closes the open card before it goes up a level (ADR-283); captured first, so the level stays.
   useEffect(() => {
-    if (!canvas || !sheetOpen) return;
+    if (!canvas || (!sheetOpen && !outOpen)) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]'))
         return;
       e.preventDefault();
       setSheetStop('peek');
+      setOutOpen(false);
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [canvas, sheetOpen]);
+  }, [canvas, sheetOpen, outOpen]);
   const checkErrors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const pickLens = (k: string) => {
+    setOutOpen(false);
     setLensTab(k);
     if (sheetStop === 'peek') setSheetStop('half');
   };
@@ -980,7 +1009,7 @@ export function App() {
         </Suspense>
         <main
           ref={workRef}
-          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}${canvas ? ' canvas' : ''}`}
+          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}${canvas ? ' canvas' : ''}${outLensOn ? ' out-lens' : ''}`}
           hidden={page !== 'editor'}
         >
           <aside className="side" aria-label={t('Compose')} ref={sideRef}>
@@ -1040,6 +1069,20 @@ export function App() {
                   keys={lensKeyList}
                   onPick={pickLens}
                   onFind={() => setSheetStop(sheetStop === 'peek' ? 'half' : sheetStop)}
+                  after={outputs.map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      className="btn chip out"
+                      onClick={() => {
+                        useDesign.getState().setTab(k);
+                        setSheetStop('peek');
+                        setOutOpen(true);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 >
                   {/* Checks chip (ADR-287): the error count, one tap to the Checks list. */}
                   {checkErrors > 0 && (
@@ -1210,6 +1253,16 @@ export function App() {
             </div>
           )}
           <Output />
+          {outLensOn && (
+            <button
+              type="button"
+              className="btn icon lens-out-close"
+              aria-label={t('Close the card')}
+              onClick={() => setOutOpen(false)}
+            >
+              <Icon name="x" />
+            </button>
+          )}
         </main>
 
         {/* Closing one dialog to open another fires its close event after the switch: it may only clear itself. */}

@@ -7657,3 +7657,56 @@ fieldset.group-locked {
   border-color: var(--error);
   color: var(--error);
 }
+
+/* Output lenses (ADR-288): the results become a card over the drawing; the drawing re-frames above it. */
+@media (max-width: 760px) {
+  .work.canvas.mode-compose.out-lens .output {
+    position: fixed;
+    left: var(--s-2);
+    right: var(--s-2);
+    bottom: calc(max(var(--actions-h, 64px), var(--kb, 0px)) + var(--s-2));
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    max-height: 55dvh;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-3);
+  }
+  .work.canvas.mode-compose.out-lens .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) -
+        max(var(--actions-h, 64px), var(--kb, 0px)) - var(--lens-h, 55dvh) - var(--s-2)
+    );
+    min-height: 160px;
+    padding-bottom: 0;
+  }
+  .work.canvas.out-lens .chip-rail {
+    display: none;
+  }
+  .lens-out-close {
+    position: fixed;
+    right: var(--s-3);
+    bottom: calc(max(var(--actions-h, 64px), var(--kb, 0px)) + var(--lens-h, 55dvh) - 40px);
+    z-index: 6;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-1);
+  }
+  .work.canvas.out-lens .output .tabs {
+    padding-right: calc(var(--s-8) + var(--s-5));
+  }
+}
+.part-size rect {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.part-size text {
+  fill: var(--ink);
+  font-family: var(--num);
+  font-weight: 600;
+}

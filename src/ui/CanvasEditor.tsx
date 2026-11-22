@@ -1,4 +1,5 @@
 import {
+  useSyncExternalStore,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -8,6 +9,7 @@ import {
 } from 'react';
 import { bumpLensUse, orderByUse, useCanvasEditor, useLensUse } from '../store/useCanvasEditor';
 import { useMediaQuery } from '../store/useMediaQuery';
+import { createListeners } from '../store/deviceValue';
 import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { upOneLevel } from './upLevel';
@@ -156,11 +158,14 @@ export function ChipRail({
   onPick,
   onFind,
   children,
+  after,
 }: {
   keys: string[];
   onPick: (k: string) => void;
   onFind: () => void;
   children?: ReactNode;
+  /** Chips after the editor's blocks: the output lenses (ADR-288). */
+  after?: ReactNode;
 }) {
   const used = useLensUse();
   const ordered = [OVERVIEW, ...orderByUse(keys, used)];
@@ -189,6 +194,7 @@ export function ChipRail({
           {label(k)}
         </button>
       ))}
+      {after}
     </div>
   );
 }
@@ -387,4 +393,16 @@ export function useKeyboardInset(target: RefObject<HTMLElement | null>, on: bool
       tg.style.removeProperty('--kb');
     };
   }, [target, on]);
+}
+
+/** Whether an output lens (ADR-288) shows over the drawing: the drawing labels the parts while Parts is open. */
+let outLensOn = false;
+const outLens = createListeners();
+export function setOutLens(on: boolean) {
+  if (on === outLensOn) return;
+  outLensOn = on;
+  outLens.notify();
+}
+export function useOutLens(): boolean {
+  return useSyncExternalStore(outLens.subscribe, () => outLensOn);
 }
