@@ -203,13 +203,13 @@ export function OptimizerPage({
             onChange={(v) => set({ trim: v })}
           />
         </div>
-        <label className="check">
+        <label className="toggle">
           <input
             type="checkbox"
             checked={input.grain}
             onChange={(e) => set({ grain: e.target.checked })}
           />
-          {t('Grain locked: parts never turn (length along the sheet length)')}
+          <span>{t('Grain locked: parts never turn (length along the sheet length)')}</span>
         </label>
       </section>
 

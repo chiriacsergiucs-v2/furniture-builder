@@ -544,6 +544,14 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
       <button
         type="button"
         className="btn icon outline sm"
+        aria-label={t('Add a piece to the project')}
+        onClick={onAdd}
+      >
+        <Icon name="plus" className="sm" />
+      </button>
+      <button
+        type="button"
+        className="btn icon outline sm"
         aria-label={t('Edit {name}', { name })}
         onClick={() => editInPlace(item.id)}
       >

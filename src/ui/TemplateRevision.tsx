@@ -93,7 +93,7 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
       !(await askConfirm(
         t(
           '“{name}” was edited after it was added. Its own changes go onto revision {latest} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.',
-          { name: item.design.name, latest: status.latest },
+          { name: tr(item.design.name), latest: status.latest },
         ),
         { confirmLabel: t('Replace') },
       ))

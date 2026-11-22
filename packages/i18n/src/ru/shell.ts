@@ -379,6 +379,7 @@ export const ru_shell = {
     'Не удалось удалить изделие из хранилища этого браузера.',
   'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.':
     'Восстановление остановлено: хранилище браузера отказало в сохранении. До этого восстановлено: {n}.',
+  'The backup could not be read.': 'Не удалось прочитать резервную копию.',
   'The backup could not be made in this browser.':
     'Не удалось сделать резервную копию в этом браузере.',
   'No backup files found in {name}. Choose a backup .zip made by this app.':

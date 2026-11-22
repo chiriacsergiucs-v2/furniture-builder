@@ -47,6 +47,8 @@ for (const width of WIDTHS) {
     hasTouch: phone,
     isMobile: phone,
   });
+  // The first-run canvas hints dialog blocks clicks at 390 px; mark it seen (ui-review 2026-11-23).
+  await ctx.addInitScript(() => localStorage.setItem('fb:canvas-coach', 'done'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

@@ -305,7 +305,11 @@ function BandListPick({
       </p>
       <div className="mat-picture-row">
         {url && url !== 'missing' && (
-          <img className="mat-thumb" src={url} alt={t('Picture of {name}', { name: board.name })} />
+          <img
+            className="mat-thumb"
+            src={url}
+            alt={t('Picture of {name}', { name: tr(board.name) })}
+          />
         )}
         <div className="band-matching">
           <p className="hint">{t('Matching bands')}</p>

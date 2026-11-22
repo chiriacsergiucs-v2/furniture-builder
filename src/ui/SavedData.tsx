@@ -276,16 +276,10 @@ export function SavedDataPanel() {
             className="btn"
             disabled={busy}
             onClick={() =>
-              run(
-                async () => {
-                  const p = await restoreFromFolder();
-                  if (p !== 'cancelled') setMessage(restored(p, t('the chosen folder')));
-                },
-                t(
-                  'The restore stopped: this browser’s storage refused a save. {n|# item was|# items were} restored before it.',
-                  { n: 0 },
-                ),
-              )
+              run(async () => {
+                const p = await restoreFromFolder();
+                if (p !== 'cancelled') setMessage(restored(p, t('the chosen folder')));
+              }, t('The backup could not be read.'))
             }
           >
             <Icon name="upload" className="sm" />
@@ -517,7 +511,12 @@ export function BackupReminder() {
         className="btn sm ghost"
         onClick={() => {
           setDue(null);
-          void setSetting(LATER_KEY, new Date().toISOString());
+          void setSetting(LATER_KEY, new Date().toISOString()).catch(() =>
+            useUi.getState().setNotice({
+              ok: false,
+              text: t('The setting could not be saved on this device.'),
+            }),
+          );
         }}
       >
         {t('Later')}

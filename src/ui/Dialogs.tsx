@@ -797,7 +797,7 @@ export function MaterialsPanel() {
           <li key={m.id} role="group" aria-label={t('Board {name}', { name: tr(m.name) })}>
             <input
               type="color"
-              aria-label={t('{name} colour', { name: m.name })}
+              aria-label={t('{name} colour', { name: tr(m.name) })}
               value={m.color}
               onChange={(e) => update(m.id, { color: e.target.value })}
             />
@@ -813,7 +813,7 @@ export function MaterialsPanel() {
                   e.target.value = m.name;
                   setNameMsg({
                     id: m.id,
-                    text: t('A board needs a name; it keeps {name}.', { name: m.name }),
+                    text: t('A board needs a name; it keeps {name}.', { name: tr(m.name) }),
                   });
                   return;
                 }
@@ -984,7 +984,7 @@ function MaterialPicture({ m }: { m: Material }) {
     <div className="mat-picture">
       <div className="mat-picture-row">
         {img && url && url !== 'missing' && (
-          <img className="mat-thumb" src={url} alt={t('Picture of {name}', { name: m.name })} />
+          <img className="mat-thumb" src={url} alt={t('Picture of {name}', { name: tr(m.name) })} />
         )}
         <label className={`btn sm outline file-btn${busy ? ' disabled' : ''}`}>
           <Icon name="upload" className="sm" />
@@ -995,8 +995,8 @@ function MaterialPicture({ m }: { m: Material }) {
             disabled={busy}
             aria-label={
               img
-                ? t('Replace picture for {name}', { name: m.name })
-                : t('Add a picture for {name}', { name: m.name })
+                ? t('Replace picture for {name}', { name: tr(m.name) })
+                : t('Add a picture for {name}', { name: tr(m.name) })
             }
             onChange={(e) => {
               void pick(e.target.files?.[0]);
