@@ -61,7 +61,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `frontend-design`, `caveman`,
+  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `ui-rework` (a whole-flow redesign from findings to fixes on one branch and one pull request), `frontend-design`, `caveman`,
   and the health loops `health-bugs`, `health-security`, `health-deps`, `health-cleanup`, `health-reuse` (shared loop in
   `health-bugs/loop.md`; see _Orchestration_)
 - `.claude/agents/` — subagents from the MIT-licensed `maslennikov-ig/claude-code-orchestrator-kit`, by area (health,
@@ -288,6 +288,9 @@ the user's memory preferences, since they apply across projects.
    scope; ask one question instead.
 5. **One ADR, one pull request.** A request for N ADRs means N ADRs, each built and shipped in its own pull request.
    Splitting into more ADRs than asked needs the user's explicit approval. Dependent ADRs are stacked, never bundled.
+   Exception: the `ui-rework` skill delivers a whole-flow rework as one umbrella ADR on one branch and one pull request,
+   its slices as commits (user 2026-11-22: "delivered throught 1 single pr, 1 branch"; incident: the canvas editor
+   shipped as eight stacked pull requests #307–#314, each merge needed a retarget).
 
 ## Toggleable rules
 
