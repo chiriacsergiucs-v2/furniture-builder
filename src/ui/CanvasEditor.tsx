@@ -332,6 +332,8 @@ interface LensRequest {
   tab: string;
   /** Finds the control to focus inside the card's editor, once it shows. */
   focus?: (body: HTMLElement) => HTMLElement | null;
+  /** Lowers a full card to half, so the change shows on the drawing (Android report 2026-11-22). */
+  showDrawing?: boolean;
 }
 const LENS_EVENT = 'fb:lens';
 

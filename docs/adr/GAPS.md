@@ -2261,3 +2261,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+
+### G-581: Stacked fix: live-verify and a real Android device check
+
+- Status: Open
+- Origin: N374, PR #315 (2026-11-22)
+- Missing: The fix is checked only in Chromium phone emulation on a local build; not on the live URL and not on a real Android phone
+- Request: Editing a piece does not allow to move to stacked, nothing happens, android
+- Questions: Does the fix behave on the user's phone?
+- Suggested pick: After merge, open the live URL on Android: Edit Bookcase › Divide this space › Stacked shows Division with Stacked chosen
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
