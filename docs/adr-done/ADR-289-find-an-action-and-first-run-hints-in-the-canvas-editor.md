@@ -1,7 +1,8 @@
 # ADR-289: Find an action and first-run hints in the canvas editor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-288
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 7: Find and coach marks)
 - Backlog: N372
