@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from 'react';
-import { findInProduct, productRoots } from '../core/design';
+import { findInProduct, parentOf as spaceParent, productRoots } from '../core/design';
 import { boxCentre } from '../core/geometry';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { pt } from '@furniture-builder/i18n/print';
@@ -20,6 +20,7 @@ import {
   parentOf as parentSel,
   pathAt,
   selectionBox,
+  type Selection,
 } from '../core/selectPath';
 import { WHOLE_LABEL, nameOfSpace } from '../core/spaceNames';
 import { faceMapping } from '../core/surface';
@@ -32,6 +33,7 @@ import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/type
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { WallBehind } from './WallBehind';
+import { controlByLabel, openLens, OVERVIEW, useCanvas } from './CanvasEditor';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -146,6 +148,50 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   const [pxScale, setPxScale] = useState(0);
   const floorUnits = !print && pxScale > 0 ? MIN_LABEL_PX / pxScale : 0;
   const fontSize = Math.max(Math.max(b.w, b.h) / 26, floorUnits);
+  // Size tags (ADR-284): in the canvas editor a size on the drawing is a button that opens its field in the card.
+  const canvas = useCanvas() && !print;
+  const hit = pxScale > 0 ? 44 / pxScale : fontSize * 3;
+  const wholeTag = (field: 'Width' | 'Height' | 'Depth', n: number): DimTag | undefined =>
+    canvas
+      ? {
+          name:
+            field === 'Width'
+              ? t('Width {n} mm', { n })
+              : field === 'Height'
+                ? t('Height {n} mm', { n })
+                : t('Depth {n} mm', { n }),
+          hit,
+          onActivate: () => {
+            select(null);
+            const label =
+              field === 'Width' ? t('Width') : field === 'Height' ? t('Height') : t('Depth');
+            openLens({ tab: OVERVIEW, focus: (body) => controlByLabel(body, label) });
+          },
+        }
+      : undefined;
+  // The split around the selected part, from the design tree (a part's size lives in its parent's Division).
+  const partFound =
+    canvas && typeof selectedId === 'string'
+      ? findInProduct(design.product, selectedId)
+      : undefined;
+  const partSpace = partFound ? spaceParent(partFound.root, partFound.space.id) : undefined;
+  const partParent: Selection = partSpace ? partSpace.id : null;
+  const partAxis = partSpace?.kind === 'split' ? partSpace.axis : undefined;
+  const partTag = (name: string): DimTag | undefined =>
+    canvas && partParent !== null && typeof selectedId === 'string'
+      ? {
+          name,
+          hit,
+          onActivate: () => {
+            const part = selectedId;
+            select(partParent);
+            openLens({
+              tab: t('Division'),
+              focus: (body) => body.querySelector<HTMLElement>(`[data-part-id="${part}"] input`),
+            });
+          },
+        }
+      : undefined;
   // The previewed space (ADR-269) and the pinned one, each in its own dashed outline.
   const hoverBox = canHover && hoverId !== undefined ? selectionBox(model, hoverId) : undefined;
   const hoverName =
@@ -411,8 +457,31 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
             height={selectedSpace.box.h}
           />
         )}
-        <Dim x1={b.x} x2={b.x + b.w} y={pad * 0.75} fontSize={fontSize} label={`${b.w}`} />
-        <DimV y1={0} y2={-(b.y + b.h)} x={b.x - pad * 0.55} fontSize={fontSize} label={`${b.h}`} />
+        <Dim
+          x1={b.x}
+          x2={b.x + b.w}
+          y={pad * 0.75}
+          fontSize={fontSize}
+          label={`${b.w}`}
+          tag={wholeTag('Width', b.w)}
+        />
+        <DimV
+          y1={0}
+          y2={-(b.y + b.h)}
+          x={b.x - pad * 0.55}
+          fontSize={fontSize}
+          label={`${b.h}`}
+          tag={wholeTag('Height', b.h)}
+        />
+        {canvas && (
+          <TagPill
+            x={b.x + b.w}
+            y={-(b.y + b.h) - pad * 0.45}
+            fontSize={fontSize * 0.85}
+            label={t('D {n}', { n: b.d })}
+            tag={wholeTag('Depth', b.d)!}
+          />
+        )}
         {selectedSpace && selectedId !== null && (
           <g ref={selDimRef}>
             <Dim
@@ -422,7 +491,23 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               fontSize={fontSize * 0.85}
               label={`${selectedSpace.box.w}`}
               subtle
+              tag={
+                partAxis === 'x'
+                  ? partTag(t('Width {n} mm', { n: selectedSpace.box.w }))
+                  : undefined
+              }
             />
+            {partAxis === 'y' && (
+              <DimV
+                y1={Y(selectedSpace.box.y, selectedSpace.box.h)}
+                y2={Y(selectedSpace.box.y, selectedSpace.box.h) + selectedSpace.box.h}
+                x={b.x + b.w + pad * 0.45}
+                fontSize={fontSize * 0.85}
+                label={`${selectedSpace.box.h}`}
+                subtle
+                tag={partTag(t('Height {n} mm', { n: selectedSpace.box.h }))}
+              />
+            )}
           </g>
         )}
       </svg>
@@ -517,6 +602,36 @@ export function PieceElevation({
   );
 }
 
+/**
+ * A size label that is also a button (the canvas editor's size tags, ADR-284): its name for assistive tech, what a tap
+ * does, and the hit size in drawing units (44 px at the current scale).
+ */
+export interface DimTag {
+  name: string;
+  onActivate: () => void;
+  hit: number;
+}
+
+/** Button props for a size tag: a tap or Enter / Space activates it. */
+function tagProps(tag: DimTag | undefined) {
+  if (!tag) return {};
+  return {
+    role: 'button',
+    tabIndex: 0,
+    'aria-label': tag.name,
+    onClick: (e: React.MouseEvent) => {
+      e.stopPropagation();
+      tag.onActivate();
+    },
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tag.onActivate();
+      }
+    },
+  };
+}
+
 export function Dim({
   x1,
   x2,
@@ -524,6 +639,7 @@ export function Dim({
   label,
   fontSize,
   subtle,
+  tag,
 }: {
   x1: number;
   x2: number;
@@ -531,11 +647,21 @@ export function Dim({
   label: string;
   fontSize: number;
   subtle?: boolean;
+  tag?: DimTag;
 }) {
   const mid = (x1 + x2) / 2;
   const w = label.length * fontSize * 0.62 + fontSize;
   return (
-    <g className={`dim ${subtle ? 'subtle' : ''}`}>
+    <g className={`dim ${subtle ? 'subtle' : ''}${tag ? ' tag' : ''}`} {...tagProps(tag)}>
+      {tag && (
+        <rect
+          className="dim-hit"
+          x={mid - Math.max(w, tag.hit) / 2}
+          y={y - Math.max(fontSize * 1.4, tag.hit) / 2}
+          width={Math.max(w, tag.hit)}
+          height={Math.max(fontSize * 1.4, tag.hit)}
+        />
+      )}
       <line x1={x1} x2={x2} y1={y} y2={y} />
       <line x1={x1} x2={x1} y1={y - fontSize * 0.4} y2={y + fontSize * 0.4} />
       <line x1={x2} x2={x2} y1={y - fontSize * 0.4} y2={y + fontSize * 0.4} />
@@ -553,6 +679,45 @@ export function Dim({
   );
 }
 
+/** A size tag with no dimension line, its right edge at `x` (the depth, which the front view cannot draw, ADR-284). */
+function TagPill({
+  x,
+  y,
+  label,
+  fontSize,
+  tag,
+}: {
+  x: number;
+  y: number;
+  label: string;
+  fontSize: number;
+  tag: DimTag;
+}) {
+  const w = label.length * fontSize * 0.62 + fontSize;
+  const cx = x - w / 2;
+  return (
+    <g className="dim subtle tag" {...tagProps(tag)}>
+      <rect
+        className="dim-hit"
+        x={cx - Math.max(w, tag.hit) / 2}
+        y={y - Math.max(fontSize * 1.4, tag.hit) / 2}
+        width={Math.max(w, tag.hit)}
+        height={Math.max(fontSize * 1.4, tag.hit)}
+      />
+      <rect
+        x={cx - w / 2}
+        y={y - fontSize * 0.7}
+        width={w}
+        height={fontSize * 1.4}
+        rx={fontSize * 0.2}
+      />
+      <text x={cx} y={y} fontSize={fontSize} textAnchor="middle" dominantBaseline="central">
+        {label}
+      </text>
+    </g>
+  );
+}
+
 export function DimV({
   y1,
   y2,
@@ -560,6 +725,7 @@ export function DimV({
   label,
   fontSize,
   subtle,
+  tag,
 }: {
   y1: number;
   y2: number;
@@ -567,11 +733,21 @@ export function DimV({
   label: string;
   fontSize: number;
   subtle?: boolean;
+  tag?: DimTag;
 }) {
   const mid = (y1 + y2) / 2;
   const w = label.length * fontSize * 0.62 + fontSize;
   return (
-    <g className={`dim ${subtle ? 'subtle' : ''}`}>
+    <g className={`dim ${subtle ? 'subtle' : ''}${tag ? ' tag' : ''}`} {...tagProps(tag)}>
+      {tag && (
+        <rect
+          className="dim-hit"
+          x={x - Math.max(fontSize * 1.4, tag.hit) / 2}
+          y={mid - Math.max(w, tag.hit) / 2}
+          width={Math.max(fontSize * 1.4, tag.hit)}
+          height={Math.max(w, tag.hit)}
+        />
+      )}
       <line x1={x} x2={x} y1={y1} y2={y2} />
       <line x1={x - fontSize * 0.4} x2={x + fontSize * 0.4} y1={y1} y2={y1} />
       <line x1={x - fontSize * 0.4} x2={x + fontSize * 0.4} y1={y2} y2={y2} />
