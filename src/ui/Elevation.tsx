@@ -40,7 +40,8 @@ import type { Diagnostic, FurnitureModel, Material, Panel, SpaceOpening } from '
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { WallBehind } from './WallBehind';
-import { controlByLabel, openLens, OVERVIEW, useCanvas } from './CanvasEditor';
+import { controlByLabel, openLens, OVERVIEW, useCanvas, useOutLens } from './CanvasEditor';
+import { useView } from '../store/useView';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -309,6 +310,20 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         : (p ?? null),
     );
   }, [picksOn, sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, pxScale]);
+
+  // The Parts lens (ADR-288): each front on the drawing shows its cut size, the same row the Parts list shows.
+  const outLens = useOutLens();
+  const tab = useDesign((st) => st.tab);
+  const view = useView();
+  const partSizes = useMemo(() => {
+    if (!canvas || !outLens || tab !== 'parts') return [];
+    const rowOf = new Map<string, { length: number; width: number }>();
+    for (const r of view.cutRows) for (const id of r.panelIds) rowOf.set(id, r);
+    return fronts.flatMap((p) => {
+      const r = rowOf.get(p.id);
+      return r ? [{ p, label: `${r.length}×${r.width}` }] : [];
+    });
+  }, [canvas, outLens, tab, view.cutRows, fronts]);
 
   // Problem pins (ADR-287): one per space a check names, error first; a tap opens a callout with the messages.
   const pins = useMemo(() => {
@@ -638,6 +653,20 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               />
             );
           })}
+        {partSizes.map(({ p, label }) => {
+          const fs = fontSize * 0.75;
+          const w = label.length * fs * 0.6 + fs;
+          const cx = p.box.x + p.box.w / 2,
+            cy = Y(p.box.y, p.box.h) + p.box.h / 2;
+          return (
+            <g key={`size-${p.id}`} className="part-size" aria-hidden="true">
+              <rect x={cx - w / 2} y={cy - fs * 0.7} width={w} height={fs * 1.4} rx={fs * 0.2} />
+              <text x={cx} y={cy} fontSize={fs} textAnchor="middle" dominantBaseline="central">
+                {label}
+              </text>
+            </g>
+          );
+        })}
         {pins.map((p) => {
           const r = hit / 2;
           const cx = p.box.x + Math.min(r, p.box.w / 2);
