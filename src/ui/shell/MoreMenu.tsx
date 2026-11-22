@@ -20,6 +20,7 @@ import { useUi } from '../../store/uiStore';
 import { useCanvasEditor } from '../../store/useCanvasEditor';
 import { useCatalogFinder } from '../../store/useCatalogFinder';
 import { LanguageMenu } from './LanguageMenu';
+import { AppearanceDialog } from '../Appearance';
 import { t } from '@furniture-builder/i18n';
 
 const FILE_FAILED = () =>
@@ -58,6 +59,7 @@ export function MoreMenu({
   const setNotice = useUi((s) => s.setNotice);
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
+  const [appearance, setAppearance] = useState(false);
   const [roomFill, setRoomFill] = useState(false);
   // With focusButton, focus goes to the More button: closing hides the entry that had it, and a dialog that opens
   // next restores focus there (audit F-02).
@@ -341,6 +343,10 @@ export function MoreMenu({
             </small>
           </button>
           <span className="menu-sep" aria-hidden="true" />
+          <button type="button" onClick={run(() => setAppearance(true))}>
+            <Icon name="sliders" />
+            {t('Appearance')} <small>{t('font size, gaps, paddings')}</small>
+          </button>
           <LanguageMenu />
           <span className="menu-sep" aria-hidden="true" />
           <button
@@ -354,6 +360,8 @@ export function MoreMenu({
         </div>
       </details>
       {/* Out of the app bar, whose styles are for its own buttons. */}
+      {appearance &&
+        createPortal(<AppearanceDialog open onClose={() => setAppearance(false)} />, document.body)}
       {pack &&
         createPortal(<ReviewPackDialog open onClose={() => setPack(false)} />, document.body)}
       {roomFill &&

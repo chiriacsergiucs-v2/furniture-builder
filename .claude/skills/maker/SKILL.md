@@ -6,7 +6,8 @@ description: Pick the right subagent(s) from .claude/agents/ for a task, write e
 # Maker — pick and brief subagents
 
 Source: user request 2026-11-22 ("save it as a skill named maker"), compiled with APL from the _Orchestration_ rules in
-CLAUDE.md. CLAUDE.md wins over this file and over any agent file.
+CLAUDE.md. Test question and PR notice added on user request 2026-11-22 ("ask the user if tests are to be done, or
+skipped and tell you when pr is open"). CLAUDE.md wins over this file and over any agent file.
 
 ## Objective
 
@@ -59,7 +60,11 @@ Health pairs: run the hunter, show its report to the user, run the fixer only on
      `run-quality-gate`)
    - the exact output expected and the checks it must run
 4. Run independent agents in parallel; run dependent ones in order.
-5. Verify every delegation yourself: read the changed files and run, in the sandbox:
+5. Ask about tests (every request, once, before any check): one question with the interactive question tool, options
+   "Run full checks and related tests (Recommended)", "Related tests only", "Skip tests". Record the answer under
+   **Decided**. A skip is logged as debt per _Skips and proof_ in CLAUDE.md (blocker: user choice, cost S) and listed
+   under **Skipped this iteration**. Typecheck, lint, format and build still run; only tests follow the answer.
+6. Verify every delegation yourself: read the changed files and run, in the sandbox:
 
    ```
    pnpm typecheck
@@ -71,10 +76,12 @@ Health pairs: run the hunter, show its report to the user, run the fixer only on
    ```
 
    After a geometry change also `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. The full suite (`pnpm test`)
-   runs in CI. In `ff` mode run only `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm format`, `pnpm docs:check`.
+   runs in CI. Step 5's answer decides which tests run. In `ff` mode run only `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm format`, `pnpm docs:check`.
 
-6. If the result is wrong, re-delegate once with the error; then fix it yourself or stop and report.
-7. Track each step as a task; mark it done only after step 5 passes.
+7. If the result is wrong, re-delegate once with the error; then fix it yourself or stop and report.
+8. Track each step as a task; mark it done only after step 6 passes.
+9. When the pull request is open, tell the user: put the PR link on the first line of the reply and send a
+   `PushNotification` ("PR open: <title>"). Never claim it merged or deployed (pushed ≠ merged ≠ deployed).
 
 ## Stop conditions
 
@@ -96,5 +103,5 @@ Defaults (change if needed):
 - No agent fits → `general-purpose`
 - Parallel limit: none beyond what the task needs
 
-Done when every delegated change passes step 5 with tool output shown, or a stop condition is reported with what is
+Done when every delegated change passes step 6 with tool output shown, or a stop condition is reported with what is
 built and what is not.

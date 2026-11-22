@@ -17,10 +17,12 @@ import '@fontsource/fira-sans-condensed/cyrillic-600.css';
 import './styles.css';
 import { t } from '@furniture-builder/i18n';
 import { applyTheme } from './store/useTheme';
+import { applyThemeVars } from './store/themeVars';
 import { installCutTitles } from './ui/cutTitle';
 import { registerSW } from 'virtual:pwa-register';
 
 applyTheme();
+applyThemeVars();
 installCutTitles();
 
 /**

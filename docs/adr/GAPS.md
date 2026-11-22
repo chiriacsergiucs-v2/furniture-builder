@@ -2333,3 +2333,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-587: Appearance dialog: find-it test
+
+- Status: Open
+- Origin: N378, PR #317, 2026-11-22
+- Missing: jsdom find-it test (tests/find-it/appearance.test.tsx, 390 and 1280 px) that finds More > Appearance, moves a slider, resets it
+- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
+- Questions: none
+- Suggested pick: Write the jsdom find-it test (catch-up acceptance)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-588: Appearance dialog: colours and control height not editable
+
+- Status: Open
+- Origin: N378, PR #317, 2026-11-22
+- Missing: Colour tokens and --control-h are not in the Appearance dialog: the dark set overrides colours, touch targets stay 44 px (ADR-114)
+- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
+- Questions: Should colours be editable per light and dark set? Allow --control-h below 44 px on touch screens?
+- Suggested pick: Add editable accent and primary colours for light and dark, keep --control-h fixed
+- Work: Medium
+- Impact: Medium
+- Necessity: Low

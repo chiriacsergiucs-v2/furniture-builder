@@ -7925,3 +7925,47 @@ fieldset.group-locked {
   flex-wrap: wrap;
   gap: var(--s-2);
 }
+
+/* Appearance dialog: one row per theme variable (label, value, reset, slider). */
+.appearance-group {
+  border: 0;
+  margin: 0 0 var(--s-4);
+  padding: 0;
+}
+.appearance-group legend {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: var(--s-2);
+}
+.appearance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'label out reset'
+    'slider slider slider';
+  gap: var(--s-1) var(--s-3);
+  align-items: center;
+  padding: var(--s-1) 0;
+}
+.appearance-row label {
+  grid-area: label;
+}
+.appearance-row input[type='range'] {
+  grid-area: slider;
+  width: 100%;
+}
+.appearance-row output {
+  grid-area: out;
+  font-family: var(--num);
+  text-align: right;
+}
+.appearance-row button {
+  grid-area: reset;
+}
+@media (min-width: 640px) {
+  .appearance-row {
+    grid-template-columns: 9rem minmax(0, 1fr) 5rem auto;
+    grid-template-areas: 'label slider out reset';
+  }
+}
