@@ -1,7 +1,8 @@
 # ADR-286: Fill an empty space from picks on the drawing
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-285
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 4: in-space picks)
 - Backlog: N369
