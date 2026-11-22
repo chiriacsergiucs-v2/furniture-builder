@@ -351,3 +351,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-287](../adr-done/ADR-287-problem-pins-on-the-drawing-and-a-checks-chip.md) | Problem pins on the drawing and a Checks chip | ADR-286 | ✅ Implemented |
 | [ADR-288](../adr-done/ADR-288-output-lenses-in-the-canvas-editor.md) | Output lenses in the canvas editor | ADR-287 | ✅ Implemented |
 | [ADR-289](../adr-done/ADR-289-find-an-action-and-first-run-hints-in-the-canvas-editor.md) | Find an action and first-run hints in the canvas editor | ADR-288 | ✅ Implemented |
+| [ADR-290](../adr-done/ADR-290-turn-the-canvas-editor-on-by-default-on-phones.md) | Turn the canvas editor on by default on phones | ADR-289 | ✅ Implemented |

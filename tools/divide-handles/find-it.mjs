@@ -18,6 +18,8 @@ for (const width of [360, 390]) {
     hasTouch: true,
     isMobile: true,
   });
+  // Start from the sheet (More › switch off, ADR-290), so turning it on is part of the find-it path.
+  await ctx.addInitScript(() => localStorage.setItem('fb:canvasEditor', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

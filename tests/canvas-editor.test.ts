@@ -31,8 +31,8 @@ const off = (root: Element, id: string) =>
   root.querySelector(`#${id}`)!.hasAttribute('data-lens-off');
 
 describe('canvas editor (ADR-283)', () => {
-  it('is off unless "on" is stored', () => {
-    expect(parseCanvasEditor(null)).toBe(false);
+  it('is on unless "off" is stored (ADR-290)', () => {
+    expect(parseCanvasEditor(null)).toBe(true);
     expect(parseCanvasEditor('off')).toBe(false);
     expect(parseCanvasEditor('on')).toBe(true);
   });
