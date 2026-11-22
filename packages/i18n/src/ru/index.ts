@@ -3,6 +3,7 @@
  * code (typed keys for `t`); `ruData` holds text from built-in data (looked up by `tr`, ADR-155).
  */
 import { ru_account } from './account';
+import { ru_appearance } from './appearance';
 import { ru_assistant } from './assistant';
 import { ru_base } from './base';
 import { ru_catalog } from './catalog';
@@ -47,6 +48,7 @@ export const ru = {
   ...ru_surfaces,
   ...ru_kitchen,
   ...ru_flows,
+  ...ru_appearance,
 };
 
 export const ruData: Record<string, string> = {
