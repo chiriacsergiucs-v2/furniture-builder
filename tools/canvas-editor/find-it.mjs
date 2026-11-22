@@ -50,6 +50,10 @@ for (const width of [360, 390]) {
   const toggle = page.getByRole('button', { name: /Canvas editor \(preview\)/ });
   check(width, 'More lists "Canvas editor (preview)"', await toggle.isVisible());
   await toggle.click();
+  // First-run hints (ADR-289) open once; skip them.
+  await page.waitForTimeout(200);
+  if (await page.getByRole('dialog', { name: 'Getting started' }).isVisible())
+    await page.getByRole('button', { name: 'Skip' }).click();
   await page.waitForTimeout(200);
   check(
     width,
@@ -155,8 +159,15 @@ for (const width of [360, 390]) {
     !(await side.isVisible()) &&
       (await pill.getByRole('button').allInnerTexts()).join('›') === before.join('›'),
   );
+  // Find (ADR-289) opens its own search; Esc closes it. Then reopen the card for the next check.
   await page.getByRole('button', { name: 'Find an action' }).click();
-  check(width, 'Find opens the card with its tabs', await tabs.isVisible());
+  check(
+    width,
+    'Find opens "Find an action"',
+    await page.getByRole('dialog', { name: 'Find an action' }).isVisible(),
+  );
+  await page.keyboard.press('Escape');
+  await rail.getByRole('button', { name: 'Contents', exact: true }).click();
   const svgBox = await box(page.locator('section.stage svg').first());
   await page.mouse.click(svgBox.x + 4, svgBox.y + 4);
   await page.waitForTimeout(150);
@@ -200,6 +211,10 @@ for (const width of [360, 390]) {
   // 7. Flag off again: today's sheet and peek row come back.
   await page.locator('details.more > summary').first().click();
   await page.getByRole('button', { name: /Canvas editor \(preview\)/ }).click();
+  // First-run hints (ADR-289) open once; skip them.
+  await page.waitForTimeout(200);
+  if (await page.getByRole('dialog', { name: 'Getting started' }).isVisible())
+    await page.getByRole('button', { name: 'Skip' }).click();
   await page.waitForTimeout(200);
   check(
     width,

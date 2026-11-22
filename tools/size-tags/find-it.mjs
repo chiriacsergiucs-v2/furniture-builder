@@ -47,6 +47,10 @@ for (const width of [360, 390]) {
   check(width, 'flag off: the sizes are not buttons', (await tag(/^Width \d+ mm$/).count()) === 0);
   await page.locator('details.more > summary').first().click();
   await page.getByRole('button', { name: /Canvas editor \(preview\)/ }).click();
+  // First-run hints (ADR-289) open once; skip them.
+  await page.waitForTimeout(200);
+  if (await page.getByRole('dialog', { name: 'Getting started' }).isVisible())
+    await page.getByRole('button', { name: 'Skip' }).click();
   await page.waitForTimeout(300);
 
   // 1. The whole piece's tags, each at least 44 px.
