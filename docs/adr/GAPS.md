@@ -2357,3 +2357,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low
+
+### G-589: Appearance: tests for − / + and ±5% controls
+
+- Status: Open
+- Origin: N378, 2026-11-22
+- Missing: unit tests for stepThemeVar and scaleThemeVars (whole px rounding, range ends, always moves) and a find-it for the buttons
+- Request: Add also a+- to the input for ease, and a general +-5% of current (to closest integer)
+- Questions: none
+- Suggested pick: Add the unit tests with the G-587 find-it
+- Work: Low
+- Impact: Medium
+- Necessity: Medium

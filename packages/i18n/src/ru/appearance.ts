@@ -6,6 +6,13 @@ export const ru_appearance = {
     'Изменения применяются сразу и хранятся на этом устройстве.',
   '{n|# saved value was|# saved values were} out of range and ignored.':
     '{n|# сохранённое значение вне диапазона и пропущено|# сохранённых значения вне диапазона и пропущены|# сохранённых значений вне диапазона и пропущены}.',
+  'All variables': 'Все параметры',
+  'All variables −5%': 'Все параметры −5%',
+  'All variables +5%': 'Все параметры +5%',
+  '{group} −5%': '{group}: −5%',
+  '{group} +5%': '{group}: +5%',
+  'Decrease {name}': 'Уменьшить: {name}',
+  'Increase {name}': 'Увеличить: {name}',
   'Reset all': 'Сбросить всё',
   'Reset {name}': 'Сбросить: {name}',
   'Font size': 'Размер шрифта',
