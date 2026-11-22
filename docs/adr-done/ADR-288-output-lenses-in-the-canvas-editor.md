@@ -1,7 +1,8 @@
 # ADR-288: Output lenses in the canvas editor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-287
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 6: output lenses)
 - Backlog: N371
