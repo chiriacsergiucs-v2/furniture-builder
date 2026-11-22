@@ -8,7 +8,7 @@ import { t } from '@furniture-builder/i18n';
  * field. `def` is the value in `src/styles.css` `:root` (`tests/theme-vars.test.ts` keeps the two equal). Not here:
  * `--control-h` (touch targets stay 44 px on a touch screen, ADR-114) and colours (the dark set overrides them).
  */
-export type ThemeVar = {
+type ThemeVar = {
   name: string;
   label: () => string;
   unit: 'rem' | 'px' | '';
@@ -17,7 +17,7 @@ export type ThemeVar = {
   step: number;
   def: number;
 };
-export type ThemeGroup = { id: string; title: () => string; vars: ThemeVar[] };
+type ThemeGroup = { id: string; title: () => string; vars: ThemeVar[] };
 
 const rem = (name: string, label: () => string, def: number): ThemeVar => ({
   name,
