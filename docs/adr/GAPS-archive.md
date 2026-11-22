@@ -3705,3 +3705,15 @@ highest id in either file.
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+
+### G-578: ADR-283 canvas editor frame not built
+
+- Status: Done (ADR-283)
+- Origin: ADR-283 (N366)
+- Missing: Flag fb:canvasEditor, selection ladder, chip rail, lens card, re-framing, sections split into mountable parts
+- Request: User 2026-11-22 picked 'Add ADR-283 to repo' (ADR only, not the build)
+- Questions: Build ADR-283 next with next-adr?
+- Suggested pick: Wait for the user's go (scope)
+- Work: High
+- Impact: High
+- Necessity: Medium-high

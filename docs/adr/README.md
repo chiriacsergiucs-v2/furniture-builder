@@ -344,4 +344,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-280](../adr-done/ADR-280-extract-the-i18n-package.md) | Extract the i18n package | ADR-279 | ✅ Implemented |
 | [ADR-281](../adr-done/ADR-281-raise-the-family-variant-cap-to-12-and-add-six-variants-to-n.md) | Raise the family variant cap to 12 and add six variants to six families | ADR-033 | ✅ Implemented |
 | [ADR-282](../adr-done/ADR-282-staggered-rows-from-three-span-widths.md) | Staggered rows from three span widths | ADR-011, ADR-205 | ✅ Implemented |
-| [ADR-283](ADR-283-edit-on-the-canvas-on-phones-selection-ladder-chip-rail-and.md) | Edit on the canvas on phones: selection ladder, chip rail and lens card | ADR-078, ADR-112, ADR-144, ADR-211, ADR-241, ADR-247 | Pending |
+| [ADR-283](../adr-done/ADR-283-edit-on-the-canvas-on-phones-selection-ladder-chip-rail-and.md) | Edit on the canvas on phones: selection ladder, chip rail and lens card | ADR-078, ADR-112, ADR-144, ADR-211, ADR-241, ADR-247 | ✅ Implemented |

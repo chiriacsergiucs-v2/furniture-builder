@@ -1,7 +1,8 @@
 # ADR-283: Edit on the canvas on phones: selection ladder, chip rail and lens card
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-078, ADR-112, ADR-144, ADR-211, ADR-241, ADR-247
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec), https://claude.ai/artifact/XUw8WtVvpHiYiEuuLkBVUJ (prototype)
 - Backlog: N366
@@ -41,8 +42,10 @@ Behind a device flag `fb:canvasEditor` (off by default), at ≤ 760 px in Compos
 5. **Phones only.** Decided with the user (2026-11-22): at ≥ 1024 px the left panel stays; the canvas tags,
    handles and pins of later slices are added there too. The study's 27 % fewer taps on the top tasks (target
    30 %) was accepted by the user; the aim is that the selection stays visible.
-6. **No new behaviour in the model.** Sections are split out of `Inspector.tsx`, `Editors.tsx` and `Project.tsx`
-   so each mounts alone; their store calls, texts and tests do not change.
+6. **No new behaviour in the model.** The editor stays mounted unchanged in the card; each titled block (`Section`
+   and `Group` carry `data-lens-key`) is shown alone and the rest is marked `data-lens-off` (decided by Claude while
+   building, 2026-11-22: same effect as splitting the files, with no change to their store calls, texts and tests).
+   The Overview tab shows what sits outside the blocks (title, pin, focus, notes).
 
 ## Alternatives considered
 
@@ -66,11 +69,11 @@ Behind a device flag `fb:canvasEditor` (off by default), at ≤ 760 px in Compos
 
 ## Done when
 
-- [ ] With `fb:canvasEditor` on at 390 px, a space tap shows `Piece › Space N` in the pill and no sheet.
-- [ ] Every section reachable from today's phone sheet opens from a chip as a lens card tab (check list in the PR).
-- [ ] The selected space stays fully inside the visible stage with the card open at 30 dvh and 55 dvh.
-- [ ] ↑, Esc and a canvas tap step out in the same order as today's Up one level.
-- [ ] Chips are ordered by use on the device and keep 44 px targets under `pointer: coarse` (ADR-114).
-- [ ] Every new text has its Russian entry; `pnpm typecheck` passes.
-- [ ] Flag off: the phone sheet and every existing find-it test behave as before.
-- [ ] Find-it browser script `tools/canvas-editor/find-it.mjs` passes at 360 and 390 px from the bare app.
+- [x] With `fb:canvasEditor` on at 390 px, a space tap shows `Piece › Space N` in the pill and no sheet.
+- [x] Every section reachable from today's phone sheet opens from a chip as a lens card tab (check list in the PR).
+- [x] The selected space stays fully inside the visible stage with the card open at 30 dvh and 55 dvh.
+- [x] ↑, Esc and a canvas tap step out in the same order as today's Up one level.
+- [x] Chips are ordered by use on the device and keep 44 px targets under `pointer: coarse` (ADR-114).
+- [x] Every new text has its Russian entry; `pnpm typecheck` passes.
+- [x] Flag off: the phone sheet and every existing find-it test behave as before.
+- [x] Find-it browser script `tools/canvas-editor/find-it.mjs` passes at 360 and 390 px from the bare app.

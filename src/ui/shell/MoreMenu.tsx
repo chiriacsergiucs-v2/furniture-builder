@@ -17,6 +17,7 @@ import { importFile } from './importFile';
 import { backendConfigured, useAccount } from '../../store/accountStore';
 import { useAssistant } from '../../store/assistantStore';
 import { useUi } from '../../store/uiStore';
+import { useCanvasEditor } from '../../store/useCanvasEditor';
 import { LanguageMenu } from './LanguageMenu';
 import { t } from '@furniture-builder/i18n';
 
@@ -43,6 +44,7 @@ export function MoreMenu({
   /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
   current?: 'info' | 'optimizer';
 }) {
+  const [canvasEditor, setCanvasEditor] = useCanvasEditor();
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
   const model = useDesign((s) => s.model);
@@ -311,6 +313,19 @@ export function MoreMenu({
               </button>
             </>
           )}
+          <span className="menu-sep" aria-hidden="true" />
+          {/* The canvas editor on phones, a preview behind a device flag (ADR-283). */}
+          <button
+            type="button"
+            aria-pressed={canvasEditor}
+            onClick={run(() => setCanvasEditor(!canvasEditor))}
+          >
+            <Icon name="sliders" />
+            {t('Canvas editor (preview)')}{' '}
+            <small>
+              {canvasEditor ? t('on: edit on the drawing') : t('off: the editor sheet')}
+            </small>
+          </button>
           <span className="menu-sep" aria-hidden="true" />
           <LanguageMenu />
           <span className="menu-sep" aria-hidden="true" />

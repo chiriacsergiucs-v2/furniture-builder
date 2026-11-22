@@ -355,6 +355,7 @@ export function Group({
       className="group"
       open={open}
       id={id}
+      data-lens-key={info ? undefined : title}
       onToggle={(e) => {
         if (e.currentTarget.open !== open) setGroupOpen(key, e.currentTarget.open);
       }}
@@ -381,7 +382,7 @@ export function Group({
   );
   if (!info) return group;
   return (
-    <div className="group-wrap">
+    <div className="group-wrap" data-lens-key={title}>
       {group}
       {info}
     </div>
@@ -412,8 +413,9 @@ export function Section({
   /** An `InfoTip` right after the title (ADR-113). */
   info?: ReactNode;
 }) {
+  // data-lens-key: the canvas editor shows one titled block at a time (ADR-283).
   return (
-    <section className="section" aria-label={title}>
+    <section className="section" aria-label={title} data-lens-key={title}>
       <div className="card-title">
         {info ? (
           <span className="info-row">

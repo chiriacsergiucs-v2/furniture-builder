@@ -1,4 +1,3 @@
-import { parentOf } from '../core/selectPath';
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   lastDesignId,
@@ -31,12 +30,24 @@ import { PieceList } from './PieceList';
 import { usePieceList } from '../store/pieceListStore';
 import { useView } from '../store/useView';
 import { Elevation } from './Elevation';
-import { Inspector, selectionLabel } from './Inspector';
+import { Inspector, selectionChain, selectionLabel } from './Inspector';
 import { Output } from './Output';
 import { useProblem } from '../store/problemStore';
 import { PrintSheet } from './PrintSheet';
 import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
+import { upOneLevel } from './upLevel';
+import {
+  ChipRail,
+  LadderPill,
+  LensHead,
+  OVERVIEW,
+  useLens,
+  useLensAnchor,
+  useLensHeight,
+  type Crumb,
+} from './CanvasEditor';
+import { useCanvasEditor } from '../store/useCanvasEditor';
 import { SheetHandle, type SheetStop } from './SheetHandle';
 import { rovingKeys, rovingTab } from './controls';
 import { setTheme, useTheme } from '../store/useTheme';
@@ -276,6 +287,34 @@ export function App() {
   // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
   const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
   const sheetOpen = sheetStop !== 'peek';
+  // The canvas editor (ADR-283): on a phone, behind a device flag, the sheet becomes a lens card that shows one block
+  // of the editor at a time, opened from a chip rail; a selection ladder replaces the peek row.
+  const [canvasFlag] = useCanvasEditor();
+  const canvas = canvasFlag && phone;
+  const [lensTab, setLensTab] = useState(OVERVIEW);
+  const workRef = useRef<HTMLElement>(null);
+  const sideRef = useRef<HTMLElement>(null);
+  const sideBodyRef = useRef<HTMLDivElement>(null);
+  const lensKeyList = useLens(sideBodyRef, canvas, lensTab);
+  const stageRef = useRef<HTMLElement>(null);
+  useLensHeight(sideRef, workRef, canvas && sheetOpen);
+  useLensAnchor(sideRef, stageRef, canvas && sheetOpen);
+  // Esc closes the open card before it goes up a level (ADR-283); captured first, so the level stays.
+  useEffect(() => {
+    if (!canvas || !sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]'))
+        return;
+      e.preventDefault();
+      setSheetStop('peek');
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [canvas, sheetOpen]);
+  const pickLens = (k: string) => {
+    setLensTab(k);
+    if (sheetStop === 'peek') setSheetStop('half');
+  };
   // Edit this piece asks for the full sheet in the project (ADR-241).
   const sheetAsk = useUi((s) => s.sheetAsk);
   const [lastAsk, setLastAsk] = useState(sheetAsk);
@@ -330,7 +369,15 @@ export function App() {
     setLastSel(selKey);
     // Choosing something opens the edit sheet to half; a peek-row action (duplicate) asks to keep it closed once.
     const keepClosed = takeKeepSheetClosed();
-    if (selKey !== null && selKey !== undefined && !keepClosed && !tapMode && sheetStop === 'peek')
+    // The canvas editor opens its card from a chip, never on a tap of the drawing (ADR-283).
+    if (
+      !canvas &&
+      selKey !== null &&
+      selKey !== undefined &&
+      !keepClosed &&
+      !tapMode &&
+      sheetStop === 'peek'
+    )
       setSheetStop('half');
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
@@ -543,20 +590,9 @@ export function App() {
       }
       // Esc in an open dialog closes the dialog only, not the selection too (ADR-160); Esc that cancels a drag or a
       // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
-      if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
-        const st = useDesign.getState();
-        // An entered space (ADR-270) is left first; the selection stays.
-        if (useUi.getState().enteredId) {
-          useUi.getState().exitEntered();
-          return;
-        }
-        // Inside a drilled project piece Esc also goes up one level; only the whole piece clears the selection (ADR-249).
-        if (st.project && !st.editingItemId && st.drillItemId && st.selectedId !== null)
-          st.select(parentOf(st.model, st.selectedId));
-        else if (st.project && !st.editingItemId) st.selectItem(null);
-        // In the piece editor Esc goes up one level: a space → the one around it → the whole piece → nothing (ADR-203).
-        else st.select(parentOf(st.model, st.selectedId));
-      }
+      // Esc goes up one level (ADR-203, ADR-249, ADR-270); the canvas editor's ↑ does the same (ADR-283).
+      if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]'))
+        upOneLevel();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -592,6 +628,29 @@ export function App() {
         const l = selectionLabel(design.product, selectedId);
         return l ? t('Selected: {name}', { name: l }) : t('Tap a space to edit it');
       })();
+
+  // The selection ladder (ADR-283): every level from the project or piece down to the selection, as the breadcrumb.
+  const dsel = useDesign.getState;
+  const inside: Crumb[] = selectionChain(design.product, selectedId).map((c) => ({
+    label: c.label,
+    go: () => dsel().select(c.id),
+  }));
+  const crumbs: Crumb[] = inProject
+    ? [
+        { label: tr(project!.name), go: () => dsel().selectItem(null) },
+        ...(selectedCount > 1
+          ? [{ label: t('{n} pieces selected', { n: selectedCount }), go: () => {} }]
+          : selectedItem || selectedModel
+            ? [
+                {
+                  label: tr(String(selectedItem?.design.name ?? selectedModel?.name)),
+                  go: () => dsel().select(null),
+                },
+                ...(drillLevel ? inside : []),
+              ]
+            : []),
+      ]
+    : [{ label: tr(design.name), go: () => dsel().select(null) }, ...inside];
 
   const nameField = (
     <input
@@ -902,11 +961,22 @@ export function App() {
           )}
         </Suspense>
         <main
-          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
+          ref={workRef}
+          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}${canvas ? ' canvas' : ''}`}
           hidden={page !== 'editor'}
         >
-          <aside className="side" aria-label={t('Compose')}>
-            <div className="sheet-peek-row">
+          <aside className="side" aria-label={t('Compose')} ref={sideRef}>
+            {canvas && (
+              <LensHead
+                keys={lensKeyList}
+                active={lensTab}
+                tall={sheetStop === 'full'}
+                onPick={setLensTab}
+                onTall={(tall) => setSheetStop(tall ? 'full' : 'half')}
+                onClose={() => setSheetStop('peek')}
+              />
+            )}
+            <div className="sheet-peek-row" hidden={canvas}>
               {phone && <SheetHandle stop={sheetStop} onStop={setSheetStop} />}
               <button
                 type="button"
@@ -922,7 +992,7 @@ export function App() {
             </div>
             {/* Phones: Settings and Material open here, the sheet at full height (ADR-247). */}
             <div id="sheet-slot" className="sheet-slot" />
-            <div className="side-body">
+            <div className="side-body" ref={sideBodyRef}>
               {inProject ? (
                 <ProjectPanel mode="compose" onAdd={openPieces} />
               ) : (
@@ -931,9 +1001,32 @@ export function App() {
             </div>
           </aside>
           <section
+            ref={stageRef}
+            // A tap on empty drawing closes the canvas editor's card (ADR-283); a tap on a part selects it.
+            onClick={
+              canvas && sheetOpen
+                ? (e) => {
+                    const el = e.target as Element;
+                    if (el === e.currentTarget || el.tagName.toLowerCase() === 'svg')
+                      setSheetStop('peek');
+                  }
+                : undefined
+            }
             className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
             aria-label={t('Drawing')}
           >
+            {canvas && mode === 'compose' && (
+              <>
+                <LadderPill crumbs={crumbs} />
+                <ChipRail
+                  keys={lensKeyList}
+                  onPick={pickLens}
+                  onFind={() => setSheetStop(sheetStop === 'peek' ? 'half' : sheetStop)}
+                >
+                  {inProject && <PeekActions onAdd={openPieces} />}
+                </ChipRail>
+              </>
+            )}
             {piecesShown && (
               <PieceList
                 onBrowse={() => {
