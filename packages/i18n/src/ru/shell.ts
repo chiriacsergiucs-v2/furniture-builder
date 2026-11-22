@@ -425,6 +425,10 @@ export const ru_shell = {
   'Canvas editor (preview)': 'Редактор на чертеже (предпросмотр)',
   'on: edit on the drawing': 'вкл.: правка на чертеже',
   'off: the editor sheet': 'выкл.: панель редактора',
+  // Catalog finder (ADR-291).
+  'Catalog finder (preview)': 'Поиск по каталогу (предпросмотр)',
+  'on: search and filters': 'вкл.: поиск и фильтры',
+  'off: the grouped catalog': 'выкл.: каталог по группам',
   'Selection path': 'Путь выбора',
   Overview: 'Обзор',
   'Editor actions': 'Действия редактора',
