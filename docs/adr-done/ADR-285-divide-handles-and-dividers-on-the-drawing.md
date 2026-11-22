@@ -1,7 +1,8 @@
 # ADR-285: Divide handles and dividers on the drawing
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-284
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 3: split bars and + divide handles)
 - Backlog: N368
