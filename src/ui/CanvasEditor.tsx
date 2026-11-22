@@ -327,7 +327,7 @@ export function useCanvas(): boolean {
 }
 
 /** A request to open the lens card on a block and focus one control in it (ADR-284). */
-export interface LensRequest {
+interface LensRequest {
   /** The block's title (`data-lens-key`), or OVERVIEW. */
   tab: string;
   /** Finds the control to focus inside the card's editor, once it shows. */
