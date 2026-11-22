@@ -442,4 +442,6 @@ export const ru_shell = {
   'Divide side by side': 'Разделить по ширине',
   'Divide stacked': 'Разделить по высоте',
   'Divider {i} of {n}': 'Перегородка {i} из {n}',
+  // In-space picks (ADR-286).
+  'Fill this space': 'Заполнить это пространство',
 } satisfies Record<string, string>;

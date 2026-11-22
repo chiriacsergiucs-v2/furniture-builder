@@ -7571,3 +7571,30 @@ fieldset.group-locked {
   stroke: var(--surface);
   stroke-width: 4px;
 }
+
+/* In-space picks (ADR-286): what can fill the selected empty space, laid over it on the drawing. */
+.space-picks {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  pointer-events: none;
+}
+.space-picks .btn.pick {
+  pointer-events: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  white-space: nowrap;
+}
+.space-picks .btn.pick[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}

@@ -7,7 +7,13 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from 'react';
-import { findInProduct, parentOf as spaceParent, productRoots, splitSpace } from '../core/design';
+import {
+  changeKind,
+  findInProduct,
+  parentOf as spaceParent,
+  productRoots,
+  splitSpace,
+} from '../core/design';
 import { snapIsOn } from '../store/useSnap';
 import { boxCentre } from '../core/geometry';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
@@ -23,7 +29,7 @@ import {
   selectionBox,
   type Selection,
 } from '../core/selectPath';
-import { WHOLE_LABEL, nameOfSpace } from '../core/spaceNames';
+import { KIND_LABEL, WHOLE_LABEL, nameOfSpace } from '../core/spaceNames';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { useDesign } from '../store/designStore';
@@ -279,6 +285,31 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
     setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
   }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, design.product]);
 
+  // In-space picks (ADR-286): placed over the selected space, in the figure's own pixels.
+  const [pickBox, setPickBox] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const picksOn = canvas && selNode !== undefined && selNode.kind === 'empty';
+  useLayoutEffect(() => {
+    const fig = figRef.current,
+      sel = selRef.current;
+    if (!picksOn || !fig || !sel) return setPickBox(null);
+    const [bx] = boxIn(fig.getBoundingClientRect(), sel);
+    setPickBox((p) =>
+      bx &&
+      (!p ||
+        p.left !== bx.left ||
+        p.top !== bx.top ||
+        p.width !== bx.width ||
+        p.height !== bx.height)
+        ? bx
+        : (p ?? null),
+    );
+  }, [picksOn, sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, pxScale]);
+
   // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
   const pointAt = (e: MouseEvent<SVGSVGElement>) => {
     const m = e.currentTarget.getScreenCTM();
@@ -500,9 +531,10 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
           tag={wholeTag('Height', b.h)}
         />
         {canvas && (
+          // At the right end of the overall width line, clear of the selected space's size above the piece.
           <TagPill
             x={b.x + b.w}
-            y={-(b.y + b.h) - pad * 0.45}
+            y={pad * 0.75}
             fontSize={fontSize * 0.85}
             label={t('D {n}', { n: b.d })}
             tag={wholeTag('Depth', b.d)!}
@@ -587,6 +619,43 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         <span className="el-chip" aria-hidden="true">
           {hoverName}
         </span>
+      )}
+      {picksOn && pickBox && selNode && (
+        <div
+          className="space-picks"
+          role="group"
+          aria-label={t('Fill this space')}
+          style={{
+            left: pickBox.left,
+            top: pickBox.top,
+            width: pickBox.width,
+            height: pickBox.height,
+          }}
+        >
+          {(['shelves', 'drawers', 'hanging'] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              className="btn pick"
+              onClick={() => updateSpace(selNode.id, (sp) => changeKind(sp, k))}
+            >
+              {KIND_LABEL[k]}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="btn pick"
+            aria-pressed={!!selNode.front}
+            onClick={() =>
+              updateSpace(selNode.id, (sp) => ({
+                ...sp,
+                front: sp.front ? null : { kind: 'doors', count: 1 },
+              }))
+            }
+          >
+            {t('Door')}
+          </button>
+        </div>
       )}
       {selectedSpace && (
         <CountStepper
