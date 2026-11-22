@@ -1,7 +1,8 @@
 # ADR-290: Turn the canvas editor on by default on phones
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-289
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 7: the sheet's place)
 - Backlog: N373
