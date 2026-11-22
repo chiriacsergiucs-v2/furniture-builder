@@ -6,7 +6,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { bumpLensUse, orderByUse, useLensUse } from '../store/useCanvasEditor';
+import { bumpLensUse, orderByUse, useCanvasEditor, useLensUse } from '../store/useCanvasEditor';
+import { useMediaQuery } from '../store/useMediaQuery';
 import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { upOneLevel } from './upLevel';
@@ -311,4 +312,79 @@ export function useLensAnchor(
     el.style.setProperty('--lens-anchor', `${Math.round(x)}px`);
     el.setAttribute('data-anchored', '');
   });
+}
+
+/** True while the canvas editor runs: the device flag is on and the screen is a phone (ADR-283). */
+export function useCanvas(): boolean {
+  const [on] = useCanvasEditor();
+  return useMediaQuery('(max-width: 760px)') && on;
+}
+
+/** A request to open the lens card on a block and focus one control in it (ADR-284). */
+interface LensRequest {
+  /** The block's title (`data-lens-key`), or OVERVIEW. */
+  tab: string;
+  /** Finds the control to focus inside the card's editor, once it shows. */
+  focus?: (body: HTMLElement) => HTMLElement | null;
+}
+const LENS_EVENT = 'fb:lens';
+
+/** Asks the canvas editor to open its card on `tab` and focus a control (ADR-284). */
+export function openLens(req: LensRequest) {
+  window.dispatchEvent(new CustomEvent<LensRequest>(LENS_EVENT, { detail: req }));
+}
+
+/** Calls `fn` for each lens request while mounted. */
+export function useLensRequests(fn: (req: LensRequest) => void) {
+  const ref = useRef(fn);
+  useLayoutEffect(() => {
+    ref.current = fn;
+  });
+  useEffect(() => {
+    const on = (e: Event) => ref.current((e as CustomEvent<LensRequest>).detail);
+    window.addEventListener(LENS_EVENT, on);
+    return () => window.removeEventListener(LENS_EVENT, on);
+  }, []);
+}
+
+/** The control a visible `<label>` with this exact text names, inside `body` (MmField and its kin, ADR-284). */
+export function controlByLabel(body: HTMLElement, text: string): HTMLElement | null {
+  for (const l of Array.from(body.querySelectorAll('label'))) {
+    if (l.textContent?.trim() !== text) continue;
+    const id = l.getAttribute('for');
+    const el = id ? document.getElementById(id) : l.querySelector('input, select, textarea');
+    if (el) return el as HTMLElement;
+  }
+  return null;
+}
+
+/**
+ * How far the on-screen keyboard reaches up from the bottom of the window, in px (ADR-284): the part of the window the
+ * visual viewport no longer covers. 0 without a keyboard or a visual viewport.
+ */
+export function keyboardInset(innerHeight: number, vvHeight?: number, vvOffsetTop = 0): number {
+  if (vvHeight === undefined) return 0;
+  return Math.max(0, Math.round(innerHeight - vvHeight - vvOffsetTop));
+}
+
+/** Writes `--kb` (the keyboard's height) on `target` while on, so the card sits on the keyboard (ADR-284). */
+export function useKeyboardInset(target: RefObject<HTMLElement | null>, on: boolean) {
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const tg = target.current;
+    if (!on || !vv || !tg) return;
+    const set = () =>
+      tg.style.setProperty(
+        '--kb',
+        `${keyboardInset(window.innerHeight, vv.height, vv.offsetTop)}px`,
+      );
+    set();
+    vv.addEventListener('resize', set);
+    vv.addEventListener('scroll', set);
+    return () => {
+      vv.removeEventListener('resize', set);
+      vv.removeEventListener('scroll', set);
+      tg.style.removeProperty('--kb');
+    };
+  }, [target, on]);
 }

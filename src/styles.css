@@ -7338,7 +7338,8 @@ fieldset.group-locked {
     overflow: visible;
     left: var(--s-2);
     right: var(--s-2);
-    bottom: calc(var(--actions-h, 64px) + var(--s-2));
+    /* On the keyboard while it is up (ADR-284), else above the nav. */
+    bottom: calc(max(var(--actions-h, 64px), var(--kb, 0px)) + var(--s-2));
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     background: var(--surface);
@@ -7376,8 +7377,8 @@ fieldset.group-locked {
   /* The drawing re-frames into the stage left above the card, so the selection stays in sight. */
   .work.canvas.mode-compose.sheet-open .stage {
     height: calc(
-      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) -
-        var(--lens-h, 30dvh) - var(--s-2)
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) -
+        max(var(--actions-h, 64px), var(--kb, 0px)) - var(--lens-h, 30dvh) - var(--s-2)
     );
     min-height: 160px;
     padding-bottom: 0;
@@ -7490,4 +7491,22 @@ fieldset.group-locked {
     outline: 2px solid var(--link);
     outline-offset: -2px;
   }
+}
+
+/* Size tags (ADR-284): a size on the drawing that opens its field; the transparent rect is the 44 px hit area. */
+.dim.tag {
+  cursor: pointer;
+}
+.dim.tag .dim-hit {
+  fill: transparent;
+  stroke: none;
+  pointer-events: all;
+}
+.dim.tag:focus {
+  outline: none;
+}
+.dim.tag:focus-visible rect:not(.dim-hit) {
+  stroke: var(--link);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
 }

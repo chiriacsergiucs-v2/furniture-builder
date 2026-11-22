@@ -43,7 +43,9 @@ import {
   LensHead,
   OVERVIEW,
   useLens,
+  useKeyboardInset,
   useLensAnchor,
+  useLensRequests,
   useLensHeight,
   type Crumb,
 } from './CanvasEditor';
@@ -299,6 +301,21 @@ export function App() {
   const stageRef = useRef<HTMLElement>(null);
   useLensHeight(sideRef, workRef, canvas && sheetOpen);
   useLensAnchor(sideRef, stageRef, canvas && sheetOpen);
+  useKeyboardInset(workRef, canvas);
+  // A size tag on the drawing (ADR-284): open the card on its block and focus the field, once the editor shows it.
+  useLensRequests((req) => {
+    if (!canvas) return;
+    setLensTab(req.tab);
+    if (sheetStop === 'peek') setSheetStop('half');
+    let tries = 0;
+    const tryFocus = () => {
+      const body = sideBodyRef.current;
+      const el = body && req.focus ? req.focus(body) : null;
+      if (el && el.offsetParent !== null) el.focus();
+      else if (tries++ < 20) requestAnimationFrame(tryFocus);
+    };
+    requestAnimationFrame(tryFocus);
+  });
   // Esc closes the open card before it goes up a level (ADR-283); captured first, so the level stays.
   useEffect(() => {
     if (!canvas || !sheetOpen) return;

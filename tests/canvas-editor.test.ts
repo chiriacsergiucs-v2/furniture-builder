@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 // The canvas editor's pure parts (ADR-283): the device flag, chips ordered by use, and one titled block at a time.
 import { describe, expect, it } from 'vitest';
-import { applyLens, clearLens, lensKeys, OVERVIEW } from '../src/ui/CanvasEditor';
+import {
+  applyLens,
+  clearLens,
+  controlByLabel,
+  keyboardInset,
+  lensKeys,
+  OVERVIEW,
+} from '../src/ui/CanvasEditor';
 import { orderByUse, parseCanvasEditor } from '../src/store/useCanvasEditor';
 
 const editor = () => {
@@ -57,5 +64,23 @@ describe('canvas editor (ADR-283)', () => {
     applyLens(root, 'Layouts');
     clearLens(root);
     expect(root.querySelectorAll('[data-lens-off]').length).toBe(0);
+  });
+
+  it('docks the card on the keyboard: its height is what the visual viewport no longer covers (ADR-284)', () => {
+    expect(keyboardInset(800, undefined)).toBe(0);
+    expect(keyboardInset(800, 800, 0)).toBe(0);
+    expect(keyboardInset(800, 500, 0)).toBe(300);
+    expect(keyboardInset(800, 500, 40)).toBe(260);
+    expect(keyboardInset(800, 900, 0)).toBe(0);
+  });
+
+  it('finds a field by its visible label (ADR-284)', () => {
+    const body = document.createElement('div');
+    body.innerHTML =
+      '<label for="w1">Width</label><input id="w1"><label for="h1">Height</label><input id="h1">';
+    document.body.appendChild(body);
+    expect(controlByLabel(body, 'Height')?.id).toBe('h1');
+    expect(controlByLabel(body, 'Depth')).toBeNull();
+    body.remove();
   });
 });

@@ -433,4 +433,9 @@ export const ru_shell = {
   'Editor card': 'Карточка редактора',
   'Close the card': 'Закрыть карточку',
   'Find an action': 'Найти действие',
+  // Size tags (ADR-284).
+  'Width {n} mm': 'Ширина {n} мм',
+  'Height {n} mm': 'Высота {n} мм',
+  'Depth {n} mm': 'Глубина {n} мм',
+  'D {n}': 'Г {n}',
 } satisfies Record<string, string>;

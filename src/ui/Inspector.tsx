@@ -1065,7 +1065,8 @@ function SplitEditor({
             const z = space.sizes[i];
             const actual = openings.find((o) => o.nodeId === c.id)?.box;
             return (
-              <li key={c.id}>
+              // data-part-id: a size tag on the drawing focuses this part's size (ADR-284).
+              <li key={c.id} data-part-id={c.id}>
                 <button type="button" className="part-name" onClick={() => onSelect(c.id)}>
                   {names(i)}
                 </button>
