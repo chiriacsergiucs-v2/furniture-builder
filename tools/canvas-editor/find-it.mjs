@@ -75,7 +75,8 @@ for (const width of [360, 390]) {
   await shot('space');
 
   // 3. Every block of the space editor opens from a chip as one tab of the lens card.
-  const chips = (await rail.getByRole('button').allInnerTexts()).map((s) => s.trim());
+  // The editor's chips; the output chips after them (ADR-288) open results, not editor blocks.
+  const chips = (await rail.locator('button:not(.out)').allInnerTexts()).map((s) => s.trim());
   check(
     width,
     'chip rail starts with Find, then Overview',
