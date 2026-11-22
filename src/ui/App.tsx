@@ -328,6 +328,7 @@ export function App() {
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
   }, [canvas, sheetOpen]);
+  const checkErrors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const pickLens = (k: string) => {
     setLensTab(k);
     if (sheetStop === 'peek') setSheetStop('half');
@@ -1040,6 +1041,19 @@ export function App() {
                   onPick={pickLens}
                   onFind={() => setSheetStop(sheetStop === 'peek' ? 'half' : sheetStop)}
                 >
+                  {/* Checks chip (ADR-287): the error count, one tap to the Checks list. */}
+                  {checkErrors > 0 && (
+                    <button
+                      type="button"
+                      className="btn chip problem"
+                      onClick={() => {
+                        setMode('build');
+                        useDesign.getState().setTab('checks');
+                      }}
+                    >
+                      {t('Checks: {n|# problem|# problems}', { n: checkErrors })}
+                    </button>
+                  )}
                   {inProject && <PeekActions onAdd={openPieces} />}
                 </ChipRail>
               </>

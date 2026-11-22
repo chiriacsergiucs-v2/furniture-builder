@@ -7598,3 +7598,62 @@ fieldset.group-locked {
   background: var(--primary);
   color: var(--on-primary);
 }
+
+/* Problem pins and the Checks chip (ADR-287): a check's space marked on the drawing, the count in the chip rail. */
+.problem-pin {
+  cursor: pointer;
+}
+.problem-pin .pin-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+.problem-pin .pin-dot {
+  stroke: var(--surface);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+.problem-pin.error .pin-dot {
+  fill: var(--error);
+}
+.problem-pin.warning .pin-dot {
+  fill: var(--warn);
+}
+.problem-pin text {
+  fill: #fff;
+  font-weight: 700;
+}
+.problem-pin:focus {
+  outline: none;
+}
+.problem-pin:focus-visible .pin-dot {
+  stroke: var(--link);
+  stroke-width: 3px;
+}
+.pin-callout {
+  position: absolute;
+  z-index: 6;
+  display: grid;
+  gap: var(--s-2);
+  width: min(280px, calc(100% - 8px));
+  padding: var(--s-3);
+  border: 1px solid var(--error);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.pin-msg {
+  margin: 0;
+  font-size: var(--fs-sm, 14px);
+}
+.pin-msg.error strong {
+  color: var(--error);
+}
+.pin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.btn.chip.problem {
+  border-color: var(--error);
+  color: var(--error);
+}

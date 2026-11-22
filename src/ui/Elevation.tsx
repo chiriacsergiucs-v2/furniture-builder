@@ -36,7 +36,7 @@ import { useDesign } from '../store/designStore';
 import { useUi } from '../store/uiStore';
 import { useEntered } from '../store/useEntered';
 import { useMediaQuery } from '../store/useMediaQuery';
-import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
+import type { Diagnostic, FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { WallBehind } from './WallBehind';
@@ -309,6 +309,30 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         : (p ?? null),
     );
   }, [picksOn, sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, pxScale]);
+
+  // Problem pins (ADR-287): one per space a check names, error first; a tap opens a callout with the messages.
+  const pins = useMemo(() => {
+    if (!canvas) return [];
+    const by = new Map<string, Diagnostic[]>();
+    for (const d of model.diagnostics) {
+      if (!d.nodeId || !model.spaces.some((o) => o.nodeId === d.nodeId && o.view !== 'side'))
+        continue;
+      by.set(d.nodeId, [...(by.get(d.nodeId) ?? []), d]);
+    }
+    return [...by].map(([nodeId, ds]) => ({
+      nodeId,
+      ds: [...ds].sort(
+        (x, y) => (x.severity === 'error' ? -1 : 0) - (y.severity === 'error' ? -1 : 0),
+      ),
+      box: model.spaces.find((o) => o.nodeId === nodeId && o.view !== 'side')!.box,
+    }));
+  }, [canvas, model]);
+  const [openPin, setOpenPin] = useState<{ nodeId: string; left: number; top: number } | null>(
+    null,
+  );
+  const pinOpen = openPin ? pins.find((p) => p.nodeId === openPin.nodeId) : undefined;
+  const setTab = useDesign((st) => st.setTab);
+  const setMode = useUi((st) => st.setMode);
 
   // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
   const pointAt = (e: MouseEvent<SVGSVGElement>) => {
@@ -614,7 +638,112 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
               />
             );
           })}
+        {pins.map((p) => {
+          const r = hit / 2;
+          const cx = p.box.x + Math.min(r, p.box.w / 2);
+          const cy = Y(p.box.y, p.box.h) + Math.min(r, p.box.h / 2);
+          const error = p.ds[0].severity === 'error';
+          return (
+            <g
+              key={p.nodeId}
+              className={`problem-pin ${error ? 'error' : 'warning'}`}
+              role="button"
+              tabIndex={0}
+              aria-label={p.ds
+                .map((d) =>
+                  d.severity === 'error'
+                    ? t('Problem: {message}', { message: d.message })
+                    : t('Check: {message}', { message: d.message }),
+                )
+                .join(' ')}
+              onClick={(e) => {
+                e.stopPropagation();
+                const f = figRef.current?.getBoundingClientRect();
+                const g = (e.currentTarget as Element).getBoundingClientRect();
+                setOpenPin(
+                  f
+                    ? {
+                        nodeId: p.nodeId,
+                        left: Math.max(4, Math.min(g.left - f.left, f.width - 284)),
+                        top: g.bottom - f.top + 4,
+                      }
+                    : null,
+                );
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                const f = figRef.current?.getBoundingClientRect();
+                const g = (e.currentTarget as Element).getBoundingClientRect();
+                setOpenPin(
+                  f
+                    ? {
+                        nodeId: p.nodeId,
+                        left: Math.max(4, Math.min(g.left - f.left, f.width - 284)),
+                        top: g.bottom - f.top + 4,
+                      }
+                    : null,
+                );
+              }}
+            >
+              <circle className="pin-hit" cx={cx} cy={cy} r={r} />
+              <circle className="pin-dot" cx={cx} cy={cy} r={r * 0.55} />
+              <text x={cx} y={cy} fontSize={r * 0.8} textAnchor="middle" dominantBaseline="central">
+                !
+              </text>
+            </g>
+          );
+        })}
       </svg>
+      {pinOpen && openPin && (
+        <div
+          className="pin-callout"
+          role="dialog"
+          aria-label={t('Problem and repairs')}
+          style={{
+            left: openPin.left,
+            top: openPin.top,
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              setOpenPin(null);
+            }
+          }}
+        >
+          {pinOpen.ds.map((d, i) => (
+            <p key={i} className={`pin-msg ${d.severity}`}>
+              <strong>{d.severity === 'error' ? t('Problem') : t('Check')}</strong> {d.message}
+            </p>
+          ))}
+          <div className="pin-actions">
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                setOpenPin(null);
+                setMode('build');
+                setTab('checks');
+              }}
+            >
+              {t('Open Checks')}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                select(pinOpen.nodeId);
+                setOpenPin(null);
+              }}
+            >
+              {t('Select it')}
+            </button>
+            <button type="button" className="btn ghost" onClick={() => setOpenPin(null)}>
+              {t('Close')}
+            </button>
+          </div>
+        </div>
+      )}
       {hoverName && (
         <span className="el-chip" aria-hidden="true">
           {hoverName}

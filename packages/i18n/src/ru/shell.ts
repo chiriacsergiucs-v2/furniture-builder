@@ -444,4 +444,9 @@ export const ru_shell = {
   'Divider {i} of {n}': 'Перегородка {i} из {n}',
   // In-space picks (ADR-286).
   'Fill this space': 'Заполнить это пространство',
+  // Problem pins (ADR-287).
+  'Problem: {message}': 'Проблема: {message}',
+  'Check: {message}': 'Проверка: {message}',
+  'Open Checks': 'Открыть проверки',
+  'Select it': 'Выбрать',
 } satisfies Record<string, string>;
