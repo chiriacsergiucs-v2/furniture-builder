@@ -11,6 +11,7 @@ import {
 } from '../src/ui/CanvasEditor';
 import { orderByUse, parseCanvasEditor } from '../src/store/useCanvasEditor';
 import { partSizeAfterMove } from '../src/ui/Elevation';
+import { flatFeatures, matches } from '../src/ui/FindAction';
 
 const editor = () => {
   const root = document.createElement('div');
@@ -92,5 +93,18 @@ describe('canvas editor (ADR-283)', () => {
     // High side: the same move shrinks it.
     expect(partSizeAfterMove(400, false, 500, 537, false)).toBe(363);
     expect(partSizeAfterMove(10, true, 500, 0, false)).toBe(1);
+  });
+
+  it('Find matches every word, case and accents ignored (ADR-289)', () => {
+    expect(matches('Mirror a piece', 'mir pie')).toBe(true);
+    expect(matches('Mirror a piece', 'mirror door')).toBe(false);
+    expect(matches('Ușa dublă', 'usa')).toBe(true);
+    expect(matches('anything', '')).toBe(true);
+  });
+
+  it('Find lists every feature line of the tree (ADR-289)', () => {
+    const all = flatFeatures();
+    expect(all.length).toBeGreaterThan(200);
+    expect(all.every(({ path }) => path.length >= 1)).toBe(true);
   });
 });

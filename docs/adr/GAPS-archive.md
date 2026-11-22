@@ -3706,6 +3706,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-577: Canvas-native editor: slices 2-7 have no ADR yet
+
+- Status: Done (ADR-289)
+- Origin: ADR-283 (N366), design spec 2026-11-22
+- Missing: ADRs for size tags and the mm bar, split bars and + divide handles, in-space picks, problem pins, output lenses, Find + coach marks + removing the phone sheet
+- Request: User 2026-11-22: new mobile editor inside the canvas with 100% of current flows; picked 'Add ADR-283 to repo'
+- Questions: Write the six follow-up ADRs now or after ADR-283 ships?
+- Suggested pick: After ADR-283 ships (scope: user asked for ADR-283 only)
+- Work: Medium
+- Impact: High
+- Necessity: Medium-high
+
 ### G-578: ADR-283 canvas editor frame not built
 
 - Status: Done (ADR-283)

@@ -444,6 +444,23 @@ export const ru_shell = {
   'Divider {i} of {n}': 'Перегородка {i} из {n}',
   // In-space picks (ADR-286).
   'Fill this space': 'Заполнить это пространство',
+  // Find an action and first-run hints (ADR-289).
+  Skip: 'Пропустить',
+  'Step {i} of {n}': 'Шаг {i} из {n}',
+  'Getting started': 'С чего начать',
+  'Open here': 'Открыть здесь',
+  'All features': 'Все функции',
+  'Search actions and features': 'Поиск действий и функций',
+  'Nothing found. Try another word.': 'Ничего не найдено. Попробуйте другое слово.',
+  'Tap to select': 'Нажмите, чтобы выбрать',
+  'Sizes and handles': 'Размеры и ручки',
+  'Chips do the rest': 'Остальное — в кнопках',
+  'Tap the drawing to select: each tap goes one space deeper. The path at the top goes back up.':
+    'Нажмите на чертёж, чтобы выбрать: каждое нажатие — на уровень глубже. Путь сверху ведёт обратно.',
+  'Yellow sizes open their field. A green + divides a space; drag a divider to resize.':
+    'Жёлтые размеры открывают своё поле. Зелёный + делит пространство; тяните перегородку, чтобы изменить размер.',
+  'The chips at the bottom open one part of the editor at a time. The magnifier finds any action.':
+    'Кнопки внизу открывают по одной части редактора. Лупа находит любое действие.',
   // Problem pins (ADR-287).
   'Problem: {message}': 'Проблема: {message}',
   'Check: {message}': 'Проверка: {message}',

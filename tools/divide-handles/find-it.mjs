@@ -39,6 +39,10 @@ for (const width of [360, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await page.locator('details.more > summary').first().click();
   await page.getByRole('button', { name: /Canvas editor \(preview\)/ }).click();
+  // First-run hints (ADR-289) open once; skip them.
+  await page.waitForTimeout(200);
+  if (await page.getByRole('dialog', { name: 'Getting started' }).isVisible())
+    await page.getByRole('button', { name: 'Skip' }).click();
   await page.waitForTimeout(300);
   await tapTo(2);
 
@@ -107,6 +111,10 @@ for (const width of [360, 390]) {
   // 6. Flag off: a selected space has no handles.
   await page.locator('details.more > summary').first().click();
   await page.getByRole('button', { name: /Canvas editor \(preview\)/ }).click();
+  // First-run hints (ADR-289) open once; skip them.
+  await page.waitForTimeout(200);
+  if (await page.getByRole('dialog', { name: 'Getting started' }).isVisible())
+    await page.getByRole('button', { name: 'Skip' }).click();
   await page.waitForTimeout(300);
   check(width, 'flag off: no divide handles', (await handle('Divide stacked').count()) === 0);
   check(width, 'no script errors', errors.length === 0, errors.join(' | '));

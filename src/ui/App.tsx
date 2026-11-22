@@ -47,6 +47,7 @@ import { PrintSheet } from './PrintSheet';
 import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
 import { upOneLevel } from './upLevel';
+import { CanvasHints, FindAction } from './FindAction';
 import {
   ChipRail,
   LadderPill,
@@ -329,6 +330,13 @@ export function App() {
   });
   // Output lenses (ADR-288): the results shown as a card over the drawing, opened from chips after the blocks.
   const [outOpen, setOutOpen] = useState(false);
+  // Find an action (ADR-289).
+  const [findOpen, setFindOpen] = useState(false);
+  const openOutput = (tab: Tab) => {
+    useDesign.getState().setTab(tab);
+    setSheetStop('peek');
+    setOutOpen(true);
+  };
   const outLensOn = canvas && outOpen && mode === 'compose';
   const resultsRef = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
@@ -1068,17 +1076,13 @@ export function App() {
                 <ChipRail
                   keys={lensKeyList}
                   onPick={pickLens}
-                  onFind={() => setSheetStop(sheetStop === 'peek' ? 'half' : sheetStop)}
+                  onFind={() => setFindOpen(true)}
                   after={outputs.map(([k, label]) => (
                     <button
                       key={k}
                       type="button"
                       className="btn chip out"
-                      onClick={() => {
-                        useDesign.getState().setTab(k);
-                        setSheetStop('peek');
-                        setOutOpen(true);
-                      }}
+                      onClick={() => openOutput(k)}
                     >
                       {label}
                     </button>
@@ -1253,6 +1257,19 @@ export function App() {
             </div>
           )}
           <Output />
+          {canvas && (
+            <>
+              <FindAction
+                open={findOpen}
+                blocks={lensKeyList}
+                outputs={outputs}
+                onBlock={pickLens}
+                onOutput={(tab) => openOutput(tab as Tab)}
+                onClose={() => setFindOpen(false)}
+              />
+              <CanvasHints on={page === 'editor' && mode === 'compose'} />
+            </>
+          )}
           {outLensOn && (
             <button
               type="button"
