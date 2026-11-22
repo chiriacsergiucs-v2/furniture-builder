@@ -678,7 +678,7 @@ export function PieceElevation({
  * A size label that is also a button (the canvas editor's size tags, ADR-284): its name for assistive tech, what a tap
  * does, and the hit size in drawing units (44 px at the current scale).
  */
-export interface DimTag {
+interface DimTag {
   name: string;
   onActivate: () => void;
   hit: number;
