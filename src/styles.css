@@ -7924,6 +7924,7 @@ fieldset.group-locked {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
+}
 
 /* Appearance dialog: one row per theme variable (label, value, reset, slider). */
 .appearance-group {
