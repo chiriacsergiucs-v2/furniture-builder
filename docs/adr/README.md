@@ -347,3 +347,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-283](../adr-done/ADR-283-edit-on-the-canvas-on-phones-selection-ladder-chip-rail-and.md) | Edit on the canvas on phones: selection ladder, chip rail and lens card | ADR-078, ADR-112, ADR-144, ADR-211, ADR-241, ADR-247 | ✅ Implemented |
 | [ADR-284](../adr-done/ADR-284-size-tags-on-the-drawing-open-the-matching-size-field.md) | Size tags on the drawing open the matching size field | ADR-283 | ✅ Implemented |
 | [ADR-285](../adr-done/ADR-285-divide-handles-and-dividers-on-the-drawing.md) | Divide handles and dividers on the drawing | ADR-284 | ✅ Implemented |
+| [ADR-286](../adr-done/ADR-286-fill-an-empty-space-from-picks-on-the-drawing.md) | Fill an empty space from picks on the drawing | ADR-285 | ✅ Implemented |
