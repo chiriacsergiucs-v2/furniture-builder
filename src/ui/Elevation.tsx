@@ -7,7 +7,8 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from 'react';
-import { findInProduct, parentOf as spaceParent, productRoots } from '../core/design';
+import { findInProduct, parentOf as spaceParent, productRoots, splitSpace } from '../core/design';
+import { snapIsOn } from '../store/useSnap';
 import { boxCentre } from '../core/geometry';
 import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { pt } from '@furniture-builder/i18n/print';
@@ -192,6 +193,31 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
           },
         }
       : undefined;
+  // Divide handles and dividers on the drawing (ADR-285): the same splits the Divide and Division blocks make.
+  const updateSpace = useDesign((st) => st.updateSpace);
+  const selFound =
+    canvas && typeof selectedId === 'string'
+      ? findInProduct(design.product, selectedId)
+      : undefined;
+  const selNode = selFound?.space;
+  // The split whose dividers show: the selected split, else the split around the selected part.
+  const barSplit =
+    selNode?.kind === 'split' ? selNode : partSpace?.kind === 'split' ? partSpace : undefined;
+  const barBoxes =
+    barSplit?.kind === 'split'
+      ? barSplit.children.map(
+          (c) => model.spaces.find((o) => o.nodeId === c.id && o.view !== 'side')?.box,
+        )
+      : [];
+  const [barDrag, setBarDrag] = useState<{ i: number; value: number } | null>(null);
+  const commitBar = (i: number, value: number) => {
+    if (!barSplit || barSplit.kind !== 'split') return;
+    updateSpace(barSplit.id, (sp) =>
+      sp.kind === 'split'
+        ? { ...sp, sizes: sp.sizes.map((z, j) => (j === i ? { mode: 'mm' as const, value } : z)) }
+        : sp,
+    );
+  };
   // The previewed space (ADR-269) and the pinned one, each in its own dashed outline.
   const hoverBox = canHover && hoverId !== undefined ? selectionBox(model, hoverId) : undefined;
   const hoverName =
@@ -510,6 +536,52 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
             )}
           </g>
         )}
+        {canvas && selNode && selNode.kind !== 'split' && selectedSpace && (
+          <>
+            <PlusHandle
+              x={selectedSpace.box.x + selectedSpace.box.w}
+              y={
+                Y(selectedSpace.box.y, selectedSpace.box.h) +
+                Math.min(selectedSpace.box.h * 0.2, hit * 1.2)
+              }
+              r={hit / 2}
+              name={t('Divide side by side')}
+              onActivate={() => updateSpace(selNode.id, (sp) => splitSpace(sp, 'x', 2))}
+            />
+            <PlusHandle
+              x={selectedSpace.box.x + Math.min(selectedSpace.box.w * 0.25, hit * 1.2)}
+              y={Y(selectedSpace.box.y, selectedSpace.box.h) + selectedSpace.box.h}
+              r={hit / 2}
+              name={t('Divide stacked')}
+              onActivate={() => updateSpace(selNode.id, (sp) => splitSpace(sp, 'y', 2))}
+            />
+          </>
+        )}
+        {canvas &&
+          barSplit?.kind === 'split' &&
+          barBoxes.slice(0, -1).map((a, i) => {
+            const bx = barBoxes[i + 1];
+            if (!a || !bx) return null;
+            return (
+              <DividerBar
+                key={`${barSplit.id}-${i}`}
+                axis={barSplit.axis}
+                a={a}
+                b={bx}
+                hit={hit}
+                fontSize={fontSize}
+                pxScale={pxScale}
+                index={i}
+                count={barBoxes.length - 1}
+                drag={barDrag?.i === i ? barDrag.value : null}
+                onDrag={(value) => setBarDrag(value === null ? null : { i, value })}
+                onCommit={(value) => {
+                  setBarDrag(null);
+                  commitBar(i, value);
+                }}
+              />
+            );
+          })}
       </svg>
       {hoverName && (
         <span className="el-chip" aria-hidden="true">
@@ -763,6 +835,166 @@ export function DimV({
           {label}
         </text>
       </g>
+    </g>
+  );
+}
+
+/** A green + on a space's edge that divides it (ADR-285): side by side from the right edge, stacked from the bottom. */
+function PlusHandle({
+  x,
+  y,
+  r,
+  name,
+  onActivate,
+}: {
+  x: number;
+  y: number;
+  r: number;
+  name: string;
+  onActivate: () => void;
+}) {
+  const arm = r * 0.45;
+  return (
+    <g
+      className="plus-handle"
+      role="button"
+      tabIndex={0}
+      aria-label={name}
+      onClick={(e) => {
+        e.stopPropagation();
+        onActivate();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onActivate();
+        }
+      }}
+    >
+      <circle className="plus-hit" cx={x} cy={y} r={r} />
+      <circle className="plus-dot" cx={x} cy={y} r={r * 0.62} />
+      <path d={`M${x - arm} ${y}H${x + arm}M${x} ${y - arm}V${y + arm}`} />
+    </g>
+  );
+}
+
+/**
+ * The size a part gets when the divider after it is moved from `start` to `to` along the split (ADR-285): it grows by
+ * the move when it lies on the low side of the divider. Whole millimetres, 10 mm steps with snap, never below 1.
+ */
+export function partSizeAfterMove(
+  size: number,
+  partIsLow: boolean,
+  start: number,
+  to: number,
+  snap: boolean,
+) {
+  const raw = size + (partIsLow ? to - start : start - to);
+  const v = snap ? Math.round(raw / 10) * 10 : Math.round(raw);
+  return Math.max(1, v);
+}
+
+/**
+ * The divider between two parts of a split (ADR-285): drag it to size the part before it (a fixed size, one undo step
+ * on release), or focus it and use ← → / ↑ ↓ for 10 mm steps. The size tag (ADR-284) types the same size.
+ */
+function DividerBar({
+  axis,
+  a,
+  b,
+  hit,
+  fontSize,
+  pxScale,
+  index,
+  count,
+  drag,
+  onDrag,
+  onCommit,
+}: {
+  axis: 'x' | 'y';
+  a: { x: number; y: number; w: number; h: number };
+  b: { x: number; y: number; w: number; h: number };
+  hit: number;
+  fontSize: number;
+  pxScale: number;
+  index: number;
+  count: number;
+  drag: number | null;
+  onDrag: (value: number | null) => void;
+  onCommit: (value: number) => void;
+}) {
+  const across = axis === 'x';
+  // Part `a` is on the low side when it starts first along the axis (left, or lower in the front view).
+  const aLow = across ? a.x <= b.x : a.y <= b.y;
+  const size = across ? a.w : a.h;
+  const lo = aLow ? a : b,
+    hi = aLow ? b : a;
+  // The divider's line, in model coordinates along the axis, and its span across.
+  const at = across ? (lo.x + lo.w + hi.x) / 2 : (lo.y + lo.h + hi.y) / 2;
+  const shown = drag ?? size;
+  const pos = drag === null ? at : at + (aLow ? drag - size : size - drag);
+  const start = useRef<{ client: number; snap: boolean } | null>(null);
+  const toValue = (client: number) => {
+    const s = start.current!;
+    const moved = (client - s.client) / (pxScale || 1);
+    return partSizeAfterMove(size, aLow, at, at + (across ? moved : -moved), s.snap);
+  };
+  const x1 = across ? pos : Math.min(a.x, b.x);
+  const x2 = across ? pos : Math.max(a.x + a.w, b.x + b.w);
+  const y1 = across ? -Math.max(a.y + a.h, b.y + b.h) : -pos;
+  const y2 = across ? -Math.min(a.y, b.y) : -pos;
+  return (
+    <g
+      className={`divider-bar${drag !== null ? ' dragging' : ''}`}
+      role="slider"
+      tabIndex={0}
+      aria-label={t('Divider {i} of {n}', { i: index + 1, n: count })}
+      aria-valuenow={shown}
+      aria-valuetext={t('{n} mm', { n: shown })}
+      aria-orientation={across ? 'horizontal' : 'vertical'}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+        start.current = { client: across ? e.clientX : e.clientY, snap: snapIsOn() && !e.altKey };
+      }}
+      onPointerMove={(e) => {
+        if (!start.current) return;
+        onDrag(toValue(across ? e.clientX : e.clientY));
+      }}
+      onPointerUp={(e) => {
+        if (!start.current) return;
+        const v = toValue(across ? e.clientX : e.clientY);
+        start.current = null;
+        if (v !== size) onCommit(v);
+        else onDrag(null);
+      }}
+      onPointerCancel={() => {
+        start.current = null;
+        onDrag(null);
+      }}
+      onKeyDown={(e) => {
+        const grow = across ? 'ArrowRight' : 'ArrowUp';
+        const shrink = across ? 'ArrowLeft' : 'ArrowDown';
+        if (e.key !== grow && e.key !== shrink) return;
+        e.preventDefault();
+        const step = (e.key === grow) === aLow ? 10 : -10;
+        onCommit(Math.max(1, size + step));
+      }}
+    >
+      <line className="divider-hit" x1={x1} x2={x2} y1={y1} y2={y2} strokeWidth={hit} />
+      <line className="divider-line" x1={x1} x2={x2} y1={y1} y2={y2} />
+      {drag !== null && (
+        <text
+          className="divider-readout"
+          x={across ? pos : (x1 + x2) / 2}
+          y={across ? (y1 + y2) / 2 : -pos - fontSize}
+          fontSize={fontSize}
+          textAnchor="middle"
+        >
+          {t('{n} mm', { n: drag })}
+        </text>
+      )}
     </g>
   );
 }

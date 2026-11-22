@@ -438,4 +438,8 @@ export const ru_shell = {
   'Height {n} mm': 'Высота {n} мм',
   'Depth {n} mm': 'Глубина {n} мм',
   'D {n}': 'Г {n}',
+  // Divide handles and dividers (ADR-285).
+  'Divide side by side': 'Разделить по ширине',
+  'Divide stacked': 'Разделить по высоте',
+  'Divider {i} of {n}': 'Перегородка {i} из {n}',
 } satisfies Record<string, string>;
