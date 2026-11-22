@@ -402,6 +402,28 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
 const crumbName = (root: Space, s: Space) => placed(spacePlace(root, s.id), KIND_LABEL[s.kind]);
 
 /**
+ * The levels from the piece's root space down to `id`, named as the breadcrumb names them, for the canvas editor's
+ * selection ladder (ADR-283). Empty when nothing inside the piece is selected.
+ */
+export function selectionChain(
+  prod: Parameters<typeof findInProduct>[0],
+  id: Selection,
+): { id: string; label: string }[] {
+  const found = typeof id === 'string' ? findInProduct(prod, id) : undefined;
+  if (!found) return [];
+  const chain: Space[] = [];
+  let cur: Space | undefined = findSpace(found.root, found.space.id);
+  while (cur) {
+    chain.unshift(cur);
+    cur = parentOf(found.root, cur.id);
+  }
+  return chain.map((sp, i) => ({
+    id: sp.id,
+    label: i === 0 ? tr(found.label) : crumbName(found.root, sp),
+  }));
+}
+
+/**
  * The drawer head (ADR-267): path, title and size stay at the top while the body scrolls. A change of `name` plays a
  * one-off tint (CSS, off under reduced motion) and, 150 ms after the last change, a status line says what is now
  * selected, so fast tapping announces only the last selection. It never moves focus.

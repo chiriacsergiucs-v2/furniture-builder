@@ -421,4 +421,16 @@ export const ru_shell = {
   '{used}% of the board used': 'использовано {used}% плиты',
   '{n|# part not placed|# parts not placed}':
     '{n|# деталь не размещена|# детали не размещены|# деталей не размещено}',
+  // Canvas editor (ADR-283).
+  'Canvas editor (preview)': 'Редактор на чертеже (предпросмотр)',
+  'on: edit on the drawing': 'вкл.: правка на чертеже',
+  'off: the editor sheet': 'выкл.: панель редактора',
+  'Selection path': 'Путь выбора',
+  Overview: 'Обзор',
+  'Editor actions': 'Действия редактора',
+  'Shorter card': 'Ниже карточку',
+  'Taller card': 'Выше карточку',
+  'Editor card': 'Карточка редактора',
+  'Close the card': 'Закрыть карточку',
+  'Find an action': 'Найти действие',
 } satisfies Record<string, string>;

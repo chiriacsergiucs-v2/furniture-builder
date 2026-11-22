@@ -7324,3 +7324,170 @@ fieldset.group-locked {
 .opt-summary {
   font-size: 1.1rem;
 }
+
+/* Canvas editor on phones (ADR-283): the Compose sheet becomes a lens card that shows one block at a time, opened
+   from a chip rail; a selection ladder names the level reached. Only while the device flag is on (`.work.canvas`). */
+[data-lens-off] {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .work.canvas .sheet-peek-row {
+    display: none;
+  }
+  .work.canvas.mode-compose .side {
+    overflow: visible;
+    left: var(--s-2);
+    right: var(--s-2);
+    bottom: calc(var(--actions-h, 64px) + var(--s-2));
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+  }
+  .work.canvas.mode-compose:not(.sheet-open) .side {
+    display: none;
+  }
+  .work.canvas.mode-compose.sheet-open .side {
+    max-height: 30dvh;
+  }
+  .work.canvas.mode-compose.sheet-full .side {
+    height: auto;
+    max-height: 55dvh;
+  }
+  .work.canvas.mode-compose .side-body {
+    padding: var(--s-3);
+  }
+  /* The card points at the selection (ADR-283). */
+  .work.canvas.mode-compose .side[data-anchored]::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: calc(var(--lens-anchor, 50%) - 7px);
+    width: 14px;
+    height: 14px;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+    background: var(--surface);
+    transform: rotate(45deg);
+  }
+  /* The ladder replaces the space editor's breadcrumb, Up one level included. */
+  .work.canvas.mode-compose .side .crumbs {
+    display: none;
+  }
+  /* The drawing re-frames into the stage left above the card, so the selection stays in sight. */
+  .work.canvas.mode-compose.sheet-open .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) -
+        var(--lens-h, 30dvh) - var(--s-2)
+    );
+    min-height: 160px;
+    padding-bottom: 0;
+  }
+  .ladder {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    min-width: 0;
+    margin: var(--s-1) var(--s-2);
+  }
+  .ladder-up {
+    flex: none;
+    border-radius: var(--r-pill);
+  }
+  .ladder-crumbs {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    padding: 0 var(--s-1);
+  }
+  .ladder-step {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    color: var(--ink-2);
+  }
+  .ladder-crumb {
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 var(--s-2);
+    overflow: hidden;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    font: inherit;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ladder-crumb.cur {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .chip-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-1) var(--s-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chip-rail .peek-actions {
+    display: flex;
+    flex: none;
+    gap: var(--s-2);
+  }
+  .work.canvas.sheet-open .chip-rail {
+    display: none;
+  }
+  .btn.chip {
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-1);
+    white-space: nowrap;
+  }
+  .lens-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .lens-tabs {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .lens-tabs button {
+    flex: none;
+    min-height: 44px;
+    padding: 0 var(--s-3);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--ink-2);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .lens-tabs button.on {
+    border-bottom-color: var(--primary);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .lens-tabs button:focus-visible,
+  .ladder-crumb:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: -2px;
+  }
+}
