@@ -348,4 +348,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-284](../adr-done/ADR-284-size-tags-on-the-drawing-open-the-matching-size-field.md) | Size tags on the drawing open the matching size field | ADR-283 | ✅ Implemented |
 | [ADR-285](../adr-done/ADR-285-divide-handles-and-dividers-on-the-drawing.md) | Divide handles and dividers on the drawing | ADR-284 | ✅ Implemented |
 | [ADR-286](../adr-done/ADR-286-fill-an-empty-space-from-picks-on-the-drawing.md) | Fill an empty space from picks on the drawing | ADR-285 | ✅ Implemented |
-| [ADR-287](ADR-287-problem-pins-on-the-drawing-and-a-checks-chip.md) | Problem pins on the drawing and a Checks chip | ADR-286 | Pending |
+| [ADR-287](../adr-done/ADR-287-problem-pins-on-the-drawing-and-a-checks-chip.md) | Problem pins on the drawing and a Checks chip | ADR-286 | ✅ Implemented |

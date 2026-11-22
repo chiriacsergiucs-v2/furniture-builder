@@ -1,7 +1,8 @@
 # ADR-287: Problem pins on the drawing and a Checks chip
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-286
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec, slice 5: problem pins)
 - Backlog: N370
