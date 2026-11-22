@@ -61,7 +61,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `frontend-design`, `caveman`,
+  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `frontend-design`, `caveman`,
   and the health loops `health-bugs`, `health-security`, `health-deps`, `health-cleanup`, `health-reuse` (shared loop in
   `health-bugs/loop.md`; see _Orchestration_)
 - `.claude/agents/` — subagents from the MIT-licensed `maslennikov-ig/claude-code-orchestrator-kit`, by area (health,
