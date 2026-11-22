@@ -10,6 +10,7 @@ import {
   OVERVIEW,
 } from '../src/ui/CanvasEditor';
 import { orderByUse, parseCanvasEditor } from '../src/store/useCanvasEditor';
+import { partSizeAfterMove } from '../src/ui/Elevation';
 
 const editor = () => {
   const root = document.createElement('div');
@@ -82,5 +83,14 @@ describe('canvas editor (ADR-283)', () => {
     expect(controlByLabel(body, 'Height')?.id).toBe('h1');
     expect(controlByLabel(body, 'Depth')).toBeNull();
     body.remove();
+  });
+
+  it('a divider move sizes the part before it, in whole mm or 10 mm steps (ADR-285)', () => {
+    // Low side (left or lower): moving the divider up the axis grows the part.
+    expect(partSizeAfterMove(400, true, 500, 537, false)).toBe(437);
+    expect(partSizeAfterMove(400, true, 500, 537, true)).toBe(440);
+    // High side: the same move shrinks it.
+    expect(partSizeAfterMove(400, false, 500, 537, false)).toBe(363);
+    expect(partSizeAfterMove(10, true, 500, 0, false)).toBe(1);
   });
 });
