@@ -2273,3 +2273,63 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-582: Catalog finder: on by default or keep the grouped page
+
+- Status: Open
+- Origin: ADR-291, N377
+- Missing: The finder ships off by default behind More › Catalog finder (preview); turning it on by default or removing the grouped page needs the user's word (ui-rework step 5).
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Turn the finder on by default and keep the grouped page behind the switch, keep it off, or remove the grouped page?
+- Suggested pick: On by default, grouped page behind the switch (as ADR-290 did for the canvas editor)
+- Work: Low
+- Impact: Medium-high
+- Necessity: Medium
+
+### G-583: Catalog rework: web research and published spec/prototype skipped
+
+- Status: Open
+- Origin: ADR-291, ui-rework steps 3 and 7
+- Missing: No 8–12 product research with links, no weighted scoring and doubt rounds, no published spec or interactive prototype; the concept was picked from three previews in a question.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Run the research and publish the spec now, or accept the pick as made?
+- Suggested pick: Accept the pick; run research only if the finder is to become the default
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-584: Start from dialog and the Materials seller-band select keep the old layout
+
+- Status: Open
+- Origin: ADR-291 scope
+- Missing: New › Start from (Catalog.tsx StartFrom) and project Add a piece keep their own grouped list; the Materials dialog still offers seller bands as a select (MaterialDialog.tsx:486), a second band picker.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Bring Start from and the Materials band select into the finder too?
+- Suggested pick: Yes: Start from reuses the finder grid; the Materials select opens the product picker
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+
+### G-585: Finder filter row scrolls sideways on a phone
+
+- Status: Open
+- Origin: ADR-291, finder-390 screenshot
+- Missing: At 390 px the Type select and Ready to open sit off-screen in the filter row; they are reached by swiping the row.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Wrap the filters onto two rows, or move Source to its own row?
+- Suggested pick: Source tabs on their own row, the three filters below
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+
+### G-586: Grouped catalog page is 19 365 px tall on a phone, over the N311 limit
+
+- Status: Open
+- Origin: tools/catalog-flows/find-it.mjs rerun for ADR-291
+- Missing: catalog-flows check 'page under 17 000 px tall as it opens (paged, N311)' fails at 390 px: 19 365 px, measured on the build before ADR-291's changes too; the other 34 checks pass.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach.
+- Questions: Fix the grouped page's height, or let the finder (G-582) replace it?
+- Suggested pick: Let the finder become the default (G-582); keep the grouped page as is
+- Work: Low
+- Impact: Low
+- Necessity: Low

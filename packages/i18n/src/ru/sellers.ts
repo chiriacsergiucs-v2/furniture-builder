@@ -61,4 +61,14 @@ export const ru_sellers = {
   '{w} × {t} mm': '{w} × {t} мм',
   'Any product of a seller, added to this project’s shopping list.':
     'Любой товар продавца, добавленный в список покупок этого проекта.',
+  // The picker in the catalog finder (ADR-291).
+  'Flap stays': 'Подъёмники',
+  Runners: 'Направляющие',
+  Worktops: 'Столешницы',
+  'Edge bands': 'Кромки',
+  Hinges: 'Петли',
+  'Push latches': 'Толкатели',
+  'Product kind': 'Вид товара',
+  'All kinds': 'Все виды',
+  '{n|# product|# products}': '{n|# товар|# товара|# товаров}',
 };
