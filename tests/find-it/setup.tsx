@@ -87,6 +87,9 @@ export async function renderApp(width: number) {
   globalThis.indexedDB = new IDBFactory();
   window.history.replaceState(null, '', '/');
   vi.resetModules();
+  // These tests find features in the phone sheet; the canvas editor is the phone default since ADR-290 and has its
+  // own browser scripts (tools/canvas-editor and the slices after it), so the sheet is chosen here as More › switch does.
+  localStorage.setItem('fb:canvasEditor', 'off');
   // The languages stored on the device (ADR-153, ADR-157), read before the app's modules, and the chosen language's
   // dictionary loaded before them (ADR-229), as main.tsx does.
   const { langReady } = await import('../../src/langInit');

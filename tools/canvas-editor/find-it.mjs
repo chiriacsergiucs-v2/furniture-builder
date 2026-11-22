@@ -29,12 +29,36 @@ const tapSpace = async (page) => {
 };
 const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
 
+// 0. Default (ADR-290): a first visit on a phone opens the canvas editor, with its first-run hints.
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await ctx.newPage();
+  await newChest(page);
+  const hints = page.getByRole('dialog', { name: 'Getting started' });
+  check(390, 'first visit: "Getting started" shows', await hints.isVisible());
+  if (await hints.isVisible()) await hints.getByRole('button', { name: 'Skip' }).click();
+  check(
+    390,
+    'first visit: the chip rail and ladder show, no peek row',
+    (await page.getByRole('toolbar', { name: 'Editor actions' }).isVisible()) &&
+      (await page.getByRole('navigation', { name: 'Selection path' }).isVisible()) &&
+      !(await page.locator('.sheet-peek').isVisible()),
+  );
+  await ctx.close();
+}
+
 for (const width of [360, 390]) {
   const ctx = await browser.newContext({
     viewport: { width, height: 800 + (width === 390 ? 44 : 0) },
     hasTouch: true,
     isMobile: true,
   });
+  // Start from the sheet (More › switch off, ADR-290), so turning it on is part of the find-it path.
+  await ctx.addInitScript(() => localStorage.setItem('fb:canvasEditor', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

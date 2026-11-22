@@ -3729,3 +3729,15 @@ highest id in either file.
 - Work: High
 - Impact: High
 - Necessity: Medium-high
+
+### G-580: Canvas editor: remove the phone sheet or make the canvas editor the default
+
+- Status: Done (ADR-290)
+- Origin: ADR-289 (N372), design spec 2026-11-22
+- Missing: The phone sheet still exists behind the fb:canvasEditor flag (off by default); the design's last step removes it once parity is proven in the running app
+- Request: User 2026-11-22: 'maintaining all actions' (hard limit) and 'Proveed slices'
+- Questions: Turn the canvas editor on by default, remove the sheet, or keep the flag?
+- Suggested pick: Ask the user: removing UI is a consent item
+- Work: Medium
+- Impact: High
+- Necessity: Medium
