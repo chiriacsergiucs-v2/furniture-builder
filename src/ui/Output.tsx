@@ -252,9 +252,15 @@ function Parts() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">{t('Qty')}</th>
-                <th scope="col">{t('Length')}</th>
-                <th scope="col">{t('Width')}</th>
+                <th scope="col" className="num">
+                  {t('Qty')}
+                </th>
+                <th scope="col" className="num">
+                  {t('Length')}
+                </th>
+                <th scope="col" className="num">
+                  {t('Width')}
+                </th>
                 <th scope="col">{t('Edges')}</th>
                 <th scope="col">{t('Part')}</th>
               </tr>
@@ -399,9 +405,13 @@ function Lengths() {
           </caption>
           <thead>
             <tr>
-              <th scope="col">{t('Length')}</th>
+              <th scope="col" className="num">
+                {t('Length')}
+              </th>
               <th scope="col">{t('Cut into')}</th>
-              <th scope="col">{t('Left over')}</th>
+              <th scope="col" className="num">
+                {t('Left over')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -493,12 +503,16 @@ function Hardware() {
           )}
         </GuidanceTip>
       </div>
-      <table className="cut">
+      <table className="cut items">
         <thead>
           <tr>
-            <th scope="col">{t('Qty')}</th>
+            <th scope="col" className="num">
+              {t('Qty')}
+            </th>
             <th scope="col">{t('Item')}</th>
-            <th scope="col">{t('Size')}</th>
+            <th scope="col" className="num">
+              {t('Size')}
+            </th>
             <th scope="col">{t('Note')}</th>
           </tr>
         </thead>

@@ -54,6 +54,8 @@ async function newPage(browser, width, scheme) {
     console.log(`${width}px ${scheme} BLOCKED ${route.request().method()} ${u}`);
     return route.abort('blockedbyclient');
   });
+  // The first-run canvas hints dialog blocks clicks at 390 px; mark it seen (ui-review 2026-11-23).
+  await ctx.addInitScript(() => localStorage.setItem('fb:canvas-coach', 'done'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -126,8 +128,14 @@ for (const scheme of SCHEMES) {
       await wait(600);
     };
     const addBase = async () => {
+      // On the phone canvas a selected piece replaces the Add chip; Escape clears the selection (ui-review 2026-11-23).
+      if (phone) await escape();
       await sheet(true);
-      await btn('Add a piece').first().click({ timeout: 5000 });
+      // The phone canvas editor names it "Add a piece to the project" (ui-review 2026-11-23).
+      await page
+        .getByRole('button', { name: /^Add a piece( to the project)?$/ })
+        .first()
+        .click({ timeout: 5000 });
       await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
       await dlg.locator('.start-group .row-btn').first().click();
       await dlg.waitFor({ state: 'detached' }).catch(() => {});
@@ -149,7 +157,8 @@ for (const scheme of SCHEMES) {
       await addBase();
       await showPieces(page);
       const n = await page.locator('ul.pieces li').count();
-      if (n < 2) throw new Error(`the piece list shows ${n} pieces, 2 expected`);
+      // The phone canvas editor has no piece list; the pieces are on the canvas (ui-review 2026-11-23).
+      if (n < 2 && !phone) throw new Error(`the piece list shows ${n} pieces, 2 expected`);
       seeded = true;
       await sheet(false);
       await wait(300);

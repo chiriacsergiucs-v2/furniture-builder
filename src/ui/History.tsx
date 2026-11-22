@@ -111,6 +111,9 @@ function HistoryForProject() {
         >
           {t('Edit history')}
         </button>
+        {inPieceEditor && (
+          <p className="hint">{t('Go back to the project to use its edit history')}</p>
+        )}
         <button
           type="button"
           className="btn outline"

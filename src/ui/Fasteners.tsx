@@ -216,10 +216,14 @@ export function FastenerCounts() {
       <table className="cut">
         <thead>
           <tr>
-            <th scope="col">{t('Count')}</th>
+            <th scope="col" className="num">
+              {t('Count')}
+            </th>
             <th scope="col">{t('Joint type')}</th>
             <th scope="col">{t('Your fastener')}</th>
-            <th scope="col">{t('To buy')}</th>
+            <th scope="col" className="num">
+              {t('To buy')}
+            </th>
           </tr>
         </thead>
         <tbody>

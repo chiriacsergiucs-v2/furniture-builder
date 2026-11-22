@@ -41,7 +41,7 @@ export function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: (
       !(await askConfirm(
         t(
           '“{name}” was edited after it was added. Its own changes go onto {target} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.',
-          { name: item.design.name, target: name },
+          { name: tr(item.design.name), target: name },
         ),
         { confirmLabel: t('Replace') },
       ))
@@ -63,7 +63,7 @@ export function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: (
     <Dialog
       open
       onClose={onClose}
-      title={t('Replace {name}', { name: item.design.name })}
+      title={t('Replace {name}', { name: tr(item.design.name) })}
       info={
         <InfoTip label={t('About replacing a piece')} align="start">
           {t(

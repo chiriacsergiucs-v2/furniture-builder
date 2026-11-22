@@ -1227,6 +1227,8 @@ export function App() {
               </div>
               <div
                 className={`view three ${shows3d(shown) ? 'active' : ''}`}
+                role="region"
+                aria-label={t('3D view')}
                 data-seams={seams ?? undefined}
                 data-lit={lit ?? undefined}
               >

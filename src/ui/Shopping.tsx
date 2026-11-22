@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import {
   CURRENCY_ID,
   formatMoney,
@@ -346,10 +346,16 @@ export function ShoppingList() {
             <table className="cut shop">
               <thead>
                 <tr>
-                  <th scope="col">{t('Qty')}</th>
+                  <th scope="col" className="num">
+                    {t('Qty')}
+                  </th>
                   <th scope="col">{t('Item')}</th>
                   <th scope="col">{t('Details')}</th>
-                  {s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
+                  {s.id !== 'choose' && (
+                    <th scope="col" className="num">
+                      {t('Price')}
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -395,6 +401,7 @@ function Line({
   const units = unitsFor(l);
   const [unit, setUnit] = useState<ShopUnit>(e?.unit && units.includes(e.unit) ? e.unit : units[0]);
   const [bad, setBad] = useState(false);
+  const badId = useId();
   const p = linePrice(l, map, seller);
   const u = unitPrice(l, map, seller);
   const fromSeller = p !== null && priceSource(l, map, seller) === 'seller';
@@ -422,6 +429,7 @@ function Line({
                   className={bad ? 'bad' : undefined}
                   // A wrong price is named, not only coloured (ADR-260).
                   aria-invalid={bad || undefined}
+                  aria-describedby={bad ? badId : undefined}
                   title={bad ? t('An amount, for example 12.50') : undefined}
                   onBlur={(ev) => {
                     const a = parseMoney(ev.target.value);
@@ -443,6 +451,11 @@ function Line({
                   </select>
                 ) : (
                   <span>{PER[unit]}</span>
+                )}
+                {bad && (
+                  <span className="field-error" id={badId}>
+                    {t('An amount, for example 12.50')}
+                  </span>
                 )}
               </span>
             ) : p === null && l.section === 'run' ? (
