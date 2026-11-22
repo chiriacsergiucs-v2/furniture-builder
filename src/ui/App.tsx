@@ -318,7 +318,7 @@ export function App() {
   useLensRequests((req) => {
     if (!canvas) return;
     setLensTab(req.tab);
-    if (sheetStop === 'peek') setSheetStop('half');
+    if (sheetStop === 'peek' || (req.showDrawing && sheetStop === 'full')) setSheetStop('half');
     let tries = 0;
     const tryFocus = () => {
       const body = sideBodyRef.current;
