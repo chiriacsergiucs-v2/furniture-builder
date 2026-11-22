@@ -352,4 +352,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-288](../adr-done/ADR-288-output-lenses-in-the-canvas-editor.md) | Output lenses in the canvas editor | ADR-287 | ✅ Implemented |
 | [ADR-289](../adr-done/ADR-289-find-an-action-and-first-run-hints-in-the-canvas-editor.md) | Find an action and first-run hints in the canvas editor | ADR-288 | ✅ Implemented |
 | [ADR-290](../adr-done/ADR-290-turn-the-canvas-editor-on-by-default-on-phones.md) | Turn the canvas editor on by default on phones | ADR-289 | ✅ Implemented |
-| [ADR-291](ADR-291-catalog-finder-search-first-catalog-and-product-picker.md) | Catalog finder: a search-first catalog and product picker behind a switch | ADR-032, ADR-161, ADR-195, ADR-283 | Pending |
+| [ADR-291](../adr-done/ADR-291-catalog-finder-search-first-catalog-and-product-picker.md) | Catalog finder: a search-first catalog and product picker behind a switch | ADR-032, ADR-161, ADR-195, ADR-283 | ✅ Implemented |

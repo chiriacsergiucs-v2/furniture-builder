@@ -1,7 +1,8 @@
 # ADR-291: Catalog finder: a search-first catalog and product picker behind a switch
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-032, ADR-161, ADR-195, ADR-283
 - Design: n/a (concept A "Finder", picked by the user from three previews on 2026-11-22)
 - Backlog: N377
@@ -47,9 +48,9 @@ switch sits above the list on every open. Of three concepts (A Finder, B Room ra
 
 ## Done when
 
-- [ ] More › "Catalog finder (preview)" turns the finder on and off; off shows the grouped page (browser script)
-- [ ] The grid lists each family once, 24 first, starting in the first screen at 390 and 1280 px (browser script)
-- [ ] Room, Type and Ready to open narrow the grid and the count; a search with no match says so (browser script)
-- [ ] A family opens in a sheet whose items show their verb and open in the editor (browser script)
-- [ ] The product picker shows kind chips, a count and 30 products with Show more (browser script)
-- [ ] The finder's rules are unit-tested; every new text has its Russian entry (typecheck)
+- [x] More › "Catalog finder (preview)" turns the finder on and off; off shows the grouped page (browser script)
+- [x] The grid lists each family once, 24 first, starting in the first screen at 390 and 1280 px (browser script)
+- [x] Room, Type and Ready to open narrow the grid and the count; a search with no match says so (browser script)
+- [x] A family opens in a sheet whose items show their verb and open in the editor (browser script)
+- [x] The product picker shows kind chips, a count and 30 products with Show more (browser script)
+- [x] The finder's rules are unit-tested; every new text has its Russian entry (typecheck)
