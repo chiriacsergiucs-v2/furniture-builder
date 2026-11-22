@@ -1,7 +1,8 @@
 # ADR-283: Edit on the canvas on phones: selection ladder, chip rail and lens card
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-22
+- Implemented: 2026-11-22
 - Depends on: ADR-078, ADR-112, ADR-144, ADR-211, ADR-241, ADR-247
 - Design: https://claude.ai/artifact/HbCBLzkvgFuxRxmUKNzqF3 (design spec), https://claude.ai/artifact/XUw8WtVvpHiYiEuuLkBVUJ (prototype)
 - Backlog: N366
