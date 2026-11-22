@@ -7994,10 +7994,10 @@ fieldset.group-locked {
 }
 .appearance-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'label out reset'
-    'slider slider slider';
+    'dec slider inc';
   gap: var(--s-1) var(--s-3);
   align-items: center;
   padding: var(--s-1) 0;
@@ -8014,12 +8014,28 @@ fieldset.group-locked {
   font-family: var(--num);
   text-align: right;
 }
-.appearance-row button {
+.appearance-row > button:not(.appearance-step) {
   grid-area: reset;
+}
+.appearance-row .appearance-dec {
+  grid-area: dec;
+}
+.appearance-row .appearance-inc {
+  grid-area: inc;
+}
+.appearance-scale {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+.appearance-scale span {
+  flex: 1;
+  font-weight: 600;
 }
 @media (min-width: 640px) {
   .appearance-row {
-    grid-template-columns: 9rem minmax(0, 1fr) 5rem auto;
-    grid-template-areas: 'label slider out reset';
+    grid-template-columns: 9rem auto minmax(0, 1fr) auto 5rem auto;
+    grid-template-areas: 'label dec slider inc out reset';
   }
 }

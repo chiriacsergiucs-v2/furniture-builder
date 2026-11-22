@@ -182,6 +182,44 @@ export function resetThemeVar(name: string): void {
   save(next);
 }
 
+const place = (v: ThemeVar, n: number) => Math.min(v.max, Math.max(v.min, Number(n.toFixed(4))));
+
+/** The value one slider step up or down, kept inside the range. */
+function stepped(v: ThemeVar, n: number, dir: 1 | -1): number {
+  return place(v, n + dir * v.step);
+}
+
+/**
+ * The value 5% up or down, rounded to the nearest whole px (rem and line height: the nearest slider step), kept inside
+ * the range. When rounding gives no change (4 px × 5% = 0.2 px) it moves one slider step, so a press always does something.
+ */
+function scaled(v: ThemeVar, n: number, dir: 1 | -1): number {
+  const grid = v.unit === 'px' ? 1 : v.step;
+  const r = place(v, Math.round((n * (1 + dir * 0.05)) / grid) * grid);
+  return r === n ? stepped(v, n, dir) : r;
+}
+
+function change(names: string[], next: (v: ThemeVar, n: number) => number): void {
+  const out = { ...state.values };
+  for (const v of THEME_VARS) {
+    if (!names.includes(v.name)) continue;
+    const n = next(v, out[v.name] ?? v.def);
+    if (n === v.def) delete out[v.name];
+    else out[v.name] = n;
+  }
+  save(out);
+}
+
+/** One slider step for one variable. */
+export function stepThemeVar(name: string, dir: 1 | -1): void {
+  change([name], (v, n) => stepped(v, n, dir));
+}
+
+/** ±5% of the current value for the named variables (all of them when `names` is omitted). */
+export function scaleThemeVars(dir: 1 | -1, names: string[] = THEME_VARS.map((v) => v.name)): void {
+  change(names, (v, n) => scaled(v, n, dir));
+}
+
 export function resetAllThemeVars(): void {
   save({});
 }

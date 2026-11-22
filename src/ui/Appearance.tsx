@@ -3,7 +3,9 @@ import {
   cssValue,
   resetAllThemeVars,
   resetThemeVar,
+  scaleThemeVars,
   setThemeVar,
+  stepThemeVar,
   THEME_GROUPS,
   useThemeVars,
 } from '../store/themeVars';
@@ -29,6 +31,19 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
       }
     >
       <p className="hint">{t('Changes apply at once and stay on this device.')}</p>
+      <div className="appearance-scale" role="group" aria-label={t('All variables')}>
+        <span>{t('All variables')}</span>
+        <button
+          type="button"
+          onClick={() => scaleThemeVars(-1)}
+          aria-label={t('All variables −5%')}
+        >
+          −5%
+        </button>
+        <button type="button" onClick={() => scaleThemeVars(1)} aria-label={t('All variables +5%')}>
+          +5%
+        </button>
+      </div>
       {ignored > 0 && (
         <p className="alert warn" role="alert">
           {t('{n|# saved value was|# saved values were} out of range and ignored.', { n: ignored })}
@@ -37,11 +52,46 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
       {THEME_GROUPS.map((g) => (
         <fieldset key={g.id} className="appearance-group">
           <legend>{g.title()}</legend>
+          <div className="appearance-scale" role="group" aria-label={g.title()}>
+            <button
+              type="button"
+              onClick={() =>
+                scaleThemeVars(
+                  -1,
+                  g.vars.map((v) => v.name),
+                )
+              }
+              aria-label={t('{group} −5%', { group: g.title() })}
+            >
+              −5%
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                scaleThemeVars(
+                  1,
+                  g.vars.map((v) => v.name),
+                )
+              }
+              aria-label={t('{group} +5%', { group: g.title() })}
+            >
+              +5%
+            </button>
+          </div>
           {g.vars.map((v) => {
             const n = values[v.name] ?? v.def;
             return (
               <div key={v.name} className="appearance-row">
                 <label htmlFor={`ap${v.name}`}>{v.label()}</label>
+                <button
+                  type="button"
+                  className="appearance-step appearance-dec"
+                  onClick={() => stepThemeVar(v.name, -1)}
+                  disabled={n <= v.min}
+                  aria-label={t('Decrease {name}', { name: v.label() })}
+                >
+                  −
+                </button>
                 <input
                   id={`ap${v.name}`}
                   type="range"
@@ -51,6 +101,15 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
                   value={n}
                   onChange={(e) => setThemeVar(v.name, Number(e.target.value))}
                 />
+                <button
+                  type="button"
+                  className="appearance-step appearance-inc"
+                  onClick={() => stepThemeVar(v.name, 1)}
+                  disabled={n >= v.max}
+                  aria-label={t('Increase {name}', { name: v.label() })}
+                >
+                  +
+                </button>
                 <output htmlFor={`ap${v.name}`}>{cssValue(v, n)}</output>
                 <button
                   type="button"
