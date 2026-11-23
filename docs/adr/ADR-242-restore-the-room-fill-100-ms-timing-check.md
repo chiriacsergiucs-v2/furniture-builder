@@ -1,6 +1,6 @@
 # ADR-242: Restore the room-fill 100 ms timing check
 
-- Status: Deferred (temporary: the timing check is skipped since 2026-11-09)
+- Status: Pending
 - Date: 2026-11-09
 - Depends on: ADR-193
 - Design: n/a
@@ -23,6 +23,9 @@ ADR-193 is Implemented and is not edited; this ADR records the change.
 - The 100 ms budget of ADR-193 still stands as a target; only its automatic check is off.
 - Later (this ADR, when built): bring the check back in a form that does not depend on the machine's speed, then
   remove the skip.
+- Form (user pick 2026-11-23: "Work counter"): `suggestRoomMixes` takes an optional `work` object and reports in
+  `work.builds` how many whole-room projects it built with `buildProjectModel`. The test checks that the 4-wall
+  default builds at most 6, the count measured on 2026-11-23. Raising that number is a decision, never a fix.
 
 ## Alternatives considered
 
@@ -49,4 +52,4 @@ ADR-193 is Implemented and is not edited; this ADR records the change.
 
 - How should the check come back? Options: a work counter (number of candidate builds) instead of milliseconds;
   a budget relative to a reference run on the same machine; or 100 ms kept with more warm runs. Suggested pick: the
-  work counter. Not applied until the user picks.
+  work counter. Answered 2026-11-23 (user): the work counter.

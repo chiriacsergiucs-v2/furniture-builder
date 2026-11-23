@@ -415,16 +415,15 @@ describe('ADR-193: tall side and room sizes', () => {
     expect(r.mixes.length).toBeGreaterThan(0);
     for (const m of r.mixes) expect(m.key).not.toMatch(/\|right/);
   });
-  // The fastest of 5 warm runs is its own cost; a busy test machine slows single runs (retried, never loosened).
-  // Skipped (user decision 2026-11-09): CI on main missed it on machine speed alone; ADR-242 (Deferred) restores it.
-  it.skip('the 4-wall default stays under 100 ms', { retry: 2 }, () => {
-    suggestRoomMixes(wizard());
-    const runs = [0, 1, 2, 3, 4].map(() => {
-      const t0 = performance.now();
-      suggestRoomMixes(wizard());
-      return performance.now() - t0;
-    });
-    expect(Math.min(...runs)).toBeLessThan(100);
+  // ADR-193's 100 ms budget, checked as work instead of time (ADR-242, user pick 2026-11-23: a work counter): the 4-wall
+  // default builds at most 6 whole-room projects, the count measured on 2026-11-23. A change that makes the call
+  // build more projects fails here on any machine, however fast; raising the number is a decision, never a fix.
+  it('the 4-wall default builds at most 6 whole-room projects (work, not time)', () => {
+    const work = { builds: 0 };
+    const r = suggestRoomMixes(wizard(), undefined, work);
+    expect(r.mixes.length).toBeGreaterThan(0);
+    expect(work.builds).toBeGreaterThan(0);
+    expect(work.builds).toBeLessThanOrEqual(6);
   });
   it('tallAtRight: the one tall cabinet moves to the right end, a new signature; none without a single tall', () => {
     const c = {
