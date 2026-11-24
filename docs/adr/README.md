@@ -353,6 +353,6 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-289](../adr-done/ADR-289-find-an-action-and-first-run-hints-in-the-canvas-editor.md) | Find an action and first-run hints in the canvas editor | ADR-288 | ✅ Implemented |
 | [ADR-290](../adr-done/ADR-290-turn-the-canvas-editor-on-by-default-on-phones.md) | Turn the canvas editor on by default on phones | ADR-289 | ✅ Implemented |
 | [ADR-291](../adr-done/ADR-291-catalog-finder-search-first-catalog-and-product-picker.md) | Catalog finder: a search-first catalog and product picker behind a switch | ADR-032, ADR-161, ADR-195, ADR-283 | ✅ Implemented |
-| [ADR-292](ADR-292-open-both-sides-rear-edge-banding-and-a-free-standing-fixing.md) | Open both sides: rear edge banding and a free-standing fixing | ADR-011, ADR-035 | Pending |
+| [ADR-292](../adr-done/ADR-292-open-both-sides-rear-edge-banding-and-a-free-standing-fixing.md) | Open both sides: rear edge banding and a free-standing fixing | ADR-011, ADR-035 | ✅ Implemented |
 | [ADR-293](ADR-293-closed-cells-a-fixed-infill-panel-on-the-front-rear-or-both.md) | Closed cells: a fixed infill panel on the front, rear or both faces | ADR-011, ADR-282, ADR-292 | Pending |
 | [ADR-294](ADR-294-rear-elevation-and-a-room-divider-catalog-family.md) | Rear elevation and a Room divider catalog family | ADR-292, ADR-293 | Pending |

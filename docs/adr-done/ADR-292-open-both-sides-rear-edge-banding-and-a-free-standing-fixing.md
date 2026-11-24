@@ -1,7 +1,8 @@
 # ADR-292: Open both sides: rear edge banding and a free-standing fixing
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-24
+- Implemented: 2026-11-24
 - Depends on: ADR-011, ADR-035
 - Design: n/a
 - Backlog: N380
