@@ -52,16 +52,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 10 adds a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
+ * The document shape this app writes: 11 adds a cabinet's Open both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
- * mount (ADR-177); 6 added role boards (ADR-163); 1 to 9 still load.
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 10 still load.
  */
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 /**
- * Older versions → 10 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
+ * Older versions → 11 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 10 add only optional fields
  * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
- * frame ends, a split's remainder order, staggered rows), so nothing else changes.
+ * frame ends, a split's remainder order, staggered rows, Open both sides), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -1122,7 +1122,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   // Staggered rows (ADR-282) came with schemaVersion 10.
   if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))
@@ -1366,6 +1366,12 @@ export function validateDesign(d: unknown): string[] {
     if (params.mountHeight !== undefined && !isInt(params.mountHeight))
       errs.push(t('mountHeight must be a whole number of mm'));
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
+    // Open both sides (ADR-292, schemaVersion 11): only `true`, only on a piece with no back.
+    if (params.twoFaced !== undefined) {
+      if (params.twoFaced !== true || params.back !== 'none')
+        errs.push(t('Open both sides needs a piece with no back'));
+      if ((d.schemaVersion as number) < 11) errs.push(t('Open both sides needs schemaVersion 11'));
+    }
     validateSpace(params.interior, errs, new Set());
   } else if (p.kind === 'desk') {
     ints(['width', 'depth', 'height', 'frontOverhang', 'frontGap'], params);

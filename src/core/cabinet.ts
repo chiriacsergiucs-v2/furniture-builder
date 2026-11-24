@@ -258,6 +258,9 @@ export function cornerHingeNote(doorHeight: Mm): string {
   return "5 per door (typical for doors over 2000 mm); choose the hinge maker's 45° corner hinge or angled plate";
 }
 
+/** Parts whose rear edge shows when a piece is open on both sides (ADR-292). */
+const TWO_FACED_ROLES = new Set<PanelRole>(['side', 'top', 'bottom', 'divider', 'shelf']);
+
 export function buildCabinet(
   p: CabinetParams,
   materials: Map<string, Material>,
@@ -298,6 +301,9 @@ export function buildCabinet(
     index?: number,
   ) => {
     const node = nodeId === opts.productNodeId ? nodeId : mapNode(nodeId);
+    // Open both sides (ADR-292): a part banded on its front edge is banded on its rear edge too.
+    if (p.twoFaced && TWO_FACED_ROLES.has(role) && banded.includes('+z') && !banded.includes('-z'))
+      banded = [...banded, '-z'];
     out.panels.push({
       id: `${prefix}${nodeId}/${role}${index === undefined ? '' : `/${index}`}`,
       nodeId: node,

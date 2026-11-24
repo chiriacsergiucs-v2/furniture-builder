@@ -1147,7 +1147,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const d = get().design;
       if (d.product.kind !== kind) return;
       // A corner's mount is a schemaVersion 7 field (ADR-177).
-      const mounted = kind === 'corner' && ('mount' in patch || 'mountHeight' in patch);
+      // Open both sides is a schemaVersion 11 field (ADR-292).
+      const mounted =
+        (kind === 'corner' && ('mount' in patch || 'mountHeight' in patch)) ||
+        (kind === 'cabinet' && 'twoFaced' in patch);
       commit({
         ...d,
         schemaVersion: mounted ? SCHEMA_VERSION : d.schemaVersion,

@@ -22,9 +22,10 @@ wall, which a divider in the middle of a room has no wall for.
 - When `twoFaced` is set, `buildModel()` adds `-z` to the banded edges of sides, top, bottom, dividers, fixed and
   loose shelves. The cut list and the edge-band totals follow from the model (ADR-004).
 - When `twoFaced` is set, the anti-tip rule schedules "Free-standing fixing: floor or ceiling" instead of the wall
-  fixing. Its note says to choose the fixing for the floor or ceiling type (ADR-010: no product is named).
+  fixing, as the new hardware kind `floor-fixing` (printed in Romanian as "Prindere de sine stătătoare: în podea sau
+  tavan"). Its note says to choose the fixing for the floor or ceiling type (ADR-010: no product is named).
 - Racking: no warning until the user gives a height figure (user, 2026-11-24; ADR-010, G-592).
-- UI: Piece › Construction › Back gets a fourth option, **Open both sides**. It sets `back: 'none'` and `twoFaced`.
+- UI: Piece › Settings › Back gets a fourth option, **Open both sides**. It sets `back: 'none'` and `twoFaced`.
   Picking another back clears `twoFaced`.
 
 ## Alternatives considered
@@ -35,7 +36,7 @@ wall, which a divider in the middle of a room has no wall for.
 
 ## Scope
 
-- In scope: the flag, rear banding, the free-standing fixing, the option in Construction.
+- In scope: the flag, rear banding, the free-standing fixing, the option in Settings.
 - Out of scope: a racking check for back-less pieces (G-592: no figure yet); corner units (G-591).
 
 ## Consequences
@@ -46,10 +47,10 @@ wall, which a divider in the middle of a room has no wall for.
 
 ## Done when
 
-- [ ] Open both sides: every side, top, bottom, divider and shelf has `+z` and `-z` banded (`tests/two-faced.test.ts`)
-- [ ] Back None without Open both sides keeps today's banding (same test)
-- [ ] The hardware list shows the free-standing fixing, not the wall fixing, above the anti-tip height (same test)
-- [ ] schemaVersion 11 is required for `twoFaced`; with another back it is refused; version 10 loads (same test)
-- [ ] Find-it at 390 and 1280 px: Bookcase › Construction › Back › Open both sides, then Parts shows rear bands
-      (`tests/find-it/two-faced.test.tsx`)
-- [ ] Every new text has its Russian entry (`pnpm typecheck`)
+- [x] Open both sides: every side, top, bottom, divider and shelf has `+z` and `-z` banded (`tests/two-faced.test.ts`)
+- [x] Back None without Open both sides keeps today's banding (same test)
+- [x] The hardware list shows the free-standing fixing, not the wall fixing, above the anti-tip height (same test)
+- [x] schemaVersion 11 is required for `twoFaced`; with another back it is refused; version 10 loads (same test)
+- [x] Find-it at 390 and 1280 px: Bookcase › Settings › Back › Open both sides, then Parts shows the sides banded
+      on both long edges (L2 W0) and Hardware the free-standing fixing (`tests/find-it/two-faced.test.tsx`)
+- [x] Every new text has its Russian entry (`pnpm typecheck`)

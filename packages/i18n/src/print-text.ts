@@ -82,6 +82,10 @@ export const PRINT_RU = {
   'verificați setul și balamalele înlocuite în fișa tehnică':
     'сверьте комплект и заменяемые петли с техпаспортом',
   'Prindere anti-răsturnare în perete': 'Крепление к стене от опрокидывания',
+  'Prindere de sine stătătoare: în podea sau tavan':
+    'Крепление отдельностоящего изделия: к полу или потолку',
+  'alegeți prinderea după tipul podelei sau al tavanului (orientativ)':
+    'крепёж подберите по типу пола или потолка (ориентировочно)',
   'alegeți diblurile după tipul peretelui (orientativ)':
     'дюбели подберите по типу стены (ориентировочно)',
   'Electrocasnic încorporat: ': 'Встраиваемая техника: ',
@@ -617,6 +621,9 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'verificați setul și balamalele înlocuite în fișa tehnică':
     'check the set and the hinges it replaces in the data sheet',
   'Prindere anti-răsturnare în perete': 'Anti-tip wall fixing',
+  'Prindere de sine stătătoare: în podea sau tavan': 'Free-standing fixing: floor or ceiling',
+  'alegeți prinderea după tipul podelei sau al tavanului (orientativ)':
+    'choose the fixing for the floor or ceiling type (guidance)',
   'alegeți diblurile după tipul peretelui (orientativ)':
     'choose plugs for the wall type (guidance)',
   'Electrocasnic încorporat: ': 'Built-in ',
