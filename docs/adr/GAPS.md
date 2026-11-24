@@ -2380,3 +2380,63 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-591: Room divider: Open both sides on corner units
+
+- Status: Open
+- Origin: ADR-292
+- Missing: Open both sides (twoFaced) applies to cabinets only; corner units keep front-only banding.
+- Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
+- Questions: Extend twoFaced to blind and L-shape corners?
+- Suggested pick: Later: no request for a corner divider yet
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-592: Room divider: racking check for back-less pieces
+
+- Status: Open
+- Origin: ADR-292
+- Missing: No diagnostic when a tall piece has no back; the height figure is a physical fact not in the repo (ADR-010).
+- Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
+- Questions: Warn above what height?
+- Suggested pick: No warning until the user gives a figure (user 2026-11-24)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-593: Room divider: infill on shelves, drawers or hanging spaces
+
+- Status: Open
+- Origin: ADR-293
+- Missing: A closed panel (infill) is allowed on Empty cells only.
+- Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
+- Questions: Allow an infill behind shelves or drawers?
+- Suggested pick: Later: Empty cells cover the reference piece
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-594: Room divider: grooves for an infill panel
+
+- Status: Open
+- Origin: ADR-293
+- Missing: Infills are fixed between panels with a fixing to choose; no groove option.
+- Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
+- Questions: Offer grooved infills?
+- Suggested pick: Later: no request
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-595: Room divider: printed rear sheet in the review pack
+
+- Status: Open
+- Origin: ADR-294
+- Missing: The Rear elevation is on screen only; the review pack prints the front.
+- Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
+- Questions: Print the rear elevation too?
+- Suggested pick: Later: screen first
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
