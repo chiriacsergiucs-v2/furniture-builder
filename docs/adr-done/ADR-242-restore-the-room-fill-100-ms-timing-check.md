@@ -1,7 +1,8 @@
 # ADR-242: Restore the room-fill 100 ms timing check
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-09
+- Implemented: 2026-11-26 (work counter, PR #322 and #329)
 - Depends on: ADR-193
 - Design: n/a
 - Backlog: N251
@@ -45,8 +46,8 @@ ADR-193 is Implemented and is not edited; this ADR records the change.
 
 ## Done when
 
-- [ ] The timing check runs again (no skip) in a form that does not fail on machine speed alone
-- [ ] It passes in CI on three consecutive runs
+- [x] The timing check runs again (no skip) in a form that does not fail on machine speed alone (`tests/roomfill.test.ts` "the 4-wall default builds at most 6 whole-room projects (work, not time)", PR #322)
+- [x] It passes in CI on three consecutive runs (CI runs 45789671892, 45793337467, 45793574771, all green)
 
 ## Open questions
 
