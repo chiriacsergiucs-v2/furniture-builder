@@ -1,8 +1,7 @@
 # ADR-297: Move the desktop mode switch into the top bar
 
-- Status: Implemented
+- Status: Pending
 - Date: 2026-11-26
-- Implemented: 2026-11-26
 - Depends on: ADR-079
 - Design: docs/ui-design.md (§4 Screens: editor)
 - Backlog: N397
