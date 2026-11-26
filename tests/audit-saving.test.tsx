@@ -84,13 +84,22 @@ describe('ADR-263 saving, backup and sharing', () => {
       name: 'Changed after backup',
       updatedAt: new Date().toISOString(),
     });
-    store.failSaveDesign = true;
+    // The storage refuses design rows from here on (G-489: the restore writes them in one transaction, not through
+    // saveDesign).
+    const proto = Object.getPrototypeOf(db.db.designs) as { put: (...a: unknown[]) => unknown };
+    const realPut = proto.put;
+    vi.spyOn(proto, 'put').mockImplementation(function (this: { name: string }, ...a: unknown[]) {
+      return this.name === 'designs'
+        ? Promise.reject(new Error('QuotaExceededError'))
+        : realPut.apply(this, a);
+    });
     const dlg = await savedDataDialog(user);
     upload(
       within(dlg).getByLabelText('Restore a .zip', { selector: 'input' }) as HTMLInputElement,
       new File([bytes], z.name, { type: 'application/zip' }),
     );
     expect(await within(dlg).findByText(/^The restore stopped:/)).toBeTruthy();
+    vi.restoreAllMocks();
   });
 
   it('a file that is not a backup says no backup files were found', async () => {

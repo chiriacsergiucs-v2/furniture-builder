@@ -3552,6 +3552,17 @@ highest id in either file.
 - Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 - Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
 
+### G-489: Restoring a backup writes rows without a transaction
+
+- Status: Done (N390)
+- Origin: ADR-223 Out of scope, 2026-11-07 (architecture review section 4, persist row)
+- Missing: restoreFiles (src/persist/backup.ts:277-285) writes N rows one by one; a failure halfway leaves a partial restore.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should restoreFiles run in one Dexie transaction so a restore is all or nothing?
+- Suggested pick: One transaction over the restored tables, with a test that a failing row leaves the library unchanged (estimate: effort +5 %, value +5 %)
+- Work: Low
+- Impact: Medium
+
 ### G-497: The 3D viewer still imports persist directly
 
 - Status: Done (PR #329, N388)

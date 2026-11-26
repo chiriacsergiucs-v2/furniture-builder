@@ -1458,17 +1458,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 
-### G-489: Restoring a backup writes rows without a transaction
-
-- Status: Open
-- Origin: ADR-223 Out of scope, 2026-11-07 (architecture review section 4, persist row)
-- Missing: restoreFiles (src/persist/backup.ts:277-285) writes N rows one by one; a failure halfway leaves a partial restore.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should restoreFiles run in one Dexie transaction so a restore is all or nothing?
-- Suggested pick: One transaction over the restored tables, with a test that a failing row leaves the library unchanged (estimate: effort +5 %, value +5 %)
-- Work: Low
-- Impact: Medium
-
 ### G-490: Width-independent find-it tests still run at both widths
 
 - Status: Acknowledged (2026-11-23)

@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKUP_TABLES,
   decodeRow,
@@ -13,7 +13,13 @@ import { daysSince, deviceNoticeShown, reminderDue } from '../src/core/backupRem
 import { templates } from '../src/core/design';
 import { unzipStore, zipStore } from '../src/core/zip';
 import { db, getSetting, saveDesign, setSetting } from '../src/persist/db';
-import { backupZip, readTables, restoreFiles, restoreFromZip } from '../src/persist/backup';
+import {
+  backupZip,
+  readTables,
+  RestoreStopped,
+  restoreFiles,
+  restoreFromZip,
+} from '../src/persist/backup';
 import { onSavedChange } from '../src/persist/events';
 
 const design = (i = 0) => templates[i].create();
@@ -157,6 +163,42 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     const p = await restoreFiles([{ path: 'designs/bad.json', text: '{}' }]);
     expect(p.skipped).toHaveLength(1);
     expect(await db.designs.count()).toBe(0);
+  });
+
+  // G-489: a restore runs in one transaction; a row the storage refuses leaves the library as it was and says nothing.
+  it('a restore that fails on a row leaves the library unchanged and reports nothing as saved', async () => {
+    const kept = design(0);
+    await saveDesign(kept);
+    const incoming = design(1);
+    const files = [
+      { path: `designs/${incoming.id}.json`, text: JSON.stringify(incoming) },
+      { path: 'prices/r1.json', text: '{"id":"r1","unit":"piece","amount":1}' },
+    ];
+    // The storage refuses the price row (a full disk, say), after the design was written in the same restore.
+    const proto = Object.getPrototypeOf(db.prices) as { add: (...a: unknown[]) => unknown };
+    const real = proto.add;
+    const add = vi.spyOn(proto, 'add').mockImplementation(function (this: { name: string }, ...a) {
+      return this.name === 'prices'
+        ? Dexie.Promise.reject(new Error('quota'))
+        : real.apply(this, a);
+    });
+    const seen: string[] = [];
+    const off = onSavedChange((c) => seen.push(`${c.table}:${String(c.key)}`));
+    const err = await restoreFiles(files).catch((e: unknown) => e);
+    const refused = add.mock.calls.length;
+    add.mockRestore();
+    await new Promise((r) => setTimeout(r, 10));
+    off();
+    expect(refused).toBeGreaterThan(0);
+    expect(err).toBeInstanceOf(RestoreStopped);
+    expect((err as RestoreStopped).done).toBe(0);
+    expect((await db.designs.toArray()).map((r) => r.id)).toEqual([kept.id]);
+    expect(await db.prices.count()).toBe(0);
+    expect(seen).toEqual([]);
+    // The same files restore in full once the storage accepts them.
+    expect((await restoreFiles(files)).actions).toHaveLength(2);
+    expect(await db.designs.count()).toBe(2);
+    expect(await db.prices.count()).toBe(1);
   });
 
   it('readTables reads every table, unreadable rows included', async () => {

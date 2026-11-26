@@ -17,7 +17,7 @@ import { unzipStore, zipStore } from '../core/zip';
 import type { Design } from '../core/types';
 import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
-import { db, getSetting, saveDesign, saveProject, savedRows, saveTemplate, setSetting } from './db';
+import { db, getSetting, savedRows, setSetting } from './db';
 import { onSavedChange, takeDirty } from './events';
 import { t } from '@furniture-builder/i18n';
 
@@ -384,21 +384,37 @@ export class RestoreStopped extends Error {
 
 export async function restoreFiles(files: BackupFile[]): Promise<RestorePlan> {
   const plan = planRestore(files, await existing());
-  let done = 0;
-  for (const a of plan.actions) {
-    try {
-      if (a.table === 'designs') await saveDesign(a.design);
-      else if (a.table === 'projects') await saveProject(a.project);
-      else if (a.table === 'templates') await saveTemplate(a.template);
-      else {
-        await db.table(a.table).add(a.row);
-        savedRows(a.table, [a.row[keyOf(a.table)]]);
+  if (!plan.actions.length) return plan;
+  // One transaction over the restored tables (G-489): a row the storage refuses rolls the whole restore back, so the
+  // library is never left half restored; nothing was restored before the stop, so `done` is 0.
+  const tables = [...new Set(plan.actions.map((a) => a.table))].map((n) => db.table(n));
+  const saved: [BackupTable, unknown][] = [];
+  try {
+    await db.transaction('rw', tables, async () => {
+      for (const a of plan.actions) {
+        if (a.table === 'designs') {
+          const d = a.design;
+          await db.designs.put({ id: d.id, name: d.name, updatedAt: d.updatedAt, design: d });
+          saved.push([a.table, d.id]);
+        } else if (a.table === 'projects') {
+          const p = a.project;
+          await db.projects.put({ id: p.id, name: p.name, updatedAt: p.updatedAt, project: p });
+          saved.push([a.table, p.id]);
+        } else if (a.table === 'templates') {
+          const x = a.template;
+          await db.templates.put({ id: x.id, updatedAt: x.updatedAt, template: x });
+          saved.push([a.table, x.id]);
+        } else {
+          await db.table(a.table).add(a.row);
+          saved.push([a.table, a.row[keyOf(a.table)]]);
+        }
       }
-    } catch {
-      throw new RestoreStopped(done);
-    }
-    done++;
+    });
+  } catch {
+    throw new RestoreStopped(0);
   }
+  // Said only once the transaction committed, so the backup and the account upload never see a rolled-back row.
+  for (const [table, key] of saved) savedRows(table, [key]);
   return plan;
 }
 
