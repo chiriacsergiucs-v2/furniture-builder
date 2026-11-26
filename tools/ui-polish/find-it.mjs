@@ -68,12 +68,12 @@ for (const width of [390, 1280]) {
   await page.getByRole('heading', { name: 'Projects', level: 1 }).waitFor();
   const y0 = await yellows(page);
   check(width, 'Projects: one yellow action', y0.length === 1, y0.join(' / '));
-  if (phone)
-    check(
-      width,
-      'phone bar shows "Furniture Builder"',
-      await page.getByText('Furniture Builder', { exact: true }).isVisible(),
-    );
+  // The brand mark went with 234f34df (navbar simplification); the Projects place in the Places bar names the page.
+  check(
+    width,
+    'Places bar shows the current place "Projects"',
+    await places.getByRole('link', { name: 'Projects', exact: true }).isVisible(),
+  );
   check(
     width,
     'Projects page has no "Clean up unused pictures"',
@@ -299,18 +299,14 @@ for (const width of [390, 1280]) {
   await dlg.getByRole('button', { name: 'Close', exact: true }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
-  // 8. The brand goes to Projects; each row keeps its buttons on one line.
-  if (
-    !phone ||
-    (await page.getByRole('link', { name: 'Furniture Builder, go to Projects' }).isVisible())
-  ) {
-    await page.getByRole('link', { name: 'Furniture Builder, go to Projects' }).click();
-    check(
-      width,
-      'brand opens Projects',
-      await page.getByRole('heading', { name: 'Projects', level: 1 }).isVisible(),
-    );
-  } else check(width, 'brand visible on the Catalog page', false);
+  // 8. The Projects place opens Projects (the brand link went, 234f34df); each row keeps its buttons on one line.
+  await places.getByRole('link', { name: 'Projects', exact: true }).click();
+  check(
+    width,
+    'Projects place opens Projects',
+    await page.getByRole('heading', { name: 'Projects', level: 1 }).isVisible(),
+  );
+  await page.locator('main.projects-page ul.library > li').first().waitFor({ timeout: 10000 });
   // One line: every child of a row overlaps the same horizontal band.
   const rows = await page.locator('main.projects-page ul.library > li').evaluateAll((lis) =>
     lis.map((li) => {

@@ -3309,7 +3309,7 @@ table.buy {
 }
 /* Item tiles (catalog grid): two columns on a phone, four from 900 px. The whole tile is one button: picture of the
    inside (doors off), name, size. A tile that cannot open yet is a plain box with its reason. */
-.items {
+ul.items {
   list-style: none;
   margin: var(--s-1) 0 0;
   padding: 0;
@@ -3318,7 +3318,7 @@ table.buy {
   gap: var(--s-2);
 }
 @media (min-width: 900px) {
-  .items {
+  ul.items {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
