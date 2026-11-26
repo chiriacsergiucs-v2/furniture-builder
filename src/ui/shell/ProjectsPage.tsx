@@ -10,8 +10,8 @@ import {
   listProjectVersions,
   listProjects,
   saveProject,
-  type StoredDesign,
-  type StoredProject,
+  type DesignListing,
+  type ProjectListing,
 } from '../../store/libraryStore';
 import { useDesign } from '../../store/designStore';
 import { askConfirm, askText } from '../Confirm';
@@ -59,15 +59,16 @@ export function ProjectsPage({
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
   const currentId = useDesign((s) => (s.project ? s.project.id : s.design.id));
-  const [projects, setProjects] = useState<StoredProject[] | null>(null);
+  const [projects, setProjects] = useState<ProjectListing[] | null>(null);
   // Accounts (ADR-137, ADR-142): another account's copies are hidden here, never removed.
   const hidden = useAccount((s) => s.hidden);
   const configured = useAccount((s) => s.configured);
   const signedIn = useAccount((s) => !!s.user);
   const setAccountDialog = useAccount((s) => s.setDialog);
   const lastSync = useAccount((s) => s.sync?.lastSyncAt);
-  const [pieces, setPieces] = useState<StoredDesign[]>([]);
+  const [pieces, setPieces] = useState<DesignListing[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const unreadable = t('Saved work could not be read from this browser.');
   // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
   // Worked out once per list (not per render); nothing until this device's templates are read.
   const locals = useLocalTemplates();
@@ -75,10 +76,12 @@ export function ProjectsPage({
     const out = new Map<string, string>();
     if (!locals) return out;
     for (const r of pieces) {
+      if (!r.design) continue;
       const s = templateStatus({ design: r.design }, catalogFamilies, locals);
       if (s.kind === 'newer') out.set(r.id, ` · ${updatedText(s)}`);
     }
     for (const r of projects ?? []) {
+      if (!r.project) continue;
       const n = newerCount(r.project.items, catalogFamilies, locals);
       if (n) out.set(r.id, ` · ${newerText(n)}`);
     }
@@ -134,7 +137,7 @@ export function ProjectsPage({
     refresh();
   };
   // Copied through the validating path (ADR-227): a row that cannot be read is refused and left as it is.
-  const duplicate = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {
+  const duplicate = async (r: DesignListing | ProjectListing, kind: 'piece' | 'project') => {
     const name = t('{name} (copy)', { name: r.name });
     const res = await (kind === 'project' ? copyProject(r.id, name) : copyDesign(r.id, name)).catch(
       () => ({ ok: false as const, reason: '' }),
@@ -142,7 +145,7 @@ export function ProjectsPage({
     if (!res.ok) setMsg({ ok: false, text: t('Saved work could not be read from this browser.') });
     refresh();
   };
-  const remove = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {
+  const remove = async (r: DesignListing | ProjectListing, kind: 'piece' | 'project') => {
     if (
       !(await askConfirm(
         kind === 'project'
@@ -195,7 +198,7 @@ export function ProjectsPage({
   };
   const when = (iso: string) => new Date(iso).toLocaleDateString();
   const row = (
-    r: StoredDesign | StoredProject,
+    r: DesignListing | ProjectListing,
     kind: 'piece' | 'project',
     glyph: IconName,
     sub: string,
@@ -345,8 +348,14 @@ export function ProjectsPage({
                       r,
                       'project',
                       'project',
-                      `${t('{n|# piece|# pieces} · edited {date}', { n: r.project.items.length, date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`,
-                      () => openProject(r.project),
+                      r.project
+                        ? `${t('{n|# piece|# pieces} · edited {date}', { n: r.project.items.length, date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`
+                        : unreadable,
+                      // A row the app cannot read is listed and kept (ADR-012), never opened (G-493).
+                      () =>
+                        r.project
+                          ? openProject(r.project)
+                          : setMsg({ ok: false, text: unreadable }),
                     ),
                   )}
                 </ul>
@@ -362,9 +371,14 @@ export function ProjectsPage({
                       row(
                         r,
                         'piece',
-                        templateGlyph(r.design.product.kind),
-                        `${t('{kind} · edited {date}', { kind: KIND_TEXT[r.design.product.kind], date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`,
-                        () => load(r.design, { fromStorage: true }),
+                        templateGlyph(r.design?.product.kind ?? ''),
+                        r.design
+                          ? `${t('{kind} · edited {date}', { kind: KIND_TEXT[r.design.product.kind], date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`
+                          : unreadable,
+                        () =>
+                          r.design
+                            ? load(r.design, { fromStorage: true })
+                            : setMsg({ ok: false, text: unreadable }),
                       ),
                     )}
                 </ul>

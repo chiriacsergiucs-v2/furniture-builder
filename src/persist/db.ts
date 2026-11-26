@@ -253,8 +253,35 @@ export async function saveDesign(d: Design, database = db): Promise<void> {
   savedRows('designs', [d.id]);
 }
 
-export async function listDesigns(database = db): Promise<StoredDesign[]> {
-  return database.designs.orderBy('updatedAt').reverse().toArray();
+/**
+ * A saved design as a list shows it (G-493): its id, name and date, and the design only when it still validates, so
+ * no caller can show or re-save an unvalidated row. A row the app cannot read is still listed (it is kept, ADR-012).
+ */
+export interface DesignListing {
+  id: string;
+  name: string;
+  updatedAt: string;
+  design?: Design;
+}
+/** A listed design that the app can read. */
+export const readableDesign = (r: DesignListing): r is DesignListing & { design: Design } =>
+  r.design !== undefined;
+/** A saved project as a list shows it (G-493): the project only when it still validates. */
+export interface ProjectListing {
+  id: string;
+  name: string;
+  updatedAt: string;
+  project?: Project;
+}
+
+export async function listDesigns(database = db): Promise<DesignListing[]> {
+  const rows = await database.designs.orderBy('updatedAt').reverse().toArray();
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    updatedAt: r.updatedAt,
+    ...(validateDesign(r.design).length ? {} : { design: r.design }),
+  }));
 }
 
 /** Returns the design only if it still validates; corrupt rows are skipped, never deleted. */
@@ -279,8 +306,15 @@ export async function saveProject(p: Project, database = db): Promise<void> {
   await database.projects.put({ id: p.id, name: p.name, updatedAt: p.updatedAt, project: p });
   savedRows('projects', [p.id]);
 }
-export const listProjects = (database = db): Promise<StoredProject[]> =>
-  database.projects.orderBy('updatedAt').reverse().toArray();
+export async function listProjects(database = db): Promise<ProjectListing[]> {
+  const rows = await database.projects.orderBy('updatedAt').reverse().toArray();
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    updatedAt: r.updatedAt,
+    ...(validateProject(r.project).length ? {} : { project: r.project }),
+  }));
+}
 /** Returns the project only if it still validates; corrupt rows are skipped, never deleted. */
 export async function loadProject(id: string, database = db): Promise<Project | undefined> {
   const row = await database.projects.get(id);

@@ -3563,6 +3563,17 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 
+### G-493: Saved-row list functions still return whole rows
+
+- Status: Done (N392)
+- Origin: ADR-227 Out of scope, 2026-11-07 (architecture review I-09)
+- Missing: listDesigns/listProjects (src/persist/db.ts:231-233, 247-248) still return raw rows instead of { id, name, updatedAt } summaries.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the list functions return summaries so no caller can re-save an unvalidated row?
+- Suggested pick: Return summaries in a follow-up after ADR-227 and ADR-223 (estimate: effort +10 %, value +3 %)
+- Work: Low
+- Impact: Low
+
 ### G-496: Print dictionaries are not loaded lazily
 
 - Status: Done (N391)
