@@ -2162,3 +2162,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low-medium
 - Impact: Low
 - Necessity: Low-medium
+
+### G-608: Kits: handles as a kit edit
+
+- Status: Open
+- Origin: ADR-298
+- Missing: A kit keeps only the outer size and the boards open; handles are not a kit edit, because no kit has fronts yet.
+- Request: User 2026-11-26: "Build template means when we do it you get that prebuilt item, but your customisations are much more limited"
+- Questions: Should handles be a kit edit once a kit has fronts?
+- Suggested pick: Later: no kit has fronts
+- Work: Low
+- Impact: Low
+- Necessity: Low

@@ -1,4 +1,5 @@
 import { hasStagger, refreshStagger } from '../core/stagger';
+import { kitBlocked, unlockKit } from '../core/kit';
 import { turnModelItem } from '../core/model3d';
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
@@ -148,8 +149,10 @@ export const useDesign = create<State>((rawSet, get) => {
     const open = get().editingItemId ?? get().drillItemId;
     const p0 = get().project;
     // Boards and construction locks (ADR-211) refuse their changes the same way.
+    // A kit (ADR-298) keeps only its size and boards open.
     const locked =
-      p0 && open ? (resizeBlocked(p0, open, next) ?? lockBlocked(p0, open, next)) : null;
+      (p0 && open ? (resizeBlocked(p0, open, next) ?? lockBlocked(p0, open, next)) : null) ??
+      kitBlocked(design, next);
     if (locked) {
       set({ notice: locked });
       return locked;
@@ -1099,6 +1102,9 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     ...runActions(h),
     ...roomActions(h),
+    unlockKit: () => {
+      if (commit(unlockKit(get().design)) === null) set({ notice: t('Kit unlocked.') });
+    },
     setKerf: (kerf) => {
       const d = get().design;
       commit({ ...d, cutting: { ...d.cutting, kerf } });

@@ -19,6 +19,7 @@ import { MATERIAL_ROLES } from './roles';
 import { t } from '@furniture-builder/i18n';
 import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
+import { KIT_EDITS } from './types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
 import { isObj } from './guards';
 
@@ -52,11 +53,12 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 11 adds a cabinet's Open both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
+ * The document shape this app writes: 12 adds a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
+ * both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
  * mount (ADR-177); 6 added role boards (ADR-163); 1 to 10 still load.
  */
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 /**
  * Older versions → 11 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 10 add only optional fields
@@ -882,6 +884,18 @@ function validateCatalog(c: unknown, version: unknown, errs: string[]) {
   }
   for (const k of ['category', 'brand', 'productName', 'articleNumber', 'hardwareToChoose'])
     if (!isOptStr(c[k])) errs.push(t('Invalid catalog {k}', { k }));
+  // A kit (ADR-298, schemaVersion 12): a non-empty list of known edits, each once.
+  if (c.kit !== undefined) {
+    if ((version as number) < 12) errs.push(t('A kit needs schemaVersion 12'));
+    const allow = isObj(c.kit) ? c.kit.allow : undefined;
+    if (
+      !Array.isArray(allow) ||
+      !allow.length ||
+      new Set(allow).size !== allow.length ||
+      !allow.every((a) => (KIT_EDITS as readonly unknown[]).includes(a))
+    )
+      errs.push(t('Invalid kit'));
+  }
   const o = c.origin;
   if (o === undefined) return;
   if (
@@ -906,6 +920,9 @@ function validateCatalog(c: unknown, version: unknown, errs: string[]) {
       !o.rooms.every((r) => (ROOMS as readonly unknown[]).includes(r))
     )
       errs.push(t('Invalid catalog origin rooms'));
+    // The room Custom is new in schemaVersion 12 (ADR-298).
+    if ((version as number) < 12 && Array.isArray(o.rooms) && o.rooms.includes('custom'))
+      errs.push(t('The room Custom needs schemaVersion 12'));
   }
   if (
     o.sourceUrl !== undefined &&
@@ -1122,7 +1139,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   // Staggered rows (ADR-282) came with schemaVersion 10.
   if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))

@@ -246,7 +246,10 @@ export function validateLocalTemplate(t: unknown): TemplateProblem[] {
       typeof v.summary !== 'string' ||
       (v.kind !== 'interior' && v.kind !== 'construction') ||
       !Array.isArray(v.requires) ||
-      !v.requires.every((c) => CAPS.has(c as string))
+      !v.requires.every((c) => CAPS.has(c as string)) ||
+      // Highlights and kits (ADR-298): optional, `true` when set; older readers ignore them.
+      (v.highlight !== undefined && v.highlight !== true) ||
+      (v.kit !== undefined && v.kit !== true)
     ) {
       add('bad-variant');
       continue;

@@ -254,5 +254,12 @@ export const ru_inspector = {
   Hide: 'Скрыть',
   'Pinned: {name}': 'Закреплено: {name}',
   'Whole piece tree': 'Дерево всего изделия',
-  '{name}, {size} mm': '{name}, {size} мм',
+  '{name}, {size} mm': '{name}, {size} мм', // ADR-298: kits.
+  'Kit: {name}': 'Комплект: {name}',
+  'Size and boards can be changed. Unlock all edits to change the rest.':
+    'Можно менять размер и плиты. Снимите блокировку правок, чтобы менять остальное.',
+  'Unlock all edits': 'Снять блокировку правок',
+  'Unlock this kit? The piece becomes a normal design. You can undo this.':
+    'Разблокировать комплект? Изделие станет обычным проектом. Это можно отменить.',
+  'Kit unlocked.': 'Комплект разблокирован.',
 } satisfies Record<string, string>;
