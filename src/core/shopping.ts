@@ -4,9 +4,10 @@
  * Screws, dowels and cams are counted only as joints of the model, as guidance; the fastener is the user's (ADR-074).
  */
 import { t } from '@furniture-builder/i18n';
-import { bandKey, rowBandMetres, type CutRow } from './cutlist';
+import { areaM2, bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
-import type { RunPart } from './project';
+import type { Project, RunPart } from './project';
+import { runPartNames, worktopCorners } from './projectWorktops';
 import {
   fastenerShopLines,
   notCountedPrint,
@@ -117,6 +118,23 @@ function bandingLines(rows: CutRow[]): ShopLine[] {
   return out;
 }
 
+/** The chosen worktop joints of a project for the shopping list (ADR-205); a corner with no joint yet is an error elsewhere. */
+export function worktopJointList(
+  project: Project,
+): { kind: 'mitre' | 'butt'; a: string; b: string }[] {
+  return worktopCorners(project).flatMap((c) =>
+    c.joint
+      ? [
+          {
+            kind: c.joint.kind,
+            a: runPartNames(project, c.a),
+            b: runPartNames(project, c.b),
+          },
+        ]
+      : [],
+  );
+}
+
 export function shoppingList(input: {
   rows: CutRow[];
   materials: Material[];
@@ -125,6 +143,8 @@ export function shoppingList(input: {
   runParts?: RunPart[];
   /** Sinks over base units (ADR-125): the base's name and the user's cut-out size. */
   sinks?: { over: string; w: number; d: number }[];
+  /** Chosen worktop joints (ADR-205): the kind and the two worktops' names; their fixings are the user's (ADR-010). */
+  worktopJoints?: { kind: 'mitre' | 'butt'; a: string; b: string }[];
   diagnostics?: Diagnostic[];
   /** Fastener counts from the model and the user's fastener list (ADR-074). */
   fasteners?: { counts: FastenerCount[]; choices: FastenerChoice[] };
@@ -174,7 +194,7 @@ export function shoppingList(input: {
       });
       continue;
     }
-    const m2 = r2(list.reduce((s, r) => s + r.length * r.width * r.quantity, 0) / 1e6);
+    const m2 = r2(areaM2(list, id));
     const n = sheets?.get(id) ?? null;
     const sheet = m?.sheet;
     lines.push({
@@ -293,6 +313,18 @@ export function shoppingList(input: {
         d: sk.d,
         over: sk.over,
       }),
+    });
+  // A joint's fixings are the user's to choose: no count, size or type is guessed (ADR-010, G-409).
+  for (const j of input.worktopJoints ?? [])
+    lines.push({
+      section: 'choose',
+      label: t('Worktop joint fixings (your choice)'),
+      quantity: 1,
+      unit: 'piece',
+      detail:
+        j.kind === 'mitre'
+          ? t('mitred joint between {a} and {b}', { a: j.a, b: j.b })
+          : t('butt joint between {a} and {b}', { a: j.a, b: j.b }),
     });
   for (const rp of input.runParts ?? []) {
     const runKey = runPartKey(rp);

@@ -187,17 +187,27 @@ export function ProjectTemplateList({
   const [readError, setReadError] = useState(false);
   const live = useRef(true);
   const reading = useRef(false);
+  // A refresh asked for while a read is in flight (a delete or rename finished meanwhile): read again afterwards (G-375).
+  const again = useRef(false);
   const refresh = useCallback(async () => {
-    if (reading.current) return;
+    if (reading.current) {
+      again.current = true;
+      return;
+    }
     reading.current = true;
     try {
-      const next = await listProjectTemplates();
-      if (live.current) {
-        setRows(next);
-        setReadError(false);
-      }
-    } catch {
-      if (live.current) setReadError(true);
+      do {
+        again.current = false;
+        try {
+          const next = await listProjectTemplates();
+          if (live.current) {
+            setRows(next);
+            setReadError(false);
+          }
+        } catch {
+          if (live.current) setReadError(true);
+        }
+      } while (again.current && live.current);
     } finally {
       reading.current = false;
     }

@@ -354,3 +354,69 @@ it('a completed image import preserves newer room edits; changing the background
   );
   expect(ctx.useDesign.getState().project!.room!.walls).toBeUndefined();
 });
+
+it('switching the wall to None during an upload, or leaving the page, raises no "not applied" notice (G-372)', async () => {
+  const ctx = await setup();
+  const images = await import('../src/persist/images');
+  const { useUi } = await import('../src/store/uiStore');
+  type Result = Awaited<ReturnType<typeof images.importImage>>;
+  let done!: (r: Result) => void;
+  vi.spyOn(images, 'importImage').mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        done = resolve;
+      }),
+  );
+  const { WallBackground } = await import('../src/ui/WallBackground');
+  const source = ctx.useDesign.getState().project!.room!;
+  const view = render(<WallBackground projectId={ctx.project.id} room={source} wall={0} />);
+  const picture = () => ({
+    ok: true as const,
+    color: '#ffffff',
+    image: { id: 'p', name: 'p', tileLength: 100, tileWidth: 100 },
+  });
+  const upload = async () => {
+    await ctx.user.selectOptions(
+      screen.getByRole('combobox', { name: 'Wall 1 background' }),
+      'picture',
+    );
+    await ctx.user.upload(
+      screen.getByLabelText('Add a picture for Wall 1'),
+      new File(['png'], 'p.png', { type: 'image/png' }),
+    );
+  };
+  act(() => useUi.getState().setNotice(null));
+  await upload();
+  await ctx.user.selectOptions(screen.getByRole('combobox', { name: 'Wall 1 background' }), 'none');
+  await act(async () => done(picture()));
+  expect(useUi.getState().notice).toBeNull();
+  await upload();
+  view.unmount();
+  await act(async () => done(picture()));
+  expect(useUi.getState().notice).toBeNull();
+});
+
+it('a refresh asked for while a template read is in flight runs after it, so the list is not left stale (G-375)', async () => {
+  const ctx = await setup();
+  const { templateFromProject } = await import('../src/core/projectTemplate');
+  const oldRow = templateFromProject(ctx.project, 'Old name');
+  const newRow = { ...oldRow, name: 'New name' };
+  const resolvers: Array<(r: (typeof oldRow)[]) => void> = [];
+  const read = vi
+    .spyOn(ctx.persistence, 'listProjectTemplates')
+    .mockRejectedValueOnce(new Error('read failed'))
+    .mockImplementation(() => new Promise((resolve) => resolvers.push(resolve)));
+  const { ProjectTemplateList } = await import('../src/ui/ProjectTemplates');
+  render(<ProjectTemplateList manage onOpened={vi.fn()} />);
+  const retry = await screen.findByRole('button', { name: 'Retry' });
+  await ctx.user.click(retry);
+  await waitFor(() => expect(resolvers).toHaveLength(1));
+  // A second refresh arrives while the first read is still running.
+  await ctx.user.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(read).toHaveBeenCalledTimes(2);
+  await act(async () => resolvers[0]([oldRow]));
+  await waitFor(() => expect(resolvers).toHaveLength(2));
+  await act(async () => resolvers[1]([newRow]));
+  expect(await screen.findByText('New name')).toBeTruthy();
+  expect(screen.queryByText('Old name')).toBeNull();
+});

@@ -1,3 +1,4 @@
+import { svgId } from './svgId';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { t } from '@furniture-builder/i18n';
 import { floorRect, wallBands, type FloorFinish, type Room, type WallFinish } from '../core/room';
@@ -94,7 +95,7 @@ export function FloorFill({ room }: { room: Room }) {
   const f = room.floor;
   const finishes = useMemo<WallFinish[]>(() => (f ? [{ wall: 0, ...f }] : []), [f]);
   const urls = useWallPictureUrls(finishes);
-  const clip = `${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-floor`;
+  const clip = `${svgId(useId())}-floor`;
   if (!f) return null;
   const points = room.outline.map((p) => p.join(',')).join(' ');
   const url = f.image ? urls.get(pictureKey(f.image)) : undefined;
@@ -148,7 +149,7 @@ export function WallBands({ room }: { room: Room }) {
  * Returns the patterns and the fill of each piece (undefined = the plan's usual fill).
  */
 export function useBoardFills(pieces: PlacedPiece[]) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const uid = svgId(useId());
   const tops = useMemo(
     () =>
       new Map(
@@ -165,7 +166,7 @@ export function useBoardFills(pieces: PlacedPiece[]) {
     return [...seen.values()];
   }, [tops]);
   const urls = useImageUrls(imageKey(boards));
-  const patId = (imgId: string) => `${uid}-board-${imgId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const patId = (imgId: string) => `${uid}-board-${svgId(imgId)}`;
   const defs = (
     <defs>
       {boards.map((m) => {

@@ -1,3 +1,4 @@
+import { boxCentre } from './geometry';
 import { hardwareSummary } from './cutlist';
 import { profileWorld, rotateAbout, type V3 } from './shape';
 import type { Design, FurnitureModel, Panel } from './types';
@@ -68,7 +69,7 @@ export function exportFusionPython(design: Design, model: FurnitureModel): strin
         );
         continue;
       }
-      let c: V3 = [b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2],
+      let c: V3 = [boxCentre(b).x, boxCentre(b).y, boxCentre(b).z],
         ex: V3 = [1, 0, 0],
         ez: V3 = [0, 0, 1];
       if (p.shape?.kind === 'tilt') {

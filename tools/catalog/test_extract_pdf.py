@@ -11,6 +11,13 @@ from unittest import mock
 
 import extract_pdf
 
+try:
+    import pdfplumber  # noqa: F401
+
+    HAVE_PDFPLUMBER = True
+except ImportError:
+    HAVE_PDFPLUMBER = False
+
 
 def make_pdf(pages):
     """A minimal PDF. Each page is a list of ('text', x, y, size, string) or ('line', x1, y1, x2, y2);
@@ -65,6 +72,7 @@ MANUAL = [
 ]
 
 
+@unittest.skipUnless(HAVE_PDFPLUMBER, 'pdfplumber is not installed (needed to read the test PDF)')
 class ExtractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

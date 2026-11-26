@@ -232,7 +232,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-056: Which bay the divider stepper adds or removes
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-084, 2026-10-25; agent scoped it out
 - Missing: stepDividers still adds an empty bay at the end and removes the last bay (src/core/counts.ts:97-108); nothing is added or removed next to the selection.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
@@ -325,7 +326,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-101: Ledger not editable from the app
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-101, 2026-10-26; ADR-002 (no backend, no tokens)
 - Missing: The page cannot write docs/adr/GAPS.md; decisions go through Copy decisions. (ADR-126 now permits opt-in online features, so 'while ADR-002 holds' is outdated; no ledger write path exists.)
 - Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
@@ -341,7 +343,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-107: Keep mine for saved single pieces
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-096 (2026-10-26, Claude: scoped while building)
 - Missing: Saved single pieces in the Library (Projects → Single pieces) show 'Template updated (revision a → b)', but Keep mine and Replace are offered on project pieces only; a saved single piece has no field to remember a kept revision.
 - Request: Answer to 'Show the notice in the Library too?': "Library too" (2026-10-26)
@@ -356,7 +359,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-109: Cycling stacked pieces on the plan replaces opening them
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-097 (2026-10-26, Claude: defaulted while building)
 - Missing: On the plan, a tap on the same spot over stacked pieces selects the next piece under it (ADR-097) instead of opening the selected piece's interior (ADR-083, G-066); stacked pieces open from the room front view, 3D or the card.
 - Request: New adr 2 (2026-10-26): tapping the same spot again selects the next piece under the pointer
@@ -371,7 +375,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-119: Doubled rails on a rails top
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-105, 2026-10-27, Claude default
 - Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
 - Request: Add the doubled top support … 2 panels
@@ -386,7 +391,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-120: Glue and screws for the doubled top
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-105, 2026-10-27, Claude (ADR-010)
 - Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
 - Request: Add the doubled top support … 2 panels
@@ -401,7 +407,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-121: Doubled bottom, sides or shelves
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-105, 2026-10-27, Claude scope
 - Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
 - Request: Add the doubled top support
@@ -416,7 +423,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-122: Fill a wall: at most 40 pieces per mix
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-103 review, 2026-10-27; Claude added the bound
 - Missing: A mix has at most 40 pieces (Equal fronts at most 80 fronts), so a tiny min width cannot freeze the page; beyond that the wizard says so instead of suggesting.
 - Request: suggest a good width per piece ... resulting in a few pieces of furniture mixed (context: no limit was asked for)
@@ -446,7 +454,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-104, 2026-10-27, review nit
 - Missing: The over-hood wall variant (no bottom) is dealt into the wall row at any position; nothing ties it to a hood or hob below.
 - Request: Yes, every catalog wall variant
@@ -461,7 +470,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-128: Save a project piece back over an existing template
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-107, 2026-10-27, Claude scope
 - Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
 - Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
@@ -476,7 +486,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-129: Save a group or several pieces as one catalog item
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-107, 2026-10-27, Claude scope
 - Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
 - Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
@@ -491,7 +502,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-135: jsdom find-it cannot tap the drawing by position
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-108 (found while building)
 - Missing: The drawing hit-tests taps by screen position (getScreenCTM), which jsdom has no layout for; jsdom tests use each space's keyboard route (Enter), which runs the same tap at the space's centre, so a tap off-centre is not tested
 - Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
@@ -506,7 +518,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-137: Linked copies across projects and templates
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-111, 2026-10-27, Claude scope
 - Missing: Links live inside one project; a change does not reach copies in other projects, saved designs or catalog templates (earlier request 2026-10-27, replaced by the user).
 - Request: give the possibility to update the original template, and it should be propagated further to the ones in the templates.
@@ -582,7 +595,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-171: Angled pieces are not part of runs
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-121 (found while building)
 - Missing: A piece at an angle is left out of runs: no shared worktop, run plinth, fillers, covers, trims or side-by-side compatibility rules for it
 - Request: Accept default, /batch all ready
@@ -660,7 +674,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-278: Account and share-link limits
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-128, ADR-132, 2026-10-28; Claude chose values
 - Missing: Values chosen while building, not by the user: one item at most 2 MB, one account at most 25 MB (about 20 full accounts in the 500 MB free database), at most 30 new share links per account per hour, at most 120 opens per link per hour.
 - Request: Answers G-223 “Design caps + total cap”, G-235 “Vendor defaults first”
@@ -690,7 +705,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-280: Conflict copies are not named after a device
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-129, 2026-10-28; found while building (Claude)
 - Missing: On a conflict, the account's version is kept as a copy named “… (from your account)”, not after the other device: devices have no names.
 - Request: Answer G-226: “Keep both … the second is saved as a copy named after its device”
@@ -705,7 +721,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-281: Switching accounts needs a sign-in
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-142, 2026-10-28; found while building (Claude)
 - Missing: Supabase keeps one session per browser, so Switch to … signs out and asks for the other account's password (the email is filled in); it is not a one-tap switch.
 - Request: Answer G-263: “Several (Recommended)”
@@ -926,7 +943,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-369: Drop the duplicate push-to-main CI run
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion D: once deploy waits on CI (ADR-197), the push-to-main CI run re-verifies a tree that was already green on its pull request. The main run is kept.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -955,54 +973,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
 
-### G-372: Wall picture: stale notice on a deliberate change or leaving the page
-
-- Status: Open
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/WallBackground.tsx pick(): the 'prepared picture was not applied' error notice fires when the user switches the wall to None/Colour during an upload, or leaves the page (global notice shows on another page).
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Show the stale notice only when the wall or background changed outside this control?
-- Suggested pick: Only notify when the operation was not cancelled by this control or unmount (closest to ADR-200's intent; est. +5 % work, removes a false error).
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-
-### G-373: Size-lock note shows unrelated design notices
-
-- Status: Open
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/Inspector.tsx SizeLockNote now renders any design-store notice (move refused, plan notices) in the size-lock info box, even for unlocked pieces.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Is showing every refusal notice in the inspector intended, or only size-lock refusals?
-- Suggested pick: Show the note only when an axis is locked or the notice is a size-lock refusal (matches ADR-122/199 wording; est. small change).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
-### G-374: Escape on More may not close it in Safari
-
-- Status: Open
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/shell/MoreMenu.tsx listens for Escape on the menu element only; Safari does not focus <summary> on click, so Escape likely does nothing while editor shortcuts stay blocked. Not tested in Safari.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Listen on window again but only act when More is open?
-- Suggested pick: Window listener gated on details.open, keeping preventDefault/stopPropagation (keeps ADR-198 behaviour in all browsers; est. small change).
-- Work: Low
-- Impact: Low-medium
-- Necessity: Low-medium
-
-### G-375: Template list refresh skipped while a read is pending
-
-- Status: Open
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/ProjectTemplates.tsx refresh() returns early when a read is in flight, so a delete or rename finishing during a Retry read can leave a stale row.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Queue one follow-up read instead of dropping it?
-- Suggested pick: Mark a pending re-read and run it after the current read (fixes the race fully; est. small change).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-376: Include the room starts ticked in Save as project template
 
 - Status: Open
@@ -1029,20 +999,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Outlets are not checked against sinks, hobs or water.
 - Fix: Add distances that the user enters, checked as warnings, with no built-in values.
 - Conflicts: none
-
-### G-409: Worktop joint fixings
-
-- Status: Open
-- Origin: ADR-205, 2026-11-06; agent scoped it out
-- Missing: A mitred or butt worktop joint lists no fixings (worktop connector bolts, biscuits). Their type and count are supplier values (ADR-010).
-- Request: Kitchen runs with plinth, filler, sink front (G-010 context, not a quote)
-- Questions: List a "Worktop joint fixings (your choice)" line under To choose before buying?
-- Suggested pick: Yes: one line per joint, with no count or size. (estimate: effort +5%, value +5%)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Worktop joints have no fixing line in the shopping list.
-- Fix: Add one user-chosen shopping line per worktop joint.
 
 ### G-420: Run parts read connections
 
@@ -1313,20 +1269,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: A Lock insides toggle in More actions, refused like the other locks.
 - Conflicts: none
 
-### G-454: Versions of deleted projects with no project open
-
-- Status: Open
-- Origin: ADR-211, 2026-11-06; agent scoped it out (G-389's pick puts the list in History, inside an open project)
-- Missing: With no project open (for example after deleting every project) the versions of deleted projects cannot be reached.
-- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it).
-- Questions: Also show the Versions of deleted projects list on the Projects page?
-- Suggested pick: Show the same list, with Restore as a new project and Delete, under the Projects page's list (estimate: effort +4 %, value +3 %).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: Kept versions of deleted projects need an open project to be reached.
-- Fix: The same list on the Projects page.
-
 ### G-460: Band tolerances and edgebander settings
 
 - Status: Open
@@ -1484,7 +1426,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-486: The CI build job does not cache Vite build output
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-220 Out of scope, 2026-11-07 (architecture review I-02)
 - Missing: ADR-220 caches only the type-check state (node_modules/.tmp). The build job still runs a cold vite build; no build or Vitest result cache.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1528,7 +1471,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-490: Width-independent find-it tests still run at both widths
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-224 Out of scope, 2026-11-07 (architecture review I-06, section 10 question 1)
 - Missing: Running find-it tests whose rendered path does not depend on width at one width (about -40 % test CPU) is not built; it amends CLAUDE.md R3 and ADR-108, which stay unchanged.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1606,17 +1550,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 
-### G-497: The 3D viewer still imports persist directly
-
-- Status: Open
-- Origin: ADR-230 Out of scope, 2026-11-07 (architecture review section 2)
-- Missing: Viewer3D.tsx:78-79 import src/persist; ADR-230 removes ui imports and DOM side channels only.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should the viewer read saved models and pictures through the store (after ADR-223)?
-- Suggested pick: Route them through the store after ADR-223 (estimate: effort +5 %, value +2 %)
-- Work: Low
-- Impact: Low
-
 ### G-498: The design store is not split into slices
 
 - Status: Open
@@ -1630,7 +1563,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-499: The whole app, seller catalog included, is precached on first visit
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-234 Out of scope, 2026-11-07 (architecture review I-16, section 10 question 3)
 - Missing: Precaching the shell only and runtime-caching the seller catalog and path tracer on first use (first-visit download about -40 %) is not built: ADR-234 keeps offline before first use (ADR-002, ADR-161).
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1650,17 +1584,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
 - Work: Medium
 - Impact: Low-medium
-
-### G-501: The catalog PDF extractor tests run nowhere
-
-- Status: Open
-- Origin: ADR-237 Out of scope, 2026-11-07 (architecture review I-19)
-- Missing: tools/catalog/test_extract_pdf.py imports extract_pdf.py, which imports pdfplumber at module top (line 21), so it cannot run in CI without installing pdfplumber.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Install pdfplumber in CI (a Python dependency the app does not use) or make the import lazy so the tests run without it?
-- Suggested pick: Make the pdfplumber import lazy in the functions that need it and run the tests that do not (estimate: effort +5 %, value +2 %)
-- Work: Low
-- Impact: Low
 
 ### G-502: No frame-time profile of the 3D viewer
 
@@ -1687,7 +1610,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-504: Two find-it checks still read a class on an element found by role
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-224 build, 2026-11-07 (architecture review I-06)
 - Missing: tests/find-it/info-tip.test.tsx picks the info buttons among all buttons found by role by their info-btn class, and tests/find-it/editor-nav.test.tsx reads the sheet-open and sheet-full classes on the editor's main area (found by role): an info button has no role or name of its own that sets it apart, and the sheet stop is CSS layout. No querySelector remains.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1832,18 +1756,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
-
-- Status: Open
-- Origin: bug-hunt 2026-11-17 L-2
-- Missing: Not moved to boxCentre: Elevation.tsx:380-381, RoomDrawings.tsx:951, ViewerScene.tsx:486,581,807,824, AR.tsx:928, arPlace.ts:187,313; core call sites selectPath.ts, project.ts:1145, fusion.ts:68, selection.ts:136, snapshot.ts:242, projectProfiles.ts:176
-- Request: Move remaining centre arithmetic to boxCentre
-- Questions: Include core call sites in a follow-up?
-- Suggested pick: Follow-up change, each site checked for its formula
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-539: Russian key conflicts with different wording (reuse H1)
 
 - Status: Open
@@ -1870,7 +1782,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-541: Remaining duplicates skipped (reuse L5, L7, B1-B3)
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: reuse health 2026-11-18 L5, L7, boundary-blocked
 - Missing: L7: assistant.ts isInt and wallfill.ts whole differ from guards.ts; seller origin string in src/online and tools/sellers (tools cannot import src); test picture bases kept literal. B1: Deno assistant function copies cannot import src/. B2 Viewer3D FRONT now uses core panelRoles. B3 tools/sellers pictureExt standalone
 - Request: Consolidate where layers allow
@@ -2070,18 +1983,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-564: Cap file size in five text importers
-
-- Status: Open
-- Origin: Security health check round 1, 2026-11-19 (L-1)
-- Missing: src/ui/Shopping.tsx:126, src/ui/Dialogs.tsx:545 and :573, src/ui/CatalogPage.tsx:255 and src/ui/Gaps.tsx:166 read a file with f.text() and no size cap; importFile already has MAX_IMPORT_BYTES
-- Request: /health-security, loop prompt: rotate the health skills until no high-priority issue; user approved Medium only
-- Questions: None; the cap value is MAX_IMPORT_BYTES
-- Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-565: Re-encode or sniff pictures inside imported files
 
 - Status: Open
@@ -2106,18 +2007,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-567: Assistant 8000-character cap: user feedback in the chat
-
-- Status: Open
-- Origin: Bug health check round 1, 2026-11-19 (M1)
-- Missing: The textarea stops typing at 8000 characters (maxLength) with no message, and a long assistant reply in history is cut to 8000 characters when resent
-- Request: /health-bugs, loop prompt; user approved Medium (client cap only)
-- Questions: Show a counter or message near 8000? New text needs t() and a Russian entry
-- Suggested pick: Add a short counter under the textarea (Work Low, Value Low)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
@@ -2140,18 +2029,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
 - Work: Medium
 - Impact: Low-medium
-- Necessity: Low
-
-### G-571: Reuse findings L1 to L8
-
-- Status: Open
-- Origin: Reuse health check round 1, 2026-11-20 (low)
-- Missing: escapeHtml in two copies; inline clamp; SVG id sanitiser x7; position range -20000..20000 on about 22 fields; FRONTS and DRAWER_BOX aliases; area sum in shopping.ts; assistant model and request defaults in index.ts and assistant-eval.mjs; Pt tuple alias
-- Request: /health-reuse, loop prompt; user approved high items only
-- Questions: None
-- Suggested pick: Fix with the medium group in one cleanup pass (Work Low, Value Low)
-- Work: Low
-- Impact: Low
 - Necessity: Low
 
 ### G-572: Low dev dependency updates
@@ -2241,18 +2118,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-582: Catalog finder: on by default or keep the grouped page
-
-- Status: Open
-- Origin: ADR-291, N377
-- Missing: The finder ships off by default behind More › Catalog finder (preview); turning it on by default or removing the grouped page needs the user's word (ui-rework step 5).
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Turn the finder on by default and keep the grouped page behind the switch, keep it off, or remove the grouped page?
-- Suggested pick: On by default, grouped page behind the switch (as ADR-290 did for the canvas editor)
-- Work: Low
-- Impact: Medium-high
-- Necessity: Medium
-
 ### G-583: Catalog rework: web research and published spec/prototype skipped
 
 - Status: Open
@@ -2276,18 +2141,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
-
-### G-586: Grouped catalog page is 19 365 px tall on a phone, over the N311 limit
-
-- Status: Open
-- Origin: tools/catalog-flows/find-it.mjs rerun for ADR-291
-- Missing: catalog-flows check 'page under 17 000 px tall as it opens (paged, N311)' fails at 390 px: 19 365 px, measured on the build before ADR-291's changes too; the other 34 checks pass.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach.
-- Questions: Fix the grouped page's height, or let the finder (G-582) replace it?
-- Suggested pick: Let the finder become the default (G-582); keep the grouped page as is
-- Work: Low
-- Impact: Low
-- Necessity: Low
 
 ### G-587: Appearance dialog: find-it test
 

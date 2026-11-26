@@ -61,7 +61,14 @@ import {
   unusedImageIds as stored_unusedImageIds,
 } from '../persist/db';
 
+import { loadModelScene as stored_loadModelScene } from '../persist/models';
+
 export type { CopyResult, StoredDesign, StoredModel, StoredProject } from '../persist/db';
+export type { ModelScene } from '../persist/models';
+
+// ---- 3D models for the viewer (ADR-076, G-497) -----------------------------------------------------------------------
+/** The stored model parsed once per id, for the 3D view; the view reads it here, never from `src/persist`. */
+export const loadModelScene = (id: string) => stored_loadModelScene(id);
 
 // ---- Designs (pieces) ------------------------------------------------------------------------------------------------
 export const saveDesign = (d: Design) => stored_saveDesign(d);

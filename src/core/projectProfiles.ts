@@ -1,3 +1,4 @@
+import { boxCentre } from './geometry';
 /**
  * Moulding profiles and repair fillers of a run (ADR-209): moved out of project.ts unchanged (cleanup audit 2026-11-09, item 13).
  */
@@ -172,8 +173,7 @@ export function planRepairFiller(r: RunRequest, byId: Map<string, PlacedPiece>):
   const th = m.thickness;
   const lo = along === 'x' ? b.x : b.z,
     hi = along === 'x' ? b.x + b.w : b.z + b.d;
-  const oc =
-    along === 'x' ? other.bounds.x + other.bounds.w / 2 : other.bounds.z + other.bounds.d / 2;
+  const oc = along === 'x' ? boxCentre(other.bounds).x : boxCentre(other.bounds).z;
   const gap0 = oc < (lo + hi) / 2 ? lo - w : hi;
   const front =
     pc.facing.axis === 'z'

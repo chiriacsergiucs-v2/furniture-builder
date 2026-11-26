@@ -5,6 +5,7 @@
  * that rectangle. Pure: the viewer turns a pointer into a ray, this module turns it into a wall point and a dragged
  * rectangle (whole mm, edges snapping to the wall ends, floor and ceiling as pieces snap to walls, ADR-070).
  */
+import { clamp } from './clamp';
 import { t } from '@furniture-builder/i18n';
 import { MAX_REACH, type Ray } from './drag3d';
 import {
@@ -151,7 +152,6 @@ const snapTo = (v: number, targets: number[], range: number) => {
     }
   return best;
 };
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 /**
  * The picture rectangle after dragging `handle` by `du` (along the wall) and `dy` (up) mm from `start`: whole mm, at

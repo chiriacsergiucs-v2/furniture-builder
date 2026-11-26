@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { t } from '@furniture-builder/i18n';
+import { clamp } from '../core/clamp';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
 import { useCanvas } from './CanvasEditor';
@@ -74,7 +75,7 @@ export function MmField({
   // The steppers step from the stored value and clear any draft.
   const bump = (d: number) => {
     setText(String(value));
-    onChange(Math.min(max, Math.max(min, value + d)));
+    onChange(clamp(value + d, min, max));
   };
   return (
     <div className="field">

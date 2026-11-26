@@ -46,7 +46,11 @@ try {
     const viewport = { width, height: phone ? 844 : 900 };
     const context = await browser.newContext({ viewport, hasTouch: phone, isMobile: phone });
     // First-run hints (ADR-289) open once over the editor; this script does not test them.
-    await context.addInitScript(() => localStorage.setItem('fb:canvas-coach', 'done'));
+    await context.addInitScript(() => {
+      localStorage.setItem('fb:canvas-coach', 'done');
+      // This script drives the grouped catalog page; the finder is the default (G-582) and has its own script.
+      localStorage.setItem('fb:catalogFinder', 'off');
+    });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -270,7 +274,10 @@ try {
     // 8. A refused read: a fresh page whose templates store cannot be read.
     const readCtx = await browser.newContext({ viewport, hasTouch: phone, isMobile: phone });
     await readCtx.addInitScript(failTemplateReads);
-    await readCtx.addInitScript(() => localStorage.setItem('fb:canvas-coach', 'done'));
+    await readCtx.addInitScript(() => {
+      localStorage.setItem('fb:canvas-coach', 'done');
+      localStorage.setItem('fb:catalogFinder', 'off');
+    });
     const rp = await readCtx.newPage();
     await rp.goto(url);
     await rp
@@ -287,7 +294,10 @@ try {
 
     // 9. With a piece open: "Save this piece as a template" opens name/room/type and links to the family (item 5).
     const pc = await browser.newContext({ viewport, hasTouch: phone, isMobile: phone });
-    await pc.addInitScript(() => localStorage.setItem('fb:canvas-coach', 'done'));
+    await pc.addInitScript(() => {
+      localStorage.setItem('fb:canvas-coach', 'done');
+      localStorage.setItem('fb:catalogFinder', 'off');
+    });
     const p2 = await pc.newPage();
     await p2.goto(url);
     await p2.getByRole('button', { name: 'New single piece', exact: true }).click();

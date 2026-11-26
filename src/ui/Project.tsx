@@ -1,6 +1,6 @@
+import { POSITION_MAX, POSITION_MIN } from '../core/limits';
 import { DEFAULT_MOUNT_HEIGHT } from '../core/design';
 import { isSizeLocked, lockedAxes } from '../core/sizeLock';
-import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { RoomFront, RoomPlan } from './RoomDrawings';
 import { boxCentre } from '../core/geometry';
 import { t, tr } from '@furniture-builder/i18n';
@@ -448,7 +448,7 @@ export function ProjectPanel({
                   label={t('Gap to {name} on the left', { name: tr(left.item.design.name) })}
                   value={left.gap}
                   min={0}
-                  max={20000}
+                  max={POSITION_MAX}
                   onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
                 />
                 <Toggle
@@ -1320,8 +1320,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       <MmField
         label={t('From left')}
         value={pos.x}
-        min={-20000}
-        max={20000}
+        min={POSITION_MIN}
+        max={POSITION_MAX}
         onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
         disabled={!!hint('x')}
         hint={hint('x')}
@@ -1330,8 +1330,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       <MmField
         label={t('From back')}
         value={pos.z}
-        min={-20000}
-        max={20000}
+        min={POSITION_MIN}
+        max={POSITION_MAX}
         onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
         disabled={!!hint('z')}
         hint={hint('z')}
@@ -1368,7 +1368,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Underside above the floor')}
             value={pl.height}
             min={0}
-            max={20000}
+            max={POSITION_MAX}
             onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
             disabled={!!hint('mountHeight')}
             hint={hint('mountHeight')}
@@ -1413,8 +1413,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
           <MmField
             label={t('From left')}
             value={pos.x}
-            min={-20000}
-            max={20000}
+            min={POSITION_MIN}
+            max={POSITION_MAX}
             onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
             disabled={!!hint('x')}
             hint={hint('x')}
@@ -1423,8 +1423,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
           <MmField
             label={t('From back')}
             value={pos.z}
-            min={-20000}
-            max={20000}
+            min={POSITION_MIN}
+            max={POSITION_MAX}
             onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
             disabled={!!hint('z')}
             hint={hint('z')}
@@ -1434,7 +1434,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             label={t('Above floor')}
             value={pos.y}
             min={0}
-            max={20000}
+            max={POSITION_MAX}
             onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
             disabled={!!hint('y')}
             hint={hint('y')}
@@ -1450,9 +1450,6 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     </>
   );
 }
-
-export const FRONTS = FRONT_ROLES;
-export const DRAWER_BOX = DRAWER_BOX_ROLES;
 
 export const onKey = (f: () => void) => (e: KeyboardEvent) => {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -2021,7 +2018,7 @@ function RoomSection() {
                           }
                           value={shown.cutWidth}
                           min={100}
-                          max={20000}
+                          max={POSITION_MAX}
                           onChange={(v) => setSize('cutWidth', v)}
                           error={sizeError('cutWidth')}
                         />
@@ -2035,7 +2032,7 @@ function RoomSection() {
                           }
                           value={shown.cutDepth}
                           min={100}
-                          max={20000}
+                          max={POSITION_MAX}
                           onChange={(v) => setSize('cutDepth', v)}
                           error={sizeError('cutDepth')}
                         />
@@ -2048,7 +2045,7 @@ function RoomSection() {
                             }
                             value={shown.offset}
                             min={0}
-                            max={20000}
+                            max={POSITION_MAX}
                             onChange={(v) => setSize('offset', v)}
                             error={sizeError('offset')}
                           />

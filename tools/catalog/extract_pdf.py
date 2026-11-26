@@ -18,8 +18,6 @@ import subprocess
 import sys
 import tempfile
 
-import pdfplumber
-
 FORMAT = 1
 LINE_TOL = 2.0  # words whose tops differ by at most this many points share a line
 GAP_FACTOR = 3.0  # a horizontal gap wider than this many font sizes starts a new run (separate callouts)
@@ -200,6 +198,8 @@ def extract_page(page, number, facts, warnings):
 def extract(path):
     with open(path, 'rb') as f:
         digest = hashlib.sha256(f.read()).hexdigest()
+    import pdfplumber  # lazy: only reading a PDF needs it, so the rest imports without it (G-501)
+
     facts, warnings, pages = [], [], []
     with pdfplumber.open(path) as pdf:
         meta = pdf.metadata or {}

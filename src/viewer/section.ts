@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '@furniture-builder/i18n';
+import { clamp } from '../core/clamp';
 import { createListeners } from '../store/deviceValue';
 
 /** A room axis the section cuts across: x along the wall (width), y up (height), z out from the wall (depth). */
@@ -31,7 +32,7 @@ export const useSection = () => useSyncExternalStore(subscribe, () => now);
 
 /** The cut position (mm) for `s` within the shown extent `[min, max]` along its axis: the middle when not set. */
 export const cutAt = (s: Pick<SectionState, 'at'>, min: number, max: number): number =>
-  s.at === null ? Math.round((min + max) / 2) : Math.min(max, Math.max(min, s.at));
+  s.at === null ? Math.round((min + max) / 2) : clamp(s.at, min, max);
 
 export const AXIS_LABEL: Record<SectionAxis, string> = {
   x: t('Width'),

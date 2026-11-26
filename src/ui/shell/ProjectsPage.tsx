@@ -26,6 +26,7 @@ import { newerCount, newerText, templateStatus } from '../../core/templateRevisi
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
 import { useUi } from '../../store/uiStore';
+import { OrphanVersions } from '../History';
 import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
@@ -371,6 +372,8 @@ export function ProjectsPage({
             )}
           </>
         )}
+        {/* Versions of deleted projects stay reachable with no project open (G-454). */}
+        <OrphanVersions reload={0} />
         <ProjectTemplateList onOpened={onOpened} />
       </section>
       <InYourAccount onOpened={onOpened} />

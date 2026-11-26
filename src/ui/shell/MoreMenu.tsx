@@ -80,7 +80,9 @@ export function MoreMenu({
         return;
       }
       // Arrow keys, Home and End move through the entries (audit F-02); the menu stays a disclosure.
+      // Only from inside the menu: the listener is on the window now (G-374), and Safari does not focus the summary.
       const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End'];
+      if (!ref.current.contains(e.target as Node)) return;
       if (!keys.includes(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
       const items = Array.from(
         ref.current.querySelectorAll<HTMLElement>(
@@ -100,11 +102,12 @@ export function MoreMenu({
     const onClick = (e: MouseEvent) => {
       if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
     };
-    const menu = ref.current;
-    menu?.addEventListener('keydown', onKey);
+    // On the window, gated on the menu being open: Safari does not focus <summary> on click, so a keydown may never
+    // pass through the menu element (G-374).
+    window.addEventListener('keydown', onKey);
     document.addEventListener('click', onClick);
     return () => {
-      menu?.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey);
       document.removeEventListener('click', onClick);
     };
   }, []);

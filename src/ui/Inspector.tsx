@@ -1,3 +1,4 @@
+import { POSITION_MAX } from '../core/limits';
 import { axesText, isSizeLocked, lockedAxes } from '../core/sizeLock';
 import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -186,6 +187,23 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   );
 }
 
+const MARK = '\u0001';
+const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** True when the text is one of the size-lock refusals of `resizeBlocked` (ADR-122, ADR-203), in the shown language. */
+function isSizeLockRefusal(text: string): boolean {
+  const forms = [
+    t('{name} has its size locked — unlock its size to change it.', { name: MARK }),
+    t('{name} has its {axes} locked — unlock it to change it.', { name: MARK, axes: MARK }),
+    t('{name} sits on {base} and is locked — unlock it to resize {base}.', {
+      name: MARK,
+      base: MARK,
+    }),
+  ];
+  return forms.some((f) =>
+    new RegExp(`^${f.split(MARK).map(escapeRe).join('.*')}$`, 's').test(text),
+  );
+}
+
 /**
  * A project piece open in the editor with its size locked (ADR-122): says so, and why the last size edit was refused.
  */
@@ -194,7 +212,9 @@ function SizeLockNote() {
     const id = s.editingItemId ?? s.drillItemId;
     return lockedAxes(s.project?.items.find((i) => i.id === id)).join(',');
   });
-  const notice = useDesign((s) => s.notice);
+  const storeNotice = useDesign((s) => s.notice);
+  // The store's notice also carries moves refused and plan notices (G-373): only a size-lock refusal belongs here.
+  const notice = storeNotice && isSizeLockRefusal(storeNotice) ? storeNotice : null;
   if (!axesKey && !notice) return null;
   const axes = axesKey.split(',').filter(Boolean) as SizeAxis[];
   return (
@@ -1977,7 +1997,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
                   label={t('x (from left)')}
                   value={lp.place.x}
                   min={0}
-                  max={20000}
+                  max={POSITION_MAX}
                   step={1}
                   onChange={(v) => change(lp.id, { place: { ...lp.place!, x: v } })}
                 />
@@ -1985,7 +2005,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
                   label={t('y (from floor)')}
                   value={lp.place.y}
                   min={0}
-                  max={20000}
+                  max={POSITION_MAX}
                   step={1}
                   onChange={(v) => change(lp.id, { place: { ...lp.place!, y: v } })}
                 />
@@ -1993,7 +2013,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
                   label={t('z (from back)')}
                   value={lp.place.z}
                   min={0}
-                  max={20000}
+                  max={POSITION_MAX}
                   step={1}
                   onChange={(v) => change(lp.id, { place: { ...lp.place!, z: v } })}
                 />
