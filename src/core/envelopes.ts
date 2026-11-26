@@ -235,6 +235,7 @@ export const BODY_CODES = new Set([
   'pieces-overlap',
   'below-floor',
   'outside-room',
+  'taller-than-room',
   'hits-obstacle',
   'blocks-door',
   'covers-window',

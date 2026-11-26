@@ -477,7 +477,7 @@ export function checkRoom(input: RoomInput): RoomIssue[] {
         field: 'walkway',
       });
     if (!isRectangle(input.room))
-      out.push(err('room-island', t('An island needs a rectangle room.')));
+      out.push(err('room-island-not-rectangle', t('An island needs a rectangle room.')));
   }
   return out;
 }
@@ -525,7 +525,10 @@ function planIsland(
 ): IslandPlan | Diagnostic {
   const room = input.room;
   const walkway = input.island!.walkway!;
-  const tooSmall = err('room-island', t('The room is too small for an island with this walkway.'));
+  const tooSmall = err(
+    'room-island-too-small',
+    t('The room is too small for an island with this walkway.'),
+  );
   const wall = walls.reduce((a, b) => (wallLength(room, b) > wallLength(room, a) ? b : a));
   const len = wallLength(room, wall);
   const length = Math.floor((len - 2 * (input.depth + walkway)) / 50) * 50;

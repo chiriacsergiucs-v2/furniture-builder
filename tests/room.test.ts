@@ -69,7 +69,17 @@ describe('room (ADR-058)', () => {
   });
   it('a piece past the right wall or taller than the room is an error', () => {
     expect(codes(proj(['base-door'], rect(), 2700))).toContain('outside-room');
-    expect(codes(proj(['wardrobe'], { ...rect(), height: 2000 }))).toContain('outside-room');
+    expect(codes(proj(['wardrobe'], { ...rect(), height: 2000 }))).toContain('taller-than-room');
+  });
+  it('through a wall and taller than the room have their own codes, same severity (ADR-296)', () => {
+    const wall = buildProjectModel(proj(['base-door'], rect(), 2700)).diagnostics;
+    expect(wall.filter((d) => d.code === 'outside-room').length).toBeGreaterThan(0);
+    expect(wall.some((d) => d.code === 'taller-than-room')).toBe(false);
+    const tall = buildProjectModel(proj(['wardrobe'], { ...rect(), height: 2000 })).diagnostics;
+    const d = tall.find((x) => x.code === 'taller-than-room')!;
+    expect(d.severity).toBe('error');
+    expect(d.message).toMatch(/mm taller than the room\.$/);
+    expect(tall.some((x) => x.code === 'outside-room')).toBe(false);
   });
   it('a radiator on the back wall is hit → error; moved along the wall it is clear', () => {
     expect(codes(proj(['base-door'], { ...rect(), features: [feat({ from: 100 })] }))).toContain(
