@@ -411,7 +411,8 @@ for (const width of WIDTHS) {
       g.drawImage(img, 0, 0);
       const d = g.getImageData(0, 0, c.width, c.height).data;
       const seen = new Set();
-      for (let i = 0; i < d.length; i += 16) seen.add((d[i] >> 3) * 1024 + (d[i + 1] >> 3) * 32 + (d[i + 2] >> 3));
+      for (let i = 0; i < d.length; i += 16)
+        seen.add((d[i] >> 3) * 1024 + (d[i + 1] >> 3) * 32 + (d[i + 2] >> 3));
       return seen.size;
     }, shot.toString('base64'));
     ok('the 3D model is drawn (many colours in the canvas)', colours > 20, `${colours} colours`);
