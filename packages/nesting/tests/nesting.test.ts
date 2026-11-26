@@ -3,8 +3,8 @@
  * validator and that mutated layouts are rejected. FUZZ_N=5000 pnpm --filter @furniture-builder/nesting exec vitest run for a deep run.
  * The cut-list bridge (`jobsFromCutlist`) is tested in the app's tests/nesting-jobs.test.ts (ADR-279).
  */
-import { describe, it, expect } from 'vitest';
-import { nest, validateNest } from '../src';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { nest, validateNest, DEFAULT_MAX_ATTEMPTS, SAFETY_MAX_MS } from '../src';
 import type { CutTree, NestJob, NestPart, NestResult } from '../src';
 
 const KERF = 4,
@@ -108,6 +108,36 @@ describe('nest', () => {
     expect(b.unplaced).toEqual(a.unplaced);
     expect(b.stats).toEqual(a.stats);
     expect(b.search.attempts).toBe(a.search.attempts);
+  });
+
+  describe('production default does not depend on speed (G-495)', () => {
+    afterEach(() => vi.restoreAllMocks());
+    const parts = Array.from({ length: 14 }, (_, i) =>
+      part(`p${i}`, 200 + ((i * 97) % 900), 150 + ((i * 61) % 500), 1 + (i % 3)),
+    );
+    const layout = (r: NestResult) => ({ ...r, search: { ...r.search, elapsedMs: 0 } });
+
+    it('the same input with the default options gives an identical layout twice', () => {
+      const a = nest(job(parts), { seed: 7 });
+      const b = nest(job(parts), { seed: 7 });
+      expect(layout(b)).toEqual(layout(a));
+      expect(a.search.attempts).toBe(DEFAULT_MAX_ATTEMPTS);
+    });
+
+    it('a clock a thousand times slower gives the same layout as the real clock', () => {
+      const real = nest(job(parts), { seed: 7 });
+      let t = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => (t += 100));
+      const slow = nest(job(parts), { seed: 7 });
+      expect(slow.search.elapsedMs).toBeGreaterThan(1500);
+      expect(slow.search.elapsedMs).toBeLessThan(SAFETY_MAX_MS);
+      expect(layout(slow)).toEqual(layout(real));
+      expect(slow.search.attempts).toBe(DEFAULT_MAX_ATTEMPTS);
+    });
+
+    it('the safety ceiling is far above the old 1500 ms budget', () => {
+      expect(SAFETY_MAX_MS).toBeGreaterThanOrEqual(20 * 1500);
+    });
   });
 
   it('conserves area exactly on every sheet', () => {
