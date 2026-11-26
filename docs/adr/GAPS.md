@@ -973,54 +973,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
 
-### G-372: Wall picture: stale notice on a deliberate change or leaving the page
-
-- Status: Done (PRNUM, N386)
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/WallBackground.tsx pick(): the 'prepared picture was not applied' error notice fires when the user switches the wall to None/Colour during an upload, or leaves the page (global notice shows on another page).
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Show the stale notice only when the wall or background changed outside this control?
-- Suggested pick: Only notify when the operation was not cancelled by this control or unmount (closest to ADR-200's intent; est. +5 % work, removes a false error).
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-
-### G-373: Size-lock note shows unrelated design notices
-
-- Status: Done (PRNUM, N386)
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/Inspector.tsx SizeLockNote now renders any design-store notice (move refused, plan notices) in the size-lock info box, even for unlocked pieces.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Is showing every refusal notice in the inspector intended, or only size-lock refusals?
-- Suggested pick: Show the note only when an axis is locked or the notice is a size-lock refusal (matches ADR-122/199 wording; est. small change).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
-### G-374: Escape on More may not close it in Safari
-
-- Status: Done (PRNUM, N386)
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/shell/MoreMenu.tsx listens for Escape on the menu element only; Safari does not focus <summary> on click, so Escape likely does nothing while editor shortcuts stay blocked. Not tested in Safari.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Listen on window again but only act when More is open?
-- Suggested pick: Window listener gated on details.open, keeping preventDefault/stopPropagation (keeps ADR-198 behaviour in all browsers; est. small change).
-- Work: Low
-- Impact: Low-medium
-- Necessity: Low-medium
-
-### G-375: Template list refresh skipped while a read is pending
-
-- Status: Done (PRNUM, N386)
-- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
-- Missing: src/ui/ProjectTemplates.tsx refresh() returns early when a read is in flight, so a delete or rename finishing during a Retry read can leave a stale row.
-- Request: Check PR 169 code, it was written by a chatgpt
-- Questions: Queue one follow-up read instead of dropping it?
-- Suggested pick: Mark a pending re-read and run it after the current read (fixes the race fully; est. small change).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-376: Include the room starts ticked in Save as project template
 
 - Status: Open
@@ -1047,20 +999,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Outlets are not checked against sinks, hobs or water.
 - Fix: Add distances that the user enters, checked as warnings, with no built-in values.
 - Conflicts: none
-
-### G-409: Worktop joint fixings
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-205, 2026-11-06; agent scoped it out
-- Missing: A mitred or butt worktop joint lists no fixings (worktop connector bolts, biscuits). Their type and count are supplier values (ADR-010).
-- Request: Kitchen runs with plinth, filler, sink front (G-010 context, not a quote)
-- Questions: List a "Worktop joint fixings (your choice)" line under To choose before buying?
-- Suggested pick: Yes: one line per joint, with no count or size. (estimate: effort +5%, value +5%)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Worktop joints have no fixing line in the shopping list.
-- Fix: Add one user-chosen shopping line per worktop joint.
 
 ### G-420: Run parts read connections
 
@@ -1330,20 +1268,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A piece's insides cannot be locked.
 - Fix: A Lock insides toggle in More actions, refused like the other locks.
 - Conflicts: none
-
-### G-454: Versions of deleted projects with no project open
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-211, 2026-11-06; agent scoped it out (G-389's pick puts the list in History, inside an open project)
-- Missing: With no project open (for example after deleting every project) the versions of deleted projects cannot be reached.
-- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it).
-- Questions: Also show the Versions of deleted projects list on the Projects page?
-- Suggested pick: Show the same list, with Restore as a new project and Delete, under the Projects page's list (estimate: effort +4 %, value +3 %).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: Kept versions of deleted projects need an open project to be reached.
-- Fix: The same list on the Projects page.
 
 ### G-460: Band tolerances and edgebander settings
 
@@ -1626,17 +1550,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 
-### G-497: The 3D viewer still imports persist directly
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-230 Out of scope, 2026-11-07 (architecture review section 2)
-- Missing: Viewer3D.tsx:78-79 import src/persist; ADR-230 removes ui imports and DOM side channels only.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should the viewer read saved models and pictures through the store (after ADR-223)?
-- Suggested pick: Route them through the store after ADR-223 (estimate: effort +5 %, value +2 %)
-- Work: Low
-- Impact: Low
-
 ### G-498: The design store is not split into slices
 
 - Status: Open
@@ -1671,17 +1584,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
 - Work: Medium
 - Impact: Low-medium
-
-### G-501: The catalog PDF extractor tests run nowhere
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-237 Out of scope, 2026-11-07 (architecture review I-19)
-- Missing: tools/catalog/test_extract_pdf.py imports extract_pdf.py, which imports pdfplumber at module top (line 21), so it cannot run in CI without installing pdfplumber.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Install pdfplumber in CI (a Python dependency the app does not use) or make the import lazy so the tests run without it?
-- Suggested pick: Make the pdfplumber import lazy in the functions that need it and run the tests that do not (estimate: effort +5 %, value +2 %)
-- Work: Low
-- Impact: Low
 
 ### G-502: No frame-time profile of the 3D viewer
 
@@ -1830,18 +1732,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-535: F-29 half fixed: the Gaps page marks no current place
-
-- Status: Done (PRNUM, N386)
-- Origin: Catch-up live-verify, 2026-11-17 (N333)
-- Missing: N319 says More is marked as the current place on Information and Gaps. On the live site, #info marks the More button (aria-current=page); #gaps does not (aria-current absent, and the More menu has no Gaps item), because App.tsx passes current only for the info page.
-- Request: Catch up
-- Questions: Which control marks the current place on the Gaps page, now that Gaps is reached from the Information page?
-- Suggested pick: Mark More as current on Gaps too and say it in the page's back link or heading context (estimate: effort +5 %, value +5 %)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
 
 - Status: Open
@@ -1863,18 +1753,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Translate built-in names in print and CSV, or keep them as stored?
 - Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
 - Work: Medium
-- Impact: Low
-- Necessity: Low
-
-### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
-
-- Status: Done (PRNUM, N386)
-- Origin: bug-hunt 2026-11-17 L-2
-- Missing: Not moved to boxCentre: Elevation.tsx:380-381, RoomDrawings.tsx:951, ViewerScene.tsx:486,581,807,824, AR.tsx:928, arPlace.ts:187,313; core call sites selectPath.ts, project.ts:1145, fusion.ts:68, selection.ts:136, snapshot.ts:242, projectProfiles.ts:176
-- Request: Move remaining centre arithmetic to boxCentre
-- Questions: Include core call sites in a follow-up?
-- Suggested pick: Follow-up change, each site checked for its formula
-- Work: Low
 - Impact: Low
 - Necessity: Low
 
@@ -2105,18 +1983,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-564: Cap file size in five text importers
-
-- Status: Done (PRNUM, N386)
-- Origin: Security health check round 1, 2026-11-19 (L-1)
-- Missing: src/ui/Shopping.tsx:126, src/ui/Dialogs.tsx:545 and :573, src/ui/CatalogPage.tsx:255 and src/ui/Gaps.tsx:166 read a file with f.text() and no size cap; importFile already has MAX_IMPORT_BYTES
-- Request: /health-security, loop prompt: rotate the health skills until no high-priority issue; user approved Medium only
-- Questions: None; the cap value is MAX_IMPORT_BYTES
-- Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-565: Re-encode or sniff pictures inside imported files
 
 - Status: Open
@@ -2139,18 +2005,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Pin by SHA, verifying each SHA from the upstream release (Work Low, Value Low-medium)
 - Work: Low
 - Impact: Low-medium
-- Necessity: Low
-
-### G-567: Assistant 8000-character cap: user feedback in the chat
-
-- Status: Done (PRNUM, N386)
-- Origin: Bug health check round 1, 2026-11-19 (M1)
-- Missing: The textarea stops typing at 8000 characters (maxLength) with no message, and a long assistant reply in history is cut to 8000 characters when resent
-- Request: /health-bugs, loop prompt; user approved Medium (client cap only)
-- Questions: Show a counter or message near 8000? New text needs t() and a Russian entry
-- Suggested pick: Add a short counter under the textarea (Work Low, Value Low)
-- Work: Low
-- Impact: Low
 - Necessity: Low
 
 ### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
@@ -2187,18 +2041,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
 - Work: Medium
 - Impact: Low-medium
-- Necessity: Low
-
-### G-571: Reuse findings L1 to L8
-
-- Status: Done (PRNUM, N386)
-- Origin: Reuse health check round 1, 2026-11-20 (low)
-- Missing: escapeHtml in two copies; inline clamp; SVG id sanitiser x7; position range -20000..20000 on about 22 fields; FRONTS and DRAWER_BOX aliases; area sum in shopping.ts; assistant model and request defaults in index.ts and assistant-eval.mjs; Pt tuple alias
-- Request: /health-reuse, loop prompt; user approved high items only
-- Questions: None
-- Suggested pick: Fix with the medium group in one cleanup pass (Work Low, Value Low)
-- Work: Low
-- Impact: Low
 - Necessity: Low
 
 ### G-572: Low dev dependency updates
@@ -2288,18 +2130,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-582: Catalog finder: on by default or keep the grouped page
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-291, N377
-- Missing: The finder ships off by default behind More › Catalog finder (preview); turning it on by default or removing the grouped page needs the user's word (ui-rework step 5).
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Turn the finder on by default and keep the grouped page behind the switch, keep it off, or remove the grouped page?
-- Suggested pick: On by default, grouped page behind the switch (as ADR-290 did for the canvas editor)
-- Work: Low
-- Impact: Medium-high
-- Necessity: Medium
-
 ### G-583: Catalog rework: web research and published spec/prototype skipped
 
 - Status: Open
@@ -2323,30 +2153,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
-
-### G-585: Finder filter row scrolls sideways on a phone
-
-- Status: Done (PRNUM, N386)
-- Origin: ADR-291, finder-390 screenshot
-- Missing: At 390 px the Type select and Ready to open sit off-screen in the filter row; they are reached by swiping the row.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Wrap the filters onto two rows, or move Source to its own row?
-- Suggested pick: Source tabs on their own row, the three filters below
-- Work: Low
-- Impact: Low-medium
-- Necessity: Low-medium
-
-### G-586: Grouped catalog page is 19 365 px tall on a phone, over the N311 limit
-
-- Status: Done (PRNUM, N386)
-- Origin: tools/catalog-flows/find-it.mjs rerun for ADR-291
-- Missing: catalog-flows check 'page under 17 000 px tall as it opens (paged, N311)' fails at 390 px: 19 365 px, measured on the build before ADR-291's changes too; the other 34 checks pass.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach.
-- Questions: Fix the grouped page's height, or let the finder (G-582) replace it?
-- Suggested pick: Let the finder become the default (G-582); keep the grouped page as is
-- Work: Low
-- Impact: Low
-- Necessity: Low
 
 ### G-587: Appearance dialog: find-it test
 
@@ -2455,6 +2261,18 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
+### G-596: Phone middle-ground editor: device check on a real Android phone
+
+- Status: Open
+- Origin: ADR-295, N385
+- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
+- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
+- Questions: none
+- Suggested pick: User opens the live URL on the phone after merge and reports
+- Work: Low
+- Impact: Medium
+- Necessity: Medium-high
+
 ### G-597: Top-bar name field under 44 px wide on phones
 
 - Status: Open
@@ -2476,17 +2294,38 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Disable a group ±5% when every variable in it is at the limit, or show which variables stopped at their limit?
 - Suggested pick: Show 'n at their limit' next to the group after a press
 
-### G-596: Phone middle-ground editor: device check on a real Android phone
+### G-599: Settings cannot scroll in the phone canvas editor
 
 - Status: Open
-- Origin: ADR-295, N385
-- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
-- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
-- Questions: none
-- Suggested pick: User opens the live URL on the phone after merge and reports
+- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
+- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
+- Request: Canvas on by default (Recommended)
+- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
+- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
 - Work: Low
+- Impact: High
+- Necessity: High
+
+### G-600: Five browser find-it scripts stale after the navbar change
+
+- Status: Open
+- Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
+- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
+- Request: catch up burst debt
+- Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
+- Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
+
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Open
+- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
+- Work: Medium
 - Impact: Medium
-- Necessity: Medium-high
+- Necessity: Medium
 
 ### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
 
@@ -2512,27 +2351,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-599: Settings cannot scroll in the phone canvas editor
-
-- Status: Open
-- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
-- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
-- Request: Canvas on by default (Recommended)
-- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
-- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
-- Work: Low
-- Impact: High
-- Necessity: High
-
-### G-600: Five browser find-it scripts stale after the navbar change
-
-- Status: Open
-- Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
-- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
-- Request: catch up burst debt
-- Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
-- Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
-
 ### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
 
 - Status: Open
@@ -2543,16 +2361,4 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Add jsdom tests for the glue; build twins in an effect
 - Work: Low-medium
 - Impact: Low
-- Necessity: Medium
-
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Open
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
 - Necessity: Medium
