@@ -20,3 +20,4 @@ src/core/sellers/*.json
 # one (710 KB for 256 KB of text). `pnpm docs:check` refuses padded cells (cleanup audit 2026-11-09, item 11).
 docs/backlog.md
 docs/adr/README.md
+goals/reports/
