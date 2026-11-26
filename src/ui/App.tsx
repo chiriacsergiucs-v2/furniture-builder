@@ -402,8 +402,13 @@ export function App() {
       history.pushState({ fbCard: 1 }, '');
     } else if (!cardUp && cardEntry.current) {
       cardEntry.current = false;
-      pendingBack.current = location.href;
+      const keep = location.href;
+      pendingBack.current = keep;
       history.back();
+      // A back whose popstate never arrives must not block later entries (re-review of ADR-295, N3).
+      window.setTimeout(() => {
+        if (pendingBack.current === keep) pendingBack.current = null;
+      }, 600);
     }
   }, [cardUp]);
   useEffect(() => {

@@ -51,8 +51,11 @@ export function useOrbiting(): boolean {
 
 /** A frame of a drag slower than this, on average, is slow (about 45 frames a second). */
 export const SLOW_FRAME_MS = 22;
-/** A frame faster than this, on average, leaves room to draw sharper again. */
-export const FAST_FRAME_MS = 12;
+/**
+ * A frame faster than this, on average, leaves room to draw sharper again. Above the 16.7 ms frame of a 60 Hz screen,
+ * so a fast 60 Hz phone that started reduced steps back up (re-review of ADR-295, N1).
+ */
+export const FAST_FRAME_MS = 18;
 /** A gap longer than this is a pause in the drag (the finger held still), not a slow frame. */
 export const PAUSE_MS = 300;
 /** The lowest pixel ratio a drag may drop to. */

@@ -1250,10 +1250,16 @@ export function Fit({ bounds }: { bounds: Box }) {
   const pressed = useRef(false);
   // The pointers down on the view: the controls also start and end on each mouse-wheel notch, which is not a drag.
   const pointers = useRef(new Set<number>());
+  const canvasEl = useThree((s) => s.gl.domElement);
   useEffect(() => {
-    const el = controls.current?.domElement;
-    if (!el) return;
-    const down = (e: PointerEvent) => pointers.current.add(e.pointerId);
+    // The canvas the controls and the R3F events listen on (re-review of ADR-295, N2: the controls' own element may
+    // not be connected yet when this runs).
+    const el = controls.current?.domElement ?? canvasEl;
+    const down = (e: PointerEvent) => {
+      // A first finger or the mouse starts afresh: a pointer whose up was never delivered is forgotten.
+      if (e.isPrimary) pointers.current.clear();
+      pointers.current.add(e.pointerId);
+    };
     const up = (e: PointerEvent) => pointers.current.delete(e.pointerId);
     el.addEventListener('pointerdown', down, true);
     window.addEventListener('pointerup', up, true);
@@ -1263,7 +1269,7 @@ export function Fit({ bounds }: { bounds: Box }) {
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', up, true);
     };
-  }, []);
+  }, [canvasEl]);
   const target = useMemo(
     () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],

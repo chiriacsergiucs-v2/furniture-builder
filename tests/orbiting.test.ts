@@ -37,6 +37,12 @@ describe('orbit budget', () => {
     expect(feed(Array(12).fill(PAUSE_MS + 1))).toEqual(FULL_BUDGET);
   });
 
+  it('steps back up on a fast 60 Hz screen (16.7 ms frames)', () => {
+    const low = feed(Array(12).fill(SLOW_FRAME_MS * 3));
+    const up = [...Array(6)].reduce((b) => nextBudget(b, 1000 / 60, 2, false), low);
+    expect(up.scale).toBeGreaterThan(low.scale);
+  });
+
   it('raises the ratio back when frames are fast again', () => {
     const low = feed(Array(12).fill(SLOW_FRAME_MS * 3));
     const up = [...Array(6)].reduce((b) => nextBudget(b, FAST_FRAME_MS - 4, 2, false), low);
