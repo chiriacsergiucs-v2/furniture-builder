@@ -357,4 +357,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-293](ADR-293-closed-cells-a-fixed-infill-panel-on-the-front-rear-or-both.md) | Closed cells: a fixed infill panel on the front, rear or both faces | ADR-011, ADR-282, ADR-292 | Pending |
 | [ADR-294](ADR-294-rear-elevation-and-a-room-divider-catalog-family.md) | Rear elevation and a Room divider catalog family | ADR-292, ADR-293 | Pending |
 | [ADR-295](ADR-295-phone-editor-middle-ground-one-scroll-panel.md) | Phone editor middle ground: one scrolling panel, no chip rail, no folded groups | ADR-283, ADR-288, ADR-289, ADR-290 | Pending |
-| [ADR-297](ADR-297-move-the-desktop-mode-switch-into-the-top-bar.md) | Move the desktop mode switch into the top bar | ADR-079 | Pending |
+| [ADR-297](../adr-done/ADR-297-move-the-desktop-mode-switch-into-the-top-bar.md) | Move the desktop mode switch into the top bar | ADR-079 | ✅ Implemented |
