@@ -1012,7 +1012,14 @@ export function App() {
               onOpened={() => setPage('editor')}
               onInfo={() => setPage('info')}
               onOptimizer={() => setPage('optimizer')}
-              current={page === 'info' || page === 'optimizer' ? page : undefined}
+              // Gaps is reached from Information, so it marks Information as the current place (G-535).
+              current={
+                page === 'optimizer'
+                  ? 'optimizer'
+                  : page === 'info' || page === 'gaps'
+                    ? 'info'
+                    : undefined
+              }
             />
           </div>
         </header>
