@@ -12,6 +12,7 @@ import { boxCentre } from '../core/geometry';
 import { t } from '@furniture-builder/i18n';
 import {
   BAR_SPACINGS,
+  cutoutFrontLines,
   cutoutOutlines,
   materialKey,
   parseProfile,
@@ -1127,6 +1128,35 @@ export function PlanKitchenMarks({
           x2={j.line[2]}
           y2={j.line[3]}
         />
+      ))}
+    </g>
+  );
+}
+
+/**
+ * In the room front view (G-438): each sink and hob cut-out's width dashed on its worktop's top edge. The x range
+ * comes from the core (`cutoutFrontLines`); the title names it for assistive tech.
+ */
+export function FrontCutoutMarks({ project, pieces }: { project: Project; pieces: PlacedPiece[] }) {
+  const lines = useMemo(() => cutoutFrontLines(cutoutOutlines(project, pieces)), [project, pieces]);
+  if (!lines.length) return null;
+  return (
+    <g className="front-cutouts" role="img" aria-label={t('Sink and hob cut-outs on the worktop')}>
+      {lines.map((c) => (
+        <line
+          key={c.id}
+          className={`front-cutout ${c.kind}`}
+          x1={c.x1}
+          y1={-c.y}
+          x2={c.x2}
+          y2={-c.y}
+        >
+          <title>
+            {c.kind === 'sink'
+              ? t('Sink cut-out {w} mm wide', { w: c.w })
+              : t('Hob cut-out {w} mm wide', { w: c.w })}
+          </title>
+        </line>
       ))}
     </g>
   );

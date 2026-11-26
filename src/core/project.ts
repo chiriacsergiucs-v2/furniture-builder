@@ -2616,3 +2616,28 @@ export * from './projectValidate';
 export * from './projectProfiles';
 
 export * from './projectWorktops';
+
+/** A sink or hob cut-out's width as a dashed line on its worktop's top edge in the room front view (ADR-205, G-438). */
+export interface CutoutFrontLine {
+  id: string;
+  kind: 'sink' | 'hob';
+  /** Room mm: the cut-out's left and right ends along the front view's x axis. */
+  x1: Mm;
+  x2: Mm;
+  /** Height of the worktop's top face from the floor, mm (the view's y runs up). */
+  y: Mm;
+  /** The cut-out as typed (along the run), for its label. */
+  w: Mm;
+}
+
+/** Where each cut-out's width is marked on the worktop in the front view: its x range from `cutoutOutlines`. */
+export function cutoutFrontLines(cuts: readonly CutoutOutline[]): CutoutFrontLine[] {
+  return cuts.map((c) => ({
+    id: c.id,
+    kind: c.kind,
+    x1: c.box.x,
+    x2: c.box.x + c.box.w,
+    y: c.box.y + c.box.h,
+    w: c.w,
+  }));
+}

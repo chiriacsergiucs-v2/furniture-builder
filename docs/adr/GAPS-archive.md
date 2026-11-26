@@ -3418,6 +3418,21 @@ highest id in either file.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
 
+### G-438: Sink and hob cut-outs in the room front view
+
+- Status: Done (N393)
+- Origin: ADR-209, 2026-11-06; remainder of G-408 (its suggested pick was the 3D view only)
+- Missing: The room front view does not mark sink and hob cut-outs on the worktop.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw each cut-out as dashed hidden lines in the worktop's front view?
+- Suggested pick: Dashed lines at the cut-out's width on the worktop edge. (estimate: effort +5%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs are not seen in the front view.
+- Fix: Draw each cut-out's width dashed on the worktop in the room front view.
+- Conflicts: none
+
 ### G-454: Versions of deleted projects with no project open
 
 - Status: Done (PR #329, N388)
