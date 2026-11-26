@@ -36,38 +36,3 @@ function setCanvasEditor(v: boolean) {
 export function useCanvasEditor(): [boolean, (v: boolean) => void] {
   return [useSyncExternalStore(subscribe, () => on), setCanvasEditor];
 }
-
-/** Chips used most on this device come first (ADR-283). Counts by chip label, kept on this device only. */
-const USE_KEY = 'fb:lens-use';
-const use = createListeners();
-function readUse(): Record<string, number> {
-  try {
-    const v = JSON.parse(localStorage.getItem(USE_KEY) ?? '{}') as unknown;
-    return v && typeof v === 'object' ? (v as Record<string, number>) : {};
-  } catch {
-    return {};
-  }
-}
-let counts = readUse();
-
-export function bumpLensUse(key: string) {
-  counts = { ...counts, [key]: (counts[key] ?? 0) + 1 };
-  try {
-    localStorage.setItem(USE_KEY, JSON.stringify(counts));
-  } catch {
-    /* private mode */
-  }
-  use.notify();
-}
-
-export function useLensUse(): Record<string, number> {
-  return useSyncExternalStore(use.subscribe, () => counts);
-}
-
-/** Labels sorted by use on this device, most used first; ties keep their order. */
-export function orderByUse(labels: string[], used: Record<string, number>): string[] {
-  return labels
-    .map((l, i) => ({ l, i, n: used[l] ?? 0 }))
-    .sort((a, b) => b.n - a.n || a.i - b.i)
-    .map((x) => x.l);
-}

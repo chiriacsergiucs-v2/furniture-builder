@@ -66,7 +66,7 @@ const TARGET_MS = 1000 / 60;
  * What turning the view may give up to stay smooth, learned from the frames of the drags so far in this session (so a
  * slow phone starts its next drag already reduced, and a fast one never reduces).
  */
-export interface OrbitBudget {
+interface OrbitBudget {
   /** The pixel ratio while turning, as a share of the still view's ratio (1 = the same). */
   readonly scale: number;
   /** Whether ambient occlusion is skipped while turning. */

@@ -130,7 +130,7 @@ type JumpWhere = 'always' | 'space' | 'settings' | 'project' | 'structure';
  * The jump index (ADR-295): every section title in one fixed order that never depends on the selection or on use.
  * Titles are the blocks' own (`data-lens-key`), so a present block is found by its title.
  */
-export function jumpSections(): { key: string; title: string; where: JumpWhere }[] {
+function jumpSections(): { key: string; title: string; where: JumpWhere }[] {
   const list: [string, JumpWhere][] = [
     [OVERVIEW, 'always'],
     [t('Structure'), 'structure'],

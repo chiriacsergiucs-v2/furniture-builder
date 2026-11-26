@@ -9,7 +9,7 @@ import {
   lensKeys,
   OVERVIEW,
 } from '../src/ui/CanvasEditor';
-import { orderByUse, parseCanvasEditor } from '../src/store/useCanvasEditor';
+import { parseCanvasEditor } from '../src/store/useCanvasEditor';
 import { partSizeAfterMove } from '../src/ui/Elevation';
 import { flatFeatures, matches } from '../src/ui/FindAction';
 
@@ -35,11 +35,6 @@ describe('canvas editor (ADR-283)', () => {
     expect(parseCanvasEditor(null)).toBe(true);
     expect(parseCanvasEditor('off')).toBe(false);
     expect(parseCanvasEditor('on')).toBe(true);
-  });
-
-  it('orders chips by use, ties keep their order', () => {
-    expect(orderByUse(['A', 'B', 'C'], {})).toEqual(['A', 'B', 'C']);
-    expect(orderByUse(['A', 'B', 'C'], { C: 3, B: 1 })).toEqual(['C', 'B', 'A']);
   });
 
   it('lists only top-level titled blocks, in page order', () => {
