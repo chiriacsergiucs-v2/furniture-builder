@@ -40,6 +40,7 @@ import { Dialog } from './Dialogs';
 import { CatalogSaveForm } from './SaveToCatalog';
 import { InfoTip, rovingKeys, rovingTab } from './controls';
 import { t, tr } from '@furniture-builder/i18n';
+import { MAX_IMPORT_BYTES } from './shell/importFile';
 import { tNode } from './i18n';
 import { Icon } from './icons';
 import { AccountBadge, AccountRowActions } from './Account';
@@ -252,6 +253,10 @@ export function CatalogPage({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const importLocal = async (file: File) => {
+    if (file.size > MAX_IMPORT_BYTES) {
+      setMsg(t('That file is too large to import (over 20 MB).'));
+      return;
+    }
     try {
       const data = JSON.parse(await file.text()) as { templates?: unknown[] };
       // A JSON file that is not a templates file is said as such, not as "0 templates imported" (ADR-262).
@@ -1554,8 +1559,8 @@ function FinderPage({
       </div>
       <div className="catalog-toolbar finder-bar">
         {source === 'templates' && search}
+        {sources}
         <div className="finder-filters" role="group" aria-label={t('Filters')}>
-          {sources}
           {source === 'templates' && (
             <>
               <select

@@ -1012,7 +1012,9 @@ export function App() {
               onOpened={() => setPage('editor')}
               onInfo={() => setPage('info')}
               onOptimizer={() => setPage('optimizer')}
-              current={page === 'info' || page === 'optimizer' ? page : undefined}
+              current={
+                page === 'info' || page === 'optimizer' || page === 'gaps' ? page : undefined
+              }
             />
           </div>
         </header>

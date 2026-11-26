@@ -140,6 +140,7 @@ function Chat() {
           className="input"
           rows={2}
           maxLength={ASSISTANT_MAX_TEXT}
+          aria-describedby="assistant-count"
           disabled={!signedIn}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -150,6 +151,9 @@ function Chat() {
             }
           }}
         />
+        <p id="assistant-count" className="hint">
+          {t('{n} / {max}', { n: text.length, max: ASSISTANT_MAX_TEXT })}
+        </p>
         <button type="submit" className="btn" disabled={busy || !text.trim() || !signedIn}>
           {t('Send')}
         </button>

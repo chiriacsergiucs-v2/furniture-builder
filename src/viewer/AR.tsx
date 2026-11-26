@@ -1,3 +1,4 @@
+import { boxCentre } from '../core/geometry';
 import { invalidate, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useSyncExternalStore } from 'react';
 import {
@@ -921,7 +922,7 @@ function groundingShadow(b: Box): Mesh {
     new MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }),
   );
   mesh.name = 'ar:shadow';
-  mesh.position.set((b.x + b.w / 2) * S, b.y * S + 0.001, (b.z + b.d / 2) * S);
+  mesh.position.set(boxCentre(b).x * S, b.y * S + 0.001, boxCentre(b).z * S);
   mesh.renderOrder = -1;
   mesh.raycast = () => undefined;
   return mesh;

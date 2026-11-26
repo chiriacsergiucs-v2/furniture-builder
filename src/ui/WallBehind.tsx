@@ -1,3 +1,4 @@
+import { svgId } from './svgId';
 import { useId, useMemo } from 'react';
 import { t } from '@furniture-builder/i18n';
 import { placeItem } from '../core/project';
@@ -21,7 +22,7 @@ export function WallBehind({ b }: { b: Box }) {
   const design = useDesign((s) => s.design);
   const room = project?.room;
   const urls = useWallPictureUrls(room?.walls ?? NONE);
-  const clip = `${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-behind`;
+  const clip = `${svgId(useId())}-behind`;
   const wb = useMemo(() => {
     const item = editing ? project?.items.find((i) => i.id === editing) : undefined;
     // Placed as it is being edited: its size may have changed since the project was built.

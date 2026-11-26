@@ -239,7 +239,7 @@ function HistoryForProject() {
  * Restore as a new project saves a copy under a new id and opens it; the version stays. Delete removes only the tapped
  * version, after asking. Nothing here deletes anything on its own (ADR-012, G-156).
  */
-function OrphanVersions({ reload }: { reload: number }) {
+export function OrphanVersions({ reload }: { reload: number }) {
   const openProject = useDesign((s) => s.openProject);
   const [rows, setRows] = useState<ProjectVersion[]>([]);
   const [again, setAgain] = useState(0);

@@ -78,6 +78,17 @@ describe('persistence behind the store (ADR-223)', () => {
     expect(hits).toEqual([]);
   });
 
+  // G-497: the 3D view reads saved models through the store, so it imports nothing from src/persist.
+  it('src/viewer imports nothing from src/persist', () => {
+    const hits = SOURCES.filter(({ file }) => file.startsWith('src/viewer/')).flatMap(
+      ({ file, text }) =>
+        imports(text)
+          .filter(({ from }) => target(file, from).startsWith('src/persist'))
+          .map(({ from }) => `${file} → ${from}`),
+    );
+    expect(hits).toEqual([]);
+  });
+
   // ADR-223 took the hook out of src/persist; ADR-230 keeps it out of src/ui so the 3D viewer can use it too.
   it('useImageUrls lives in src/store, outside src/persist', () => {
     const where = SOURCES.filter(({ text }) => /export function useImageUrls\b/.test(text)).map(

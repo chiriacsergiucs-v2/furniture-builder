@@ -24,6 +24,7 @@ import {
 } from '../core/gaps';
 import { listGapMarks, saveGapMark, saveGapMarks } from '../store/libraryStore';
 import { download } from './shell/files';
+import { MAX_IMPORT_BYTES } from './shell/importFile';
 import { Icon } from './icons';
 
 /** The ledger as it was when this app was built (ADR-101); the file in the repo stays the source of truth. */
@@ -161,6 +162,10 @@ export function GapsPage({
     );
   };
   const importMarks = async (f: File) => {
+    if (f.size > MAX_IMPORT_BYTES) {
+      setFileMsg({ ok: false, text: 'That file is too large to import (over 20 MB).' });
+      return;
+    }
     let text: string;
     try {
       text = await f.text();

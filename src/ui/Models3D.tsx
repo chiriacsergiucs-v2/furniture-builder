@@ -1,3 +1,4 @@
+import { POSITION_MAX, POSITION_MIN } from '../core/limits';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   makeModelItem,
@@ -174,15 +175,15 @@ export function ModelFields({ item }: { item: ModelItem }) {
         <MmField
           label={t('From left')}
           value={pos.x}
-          min={-20000}
-          max={20000}
+          min={POSITION_MIN}
+          max={POSITION_MAX}
           onChange={(v) => patch(item.id, { position: { ...pos, x: v } })}
         />
         <MmField
           label={t('From back')}
           value={pos.z}
-          min={-20000}
-          max={20000}
+          min={POSITION_MIN}
+          max={POSITION_MAX}
           onChange={(v) => patch(item.id, { position: { ...pos, z: v } })}
         />
         {!item.placement && (

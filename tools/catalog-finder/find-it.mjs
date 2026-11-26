@@ -22,13 +22,6 @@ try {
       isMobile: phone,
       hasTouch: phone,
     });
-    // Starting state set before the app reads it (ADR-290's lesson): the finder off; the More switch turns it on.
-    await ctx.addInitScript(() => {
-      if (!sessionStorage.getItem('started')) {
-        sessionStorage.setItem('started', '1');
-        localStorage.setItem('fb:catalogFinder', 'off');
-      }
-    });
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -52,17 +45,28 @@ try {
     await page.goto(url);
     await page.waitForTimeout(800);
 
-    // Flag off: the grouped catalog as before.
+    // First visit, nothing stored: the finder is the default (G-582); the More switch brings the grouped page back.
     await openCatalog();
+    const gridNow = page.getByRole('list', { name: 'Families' });
+    await gridNow.waitFor({ timeout: 5000 }).catch(() => {});
+    check(width, 'default: the finder grid', (await gridNow.count()) === 1);
+    let sw = await finderSwitch();
     check(
       width,
-      'flag off: the grouped page (Jump to a group) and no Catalog actions button',
+      'More has "Catalog finder (preview)", on',
+      (await sw.getAttribute('aria-pressed')) === 'true',
+    );
+    await sw.click();
+    await page.waitForTimeout(500);
+    check(
+      width,
+      'switch off: the grouped page (Jump to a group) and no Catalog actions button',
       (await page.getByRole('navigation', { name: 'Jump to a group' }).count()) === 1 &&
         (await page.getByRole('button', { name: 'Catalog actions' }).count()) === 0,
     );
 
-    // Turn it on from More.
-    const sw = await finderSwitch();
+    // Turn it on again from More.
+    sw = await finderSwitch();
     check(
       width,
       'More has "Catalog finder (preview)", off',
@@ -88,6 +92,19 @@ try {
     check(width, 'no sideways scroll', await noSideScroll());
     await page.screenshot({ path: `${out}/finder-${width}.png` });
 
+    // G-585: Source tabs on their own row; Room, Type and Ready to open all inside the viewport.
+    const inView = async (loc) =>
+      loc.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return r.left >= 0 && r.right <= window.innerWidth + 1;
+      });
+    check(
+      width,
+      'Room, Type and Ready to open are on screen without swiping',
+      (await inView(page.getByRole('combobox', { name: 'Room' }))) &&
+        (await inView(page.getByRole('combobox', { name: 'Type' }))) &&
+        (await inView(page.getByRole('button', { name: 'Ready to open' }))),
+    );
     // Filters: Room, Type, Ready to open; the count follows.
     const count = page.locator('.finder-count');
     const before = await count.innerText();

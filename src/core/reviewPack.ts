@@ -4,6 +4,7 @@
  * by default, ADR-020, ADR-157); the problems keep the app's own words. Pure: the caller saves or shares the bytes; the app sends nothing (ADR-002).
  */
 import { getPrintLang, pt } from '@furniture-builder/i18n/print';
+import { escapeHtml } from './escapeHtml';
 import { snapshotSvg } from './snapshot';
 import { cutlistCsvRo } from './ro';
 import { printPieceNames } from './catalog/printName';
@@ -16,12 +17,6 @@ export interface PackFile {
   /** What it is, for the dialog's list. */
   what: string;
 }
-
-const esc = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
-  );
 
 const f1 = (n: number) => String(Math.round(n * 10) / 10);
 
@@ -54,7 +49,7 @@ export function planSvg(pm: ProjectModel, project: Project): string {
     out.push(
       `<polygon points="${poly}" fill="#d9ddd9" stroke="#22272a" stroke-width="${f1(span / 600)}"/>`,
       `<line x1="${f1(a)}" y1="${f1(b)}" x2="${f1(c)}" y2="${f1(d)}" stroke="#c0631d" stroke-width="${f1(span / 250)}"/>`,
-      `<text x="${f1(cx)}" y="${f1(cz)}" font-size="${f1(fs)}" font-family="sans-serif" text-anchor="middle" dominant-baseline="middle">${esc(pc.item.design.name)}</text>`,
+      `<text x="${f1(cx)}" y="${f1(cz)}" font-size="${f1(fs)}" font-family="sans-serif" text-anchor="middle" dominant-baseline="middle">${escapeHtml(pc.item.design.name)}</text>`,
     );
   }
   out.push(
@@ -70,18 +65,18 @@ export function summaryHtml(pm: ProjectModel, project: Project, date: string): s
     .map((pc) => {
       const b = pc.model.bounds;
       const p = pc.item.position;
-      return `<tr><td>${esc(pc.item.design.name)}</td><td class="n">${pc.item.quantity}</td><td class="n">${b.w} × ${b.h} × ${b.d}</td><td class="n">${p.x} / ${p.y} / ${p.z}</td><td class="n">${rotationOf(pc.item)}°</td></tr>`;
+      return `<tr><td>${escapeHtml(pc.item.design.name)}</td><td class="n">${pc.item.quantity}</td><td class="n">${b.w} × ${b.h} × ${b.d}</td><td class="n">${p.x} / ${p.y} / ${p.z}</td><td class="n">${rotationOf(pc.item)}°</td></tr>`;
     })
     .join('');
   const problems = pm.diagnostics;
   const list = problems.length
-    ? `<ul>${problems.map((d) => `<li><b>${d.severity === 'error' ? pt('Eroare') : pt('Atenție')}:</b> ${esc(d.message)}</li>`).join('')}</ul>`
+    ? `<ul>${problems.map((d) => `<li><b>${d.severity === 'error' ? pt('Eroare') : pt('Atenție')}:</b> ${escapeHtml(d.message)}</li>`).join('')}</ul>`
     : `<p>${pt('Aplicația nu a găsit probleme.')}</p>`;
   const b = pm.model.bounds;
-  return `<!doctype html><html lang="${getPrintLang()}"><head><meta charset="utf-8"><title>${esc(project.name)} — ${pt('de verificat')}</title>
+  return `<!doctype html><html lang="${getPrintLang()}"><head><meta charset="utf-8"><title>${escapeHtml(project.name)} — ${pt('de verificat')}</title>
 <style>body{font-family:sans-serif;margin:24px;color:#22272a}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:4px 6px;text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums}h1{font-size:20px}h2{font-size:16px;margin-top:20px}@media print{body{margin:0}}</style></head>
-<body><h1>${esc(project.name)}</h1>
-<p>${pt('Proiect de verificat')} · ${esc(date)} · ${pt('gabarit {w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })} · ${pt('{n} piese', { n: pm.pieces.length })}</p>
+<body><h1>${escapeHtml(project.name)}</h1>
+<p>${pt('Proiect de verificat')} · ${escapeHtml(date)} · ${pt('gabarit {w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })} · ${pt('{n} piese', { n: pm.pieces.length })}</p>
 <p>${pt('Dimensiuni în mm. Poziția este colțul din stânga-spate-jos al piesei (x de la stânga, y de la podea, z de la peretele din spate). Rotirea este în grade, în jurul centrului piesei.')}</p>
 <h2>${pt('Piese')}</h2>
 <table><thead><tr><th>${pt('Piesă')}</th><th>${pt('Buc.')}</th><th>${pt('Lățime × înălțime × adâncime')}</th><th>${pt('Poziție x / y / z')}</th><th>${pt('Rotire')}</th></tr></thead><tbody>${rows}</tbody></table>

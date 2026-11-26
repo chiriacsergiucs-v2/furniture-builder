@@ -4,6 +4,7 @@ import { useUi } from '../store/uiStore';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
 import { t, tr } from '@furniture-builder/i18n';
+import { MAX_IMPORT_BYTES } from './shell/importFile';
 import {
   BAND_COLUMNS,
   DECOR_COLUMNS,
@@ -540,6 +541,10 @@ export function MaterialsPanel() {
       .catch(() => setBands([]));
   }, []);
   const importBands = async (f: File) => {
+    if (f.size > MAX_IMPORT_BYTES) {
+      setBandMsg({ ok: false, text: t('That file is too large to import (over 20 MB).') });
+      return;
+    }
     let text: string;
     try {
       text = await f.text();
@@ -568,6 +573,10 @@ export function MaterialsPanel() {
     });
   };
   const importDecors = async (f: File) => {
+    if (f.size > MAX_IMPORT_BYTES) {
+      setDecorMsg({ ok: false, text: t('That file is too large to import (over 20 MB).') });
+      return;
+    }
     let text: string;
     try {
       text = await f.text();

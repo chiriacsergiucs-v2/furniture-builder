@@ -3,6 +3,7 @@
  * Clearances overlay that draws every zone the core derived, hatched and coloured by its worst problem.
  * Nothing here computes geometry: zones come from `buildProjectModel` (ADR-004).
  */
+import { svgId } from './svgId';
 import { useId, useState } from 'react';
 import {
   MAX_ZONE_DEPTH,
@@ -184,7 +185,7 @@ export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boole
 
 /** Every zone as a hatched box on the plan (x across, z down), drawn under the pieces' labels. */
 export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number }) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const uid = svgId(useId());
   const step = fs * 0.7;
   return (
     <g className="zones" aria-label={t('Clearance zones')}>

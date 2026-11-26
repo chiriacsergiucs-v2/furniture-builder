@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Find-it for audit finding F-29 (G-518) in jsdom (ADR-108): on the Information page, which ⋯ leads to, the "More"
 // button is marked as the current place, and so is the item in its menu; on other pages it is not. The Gaps page is
-// reached from the Information page's own button, so the menu has no Gaps item and marks no Gaps place.
+// reached from the Information page's own button, so the menu has no Gaps item; More itself is marked current there (G-535).
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { openMore, renderApp, WIDTHS } from './setup';
@@ -26,7 +26,8 @@ describe.each(WIDTHS)(
       ).toBe('page');
       await user.click(within(info).getByRole('button', { name: /^Gaps/ }));
       await screen.findByRole('heading', { name: /Gaps/, level: 1 });
-      expect(summary().getAttribute('aria-current')).toBeNull();
+      // The Gaps page marks More as the current place too (G-535).
+      expect(summary().getAttribute('aria-current')).toBe('page');
     });
   },
 );

@@ -14,7 +14,7 @@ import {
   type ProjectModel,
 } from './project';
 import { projectSellerChoices } from './sellers/choices';
-import { shoppingList, type ShopLine } from './shopping';
+import { shoppingList, worktopJointList, type ShopLine } from './shopping';
 
 interface ProjectEstimate {
   lines: ShopLine[];
@@ -48,6 +48,7 @@ export function projectEstimate(
     sheets: counts,
     runParts: project.runParts,
     sinks: sinkList(project),
+    worktopJoints: worktopJointList(project),
     diagnostics: pm.diagnostics,
     runProducts: project.runProducts,
     ...projectSellerChoices(project),

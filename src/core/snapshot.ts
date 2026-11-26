@@ -3,7 +3,7 @@
  * panel drawn as its three visible faces in the board's colour. Pure and deterministic, so the catalog pictures are
  * made once before the app runs (`npm run catalog:snapshots`) and shipped as files; nothing renders in the browser.
  */
-import { inPlaneAxes } from './geometry';
+import { boxCentre, inPlaneAxes } from './geometry';
 import { aabbOf, area2, profileWorld, rotateAbout, type V3 } from './shape';
 import type { Box, FurnitureModel, Material, Panel, PanelShape } from './types';
 
@@ -238,8 +238,7 @@ function paintOrder(boxes: Box[]): number[] {
         indeg[j]++;
       }
     }
-  const depth = (b: Box) =>
-    (b.x + b.w / 2) * V[0] + (b.y + b.h / 2) * V[1] + (b.z + b.d / 2) * V[2];
+  const depth = (b: Box) => boxCentre(b).x * V[0] + boxCentre(b).y * V[1] + boxCentre(b).z * V[2];
   const order: number[] = [];
   const done = new Array<boolean>(n).fill(false);
   while (order.length < n) {

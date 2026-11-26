@@ -1,3 +1,4 @@
+import { POSITION_MAX } from '../core/limits';
 import { useId, useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '@furniture-builder/i18n';
@@ -368,7 +369,7 @@ function GroupSize({
             label={tr(f.label)}
             value={f.value}
             min={1}
-            max={20000}
+            max={POSITION_MAX}
             hint={f.differs ? t('Pieces differ') : undefined}
             commitSame={f.differs}
             onChange={(v) => say(resize(group.id, f.key, v, split) || null)}

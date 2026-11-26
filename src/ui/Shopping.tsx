@@ -22,6 +22,7 @@ import {
   type SellerCatalog,
 } from '../core/sellers';
 import type { HardwareProduct } from '../core/types';
+import { escapeHtml } from '../core/escapeHtml';
 import { validPer } from '../core/design';
 import { notCountedPrint } from '../core/fasteners';
 import { ProductPicker } from './ProductPicker';
@@ -37,6 +38,7 @@ import {
   type ShopUnit,
 } from '../core/shopping';
 import { t, tr } from '@furniture-builder/i18n';
+import { MAX_IMPORT_BYTES } from './shell/importFile';
 import { pt } from '@furniture-builder/i18n/print';
 import { printPieceName } from '../core/catalog/printName';
 import { savePrices } from '../store/libraryStore';
@@ -123,6 +125,10 @@ export function ShoppingList() {
     }
   };
   const importPrices = async (f: File) => {
+    if (f.size > MAX_IMPORT_BYTES) {
+      setMsg(t('That file is too large to import (over 20 MB).'));
+      return;
+    }
     const r = parsePricesCsv(await f.text());
     if (!r.prices.length) {
       setMsg(
@@ -155,11 +161,11 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${esc(shopSectionPrint(s.id))}</h2><table><tr><th>${esc(pt('Cantitate'))}</th><th>${esc(pt('Articol'))}</th><th>${esc(pt('Detalii'))}</th><th>${esc(pt('Preț'))}</th><th>${esc(pt('Preț unitar'))}</th></tr>${ls
+        ? `<h2>${escapeHtml(shopSectionPrint(s.id))}</h2><table><tr><th>${escapeHtml(pt('Cantitate'))}</th><th>${escapeHtml(pt('Articol'))}</th><th>${escapeHtml(pt('Detalii'))}</th><th>${escapeHtml(pt('Preț'))}</th><th>${escapeHtml(pt('Preț unitar'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map, seller);
               const u = unitPrice(l, map, seller);
-              return `<tr><td>${String(l.quantity).replace('.', ',')} ${esc(pt(UNIT_PRINT[l.unit]))}</td><td>${esc(l.printLabel ?? tr(l.label))}</td><td>${esc(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
+              return `<tr><td>${String(l.quantity).replace('.', ',')} ${escapeHtml(pt(UNIT_PRINT[l.unit]))}</td><td>${escapeHtml(l.printLabel ?? tr(l.label))}</td><td>${escapeHtml(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${escapeHtml(currency)}`}</td><td>${u ? escapeHtml(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
@@ -167,9 +173,9 @@ export function ShoppingList() {
     // A single piece's title follows the print language (ADR-212, ADR-202); a project name prints as typed.
     const name =
       view.mode === 'design' && view.title === design.name ? printPieceName(design) : view.title;
-    const title = esc(pt('Listă de cumpărături — {name}', { name }));
+    const title = escapeHtml(pt('Listă de cumpărături — {name}', { name }));
     // The estimate line in the print language too (ADR-181, ADR-260): a print never mixes languages.
-    const estimate = esc(
+    const estimate = escapeHtml(
       pt('Estimare: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length
           ? pt(' — {n|# preț lipsă|# prețuri lipsă}', { n: est.missing.length })
@@ -182,7 +188,7 @@ export function ShoppingList() {
           : pt(' (prețurile tale)')),
     );
     w.document.write(
-      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(notCountedPrint())}</p><p>${estimate}</p>`,
+      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${escapeHtml(notCountedPrint())}</p><p>${estimate}</p>`,
     );
     w.document.close();
     w.focus();
@@ -645,6 +651,3 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
     </span>
   );
 }
-
-const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);

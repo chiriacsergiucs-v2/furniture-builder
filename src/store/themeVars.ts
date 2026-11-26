@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '@furniture-builder/i18n';
+import { clamp } from '../core/clamp';
 
 /**
  * Theme variables the user can change (Appearance dialog): font sizes, line height, spacing, corner radii and the two
@@ -182,7 +183,7 @@ export function resetThemeVar(name: string): void {
   save(next);
 }
 
-const place = (v: ThemeVar, n: number) => Math.min(v.max, Math.max(v.min, Number(n.toFixed(4))));
+const place = (v: ThemeVar, n: number) => clamp(Number(n.toFixed(4)), v.min, v.max);
 
 /** The value one slider step up or down, kept inside the range. */
 function stepped(v: ThemeVar, n: number, dir: 1 | -1): number {

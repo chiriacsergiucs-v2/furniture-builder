@@ -6,7 +6,7 @@
 import { t } from '@furniture-builder/i18n';
 import { mirrorSet } from './arrange';
 import { newId } from './design';
-import { union } from './geometry';
+import { boxCentre, union } from './geometry';
 import {
   carriedBy,
   liftOff,
@@ -133,8 +133,8 @@ export function turnSelection(
   const placed = resolvePlacements(project);
   const bounds = new Map(placed.items.map((i) => [i.id, placedBounds(i)]));
   const around = union(all.map((id) => bounds.get(id)!));
-  const cx = Math.round(around.x + around.w / 2),
-    cz = Math.round(around.z + around.d / 2);
+  const cx = Math.round(boxCentre(around).x),
+    cz = Math.round(boxCentre(around).z);
   // A footprint turned about (cx, cz) the way `rotateBox` turns a piece: dir 1 sends (x, z) to (z, −x).
   const turned = (b: Box) =>
     dir === 1

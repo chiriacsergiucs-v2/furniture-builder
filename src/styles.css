@@ -8011,11 +8011,23 @@ fieldset.group-locked {
   display: flex;
   gap: var(--s-2);
   align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-wrap: wrap;
 }
-.catalog-page.finder .finder-filters > * {
-  flex: none;
+.catalog-page.finder .finder-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-2);
+}
+.catalog-page.finder .finder-bar > .segmented {
+  align-self: flex-start;
+  max-width: 100%;
+}
+@media (pointer: coarse) {
+  .catalog-page.finder .finder-filters select,
+  .catalog-page.finder .chip-toggle,
+  .catalog-page.finder .finder-bar > .segmented button {
+    min-height: 44px;
+  }
 }
 .catalog-page.finder .finder-filters select,
 .chip-toggle {

@@ -12,7 +12,6 @@ if (!process.env.ANTHROPIC_API_KEY) {
   process.exit(0);
 }
 
-const MODEL = process.env.ASSISTANT_MODEL ?? 'claude-opus-5-5';
 /** The minimum cacheable prefix for the current models, in tokens. */
 const CACHE_MIN = 512;
 const only = process.env.EVAL_ONLY?.split(',');
@@ -28,12 +27,12 @@ const vite = await createServer({
   logLevel: 'error',
 });
 try {
-  const { SYSTEM, TOOLS, openingTurns } = await vite.ssrLoadModule(
-    '/supabase/functions/assistant/prompt.ts',
-  );
+  const { DEFAULT_MODEL, EFFORT, MAX_TOKENS, SYSTEM, TOOLS, openingTurns } =
+    await vite.ssrLoadModule('/supabase/functions/assistant/prompt.ts');
   const { actionSpecs } = await vite.ssrLoadModule('/src/store/assistantActions.ts');
   const { templates } = await vite.ssrLoadModule('/src/core/design.ts');
   const { makeItem, newProject } = await vite.ssrLoadModule('/src/core/project.ts');
+  const MODEL = process.env.ASSISTANT_MODEL ?? DEFAULT_MODEL;
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
 
   const create = (id) => templates.find((t) => t.id === id).create();
@@ -63,8 +62,8 @@ try {
   for (const c of cases) {
     const res = await client.beta.messages.create({
       model: MODEL,
-      max_tokens: 16000,
-      output_config: { effort: 'medium' },
+      max_tokens: MAX_TOKENS,
+      output_config: { effort: EFFORT },
       system,
       tools: TOOLS,
       tool_choice: { type: 'auto' },

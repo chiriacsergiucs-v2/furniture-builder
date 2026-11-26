@@ -30,6 +30,18 @@ describe.each(WIDTHS)('More menu keyboard at %ipx (find-it, F-02)', (width) => {
     expect(document.activeElement).toBe(more);
   });
 
+  it('Escape closes the menu when focus is not inside it (Safari does not focus the summary, G-374)', async () => {
+    const { user } = await renderApp(width);
+    const more = screen.getByLabelText(/^More$/);
+    await user.click(more);
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(screen.getByRole('button', { name: /^New…/ })).toBeTruthy();
+    const details = more.closest('details')!;
+    expect(details.open).toBe(true);
+    await user.keyboard('{Escape}');
+    expect(details.open).toBe(false);
+  });
+
   it('picking an entry closes the menu and puts focus on the More button', async () => {
     const { user } = await renderApp(width);
     const more = screen.getByLabelText(/^More$/);

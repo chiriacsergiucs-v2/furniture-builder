@@ -1,3 +1,4 @@
+import { boxCentre } from './geometry';
 import type { Box, FurnitureModel, Mm, Panel, SpaceOpening } from './types';
 
 /**
@@ -35,7 +36,7 @@ export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): 
   // A tap elsewhere: go to where the two paths part, then one level down (a sibling bay, not the whole piece).
   const sel = model.spaces.find((s) => s.nodeId === current && s.view !== 'side');
   if (!sel) return full[1] ?? null;
-  const own = [null, ...pathAt(model, sel.box.x + sel.box.w / 2, sel.box.y + sel.box.h / 2)];
+  const own = [null, ...pathAt(model, boxCentre(sel.box).x, boxCentre(sel.box).y)];
   let k = 0;
   while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
   return full[k + 1] ?? null;
@@ -75,7 +76,7 @@ export function drillIn(
   if (i >= 0) return full[i + 1] ?? full[0];
   // A tap elsewhere in the entered space: go to where the two paths part, then one level down.
   const o = model.spaces.find((s) => s.nodeId === sel && s.view !== 'side');
-  const op = o ? pathAt(model, o.box.x + o.box.w / 2, o.box.y + o.box.h / 2) : [];
+  const op = o ? pathAt(model, boxCentre(o.box).x, boxCentre(o.box).y) : [];
   const own = op.includes(enteredId) ? op.slice(op.indexOf(enteredId)) : [];
   let k = 0;
   while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
@@ -99,7 +100,7 @@ export function parentOf(model: FurnitureModel, sel: Selection): Selection {
   if (sel === undefined || sel === null) return undefined;
   const s = model.spaces.find((o) => o.nodeId === sel && o.view !== 'side');
   if (!s) return null;
-  const path = pathAt(model, s.box.x + s.box.w / 2, s.box.y + s.box.h / 2);
+  const path = pathAt(model, boxCentre(s.box).x, boxCentre(s.box).y);
   const at = path.indexOf(sel);
   return at > 0 ? path[at - 1] : null;
 }
@@ -116,8 +117,8 @@ export function selectionBox(model: FurnitureModel, sel: Selection): Box | undef
 
 /** Whether a panel belongs to the selected box: its front-view centre is inside (ADR-087); the rest is faded. */
 export function inSelection(sel: Box, p: Box): boolean {
-  const cx = p.x + p.w / 2,
-    cy = p.y + p.h / 2;
+  const cx = boxCentre(p).x,
+    cy = boxCentre(p).y;
   return cx >= sel.x && cx <= sel.x + sel.w && cy >= sel.y && cy <= sel.y + sel.h;
 }
 
@@ -133,9 +134,9 @@ export function hitToMm(
   if (exploded && built) {
     const b = built.box;
     return {
-      x: Math.round(b.x + b.w / 2),
-      y: Math.round(b.y + b.h / 2),
-      z: Math.round(b.z + b.d / 2),
+      x: Math.round(boxCentre(b).x),
+      y: Math.round(boxCentre(b).y),
+      z: Math.round(boxCentre(b).z),
     };
   }
   return { x: Math.round(hit.x * 1000), y: Math.round(hit.y * 1000), z: Math.round(hit.z * 1000) };

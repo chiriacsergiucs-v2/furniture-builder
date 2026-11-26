@@ -1,4 +1,5 @@
 // The project's plan and room front view (ADR-022, ADR-056, ADR-059, ADR-065): moved out of Project.tsx unchanged (cleanup audit 2026-11-09, item 13).
+import { svgId } from './svgId';
 import { lockedAxes } from '../core/sizeLock';
 import { t, tr } from '@furniture-builder/i18n';
 import {
@@ -80,13 +81,12 @@ import {
   usePlanPictureRect,
   WallBands,
 } from './RoomSurfaces';
+import { DRAWER_BOX_ROLES, FRONT_ROLES } from '../core/panelRoles';
 import { roomToPicture } from '../core/planPicture';
 
 import {
   ConnectionTicks,
-  DRAWER_BOX,
   FrontConnectionTicks,
-  FRONTS,
   NO_WALLS,
   onKey,
   SelectTip,
@@ -943,7 +943,7 @@ function RoomOutline({ room, fs, traced }: { room: Room; fs: number; traced?: bo
                 </title>
               </rect>
               <text
-                x={b.x + b.w / 2}
+                x={boxCentre(b).x}
                 y={b.z + b.d}
                 fontSize={fs * 0.6}
                 textAnchor="middle"
@@ -1099,7 +1099,7 @@ export function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
   // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
   const wallUrls = useWallPictureUrls(room?.walls ?? NO_WALLS);
-  const bgId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const bgId = svgId(useId());
   const backs = (rv?.walls ?? []).flatMap((w) => {
     const f = room && wallFinish(room, w.wall);
     if (!f) return [];
@@ -1126,12 +1126,12 @@ export function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const Y = (y: number, h: number) => -(y + h);
   // Painted back to front so nearer panels cover the ones behind them.
   const parts = pm.pieces.flatMap((pc) =>
-    pc.panels.filter((p) => !DRAWER_BOX.has(p.role)).map((p) => ({ p, pc })),
+    pc.panels.filter((p) => !DRAWER_BOX_ROLES.has(p.role)).map((p) => ({ p, pc })),
   );
   const structure = parts
-    .filter(({ p }) => !FRONTS.has(p.role))
+    .filter(({ p }) => !FRONT_ROLES.has(p.role))
     .sort((a, c) => a.p.box.z + a.p.box.d - (c.p.box.z + c.p.box.d));
-  const fronts = parts.filter(({ p }) => FRONTS.has(p.role));
+  const fronts = parts.filter(({ p }) => FRONT_ROLES.has(p.role));
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;

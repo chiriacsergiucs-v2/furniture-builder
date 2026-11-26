@@ -61,10 +61,8 @@ export function WallBackground({
     setBusy(true);
     setProblem(null);
     const r = await importImage(file);
-    if (token !== operation.current) {
-      stale();
-      return;
-    }
+    // Cancelled by this control (another choice, a new pick) or by unmount: nothing to report (G-372, ADR-200).
+    if (token !== operation.current) return;
     setBusy(false);
     if (!r.ok) {
       setProblem(`${r.problem} ${t('{name} keeps its current background.', { name })}`);
