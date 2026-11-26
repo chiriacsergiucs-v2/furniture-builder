@@ -87,7 +87,7 @@ export function orbitReleased() {
  * follow selects nothing. A mouse sends a click after any drag that starts and ends on a board; that click selected the
  * board and changed the page's layout at the end of the drag, which resized the view at full quality (drag-perf.mjs:
  * the long tasks after the release). Only a mouse press counts: a touch tap that wobbles still selects (user
- * 2026-11-26, G-600), and a touch drag sends no click.
+ * 2026-11-26, G-605), and a touch drag sends no click.
  */
 export const TAP_SLOP_PX = 10;
 let press: { x: number; y: number; far: boolean } | null = null;

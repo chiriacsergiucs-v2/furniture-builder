@@ -17,10 +17,10 @@ Machine results: `goals/reports/mobile-middle-ground-checks.json` (loop 5); brow
 | C5 Hardware found by scrolling; fixed index order | PASS | "section Hardware is reachable", "Jump to section keeps one fixed order (piece vs space)" |
 | C6 3D counters inside the 3D view | PASS | "card box is inside its host (3D pane)", "no two stepper controls overlap" at both sizes |
 | C7 open/close across taps, back, rotation, selection | PASS | Edit ×3, goBack, rotation 844↔390, different space, aria-expanded checks |
-| C8 drag ≥ 50 fps and no long task > 50 ms (4× CPU) | **FAIL** | fps met (52.9); one long task of 66 ms at drag start (G-597) |
+| C8 drag ≥ 50 fps and no long task > 50 ms (4× CPU) | **FAIL** | fps met (52.9); one long task of 66 ms at drag start (G-602) |
 | C9 rework KEEP items still work | PASS | `tools/canvas-editor/find-it.mjs` 58/58 |
 | C10–C15 typecheck, lint, format, test, build, docs | PASS | exit 0 each; CI on the PR green |
-| C16 review: no open issues | **OPEN** | loop 4 re-review: 0 blockers, 2 should-fix (1 fixed after loop 5, test gap partly), nits → G-600 |
+| C16 review: no open issues | **OPEN** | loop 4 re-review: 0 blockers, 2 should-fix (1 fixed after loop 5, test gap partly), nits → G-605 |
 
 ## 3D drag, before and after
 
@@ -44,13 +44,13 @@ then the fat edge lines (`LineSegments2`) and canvas resizes from an oscillating
 
 | Item | Blocker | Unblocks it | Cost | Gap |
 | --- | --- | --- | --- | --- |
-| First drag frame 52–66 ms | canvas resize at the ratio change (≈ 11 ms) + needed pointerdown raycast (≈ 13 ms) + SwiftShader GPU wait | draw drag frames into a fixed reduced render target, no canvas resize | M | G-597 |
-| Review nits and glue tests | scope (5-loop limit reached) | jsdom tests for FloorShadow and press wiring; twins built in an effect; mouse-only tap slop | S–M | G-600 |
+| First drag frame 52–66 ms | canvas resize at the ratio change (≈ 11 ms) + needed pointerdown raycast (≈ 13 ms) + SwiftShader GPU wait | draw drag frames into a fixed reduced render target, no canvas resize | M | G-602 |
+| Review nits and glue tests | scope (5-loop limit reached) | jsdom tests for FloorShadow and press wiring; twins built in an effect; mouse-only tap slop | S–M | G-605 |
 | Real Android device check | no device in the sandbox | the user opens the live build on the phone | S | G-596 |
 | Room drawings 20 px high at 844×390 (also on `main`) | layout decision for the short-landscape work area | pick: minimum stage height, work column scrolls | M | G-601 |
 
-Covered after the report (S-leftover rule, CLAUDE.md): G-599 built (`find-it.mjs` 73/73 with the 320×640 edit bar
-and the 844×390 room drawings passes); G-598 acknowledged (0.1 ms per frame, stale-transform risk); the touch slop
+Covered after the report (S-leftover rule, CLAUDE.md): G-604 built (`find-it.mjs` 73/73 with the 320×640 edit bar
+and the 844×390 room drawings passes); G-603 acknowledged (0.1 ms per frame, stale-transform risk); the touch slop
 answered and built (a wobbling touch tap selects).
 
 ## Agents

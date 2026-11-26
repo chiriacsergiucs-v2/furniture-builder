@@ -362,7 +362,7 @@ asks, never automatic.
   without a citation get one when they are next changed (G-574).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
-- Cover small leftovers (user rule 2026-11-26, PR #325: the final replies listed G-597, G-598, G-599 and G-600 as "still
+- Cover small leftovers (user rule 2026-11-26, PR #325: the final replies listed G-602, G-603, G-604 and G-605 as "still
   not done" instead of doing the small ones): before the final reply, every item that would go under _Skipped this
   iteration_ or "still not done" with effort S or lower (gap Work `Low`) is added to the scope and built without asking,
   with the usual checks. Only items above S, or blocked by something outside the session (a device, the network, a

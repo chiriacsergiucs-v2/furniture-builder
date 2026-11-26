@@ -1,7 +1,7 @@
-// Find-it acceptance for the phone editor middle ground (ADR-295, backlog N384), run against a production build:
+// Find-it acceptance for the phone editor middle ground (ADR-295, backlog N385), run against a production build:
 //   pnpm build && pnpm preview &  node tools/mobile-middle/find-it.mjs [url] [out dir] [--json report.json]
 // Starts every context from the bare app at 390×844 and 844×390 (plus the edit bar at 320×640 and a project's room
-// drawings at 844×390, G-599), finds the edit bar, the one scrolling panel, the jump
+// drawings at 844×390, G-604), finds the edit bar, the one scrolling panel, the jump
 // index, Results, Settings and Material by role and visible text, counts the taps to every control, and compares the
 // quick-count card box with its host in 3D. Writes `<out dir>/mobile-middle-taps.json` and screenshots
 // `<out dir>/mm-<w>x<h>-<step>.png`. Exit 1 when any check fails; a failing step is a FAIL, never a crash.
@@ -663,7 +663,7 @@ const editorFlow = async (vp) => {
   await ctx.close();
 };
 
-// G-599: the edit bar at the narrowest phone width keeps every button inside the screen and never scrolls.
+// G-604: the edit bar at the narrowest phone width keeps every button inside the screen and never scrolls.
 const narrowBar = async () => {
   const vp = { width: 320, height: 640 };
   const w = tag(vp);
@@ -716,7 +716,7 @@ const narrowBar = async () => {
   }
 };
 
-// G-599: a project's room drawings (plan and front) at short landscape fit the screen with no sideways page scroll.
+// G-604: a project's room drawings (plan and front) at short landscape fit the screen with no sideways page scroll.
 const roomDrawings = async () => {
   const vp = LANDSCAPE;
   const w = tag(vp);
