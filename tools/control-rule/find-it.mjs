@@ -2,7 +2,7 @@
 // production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/control-rule/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at 1280 px (mouse) and 390 px (touch) and walks Projects, Catalog, the editor (Compose and
-// Build & Preview, a single piece and a project) and Settings. In every state it measures each visible button, tab
+// Cut List, a single piece and a project) and Settings. In every state it measures each visible button, tab
 // and segmented label against its line height (one line each), and each control's height: 38 px with a mouse, 30 in
 // toolbars and tables (`--control-h`, `--control-h-sm`), and at least 44 × 44 with touch. Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir, makeChecker } from '../lib/harness.mjs';
@@ -46,7 +46,8 @@ const audit = (page, scope) =>
     };
     const isLink = (e) =>
       e.matches('.link, .btn.link, .danger-link, a:not(.btn)') || (!coarse && e.closest('.crumbs'));
-    const exempt = (e) => e.closest('ul.library .row-btn');
+    // Library rows and catalog item tiles are cards (picture, name, size; cd5585ee), not one-line controls.
+    const exempt = (e) => e.closest('ul.library .row-btn, ul.items button.tile');
     for (const root of roots) {
       const controls = root.querySelectorAll(
         'button, [role=tab], [role=radio], summary.btn, label.btn, a.btn, select, input.input, .field > input, .mm, .counter, .search',
@@ -91,7 +92,7 @@ const audit = (page, scope) =>
         // icon-over-label arrange row (52 px, ADR-160) keep their own height: they are measured for touch only.
         // Stepper buttons and inner inputs belong to their field.
         const kind = e.matches(
-          '.row-btn, .btn.stack, .steps button, .cs-fold, .chip, .model-handle, .front-hit, .arrange-tools .btn',
+          '.row-btn, ul.items button.tile, .btn.stack, .steps button, .cs-fold, .chip, .model-handle, .front-hit, .arrange-tools .btn',
         )
           ? 'row'
           : e.closest('.segmented') && e.matches('button')
@@ -146,6 +147,8 @@ for (const width of [1280, 390]) {
     hasTouch: phone,
     isMobile: phone,
   });
+  // The catalog finder (ADR-291) is the default Catalog now; this script measures the list Catalog, as ui-polish does.
+  await ctx.addInitScript(() => localStorage.setItem('fb:catalogFinder', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -337,12 +340,12 @@ for (const width of [1280, 390]) {
   await page.keyboard.press('Escape');
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
-  // 4. Build & Preview, project: the mode switch and the six result tabs, then each tab's panel.
+  // 4. Cut List, project: the mode switch and the six result tabs, then each tab's panel.
   // A phone has no mode switch: the Cut list place shows the results (ADR-241).
-  const bp = page.getByRole('radio', { name: 'Build & Preview' });
+  const bp = page.getByRole('radio', { name: 'Cut List' });
   if (phone) await goBuild(page);
   else {
-    await oneLine('Build & Preview', bp);
+    await oneLine('Cut List', bp);
     await bp.click();
   }
   await page.waitForTimeout(800);
@@ -368,10 +371,10 @@ for (const width of [1280, 390]) {
     // The 3D view keeps the page busy in a headless browser: the tab gets the click event itself.
     if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.dispatchEvent('click');
     await page.waitForTimeout(500);
-    await state(`Project, Build & Preview › ${t}`);
+    await state(`Project, Cut List › ${t}`);
   }
 
-  // 5. A single piece from the bare app: Compose (nothing, the whole piece, a space), Settings, Build & Preview.
+  // 5. A single piece from the bare app: Compose (nothing, the whole piece, a space), Settings, Cut List.
   await page.goto(url);
   await page.getByRole('heading', { name: 'Projects', level: 1 }).waitFor();
   await page.getByRole('button', { name: 'New single piece' }).click();
@@ -411,7 +414,7 @@ for (const width of [1280, 390]) {
     const tab = page.getByRole('tab', { name: new RegExp(`^${t}`) });
     if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.dispatchEvent('click');
     await page.waitForTimeout(500);
-    await state(`Piece, Build & Preview › ${t}`);
+    await state(`Piece, Cut List › ${t}`);
   }
 
   // 6. Projects with rows, then the Catalog (templates, its actions, Saved, Brands).
