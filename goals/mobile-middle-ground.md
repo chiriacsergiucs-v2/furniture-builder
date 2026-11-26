@@ -9,7 +9,7 @@ Inventory: `docs/research/2026-11-26-mobile-middle-ground-inventory.md`. Files: 
 `tools/mobile-middle/*`. Hard rules: offline core, translation rule, no new dependency, geometry only from
 `buildModel()`, no horizontal page scroll at 390 px.
 
-The browser checks read one report: C1 builds, starts the preview on port 4173 and runs
+The browser checks read one report: C1 builds, starts the preview (`tools/mobile-middle/with-preview.sh`) and runs
 `tools/mobile-middle/find-it.mjs` (390×844 and 844×390, Chromium) into `goals/reports/mobile-middle/`.
 
 ## Agents
@@ -26,7 +26,7 @@ The browser checks read one report: C1 builds, starts the preview on port 4173 a
 ## Checks
 
 1. C1: The browser acceptance script runs on a fresh production build.
-   - Command: `pnpm build:ci >/dev/null && (pnpm preview --port 4173 --strictPort >/dev/null 2>&1 &) && sleep 4 && node tools/mobile-middle/find-it.mjs http://localhost:4173/furniture-builder/ goals/reports/mobile-middle --json goals/reports/mobile-middle/report.json; pkill -f "vite preview" ; test -f goals/reports/mobile-middle/report.json`
+   - Command: `rm -f goals/reports/mobile-middle/report.json; bash tools/mobile-middle/with-preview.sh 'node tools/mobile-middle/find-it.mjs "$URL" goals/reports/mobile-middle --json goals/reports/mobile-middle/report.json'`
    - Fix agent: test-writer
 2. C2: No tab-pill row (chip rail) exists at mobile width and the edit bar does not scroll sideways.
    - Command: `node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json "chip rail|scroll sideways|Editor bar"`
@@ -47,10 +47,10 @@ The browser checks read one report: C1 builds, starts the preview on port 4173 a
    - Command: `node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json "Edit ×3|goBack|rotat|different space|aria-expanded"`
    - Fix agent: mobile-fixes-implementer
 8. C8: 3D drag: 3-second scripted drag, 4× CPU throttling, average ≥ 50 fps and no long task over 50 ms; report shows before and after.
-   - Command: `pnpm build:ci >/dev/null && (pnpm preview --port 4173 --strictPort >/dev/null 2>&1 &) && sleep 4 && node tools/mobile-middle/drag-perf.mjs http://localhost:4173/furniture-builder/ --assert; s=$?; pkill -f "vite preview"; exit $s`
+   - Command: `bash tools/mobile-middle/with-preview.sh 'node tools/mobile-middle/drag-perf.mjs "$URL" --assert'`
    - Fix agent: performance-optimizer
 9. C9: Every rework KEEP item still works (canvas editor find-it script: ladder, size tags, handles, picks, pins, output lenses, Find, hints, More switch).
-   - Command: `pnpm build:ci >/dev/null && (pnpm preview --port 4173 --strictPort >/dev/null 2>&1 &) && sleep 4 && node tools/canvas-editor/find-it.mjs http://localhost:4173/furniture-builder/ goals/reports/mobile-middle/canvas; s=$?; pkill -f "vite preview"; exit $s`
+   - Command: `bash tools/mobile-middle/with-preview.sh 'node tools/canvas-editor/find-it.mjs "$URL" goals/reports/mobile-middle/canvas'`
    - Fix agent: mobile-fixes-implementer
 10. C10: Type-check passes.
     - Command: `pnpm typecheck`
