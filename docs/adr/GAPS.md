@@ -170,7 +170,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-039: ADR-077 open decisions
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-077, 2026-10-25 00:15 UTC; agent default, accepted by the user
 - Missing: Open: carry over the old per-board banding prices? Preset thickness list or typed only? The allowance is stored per band, not per board.
 - Request: “Check the European standards for ABS, apply them accordingly”.
@@ -1512,7 +1513,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-503: The Gaps page still imports the gaps ledger with ?raw
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-219
 - Missing: src/ui/Gaps.tsx imports docs/adr/GAPS.md?raw, outside the three data-loader folders ADR-219 allows; eslint.config.js and tests/core-boundary.test.ts carry it as a named allowance so the tree stays green
 - Request: User, 2026-11-07: "No regressions shall be introduced"; ADR-219: ?raw imports outside catalog/brands, sellers and research fail
@@ -1810,18 +1812,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Replace the N343 find-it marker with a lockfile check, or bump three-mesh-bvh
 - Questions: Approve the three-mesh-bvh bump to 0.9.18?
 - Suggested pick: Ask user to approve the bump
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
-### G-552: look-render find-it incomplete in sandbox
-
-- Status: Open
-- Origin: catch-up 2026-11-19, tools/look-render/find-it.mjs
-- Missing: Script ran 14 PASS, 0 FAIL, then waited over 280 s for 'Save PNG' (256 path-tracer samples in software GL); end of run unverified
-- Request: Run tools/look-render/find-it.mjs to the end with a longer timeout or a GPU browser
-- Questions: Is a lower sample count in the script acceptable?
-- Suggested pick: Run with a longer timeout
 - Work: Low
 - Impact: Low
 - Necessity: Low
