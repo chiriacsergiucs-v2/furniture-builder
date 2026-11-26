@@ -1,7 +1,8 @@
 // Find-it for audit F-01 (UI flow audit 2026-11-15), run against a production build:
 //   pnpm build:ci && pnpm preview &  node tools/more-menu/find-it.mjs [url] [out dir]
 // On a touch phone at 390x812 and 390x667 the More menu scrolls inside its own box: it must show a scroll cue while
-// entries lie beyond the edge, and its last entry (Gaps) must be reachable above the bottom navigation.
+// entries lie beyond the edge, and its last entry must be reachable above the bottom navigation. The last entry was Gaps
+// until Gaps moved to Information (234f34d, 2026-11-17); the check now takes whatever entry is last (catch-up 2026-11-26).
 import { launchBrowser, previewUrl, outDir } from '../lib/harness.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -39,12 +40,13 @@ for (const height of [812, 667]) {
   if (m.scrollable)
     check(`${tag} scroll cue present`, /radial-gradient/.test(m.bg), m.bg.slice(0, 60));
   await page.screenshot({ path: `${out}/more-menu-${tag}-top.png` });
-  const gaps = menu.getByRole('button', { name: /^Gaps/ });
+  const last = menu.getByRole('button').last();
   await menu.evaluate((el) => (el.scrollTop = el.scrollHeight));
-  const g = await gaps.boundingBox();
+  const lastName = (await last.textContent())?.trim();
+  const g = await last.boundingBox();
   const nav = await page.getByRole('navigation', { name: 'Places' }).boundingBox();
   check(
-    `${tag} Gaps reachable above the bottom nav`,
+    `${tag} last entry (${lastName}) reachable above the bottom nav`,
     !!g && !!nav && g.y + g.height <= nav.y + 1,
     `${g?.y}+${g?.height} vs nav ${nav?.y}`,
   );
