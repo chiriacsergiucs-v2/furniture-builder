@@ -41,10 +41,12 @@ describe('StructureTree (ADR-268)', () => {
     expect(names()).toEqual(['Whole cabinet', expect.stringMatching(/^Interior, \d+ × \d+ mm$/)]);
   });
 
-  it('is closed in the phone sheet on a bare start', () => {
+  it('is a flat, always open block in the canvas editor on a phone (ADR-295)', () => {
     phone = true;
     render(<StructureTree />);
-    expect(screen.getByText('Structure').closest('details')!.open).toBe(false);
+    expect(screen.getByText('Structure').closest('details')).toBeNull();
+    expect(screen.getByRole('region', { name: 'Structure' }).classList.contains('flat')).toBe(true);
+    expect(screen.getByRole('tree', { name: 'Whole piece tree' })).toBeTruthy();
   });
 
   it('expands the ancestors of a space selected elsewhere and marks its row selected', () => {
