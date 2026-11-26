@@ -3715,6 +3715,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
+
+- Status: Done (N387)
+- Origin: Dependency health check round 1, 2026-11-19
+- Missing: supabase-js 2.119.2 needs minimumReleaseAgeExclude for six @supabase/* packages in pnpm-workspace.yaml; the project stays on 2.119.0
+- Request: /health-deps, loop prompt; user approved Medium, then chose: drop the bump
+- Questions: None; do not add an exclusion
+- Suggested pick: Bump after the release passes the age policy, no exclusion (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-577: Canvas-native editor: slices 2-7 have no ADR yet
 
 - Status: Done (ADR-289)

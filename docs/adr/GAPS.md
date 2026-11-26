@@ -2130,18 +2130,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
-
-- Status: Open
-- Origin: Dependency health check round 1, 2026-11-19
-- Missing: supabase-js 2.119.2 needs minimumReleaseAgeExclude for six @supabase/* packages in pnpm-workspace.yaml; the project stays on 2.119.0
-- Request: /health-deps, loop prompt; user approved Medium, then chose: drop the bump
-- Questions: None; do not add an exclusion
-- Suggested pick: Bump after the release passes the age policy, no exclusion (Work Low, Value Low)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
@@ -2182,7 +2170,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Dependency health check round 1, 2026-11-19
-- Missing: @testing-library/user-event 14.6.8 to 14.6.13, fake-indexeddb 6.2.5 to 6.2.8, @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
+- Missing: Dev patches done 2026-11-26 (N387). Left: @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
 - Request: /health-deps, loop prompt; user approved Critical and Medium only
 - Questions: Bump the SDK in both places together (backend function)?
 - Suggested pick: Dev patches first, SDK separately with your yes (Work Low, Value Low)
@@ -2432,6 +2420,18 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
+### G-596: Phone middle-ground editor: device check on a real Android phone
+
+- Status: Open
+- Origin: ADR-295, N385
+- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
+- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
+- Questions: none
+- Suggested pick: User opens the live URL on the phone after merge and reports
+- Work: Low
+- Impact: Medium
+- Necessity: Medium-high
+
 ### G-597: Top-bar name field under 44 px wide on phones
 
 - Status: Open
@@ -2453,17 +2453,38 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Disable a group ±5% when every variable in it is at the limit, or show which variables stopped at their limit?
 - Suggested pick: Show 'n at their limit' next to the group after a press
 
-### G-596: Phone middle-ground editor: device check on a real Android phone
+### G-599: Settings cannot scroll in the phone canvas editor
 
 - Status: Open
-- Origin: ADR-295, N385
-- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
-- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
-- Questions: none
-- Suggested pick: User opens the live URL on the phone after merge and reports
+- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
+- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
+- Request: Canvas on by default (Recommended)
+- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
+- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
 - Work: Low
+- Impact: High
+- Necessity: High
+
+### G-600: Five browser find-it scripts stale after the navbar change
+
+- Status: Open
+- Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
+- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
+- Request: catch up burst debt
+- Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
+- Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
+
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Open
+- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
+- Work: Medium
 - Impact: Medium
-- Necessity: Medium-high
+- Necessity: Medium
 
 ### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
 
@@ -2489,27 +2510,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-599: Settings cannot scroll in the phone canvas editor
-
-- Status: Open
-- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
-- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
-- Request: Canvas on by default (Recommended)
-- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
-- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
-- Work: Low
-- Impact: High
-- Necessity: High
-
-### G-600: Five browser find-it scripts stale after the navbar change
-
-- Status: Open
-- Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
-- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
-- Request: catch up burst debt
-- Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
-- Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
-
 ### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
 
 - Status: Open
@@ -2520,16 +2520,4 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Add jsdom tests for the glue; build twins in an effect
 - Work: Low-medium
 - Impact: Low
-- Necessity: Medium
-
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Open
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
 - Necessity: Medium
