@@ -3619,6 +3619,17 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 
+### G-502: No frame-time profile of the 3D viewer
+
+- Status: Done (N395)
+- Origin: ADR-238 Out of scope, 2026-11-07 (architecture review I-20)
+- Missing: ADR-238's saving is reasoned from object counts; no browser profile of frame time on a 20-piece room was taken before or after.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Profile the viewer in Chromium before and after ADR-238?
+- Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
 ### G-505: Some diagnostic codes still cover more than one wording
 
 - Status: Done (N396)
