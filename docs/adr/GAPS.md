@@ -2444,7 +2444,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 ### G-596: Phone middle-ground editor: device check on a real Android phone
 
 - Status: Open
-- Origin: ADR-295, N383
+- Origin: ADR-295, N384
 - Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
 - Request: user 2026-11-26: fix the mobile UI (Android Chrome)
 - Questions: none
@@ -2492,7 +2492,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 ### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
 
 - Status: Open
-- Origin: N383 / ADR-295, G-599 check (tools/mobile-middle/find-it.mjs); same on main
+- Origin: N384 / ADR-295, G-599 check (tools/mobile-middle/find-it.mjs); same on main
 - Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
 - Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
 - Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?

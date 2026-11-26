@@ -4,7 +4,7 @@
 - Date: 2026-11-26
 - Depends on: ADR-283, ADR-288, ADR-289, ADR-290
 - Design: this ADR (layout rules below); inventory in the pull request "UI: middle ground between original and rework + goal runner"
-- Backlog: N383
+- Backlog: N384
 - Acceptance: browser
 
 ## Context

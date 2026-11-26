@@ -21,3 +21,6 @@ src/core/sellers/*.json
 docs/backlog.md
 docs/adr/README.md
 goals/reports/
+# Copied from affaan-m/everything-claude-code (MIT); see .claude/agents/ecc/LICENSE (N383).
+.claude/agents/ecc/
+.claude/skills/ecc-*/

@@ -1,4 +1,4 @@
-// Find-it acceptance for the phone editor middle ground (ADR-295, backlog N383), run against a production build:
+// Find-it acceptance for the phone editor middle ground (ADR-295, backlog N384), run against a production build:
 //   pnpm build && pnpm preview &  node tools/mobile-middle/find-it.mjs [url] [out dir] [--json report.json]
 // Starts every context from the bare app at 390×844 and 844×390 (plus the edit bar at 320×640 and a project's room
 // drawings at 844×390, G-599), finds the edit bar, the one scrolling panel, the jump

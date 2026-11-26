@@ -62,10 +62,12 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
   counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `ui-rework` (a whole-flow redesign from findings to fixes on one branch and one pull request), `goal-runner` (drives a `goals/<name>.md` file to verified completion by looping checks and fix agents; user 2026-11-26: "Create a reusable goal runner that drives this task, and later tasks, to verified completion"), `frontend-design`, `caveman`,
+  the `ecc-*` guidance skills imported from `affaan-m/everything-claude-code` (TypeScript, React, Vite, testing, a11y, errors, security checklist),
   and the health loops `health-bugs`, `health-security`, `health-deps`, `health-cleanup`, `health-reuse` (shared loop in
   `health-bugs/loop.md`; see _Orchestration_)
 - `.claude/agents/` — subagents from the MIT-licensed `maslennikov-ig/claude-code-orchestrator-kit`, by area (health,
-  testing, development, database, documentation, infrastructure, meta, research); see _Orchestration_
+  testing, development, database, documentation, infrastructure, meta, research), and `ecc/` — 14 `ecc-*` agents adapted from
+  the MIT-licensed `affaan-m/everything-claude-code` (user 2026-11-26, N383); see _Orchestration_
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -160,7 +162,9 @@ and verifies the result itself (how-to: `docs/orchestration-tutorial.md`). These
    `performance-optimizer`, `code-reviewer`, `problem-investigator`, `typescript-types-specialist`, `technical-writer`,
    `deployment-engineer` (GitHub Actions), `supabase-auditor`/`supabase-fixer`/`database-architect` (`supabase/` only),
    `code-structure-refactorer` (only when the user asks for a refactor, ADR-016), `meta-agent-v3` and `skill-builder-v2`
-   (new agents and skills).
+   (new agents and skills). Second opinions and narrow reviews come from the `ecc-*` agents (everything-claude-code,
+   user 2026-11-26, N383): `ecc-typescript-reviewer`, `ecc-react-reviewer`, `ecc-code-reviewer`, `ecc-silent-failure-hunter`, `ecc-type-design-analyzer`, `ecc-pr-test-analyzer`, `ecc-comment-analyzer`, `ecc-code-simplifier`, `ecc-build-error-resolver`, `ecc-react-build-resolver`, `ecc-performance-optimizer`, `ecc-a11y-architect`, `ecc-planner`, `ecc-code-explorer`. On a name clash the kit agent and the repo skill stay the default; an `ecc-*`
+   agent runs only when delegated by name.
 7. **Not adopted from the kit:** the library-first rule (new dependencies follow _Engineering conventions_), `/push`
    after every task (pushes follow _Git_), Beads and Gastown tracking (the backlog and gaps ledgers are the trackers),
    SpecKit (ADRs cover specs) and the kit's MCP configuration.
