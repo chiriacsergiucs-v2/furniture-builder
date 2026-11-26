@@ -38,7 +38,8 @@ export function chromiumPath() {
  */
 function sheetEditorUnlessChosen() {
   try {
-    if (localStorage.getItem('fb:canvasEditor') === null) localStorage.setItem('fb:canvasEditor', 'off');
+    if (localStorage.getItem('fb:canvasEditor') === null)
+      localStorage.setItem('fb:canvasEditor', 'off');
   } catch {
     /* storage blocked: the app falls back to its default */
   }
@@ -46,11 +47,12 @@ function sheetEditorUnlessChosen() {
 
 /**
  * Launch the browser (extra launch options, such as `args`, are passed on). Every new context and page starts with the
- * sheet editor (`sheetEditorUnlessChosen`); set `CANVAS_DEFAULT=1` to run with the app's real phone default instead.
+ * sheet editor (`sheetEditorUnlessChosen`). A script that tests the app's real phone default passes `{ appDefault: true }`;
+ * `CANVAS_DEFAULT=1` does the same for every script.
  */
-export async function launchBrowser(options = {}) {
+export async function launchBrowser({ appDefault = false, ...options } = {}) {
   const browser = await chromium.launch({ executablePath: chromiumPath(), ...options });
-  if (process.env.CANVAS_DEFAULT === '1') return browser;
+  if (appDefault || process.env.CANVAS_DEFAULT === '1') return browser;
   const newContext = browser.newContext.bind(browser);
   browser.newContext = async (...args) => {
     const ctx = await newContext(...args);

@@ -2467,3 +2467,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: High
 - Necessity: High
+
+### G-600: Five browser find-it scripts stale after the navbar change
+
+- Status: Open
+- Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
+- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
+- Request: catch up burst debt
+- Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
+- Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium

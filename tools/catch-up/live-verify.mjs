@@ -13,7 +13,8 @@ import { goBuild, openTab } from '../lib/steps.mjs';
 const url = previewUrl();
 const out = outDir('dist-acceptance/live-verify');
 mkdirSync(out, { recursive: true });
-const browser = await launchBrowser();
+// Checks the app as a first visit sees it, the phone canvas editor default included (ADR-290, N373).
+const browser = await launchBrowser({ appDefault: true });
 const results = [];
 const { check } = makeChecker(results);
 const PHONE = 390;
