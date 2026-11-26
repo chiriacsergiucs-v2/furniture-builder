@@ -26,7 +26,7 @@
     "catalog:docs": "UPDATE_CATALOG_DOC=1 vitest run tests/catalog.test.ts",
     "catalog:snapshots": "WRITE_SNAPSHOTS=1 vitest run tests/snapshots.test.ts",
     "dups": "python3 -I scripts/dups.py",
-    "docs:check": "python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q",
+    "docs:check": "python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q && python3 -I -m unittest discover -s tools/catalog -p 'test_*.py' -q",
     "gaps": "python3 -I scripts/gaps.py",
     "regress": "node tools/regress.mjs",
     "sync:pending": "node scripts/sync-pending.mjs"

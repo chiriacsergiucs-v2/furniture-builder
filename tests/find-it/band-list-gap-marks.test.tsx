@@ -115,6 +115,14 @@ describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
     // A file that is not a gap-marks file applies nothing and says so.
     await user.upload(input, new File(['{}'], 'other.json', { type: 'application/json' }));
     expect(await within(page).findByText('The file is not a gap-marks file.')).toBeTruthy();
+
+    // A file over 20 MB is refused before it is read (G-564); the Gaps page is not translated.
+    const big = new File(['{}'], 'huge.json', { type: 'application/json' });
+    Object.defineProperty(big, 'size', { value: 20_000_001 });
+    await user.upload(input, big);
+    expect(
+      await within(page).findByText('That file is too large to import (over 20 MB).'),
+    ).toBeTruthy();
   });
 
   it('bare app → single piece → Settings → Import band list (CSV) → Matching bands; a pick keeps the trim allowance', async () => {
@@ -135,6 +143,21 @@ describe.each(WIDTHS)('ADR-212 at %i px (find-it)', (width) => {
       ),
     );
     await within(settings).findByText(/1 decor imported from decors\.csv/);
+
+    // A list file over 20 MB is refused before it is read (G-564).
+    const huge = (name: string) => {
+      const f = csvFile(name, 'x');
+      Object.defineProperty(f, 'size', { value: 20_000_001 });
+      return f;
+    };
+    await user.upload(within(settings).getByLabelText('Import decor list (CSV)'), huge('d.csv'));
+    expect(
+      await within(settings).findByText('That file is too large to import (over 20 MB).'),
+    ).toBeTruthy();
+    await user.upload(within(settings).getByLabelText('Import band list (CSV)'), huge('b.csv'));
+    expect(
+      await within(settings).findAllByText('That file is too large to import (over 20 MB).'),
+    ).toHaveLength(2);
     const boardRow = () =>
       within(settings)
         // Each board row is a group named after its board (ADR-255).

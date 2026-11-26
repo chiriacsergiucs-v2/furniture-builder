@@ -1,3 +1,4 @@
+import { svgId } from './svgId';
 import {
   useId,
   useLayoutEffect,
@@ -52,9 +53,6 @@ export const outlinePoints = (p: Panel) =>
 /** The smallest a drawing label is drawn on screen, in CSS pixels (audit F-26). */
 const MIN_LABEL_PX = 8;
 
-const FRONTS = FRONT_ROLES;
-const DRAWER_BOX = DRAWER_BOX_ROLES;
-
 function describe(s: SpaceOpening, count?: number, print = false): string {
   // On a printed sheet the labels follow the print language (ADR-157, ADR-265).
   if (print)
@@ -107,9 +105,9 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
   const mats = useMemo(() => new Map(design.materials.map((m) => [m.id, m])), [design.materials]);
   // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
   const urls = useImageUrls(imageKey(design.materials));
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const uid = svgId(useId());
   const patId = (materialId: string, turned: boolean) =>
-    `${uid}-pic-${materialId.replace(/[^a-zA-Z0-9_-]/g, '')}-${turned ? 1 : 0}`;
+    `${uid}-pic-${svgId(materialId)}-${turned ? 1 : 0}`;
   /** The board's picture pattern, or undefined while it has none on this device. */
   const pictureOf = (p: Panel) => {
     const m = mats.get(p.materialId);
@@ -136,10 +134,10 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
 
   const BEHIND = new Set<Panel['role']>(['back', 'modesty']);
   const structure = model.panels.filter(
-    (p) => !FRONTS.has(p.role) && !DRAWER_BOX.has(p.role) && !BEHIND.has(p.role),
+    (p) => !FRONT_ROLES.has(p.role) && !DRAWER_BOX_ROLES.has(p.role) && !BEHIND.has(p.role),
   );
   const backs = model.panels.filter((p) => BEHIND.has(p.role));
-  const fronts = model.panels.filter((p) => FRONTS.has(p.role));
+  const fronts = model.panels.filter((p) => FRONT_ROLES.has(p.role));
   const selectedPanels = new Set(
     model.panels.filter((p) => p.nodeId === selectedId).map((p) => p.id),
   );
@@ -516,7 +514,7 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
             <text
               key={`l-${s.nodeId}`}
               className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
-              x={s.box.x + s.box.w / 2}
+              x={boxCentre(s.box).x}
               y={Y(s.box.y, s.box.h) + s.box.h / 2}
               fontSize={Math.max(Math.min(fontSize, s.box.w / 6), floorUnits)}
               dominantBaseline="middle"
@@ -656,7 +654,7 @@ export function Elevation({ print = false }: { print?: boolean } = {}) {
         {partSizes.map(({ p, label }) => {
           const fs = fontSize * 0.75;
           const w = label.length * fs * 0.6 + fs;
-          const cx = p.box.x + p.box.w / 2,
+          const cx = boxCentre(p.box).x,
             cy = Y(p.box.y, p.box.h) + p.box.h / 2;
           return (
             <g key={`size-${p.id}`} className="part-size" aria-hidden="true">
@@ -849,10 +847,10 @@ export function PieceElevation({
   const fontSize = Math.max(b.w, b.h) / 26;
   const BEHIND = new Set<Panel['role']>(['back', 'modesty']);
   const structure = model.panels.filter(
-    (p) => !FRONTS.has(p.role) && !DRAWER_BOX.has(p.role) && !BEHIND.has(p.role),
+    (p) => !FRONT_ROLES.has(p.role) && !DRAWER_BOX_ROLES.has(p.role) && !BEHIND.has(p.role),
   );
   const backs = model.panels.filter((p) => BEHIND.has(p.role));
-  const fronts = model.panels.filter((p) => FRONTS.has(p.role));
+  const fronts = model.panels.filter((p) => FRONT_ROLES.has(p.role));
   return (
     <figure className="elevation piece-elevation" aria-label={label}>
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="img" aria-label={label}>

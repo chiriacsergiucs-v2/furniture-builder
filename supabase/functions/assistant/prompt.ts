@@ -1,5 +1,13 @@
 // The assistant's fixed prompt (ADR-239): the system text, the tools and how the action list is written for the
 // model. Kept apart from index.ts so scripts/assistant-eval.mjs sends exactly what the function sends.
+
+/** The model used when ASSISTANT_MODEL is not set. */
+export const DEFAULT_MODEL = 'claude-opus-5-5';
+/** The most tokens one reply may take. */
+export const MAX_TOKENS = 16000;
+/** The effort asked of the model. */
+export const EFFORT = 'medium';
+
 export interface ArgSpec {
   name: string;
   type: string;

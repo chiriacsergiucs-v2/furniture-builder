@@ -6,14 +6,22 @@
 // ASSISTANT_MODEL (default claude-opus-5-5), ASSISTANT_DAILY_CAP (default 50) and ASSISTANT_ALLOWED_ORIGIN.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { type ActionSpec, openingTurns, SYSTEM, TOOLS } from './prompt.ts';
+import {
+  type ActionSpec,
+  DEFAULT_MODEL,
+  EFFORT,
+  MAX_TOKENS,
+  openingTurns,
+  SYSTEM,
+  TOOLS,
+} from './prompt.ts';
 
 declare const Deno: {
   env: { get(name: string): string | undefined };
   serve(handler: (req: Request) => Response | Promise<Response>): void;
 };
 
-const MODEL = Deno.env.get('ASSISTANT_MODEL') ?? 'claude-opus-5-5';
+const MODEL = Deno.env.get('ASSISTANT_MODEL') ?? DEFAULT_MODEL;
 const CAP = Math.max(1, Number(Deno.env.get('ASSISTANT_DAILY_CAP') ?? '50') || 50);
 const ORIGIN = Deno.env.get('ASSISTANT_ALLOWED_ORIGIN') ?? 'https://chiriacsergiucs-v2.github.io';
 /** The largest request body accepted, in characters (a big project is well under this). */
@@ -112,8 +120,8 @@ Deno.serve(async (req) => {
   // Refusal fallbacks on by default (server-side, routed by the API).
   const params = {
     model: MODEL,
-    max_tokens: 16000,
-    output_config: { effort: 'medium' },
+    max_tokens: MAX_TOKENS,
+    output_config: { effort: EFFORT },
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     tools: TOOLS,
     tool_choice: { type: 'auto' },

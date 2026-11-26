@@ -185,7 +185,7 @@ export function dimensionLabels(b: Box): DimLabel[] {
     z1 = (b.z + b.d) * S;
   return [
     { key: 'w', mm: b.w, at: [(x0 + x1) / 2, y0 + off, z1 + off] },
-    { key: 'h', mm: b.h, at: [x0 - off, (b.y + b.h / 2) * S, z1 + off] },
+    { key: 'h', mm: b.h, at: [x0 - off, boxCentre(b).y * S, z1 + off] },
     { key: 'd', mm: b.d, at: [x0 - off, y0 + off, (z0 + z1) / 2] },
   ];
 }
@@ -311,7 +311,7 @@ export function pieceLabels(pieces: readonly ARPiece[]) {
     w: p.w,
     h: p.h,
     d: p.d,
-    at: [(p.box.x + p.box.w / 2) * S, (p.box.y + p.box.h) * S + 0.06, (p.box.z + p.box.d) * S] as [
+    at: [boxCentre(p.box).x * S, (p.box.y + p.box.h) * S + 0.06, (p.box.z + p.box.d) * S] as [
       number,
       number,
       number,

@@ -5,6 +5,7 @@
  * `Project.models`, apart from the pieces, so nothing that reads `Project.items` can reach them.
  */
 import { t } from '@furniture-builder/i18n';
+import { clamp } from './clamp';
 import { overlaps } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
 import { isObj, isInt } from './guards';
@@ -168,7 +169,7 @@ export function dragResize(
   const side = roomSide(m, axis);
   // Held to the range that keeps every side 1 to MODEL_SIDE_MAX (ADR-259).
   const r = modelSideRange(start, side, keep);
-  const value = Math.min(r.max, Math.max(r.min, Math.round(start[side] + by)));
+  const value = clamp(Math.round(start[side] + by), r.min, r.max);
   return resizeModel(start, side, value, keep);
 }
 

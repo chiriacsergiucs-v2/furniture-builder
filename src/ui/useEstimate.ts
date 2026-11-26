@@ -14,7 +14,7 @@ import {
 } from '../core/prices';
 import { sinkList } from '../core/project';
 import { productIndex, sellerPriceLookup } from '../core/sellers';
-import { shoppingList, type ShopLine } from '../core/shopping';
+import { shoppingList, worktopJointList, type ShopLine } from '../core/shopping';
 import { useDesign } from '../store/designStore';
 import { useFastenerCounts } from './Fasteners';
 import { useFastenerChoices } from '../store/fastenerStore';
@@ -44,6 +44,10 @@ export function useEstimate(): EstimateView {
   );
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
   const sinks = useMemo(() => (shownProject ? sinkList(shownProject) : []), [shownProject]);
+  const worktopJoints = useMemo(
+    () => (shownProject ? worktopJointList(shownProject) : []),
+    [shownProject],
+  );
   const n = useNesting(true);
   const fastenerCounts = useFastenerCounts();
   const fastenerChoices = useFastenerChoices();
@@ -89,6 +93,7 @@ export function useEstimate(): EstimateView {
         sheets,
         runParts,
         sinks,
+        worktopJoints,
         diagnostics: view.diagnostics,
         fasteners: { counts: fastenerCounts, choices: fastenerChoices },
         hardwareProducts: view.hardwareProducts,
@@ -96,7 +101,17 @@ export function useEstimate(): EstimateView {
         runProducts,
         runPriced,
       }),
-    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices, runProducts, runPriced],
+    [
+      view,
+      sheets,
+      runParts,
+      sinks,
+      worktopJoints,
+      fastenerCounts,
+      fastenerChoices,
+      runProducts,
+      runPriced,
+    ],
   );
   const seller = useMemo<SellerLookup | undefined>(
     () => (index ? sellerPriceLookup(index) : undefined),

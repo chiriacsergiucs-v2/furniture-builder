@@ -464,6 +464,9 @@ export const ru_core2 = {
   'Anti-tip fixing': 'Крепление от опрокидывания',
   'Hardware from a datasheet': 'Фурнитура по техпаспорту',
   'Sink (your choice)': 'Мойка (на ваш выбор)',
+  'Worktop joint fixings (your choice)': 'Крепёж стыка столешниц (на ваш выбор)',
+  'mitred joint between {a} and {b}': 'стык под 45° между {a} и {b}',
+  'butt joint between {a} and {b}': 'стык встык между {a} и {b}',
   'cut-out {w} × {d} mm in the worktop over {over}': 'вырез {w} × {d} мм в столешнице над «{over}»',
   '{w} × {h} × {d} mm, {material} (counted under Boards)':
     '{w} × {h} × {d} мм, {material} (учтено в разделе «Плиты»)',

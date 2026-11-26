@@ -24,6 +24,7 @@ import { isAxisLocked } from './sizeLock';
 import { sizeFields } from './pieceSize';
 import type { Design, DesignVariable, Diagnostic, Mm, Product, Space } from './types';
 import { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE, SPLIT_TARGET } from './varLimits';
+import { POSITION_MAX, POSITION_MIN } from './limits';
 
 export interface ProjectVariable {
   id: string;
@@ -554,7 +555,7 @@ function targetRange(item: ProjectItem, target: string): { min: Mm; max: Mm } | 
       return { min: 0, max: 3000 };
     case 'x':
     case 'z':
-      return { min: -20000, max: 20000 };
+      return { min: POSITION_MIN, max: POSITION_MAX };
   }
   return null;
 }

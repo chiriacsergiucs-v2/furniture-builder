@@ -69,7 +69,7 @@ import { useAdjustWall, usePictureDrag, usePicturePreview } from './wallPictureD
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { aabbOf } from '../core/shape';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
-import { loadModelScene, type ModelScene } from '../persist/models';
+import { loadModelScene, type ModelScene } from '../store/libraryStore';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { setRooms } from '../core/setRoom';
@@ -503,7 +503,7 @@ export function CountsAnchor({
   const v = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
     if (!box) return place(null);
-    v.set((box.x + box.w / 2) * S, (box.y + box.h) * S, (box.z + box.d) * S).project(camera);
+    v.set(boxCentre(box).x * S, (box.y + box.h) * S, (box.z + box.d) * S).project(camera);
     place(v.z > 1 ? null : { x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height });
   });
   return null;
@@ -598,7 +598,7 @@ export function ShadowCatcher({ bounds }: { bounds: Box }) {
     <mesh
       name={SHADOW_CATCHER}
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[(bounds.x + bounds.w / 2) * S, -0.0005, (bounds.z + bounds.d / 2) * S]}
+      position={[boxCentre(bounds).x * S, -0.0005, boxCentre(bounds).z * S]}
       receiveShadow
       raycast={() => null}
     >
@@ -832,7 +832,7 @@ export function HeightHandle({ id }: { id: string }) {
     return null;
   const b = pc.bounds;
   const start = pc.item.placement.height;
-  const at: [number, number, number] = [b.x + b.w / 2, b.y + b.h, b.z + b.d];
+  const at: [number, number, number] = [boxCentre(b).x, b.y + b.h, b.z + b.d];
   const dy = preview?.id === id ? preview.height - start : 0;
   return (
     <>
@@ -849,7 +849,7 @@ export function HeightHandle({ id }: { id: string }) {
       </Html>
       {dy !== 0 && (
         <mesh
-          position={[(b.x + b.w / 2) * S, (b.y + dy + b.h / 2) * S, (b.z + b.d / 2) * S]}
+          position={[boxCentre(b).x * S, (b.y + dy + b.h / 2) * S, boxCentre(b).z * S]}
           raycast={() => null}
           renderOrder={5}
         >

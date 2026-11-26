@@ -3159,6 +3159,54 @@ highest id in either file.
 - Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
 - Conflicts: none
 
+### G-372: Wall picture: stale notice on a deliberate change or leaving the page
+
+- Status: Done (PR #329, N388)
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/WallBackground.tsx pick(): the 'prepared picture was not applied' error notice fires when the user switches the wall to None/Colour during an upload, or leaves the page (global notice shows on another page).
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Show the stale notice only when the wall or background changed outside this control?
+- Suggested pick: Only notify when the operation was not cancelled by this control or unmount (closest to ADR-200's intent; est. +5 % work, removes a false error).
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+
+### G-373: Size-lock note shows unrelated design notices
+
+- Status: Done (PR #329, N388)
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/Inspector.tsx SizeLockNote now renders any design-store notice (move refused, plan notices) in the size-lock info box, even for unlocked pieces.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Is showing every refusal notice in the inspector intended, or only size-lock refusals?
+- Suggested pick: Show the note only when an axis is locked or the notice is a size-lock refusal (matches ADR-122/199 wording; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-374: Escape on More may not close it in Safari
+
+- Status: Done (PR #329, N388)
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/shell/MoreMenu.tsx listens for Escape on the menu element only; Safari does not focus <summary> on click, so Escape likely does nothing while editor shortcuts stay blocked. Not tested in Safari.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Listen on window again but only act when More is open?
+- Suggested pick: Window listener gated on details.open, keeping preventDefault/stopPropagation (keeps ADR-198 behaviour in all browsers; est. small change).
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+
+### G-375: Template list refresh skipped while a read is pending
+
+- Status: Done (PR #329, N388)
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/ProjectTemplates.tsx refresh() returns early when a read is in flight, so a delete or rename finishing during a Retry read can leave a stale row.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Queue one follow-up read instead of dropping it?
+- Suggested pick: Mark a pending re-read and run it after the current read (fixes the race fully; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-377: Remove the Rapier devDependency once its trial test is gone
 
 - Status: Done (ADR-212)
@@ -3309,6 +3357,20 @@ highest id in either file.
 - Conflicts: none
 - Note: 2026-11-06: ADR-209 takes over the 3D holes (the suggested pick); the room front view moved to G-438.
 
+### G-409: Worktop joint fixings
+
+- Status: Done (PR #329, N388)
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: A mitred or butt worktop joint lists no fixings (worktop connector bolts, biscuits). Their type and count are supplier values (ADR-010).
+- Request: Kitchen runs with plinth, filler, sink front (G-010 context, not a quote)
+- Questions: List a "Worktop joint fixings (your choice)" line under To choose before buying?
+- Suggested pick: Yes: one line per joint, with no count or size. (estimate: effort +5%, value +5%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Worktop joints have no fixing line in the shopping list.
+- Fix: Add one user-chosen shopping line per worktop joint.
+
 ### G-412: Worktop edge profiles and bundled appliance models
 
 - Status: Done (ADR-209)
@@ -3355,6 +3417,20 @@ highest id in either file.
 - Issue: Formulas cannot branch or round to a step.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
+
+### G-454: Versions of deleted projects with no project open
+
+- Status: Done (PR #329, N388)
+- Origin: ADR-211, 2026-11-06; agent scoped it out (G-389's pick puts the list in History, inside an open project)
+- Missing: With no project open (for example after deleting every project) the versions of deleted projects cannot be reached.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it).
+- Questions: Also show the Versions of deleted projects list on the Projects page?
+- Suggested pick: Show the same list, with Restore as a new project and Delete, under the Projects page's list (estimate: effort +4 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Kept versions of deleted projects need an open project to be reached.
+- Fix: The same list on the Projects page.
 
 ### G-461: Default L and U rooms give no Fill the room mix
 
@@ -3475,6 +3551,28 @@ highest id in either file.
 - Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
 - Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 - Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
+
+### G-497: The 3D viewer still imports persist directly
+
+- Status: Done (PR #329, N388)
+- Origin: ADR-230 Out of scope, 2026-11-07 (architecture review section 2)
+- Missing: Viewer3D.tsx:78-79 import src/persist; ADR-230 removes ui imports and DOM side channels only.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the viewer read saved models and pictures through the store (after ADR-223)?
+- Suggested pick: Route them through the store after ADR-223 (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-501: The catalog PDF extractor tests run nowhere
+
+- Status: Done (PR #329, N388)
+- Origin: ADR-237 Out of scope, 2026-11-07 (architecture review I-19)
+- Missing: tools/catalog/test_extract_pdf.py imports extract_pdf.py, which imports pdfplumber at module top (line 21), so it cannot run in CI without installing pdfplumber.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Install pdfplumber in CI (a Python dependency the app does not use) or make the import lazy so the tests run without it?
+- Suggested pick: Make the pdfplumber import lazy in the functions that need it and run the tests that do not (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
 
 ### G-506: Duplicate backlog id D02
 
@@ -3715,6 +3813,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
+
+- Status: Done (PR #329, N388)
+- Origin: bug-hunt 2026-11-17 L-2
+- Missing: Not moved to boxCentre: Elevation.tsx:380-381, RoomDrawings.tsx:951, ViewerScene.tsx:486,581,807,824, AR.tsx:928, arPlace.ts:187,313; core call sites selectPath.ts, project.ts:1145, fusion.ts:68, selection.ts:136, snapshot.ts:242, projectProfiles.ts:176
+- Request: Move remaining centre arithmetic to boxCentre
+- Questions: Include core call sites in a follow-up?
+- Suggested pick: Follow-up change, each site checked for its formula
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
 - Status: Done (ADR-281)
@@ -3724,6 +3834,42 @@ highest id in either file.
 - Questions: Changing outer reveals changes front sizes by 1 mm on existing odd-thickness designs: is that allowed?
 - Suggested pick: Decide between a symmetric outer limit (1 mm wider fronts on one side of existing odd-board designs) and accepting a 1 mm size difference in mirrored copies
 - Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-564: Cap file size in five text importers
+
+- Status: Done (PR #329, N388)
+- Origin: Security health check round 1, 2026-11-19 (L-1)
+- Missing: src/ui/Shopping.tsx:126, src/ui/Dialogs.tsx:545 and :573, src/ui/CatalogPage.tsx:255 and src/ui/Gaps.tsx:166 read a file with f.text() and no size cap; importFile already has MAX_IMPORT_BYTES
+- Request: /health-security, loop prompt: rotate the health skills until no high-priority issue; user approved Medium only
+- Questions: None; the cap value is MAX_IMPORT_BYTES
+- Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-567: Assistant 8000-character cap: user feedback in the chat
+
+- Status: Done (PR #329, N388)
+- Origin: Bug health check round 1, 2026-11-19 (M1)
+- Missing: The textarea stops typing at 8000 characters (maxLength) with no message, and a long assistant reply in history is cut to 8000 characters when resent
+- Request: /health-bugs, loop prompt; user approved Medium (client cap only)
+- Questions: Show a counter or message near 8000? New text needs t() and a Russian entry
+- Suggested pick: Add a short counter under the textarea (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-571: Reuse findings L1 to L8
+
+- Status: Done (PR #329, N388)
+- Origin: Reuse health check round 1, 2026-11-20 (low)
+- Missing: escapeHtml in two copies; inline clamp; SVG id sanitiser x7; position range -20000..20000 on about 22 fields; FRONTS and DRAWER_BOX aliases; area sum in shopping.ts; assistant model and request defaults in index.ts and assistant-eval.mjs; Pt tuple alias
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: None
+- Suggested pick: Fix with the medium group in one cleanup pass (Work Low, Value Low)
+- Work: Low
 - Impact: Low
 - Necessity: Low
 
@@ -3763,6 +3909,18 @@ highest id in either file.
 - Impact: High
 - Necessity: Medium
 
+### G-582: Catalog finder: on by default or keep the grouped page
+
+- Status: Done (PR #329, N388)
+- Origin: ADR-291, N377
+- Missing: The finder ships off by default behind More › Catalog finder (preview); turning it on by default or removing the grouped page needs the user's word (ui-rework step 5).
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Turn the finder on by default and keep the grouped page behind the switch, keep it off, or remove the grouped page?
+- Suggested pick: On by default, grouped page behind the switch (as ADR-290 did for the canvas editor)
+- Work: Low
+- Impact: Medium-high
+- Necessity: Medium
+
 ### G-585: Finder filter row scrolls sideways on a phone
 
 - Status: Done (N386, 2026-11-26: Source tabs on their own row, Room, Type and Ready to open on one row below, src/styles.css; tools/catalog-finder/find-it.mjs 40 of 40 on the production preview)
@@ -3774,6 +3932,18 @@ highest id in either file.
 - Work: Low
 - Impact: Low-medium
 - Necessity: Low-medium
+
+### G-586: Grouped catalog page is 19 365 px tall on a phone, over the N311 limit
+
+- Status: Done (PR #329, N388)
+- Origin: tools/catalog-flows/find-it.mjs rerun for ADR-291
+- Missing: catalog-flows check 'page under 17 000 px tall as it opens (paged, N311)' fails at 390 px: 19 365 px, measured on the build before ADR-291's changes too; the other 34 checks pass.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach.
+- Questions: Fix the grouped page's height, or let the finder (G-582) replace it?
+- Suggested pick: Let the finder become the default (G-582); keep the grouped page as is
+- Work: Low
+- Impact: Low
+- Necessity: Low
 
 ### G-597: Top-bar name field under 44 px wide on phones
 

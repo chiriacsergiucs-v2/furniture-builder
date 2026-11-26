@@ -54,8 +54,8 @@ describe('catalog finder', () => {
     expect(offersOfKind(list, '')).toHaveLength(3);
   });
 
-  it('is off unless on is stored', () => {
-    expect(parseCatalogFinder(null)).toBe(false);
+  it('is on unless off is stored', () => {
+    expect(parseCatalogFinder(null)).toBe(true);
     expect(parseCatalogFinder('off')).toBe(false);
     expect(parseCatalogFinder('on')).toBe(true);
   });

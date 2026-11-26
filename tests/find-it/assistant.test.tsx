@@ -52,6 +52,11 @@ describe.each(WIDTHS)('the assistant at %ipx (find-it, ADR-239, ADR-240)', (widt
 
     // A typed request shows the summary, the change list, Apply and Discard.
     await user.type(dlg.getByLabelText('Your request'), 'make it 1000 wide');
+    // The request box counts its characters against the 8000 limit (G-567).
+    expect(dlg.getByLabelText('Your request').getAttribute('aria-describedby')).toBe(
+      'assistant-count',
+    );
+    expect(dlg.getByText('17 / 8000')).toBeTruthy();
     await user.click(dlg.getByRole('button', { name: 'Send' }));
     const card = within(await dlg.findByRole('region', { name: 'Proposed change' }));
     expect(card.getByText('Width to 1000 mm.')).toBeTruthy();

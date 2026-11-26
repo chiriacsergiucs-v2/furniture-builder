@@ -37,4 +37,5 @@ export const ru_assistant = {
   'Applied. Undo takes it back in one step.':
     'Применено. «Отменить действие» вернёт всё за один шаг.',
   'Discarded. Nothing changed.': 'Отклонено. Ничего не изменилось.',
+  '{n} / {max}': '{n} / {max}',
 };
