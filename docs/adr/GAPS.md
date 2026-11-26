@@ -2440,3 +2440,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low-medium
 - Necessity: Low
+
+### G-596: Phone middle-ground editor: device check on a real Android phone
+
+- Status: Open
+- Origin: ADR-295, N383
+- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
+- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
+- Questions: none
+- Suggested pick: User opens the live URL on the phone after merge and reports
+- Work: Low
+- Impact: Medium
+- Necessity: Medium-high
