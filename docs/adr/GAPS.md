@@ -1775,15 +1775,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Which row keeps each of N164, N281 and N302, or does the second get a new id?
 - Suggested pick: Leave the ids as they are and keep the listed exceptions in scripts/check-docs.py until the user decides
 
-### G-528: Live-verify blocked from the sandbox
-
-- Status: Open
-- Origin: Catch-up 2026-11-17 (N330)
-- Missing: Live-verify of the logged changes: the sandbox reaches the published site now (200, 2026-11-17, N333) and 21 rows are paid. 13 rows keep a marker (N274, N286, N287, N288, N311, N318, N319, N302, N324, N329, N326, N325, N326): their changes need a flow the live script does not drive (a project with pieces, the print preview, the wizard, the 3D view), so no visible text was found for them yet.
-- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
-- Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
-- Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
-
 ### G-529: Main CI red after the navbar change (234f34d)
 
 - Status: Open

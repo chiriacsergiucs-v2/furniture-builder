@@ -3658,6 +3658,15 @@ highest id in either file.
 - Questions: none
 - Suggested pick: A repeated id fails docs:check except N164, N281, N302 and N326, which are listed (built, commit fd36837)
 
+### G-528: Live-verify blocked from the sandbox
+
+- Status: Done (catch-up 2026-11-26: every row it named was live-verified in Chromium against the published site with its browser find-it script or tools/catch-up/live-verify.mjs; the four markers left, N324, N356, N357, N359, now name their own blockers)
+- Origin: Catch-up 2026-11-17 (N330)
+- Missing: Live-verify of the logged changes: the sandbox reaches the published site now (200, 2026-11-17, N333) and 21 rows are paid. 13 rows keep a marker (N274, N286, N287, N288, N311, N318, N319, N302, N324, N329, N326, N325, N326): their changes need a flow the live script does not drive (a project with pieces, the print preview, the wizard, the 3D view), so no visible text was found for them yet.
+- Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
+- Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
+- Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
+
 ### G-531: Stale numbers and line references in architecture.md
 
 - Status: Done (b0f19100)
