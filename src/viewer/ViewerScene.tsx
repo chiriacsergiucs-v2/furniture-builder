@@ -1268,7 +1268,7 @@ export function Fit({ bounds }: { bounds: Box }) {
       // A first finger or the mouse starts afresh: a pointer whose up was never delivered is forgotten.
       if (e.isPrimary) {
         pointers.current.clear();
-        pressDown(e.clientX, e.clientY);
+        pressDown(e.clientX, e.clientY, e.pointerType);
       }
       pointers.current.add(e.pointerId);
     };

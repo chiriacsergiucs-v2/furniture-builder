@@ -139,6 +139,10 @@ describe('a press that travelled is a drag, not a tap', () => {
     // The next press starts afresh.
     pressDown(50, 50);
     expect(pressWasDrag()).toBe(false);
+    // A touch tap that wobbles past the slop still selects (user 2026-11-26).
+    pressDown(100, 100, 'touch');
+    pressMoved(100 + TAP_SLOP_PX + 5, 100);
+    expect(pressWasDrag()).toBe(false);
   });
 });
 

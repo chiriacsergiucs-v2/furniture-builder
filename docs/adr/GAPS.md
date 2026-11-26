@@ -2489,14 +2489,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low-medium
 
-### G-600: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, touch slop, thin-line width
+### G-600: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
 
 - Status: Open
 - Origin: ADR-295, code-reviewer re-review of c61d8d0
-- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; a touch tap with 11-15 px wobble no longer selects; the thin twin is 1 device px while the fat line is 1 CSS px
+- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
 - Request: User 2026-11-26: review reports no open issues
-- Questions: Is a 10 px tap slop right for touch, or should touch keep selecting?
-- Suggested pick: Apply the slop to the mouse only; add jsdom tests for the glue; build twins in an effect
+- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
+- Suggested pick: Add jsdom tests for the glue; build twins in an effect
 - Work: Low-medium
 - Impact: Low
 - Necessity: Medium
