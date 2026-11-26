@@ -3589,6 +3589,18 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 
+### G-495: Production nesting still depends on machine speed
+
+- Status: Done (N394)
+- Origin: ADR-228 Out of scope, 2026-11-07 (architecture review I-10, section 10 question 2)
+- Missing: The production default maxMs = 1500 (src/core/nesting/place.ts) is unchanged, so a sheet layout can differ between a slow and a fast device; only tests use maxMs: Infinity.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the production nesting default become deterministic (maxMs Infinity or an attempt bound), accepting a slower first layout on a weak phone and a layout that may differ from one already printed?
+- Suggested pick: An attempt bound tuned to today's median layout time, so results stop depending on speed (estimate: effort +10 %, value +5 %)
+- Work: Low
+- Impact: Medium
+- Conflicts: ADR-018: seeded guillotine heuristic with a time budget
+
 ### G-496: Print dictionaries are not loaded lazily
 
 - Status: Done (N391)

@@ -7,7 +7,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { nest, validateNest } from '../src/core/nesting';
+import { nest, validateNest, DEFAULT_MAX_ATTEMPTS, SAFETY_MAX_MS } from '../src/core/nesting';
 import type { NestJob, NestPart, NestResult } from '../src/core/nesting';
 import { projectNestingJobs } from '../src/core/project';
 import { sampleProjects } from './fixtures/mobila';
@@ -146,13 +146,13 @@ describe('production nesting default (ADR-228, ADR-018)', () => {
     vi.spyOn(performance, 'now').mockImplementation(() => (first ? ((first = false), 0) : later));
   };
 
-  it('keeps searching while 1500 ms have not passed', () => {
-    clockAt(1500);
-    expect(nest(job).search.attempts).toBe(40);
+  it('keeps searching past the old 1500 ms budget: the attempt bound decides (G-495)', () => {
+    clockAt(1501);
+    expect(nest(job).search.attempts).toBe(DEFAULT_MAX_ATTEMPTS);
   });
 
-  it('stops after the first attempt once more than 1500 ms have passed', () => {
-    clockAt(1501);
+  it('stops after the first attempt only past the safety ceiling', () => {
+    clockAt(SAFETY_MAX_MS + 1);
     expect(nest(job).search.attempts).toBe(1);
   });
 });

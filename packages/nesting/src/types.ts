@@ -33,7 +33,9 @@ export interface NestJob {
 
 export interface NestOptions {
   seed?: number;
+  /** Safety ceiling in ms (default `SAFETY_MAX_MS`, far above normal use); `Infinity` removes it. */
   maxMs?: number;
+  /** Attempt bound that decides the layout (default `DEFAULT_MAX_ATTEMPTS`). */
   maxAttempts?: number;
 }
 
