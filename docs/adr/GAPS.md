@@ -2467,9 +2467,9 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-598: 3D view: matrixAutoUpdate off for static meshes
 
-- Status: Acknowledged (decided 2026-11-26 under the S-leftover rule: measured 0.1 ms per frame, turning matrixAutoUpdate off on r3f meshes risks stale transforms; no change)
+- Status: Acknowledged (2026-11-26)
 - Origin: ADR-295, goal runner loop 4
-- Missing: updateMatrixWorld still runs each frame (about 0.1 ms); turning it off on r3f-managed meshes risks stale transforms
+- Missing: updateMatrixWorld still runs each frame (about 0.1 ms); turning it off on r3f-managed meshes risks stale transforms Decided 2026-11-26 under the S-leftover rule: no change, 0.1 ms per frame is worth less than the stale-transform risk.
 - Request: ADR-295 decision 9 (drag fix)
 - Questions: None
 - Suggested pick: Leave until a profile shows it matters
