@@ -2151,18 +2151,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 
-### G-607: Stale browser scripts: ui-polish and control-rule
-
-- Status: Open
-- Origin: N402 regress check 2026-11-26
-- Missing: pnpm regress: tools/control-rule/find-it.mjs waits for the radio 'Build & Preview' (now 'Cut List'); tools/ui-polish/find-it.mjs fails 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line' and 'Hardware: Item column >= 30 %' (21 %: the items table header cells fill half the fixed-layout table at 390 px). critique-bugs and shapes were fixed in N402.
-- Request: Low-work gaps with their suggested picks (user 2026-11-23); scripts found stale while checking G-028
-- Questions: Update the two scripts to the current labels and layout, or retire the checks the newer editor replaced?
-- Suggested pick: Update both scripts to the current UI; investigate the Hardware header widths as a layout bug
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low-medium
-
 ### G-608: Kits: handles as a kit edit
 
 - Status: Open
