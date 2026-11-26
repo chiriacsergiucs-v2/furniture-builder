@@ -1239,21 +1239,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Fill the room cannot fill a bedroom or office.
 - Fix: Add a room type to Fill the room that picks the families it fills with.
 
-### G-452: Desktop mode switch in the top bar
-
-- Status: Open
-- Origin: ADR-211, 2026-11-06; split from G-027 by the coordinator (conflicts with ADR-079)
-- Missing: On desktop the Compose / Build & Preview switch is still its own row under the app bar (src/ui/App.tsx).
-- Request: “Help with the sticky bars top and bottom, they occupy too much”.
-- Questions: Move the desktop mode switch into the top bar, replacing ADR-079's "segmented control under the app bar"?
-- Suggested pick: Move it into the top bar on desktop through a new ADR that replaces that ADR-079 sentence (estimate: effort +5 %, value +5 %).
-- Work: Low
-- Impact: Low
-- Necessity: Low
-- Issue: The desktop mode switch takes its own row.
-- Fix: A new ADR moving the switch into the top bar on desktop.
-- Conflicts: ADR-079: decided the mode control sits under the app bar.
-
 ### G-453: Lock a piece's insides
 
 - Status: Open

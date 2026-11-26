@@ -800,6 +800,37 @@ export function App() {
     />
   );
 
+  // The Compose · Build & Preview switch: its own row under the bar on a phone (hidden there, ADR-241); inside the top
+  // bar on desktop (ADR-297).
+  const modeSwitch = (
+    <div
+      className={phone ? 'segmented' : 'segmented mode-switch'}
+      role="radiogroup"
+      aria-label={t('Editor mode')}
+      onKeyDown={rovingKeys}
+    >
+      {MODES.map((m, i) => (
+        <button
+          key={m}
+          type="button"
+          role="radio"
+          aria-checked={mode === m}
+          tabIndex={rovingTab(mode === m, i, MODES.includes(mode))}
+          className={mode === m ? 'on' : ''}
+          onClick={() => setMode(m)}
+        >
+          {MODE_LABEL[m]}
+          {m === 'build' && buildMeta && (
+            <span className={`badge ${errors ? 'error' : 'warning'}`}>
+              {errors || warnings}
+              <span className="badge-words"> {buildMeta}</span>
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <>
       <div className={`app page-${page}`}>
@@ -939,6 +970,7 @@ export function App() {
               )}
             </span>
           )}
+          {page === 'editor' && !phone && modeSwitch}
           {page === 'editor' && !phone && <EstimateChip />}
           <div className="bar-tools">
             {page === 'editor' && (
@@ -1023,34 +1055,9 @@ export function App() {
             />
           </div>
         </header>
-        {page === 'editor' && (
+        {page === 'editor' && phone && (
           <div className="modes" ref={modesRef}>
-            <div
-              className="segmented"
-              role="radiogroup"
-              aria-label={t('Editor mode')}
-              onKeyDown={rovingKeys}
-            >
-              {MODES.map((m, i) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === m}
-                  tabIndex={rovingTab(mode === m, i, MODES.includes(mode))}
-                  className={mode === m ? 'on' : ''}
-                  onClick={() => setMode(m)}
-                >
-                  {MODE_LABEL[m]}
-                  {m === 'build' && buildMeta && (
-                    <span className={`badge ${errors ? 'error' : 'warning'}`}>
-                      {errors || warnings}
-                      <span className="badge-words"> {buildMeta}</span>
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+            {modeSwitch}
           </div>
         )}
         {notice && (
