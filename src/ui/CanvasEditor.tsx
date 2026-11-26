@@ -1,13 +1,14 @@
 import {
   useSyncExternalStore,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
   type RefObject,
 } from 'react';
-import { bumpLensUse, orderByUse, useCanvasEditor, useLensUse } from '../store/useCanvasEditor';
+import { useCanvasEditor } from '../store/useCanvasEditor';
 import { useMediaQuery } from '../store/useMediaQuery';
 import { createListeners } from '../store/deviceValue';
 import { t } from '@furniture-builder/i18n';
@@ -15,9 +16,9 @@ import { Icon } from './icons';
 import { upOneLevel } from './upLevel';
 
 /**
- * The canvas editor on phones (ADR-283): a selection ladder over the drawing, a chip rail at the thumb and a lens card
- * that shows one titled block of the existing editor at a time. The editor itself is mounted unchanged; this file only
- * chooses which of its blocks shows.
+ * The canvas editor on phones (ADR-283, ADR-295): a selection ladder over the drawing, a fixed edit bar at the thumb
+ * and a card that shows the whole editor of the selection in one scrolling panel, with a fixed jump index in its head.
+ * The editor itself is mounted unchanged.
  */
 
 /** The tab that shows everything outside the titled blocks: the title, path, pins, buttons and notes. */
@@ -76,20 +77,20 @@ export function clearLens(root: Element) {
   root.querySelectorAll('[data-lens-off]').forEach((el) => el.removeAttribute('data-lens-off'));
 }
 
-/** The titled blocks of the editor in `ref`, and the active one applied to it, kept up to date. */
-export function useLens(ref: RefObject<HTMLElement | null>, on: boolean, active: string): string[] {
+/**
+ * The titled blocks of the editor in `ref`, kept up to date. The whole editor shows (ADR-295: no per-block filtering);
+ * marks an older version left are cleared.
+ */
+export function useLens(ref: RefObject<HTMLElement | null>, on: boolean): string[] {
   const [keys, setKeys] = useState<string[]>([]);
   useLayoutEffect(() => {
     const root = ref.current;
     if (!root) return;
-    if (!on) {
-      clearLens(root);
-      return;
-    }
+    clearLens(root);
+    if (!on) return;
     const run = () => {
       const next = lensKeys(root);
       setKeys((k) => (k.join('\u0000') === next.join('\u0000') ? k : next));
-      applyLens(root, next.includes(active) ? active : OVERVIEW);
     };
     run();
     if (typeof MutationObserver === 'undefined') return;
@@ -104,8 +105,64 @@ export function useLens(ref: RefObject<HTMLElement | null>, on: boolean, active:
     });
     mo.observe(root, { childList: true, subtree: true });
     return () => mo.disconnect();
-  }, [ref, on, active]);
+  }, [ref, on]);
   return on ? keys : [];
+}
+
+/** Scrolls the panel `body` so the block titled `key` starts at its top; the overview is the top (ADR-295). */
+export function scrollToBlock(body: HTMLElement, key: string): boolean {
+  if (key === OVERVIEW) {
+    body.scrollTop = 0;
+    return true;
+  }
+  const el = Array.from(body.querySelectorAll('[data-lens-key]')).find(
+    (b) => b.getAttribute('data-lens-key') === key,
+  );
+  if (!el) return false;
+  body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top;
+  return true;
+}
+
+/** Where a section of the jump index lives when the selection does not have it (ADR-295). */
+type JumpWhere = 'always' | 'space' | 'settings' | 'project' | 'structure';
+
+/**
+ * The jump index (ADR-295): every section title in one fixed order that never depends on the selection or on use.
+ * Titles are the blocks' own (`data-lens-key`), so a present block is found by its title.
+ */
+export function jumpSections(): { key: string; title: string; where: JumpWhere }[] {
+  const list: [string, JumpWhere][] = [
+    [OVERVIEW, 'always'],
+    [t('Structure'), 'structure'],
+    [t('Divide this space'), 'space'],
+    [t('Division'), 'space'],
+    [t('Contents'), 'space'],
+    [t('Doors and handles'), 'space'],
+    [t('Layouts'), 'space'],
+    [t('Staggered rows'), 'space'],
+    [t('Bays and shelves'), 'settings'],
+    [t('Construction'), 'settings'],
+    [t('Legs, rails and stretchers'), 'settings'],
+    [t('Drawers and runners'), 'settings'],
+    [t('Position'), 'project'],
+    [t('Project settings'), 'project'],
+    [t('Variables'), 'settings'],
+    [t('Fasteners'), 'settings'],
+    [t('Results'), 'always'],
+  ];
+  return list.map(([key, where]) => ({
+    key,
+    title: key === OVERVIEW ? t('Overview') : key,
+    where,
+  }));
+}
+
+/** Why a section of the jump index is not in the panel now: one short line (ADR-295). */
+function jumpReason(where: JumpWhere, inProject: boolean): string {
+  if (where === 'settings') return t('in Settings');
+  if (where === 'project' || (where === 'structure' && inProject))
+    return inProject ? t('select a piece in the project') : t('only in a project');
+  return t('select a space');
 }
 
 /** One level of the selection ladder and how to go back up to it. */
@@ -150,28 +207,26 @@ export function LadderPill({ crumbs }: { crumbs: Crumb[] }) {
   );
 }
 
-const label = (k: string) => (k === OVERVIEW ? t('Overview') : k);
-
-/** The chip rail at the bottom of the drawing: the selection's blocks, most used on this device first. */
-export function ChipRail({
-  keys,
-  onPick,
+/**
+ * The edit bar at the bottom of the drawing (ADR-295): Find, Edit (opens the panel, names the selection), the Checks
+ * chip and the project's Add actions, always in this order. It never scrolls.
+ */
+export function EditBar({
+  selection,
+  open,
+  onEdit,
   onFind,
   children,
-  after,
 }: {
-  keys: string[];
-  onPick: (k: string) => void;
+  selection: string;
+  open: boolean;
+  onEdit: () => void;
   onFind: () => void;
+  /** The Checks chip and the project's actions, after Edit. */
   children?: ReactNode;
-  /** Chips after the editor's blocks: the output lenses (ADR-288). */
-  after?: ReactNode;
 }) {
-  const used = useLensUse();
-  const ordered = [OVERVIEW, ...orderByUse(keys, used)];
   return (
-    <div className="chip-rail" role="toolbar" aria-label={t('Editor actions')}>
-      {/* Find (ADR-283): a later slice searches every action; until then it opens the card on its tab list. */}
+    <div className="edit-bar" role="toolbar" aria-label={t('Editor bar')}>
       <button
         type="button"
         className="btn icon chip"
@@ -180,50 +235,39 @@ export function ChipRail({
       >
         <Icon name="search" />
       </button>
+      <button
+        type="button"
+        className="btn chip edit-open"
+        aria-expanded={open}
+        title={selection}
+        onClick={onEdit}
+      >
+        <Icon name={open ? 'chevron-down' : 'chevron-up'} className="sm" />
+        <strong>{t('Edit')}</strong> <span className="edit-sel">{selection}</span>
+      </button>
       {children}
-      {ordered.map((k) => (
-        <button
-          key={k || 'overview'}
-          type="button"
-          className="btn chip"
-          onClick={() => {
-            bumpLensUse(k || 'overview');
-            onPick(k);
-          }}
-        >
-          {label(k)}
-        </button>
-      ))}
-      {after}
     </div>
   );
 }
 
-/** The lens card's head: one tab per block, compact / tall, close. */
+/** The card's head: taller / shorter, the jump index and close (ADR-295). */
 export function LensHead({
   keys,
-  active,
+  inProject,
   tall,
-  onPick,
+  onJump,
   onTall,
   onClose,
 }: {
+  /** The titled blocks the panel has now. */
   keys: string[];
-  active: string;
+  inProject: boolean;
   tall: boolean;
-  onPick: (k: string) => void;
+  onJump: (k: string) => void;
   onTall: (tall: boolean) => void;
   onClose: () => void;
 }) {
-  const shown = keys.includes(active) ? active : OVERVIEW;
-  const tabs = [OVERVIEW, ...keys];
-  const tabsRef = useRef<HTMLDivElement>(null);
-  // The chosen tab scrolls into sight in the tab row, so the card always says which block it shows.
-  useEffect(() => {
-    tabsRef.current
-      ?.querySelector('[aria-selected="true"]')
-      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-  }, [shown, keys]);
+  const jumpId = useId();
   return (
     <div className="lens-head">
       <button
@@ -244,20 +288,33 @@ export function LensHead({
       >
         <Icon name={tall ? 'chevron-down' : 'chevron-up'} />
       </button>
-      <div className="lens-tabs" role="tablist" aria-label={t('Editor card')} ref={tabsRef}>
-        {tabs.map((k) => (
-          <button
-            key={k || 'overview'}
-            type="button"
-            role="tab"
-            aria-selected={k === shown}
-            className={k === shown ? 'on' : ''}
-            onClick={() => onPick(k)}
-          >
-            {label(k)}
-          </button>
-        ))}
-      </div>
+      <label className="sr-only" htmlFor={jumpId}>
+        {t('Jump to section')}
+      </label>
+      {/* A shortcut only (ADR-295): every block is also reached by scrolling. The list never changes order. */}
+      <select
+        id={jumpId}
+        className="jump-index"
+        value="__"
+        onChange={(e) => {
+          const k = e.target.value;
+          if (k !== '__') onJump(k === '__overview' ? OVERVIEW : k);
+        }}
+      >
+        <option value="__" disabled hidden>
+          {t('Jump to section')}
+        </option>
+        {jumpSections().map(({ key, title, where }) => {
+          const here = where === 'always' || keys.includes(key);
+          return (
+            <option key={key || '__overview'} value={key || '__overview'} disabled={!here}>
+              {here
+                ? title
+                : t('{title} — {reason}', { title, reason: jumpReason(where, inProject) })}
+            </option>
+          );
+        })}
+      </select>
       <button
         type="button"
         className="btn icon ghost"

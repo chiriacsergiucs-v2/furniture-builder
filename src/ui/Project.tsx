@@ -48,6 +48,7 @@ import {
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { useCanvas } from './CanvasEditor';
 import { WallBackground } from './WallBackground';
 import { RoomFeatures } from './RoomFeatures';
 import { turnedFootprint, type TurnGesture } from '../shared/planDrag';
@@ -1922,6 +1923,10 @@ function RoomSection() {
       .map((i) => i.message)
       .join(' ') || undefined;
   const walls = room ? room.outline.map((_, i) => i) : [];
+  // The canvas editor on a phone folds nothing (ADR-295): the room's fold is a plain block there.
+  const flat = useCanvas();
+  const Fold = flat ? 'div' : 'details';
+  const Sum = flat ? 'div' : 'summary';
   return (
     <section className="section room" aria-label={t('Room')}>
       {!room ? (
@@ -1950,8 +1955,8 @@ function RoomSection() {
         <>
           {/* Set once, edited rarely: a closed fold whose summary names the room (ADR-160). Wall warnings stay
               outside it. */}
-          <details className="group room-fold">
-            <summary>
+          <Fold className={`group room-fold${flat ? ' flat' : ''}`}>
+            <Sum className={flat ? 'group-title' : undefined}>
               <span className="room-sum">
                 <span className="card-title">
                   <span>{t('Room')}</span>
@@ -1973,8 +1978,8 @@ function RoomSection() {
                   })}
                 </span>
               </span>
-              <Icon name="chevron-down" className="chev" />
-            </summary>
+              {!flat && <Icon name="chevron-down" className="chev" />}
+            </Sum>
             <div className="group-body">
               {room.shape ? (
                 <>
@@ -2105,7 +2110,7 @@ function RoomSection() {
                 {t('Remove the room')}
               </button>
             </div>
-          </details>
+          </Fold>
           {issues.map((m) => (
             <p key={m} className="hint warn">
               {m}

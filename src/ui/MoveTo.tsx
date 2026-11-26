@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { t, tr } from '@furniture-builder/i18n';
 import { MOVE_TO_ACTIONS, MOVE_TO_LABELS, moveToOptions, type MoveToAction } from '../core/moveTo';
 import { useDesign } from '../store/designStore';
+import { useCanvas } from './CanvasEditor';
 
 /**
  * The one-tap Move to buttons for a project piece (ADR-147), or for several selected pieces moved as one block
@@ -19,6 +20,10 @@ export function MoveToButtons({
   onlyWorking?: boolean;
 }) {
   const project = useDesign((s) => s.project);
+  // The canvas editor on a phone folds nothing (ADR-295): the actions that are off show as a plain list there.
+  const flat = useCanvas();
+  const Off = flat ? 'div' : 'details';
+  const OffSum = flat ? 'p' : 'summary';
   const moveItemTo = useDesign((s) => s.moveItemTo);
   const options = useMemo(() => (project ? moveToOptions(project, id) : null), [project, id]);
   const [msg, setMsg] = useState<{ id: string; text: string } | null>(null);
@@ -67,8 +72,8 @@ export function MoveToButtons({
         })}
       </div>
       {onlyWorking && off.length > 0 && (
-        <details className="move-to-off">
-          <summary>{t('{n|# more is off|# more are off}', { n: off.length })}</summary>
+        <Off className="move-to-off">
+          <OffSum>{t('{n|# more is off|# more are off}', { n: off.length })}</OffSum>
           <ul>
             {off.map((a) => (
               <li key={a}>
@@ -76,7 +81,7 @@ export function MoveToButtons({
               </li>
             ))}
           </ul>
-        </details>
+        </Off>
       )}
       {msg?.id === key && (
         <p className="hint" role="status">

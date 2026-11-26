@@ -49,10 +49,10 @@ import { Icon } from './icons';
 import { upOneLevel } from './upLevel';
 import { CanvasHints, FindAction } from './FindAction';
 import {
-  ChipRail,
+  EditBar,
   LadderPill,
   LensHead,
-  OVERVIEW,
+  scrollToBlock,
   useLens,
   useKeyboardInset,
   useLensAnchor,
@@ -63,7 +63,7 @@ import {
 } from './CanvasEditor';
 import { useCanvasEditor } from '../store/useCanvasEditor';
 import { SheetHandle, type SheetStop } from './SheetHandle';
-import { rovingKeys, rovingTab } from './controls';
+import { rovingKeys, rovingTab, Section } from './controls';
 import { setTheme, useTheme } from '../store/useTheme';
 import { setLook, useLook } from '../store/useLook';
 import { RenderDialog } from './RenderDialog';
@@ -301,35 +301,44 @@ export function App() {
   // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
   const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
   const sheetOpen = sheetStop !== 'peek';
-  // The canvas editor (ADR-283): on a phone, behind a device flag, the sheet becomes a lens card that shows one block
-  // of the editor at a time, opened from a chip rail; a selection ladder replaces the peek row.
+  // The canvas editor (ADR-283, ADR-295): on a phone, behind a device flag, the sheet becomes a card that shows the
+  // whole editor of the selection, opened from the edit bar; a selection ladder replaces the peek row.
   const [canvasFlag] = useCanvasEditor();
   const canvas = canvasFlag && phone;
-  const [lensTab, setLensTab] = useState(OVERVIEW);
   const workRef = useRef<HTMLElement>(null);
   const sideRef = useRef<HTMLElement>(null);
   const sideBodyRef = useRef<HTMLDivElement>(null);
-  const lensKeyList = useLens(sideBodyRef, canvas, lensTab);
+  const lensKeyList = useLens(sideBodyRef, canvas);
+  // Scrolls the panel to a block once it shows (ADR-295); `then` runs after, e.g. to focus a field in it.
+  const scrollWhenShown = (key: string, then?: (body: HTMLElement) => boolean) => {
+    let tries = 0;
+    const go = () => {
+      const body = sideBodyRef.current;
+      const ready = !!body && body.offsetParent !== null;
+      if (ready && scrollToBlock(body, key) && (!then || then(body))) return;
+      if (tries++ < 20) requestAnimationFrame(go);
+    };
+    requestAnimationFrame(go);
+  };
   const stageRef = useRef<HTMLElement>(null);
   useLensHeight(sideRef, workRef, canvas && sheetOpen);
   useLensAnchor(sideRef, stageRef, canvas && sheetOpen);
   useKeyboardInset(workRef, canvas);
-  // A size tag on the drawing (ADR-284): open the card on its block and focus the field, once the editor shows it.
+  // Output lenses (ADR-288): the results shown as a card over the drawing, opened from the panel's Results block.
+  const [outOpen, setOutOpen] = useState(false);
+  // A size tag on the drawing (ADR-284): open the card, scroll to its block and focus the field, once the editor shows it.
   useLensRequests((req) => {
     if (!canvas) return;
-    setLensTab(req.tab);
+    setOutOpen(false);
     if (sheetStop === 'peek' || (req.showDrawing && sheetStop === 'full')) setSheetStop('half');
-    let tries = 0;
-    const tryFocus = () => {
-      const body = sideBodyRef.current;
-      const el = body && req.focus ? req.focus(body) : null;
-      if (el && el.offsetParent !== null) el.focus();
-      else if (tries++ < 20) requestAnimationFrame(tryFocus);
-    };
-    requestAnimationFrame(tryFocus);
+    scrollWhenShown(req.tab, (body) => {
+      if (!req.focus) return true;
+      const el = req.focus(body);
+      if (!el || el.offsetParent === null) return false;
+      el.focus();
+      return true;
+    });
   });
-  // Output lenses (ADR-288): the results shown as a card over the drawing, opened from chips after the blocks.
-  const [outOpen, setOutOpen] = useState(false);
   // Find an action (ADR-289).
   const [findOpen, setFindOpen] = useState(false);
   const openOutput = (tab: Tab) => {
@@ -338,6 +347,8 @@ export function App() {
     setOutOpen(true);
   };
   const outLensOn = canvas && outOpen && mode === 'compose';
+  // The canvas editor's stage in Compose: ladder, view tools, the view, the docked counts and the edit bar (ADR-295).
+  const canvasStage = canvas && mode === 'compose';
   const resultsRef = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
     resultsRef.current = workRef.current?.querySelector<HTMLElement>('.output') ?? null;
@@ -364,11 +375,34 @@ export function App() {
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
   }, [canvas, sheetOpen, outOpen]);
+  // Back closes the open card (ADR-295): opening it adds one history entry; closing it any other way takes that entry
+  // back, once. Never more than one entry, and a back that is ours is never read as a close twice.
+  const cardUp = canvas && mode === 'compose' && (sheetOpen || outOpen);
+  const cardEntry = useRef(false);
+  useEffect(() => {
+    if (cardUp && !cardEntry.current) {
+      cardEntry.current = true;
+      history.pushState({ fbCard: 1 }, '');
+    } else if (!cardUp && cardEntry.current) {
+      cardEntry.current = false;
+      if ((history.state as { fbCard?: number } | null)?.fbCard) history.back();
+    }
+  }, [cardUp]);
+  useEffect(() => {
+    const onPop = () => {
+      if (!cardEntry.current || (history.state as { fbCard?: number } | null)?.fbCard) return;
+      cardEntry.current = false;
+      setSheetStop('peek');
+      setOutOpen(false);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const checkErrors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const pickLens = (k: string) => {
     setOutOpen(false);
-    setLensTab(k);
     if (sheetStop === 'peek') setSheetStop('half');
+    scrollWhenShown(k);
   };
   // Edit this piece asks for the full sheet in the project (ADR-241).
   const sheetAsk = useUi((s) => s.sheetAsk);
@@ -1024,9 +1058,12 @@ export function App() {
             {canvas && (
               <LensHead
                 keys={lensKeyList}
-                active={lensTab}
+                inProject={inProject}
                 tall={sheetStop === 'full'}
-                onPick={setLensTab}
+                onJump={(k) => {
+                  const body = sideBodyRef.current;
+                  if (body) scrollToBlock(body, k);
+                }}
                 onTall={(tall) => setSheetStop(tall ? 'full' : 'half')}
                 onClose={() => setSheetStop('peek')}
               />
@@ -1053,6 +1090,18 @@ export function App() {
               ) : (
                 <Inspector mode="compose" />
               )}
+              {/* The panel ends with the results (ADR-295), each opening its output card (ADR-288). */}
+              {canvas && (
+                <Section title={t('Results')}>
+                  <div className="results-block">
+                    {outputs.map(([k, label]) => (
+                      <button key={k} type="button" className="btn" onClick={() => openOutput(k)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              )}
             </div>
           </aside>
           <section
@@ -1070,41 +1119,7 @@ export function App() {
             className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
             aria-label={t('Drawing')}
           >
-            {canvas && mode === 'compose' && (
-              <>
-                <LadderPill crumbs={crumbs} />
-                <ChipRail
-                  keys={lensKeyList}
-                  onPick={pickLens}
-                  onFind={() => setFindOpen(true)}
-                  after={outputs.map(([k, label]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      className="btn chip out"
-                      onClick={() => openOutput(k)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                >
-                  {/* Checks chip (ADR-287): the error count, one tap to the Checks list. */}
-                  {checkErrors > 0 && (
-                    <button
-                      type="button"
-                      className="btn chip problem"
-                      onClick={() => {
-                        setMode('build');
-                        useDesign.getState().setTab('checks');
-                      }}
-                    >
-                      {t('Checks: {n|# problem|# problems}', { n: checkErrors })}
-                    </button>
-                  )}
-                  {inProject && <PeekActions onAdd={openPieces} />}
-                </ChipRail>
-              </>
-            )}
+            {canvas && mode === 'compose' && <LadderPill crumbs={crumbs} />}
             {piecesShown && (
               <PieceList
                 onBrowse={() => {
@@ -1249,9 +1264,40 @@ export function App() {
                 )}
               </div>
             </div>
+            {/* The canvas editor: the quick-count card docks under the 3D view, inside the stage (ADR-295). */}
+            {canvasStage && <div id="count-dock" ref={setCountDock} className="count-dock-slot" />}
+            {/* The edit bar (ADR-295): Find, Edit, the Checks chip and the project's actions, in a fixed order. */}
+            {canvasStage && (
+              <EditBar
+                selection={crumbs[crumbs.length - 1]?.label ?? ''}
+                open={sheetOpen}
+                onEdit={() => {
+                  setOutOpen(false);
+                  setSheetStop(sheetOpen ? 'peek' : 'half');
+                }}
+                onFind={() => setFindOpen(true)}
+              >
+                {/* Checks chip (ADR-287): the error count, one tap to the Checks list. */}
+                {checkErrors > 0 && (
+                  <button
+                    type="button"
+                    className="btn chip problem"
+                    onClick={() => {
+                      setMode('build');
+                      useDesign.getState().setTab('checks');
+                    }}
+                  >
+                    {t('Checks: {n|# problem|# problems}', { n: checkErrors })}
+                  </button>
+                )}
+                {inProject && <PeekActions onAdd={openPieces} />}
+              </EditBar>
+            )}
           </section>
           {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
-          {phone && <div id="count-dock" ref={setCountDock} className="count-dock-slot" />}
+          {phone && !canvasStage && (
+            <div id="count-dock" ref={setCountDock} className="count-dock-slot" />
+          )}
           {/* Phones: the running estimate heads the Cut list place (ADR-241; was in the mode row). */}
           {phone && (
             <div className="cut-estimate">

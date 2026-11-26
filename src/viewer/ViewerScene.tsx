@@ -1,6 +1,6 @@
 // The 3D view's scene parts: panels, room, models, handles, overlays and the ⋯ menu (ADR-014): moved out of Viewer3D.tsx unchanged (cleanup audit 2026-11-09, item 13).
 import { invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Html, Line, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Html, Line, OrbitControls } from '@react-three/drei';
 import {
   useContext,
   useEffect,
@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
   type ComponentRef,
   type ReactElement,
   type ReactNode,
@@ -113,6 +114,14 @@ import {
   useARUi,
 } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
+import {
+  isOrbiting,
+  orbitDpr,
+  orbitMoved,
+  orbitReleased,
+  setOrbiting,
+  useOrbiting,
+} from './orbiting';
 import { type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, Panel, Yaw } from '../core/types';
@@ -610,7 +619,11 @@ export function Occlusion() {
   useEffect(() => () => composer.dispose(), [composer]);
   // Priority 1 takes over drawing from the default renderer. In AR the composer's passes would draw through the XR
   // camera into its own targets and show nothing, so AR draws the scene directly.
-  useFrame(() => (gl.xr.isPresenting ? gl.render(scene, camera) : composer.render()), 1);
+  // While the view is turned (orbiting.ts), the occlusion pass is skipped: it costs most of the frame on a phone.
+  useFrame(
+    () => (gl.xr.isPresenting || isOrbiting() ? gl.render(scene, camera) : composer.render()),
+    1,
+  );
   return null;
 }
 
@@ -1228,6 +1241,7 @@ function RoomFloor({ room }: { room: Room }) {
 export function Fit({ bounds }: { bounds: Box }) {
   const { camera, size: view } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const pressed = useRef(false);
   const target = useMemo(
     () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],
@@ -1270,8 +1284,44 @@ export function Fit({ bounds }: { bounds: Box }) {
       dampingFactor={0.12}
       minDistance={0.2}
       maxDistance={20}
+      // While the view is turned, camera-independent work pauses (OrbitQuality, FloorShadow, Occlusion). Turning
+      // starts with the first camera move after a press, so a tap (press and release, no move) changes nothing.
+      onStart={() => (pressed.current = true)}
+      onChange={() => orbitMoved(pressed.current)}
+      onEnd={() => {
+        pressed.current = false;
+        orbitReleased();
+      }}
     />
   );
+}
+
+/**
+ * While the view is turned (orbiting.ts): the pixel ratio drops (orbitDpr) and the shadow map is not redrawn (the
+ * lights and pieces stay still; only the camera moves). Both come back when the drag ends, so the still view is unchanged.
+ */
+export function OrbitQuality() {
+  const on = useOrbiting();
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, viewport } = get();
+    // Straight on the renderer, not through the canvas state (setDpr): that would re-render every component reading
+    // the whole state at the start and end of each drag. The canvas keeps its CSS size; a resize sets the state's ratio.
+    const dpr = on ? orbitDpr(viewport.dpr) : viewport.dpr;
+    // In AR the XR session owns the drawing size.
+    if (gl.getPixelRatio() !== dpr && !gl.xr.isPresenting) gl.setPixelRatio(dpr);
+    gl.shadowMap.autoUpdate = !on;
+    if (!on) gl.shadowMap.needsUpdate = true;
+    invalidate();
+  }, [on, get]);
+  useEffect(() => () => setOrbiting(false), []);
+  return null;
+}
+
+/** The plain look's floor shadow (drei ContactShadows): it does not depend on the camera, so it is frozen while turning. */
+export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
+  const on = useOrbiting();
+  return <ContactShadows {...props} frames={on ? 0 : Infinity} />;
 }
 
 export function Panels({

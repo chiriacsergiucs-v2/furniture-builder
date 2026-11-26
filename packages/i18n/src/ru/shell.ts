@@ -432,10 +432,16 @@ export const ru_shell = {
   'off: the grouped catalog': 'выкл.: каталог по группам',
   'Selection path': 'Путь выбора',
   Overview: 'Обзор',
-  'Editor actions': 'Действия редактора',
+  // The edit bar and the jump index (ADR-295).
+  'Editor bar': 'Панель редактора',
+  'Jump to section': 'Перейти к разделу',
+  '{title} — {reason}': '{title} — {reason}',
+  'select a space': 'выберите секцию',
+  'in Settings': 'в настройках',
+  'select a piece in the project': 'выберите предмет в проекте',
+  'only in a project': 'только в проекте',
   'Shorter card': 'Ниже карточку',
   'Taller card': 'Выше карточку',
-  'Editor card': 'Карточка редактора',
   'Close the card': 'Закрыть карточку',
   'Find an action': 'Найти действие',
   // Size tags (ADR-284).
@@ -459,13 +465,13 @@ export const ru_shell = {
   'Nothing found. Try another word.': 'Ничего не найдено. Попробуйте другое слово.',
   'Tap to select': 'Нажмите, чтобы выбрать',
   'Sizes and handles': 'Размеры и ручки',
-  'Chips do the rest': 'Остальное — в кнопках',
+  'Edit opens the editor': 'Кнопка «Изменить» открывает редактор',
   'Tap the drawing to select: each tap goes one space deeper. The path at the top goes back up.':
     'Нажмите на чертёж, чтобы выбрать: каждое нажатие — на уровень глубже. Путь сверху ведёт обратно.',
   'Yellow sizes open their field. A green + divides a space; drag a divider to resize.':
     'Жёлтые размеры открывают своё поле. Зелёный + делит пространство; тяните перегородку, чтобы изменить размер.',
-  'The chips at the bottom open one part of the editor at a time. The magnifier finds any action.':
-    'Кнопки внизу открывают по одной части редактора. Лупа находит любое действие.',
+  'Edit at the bottom opens the whole editor of the selection; Jump to goes to a section. The magnifier finds any action.':
+    'Кнопка «Изменить» внизу открывает весь редактор выбранного; «Перейти к разделу» ведёт к нужному разделу. Лупа находит любое действие.',
   // Problem pins (ADR-287).
   'Problem: {message}': 'Проблема: {message}',
   'Check: {message}': 'Проверка: {message}',

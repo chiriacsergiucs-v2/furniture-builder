@@ -10,6 +10,7 @@ import {
 import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
 import { useUi } from '../store/uiStore';
+import { useCanvas } from './CanvasEditor';
 
 /**
  * Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet.
@@ -318,7 +319,8 @@ export function Counter({
 }
 
 /**
- * Collapsible section. `id` lets the steps rail open and scroll to it. `openOn`: while it is non-empty the group
+ * Collapsible section; in the canvas editor on a phone a flat block that is always open (ADR-295: no folded groups,
+ * so an opened panel shows its controls at once). `id` lets the steps rail open and scroll to it. `openOn`: while it is non-empty the group
  * opens itself, and again whenever it changes (an error it holds is never left folded away, ADR-008, ADR-117).
  */
 export function Group({
@@ -349,7 +351,34 @@ export function Group({
   const kept = useUi((s) => s.groupOpen[key]);
   const setGroupOpen = useUi((s) => s.setGroupOpen);
   const open = kept ?? defaultOpen;
-  const group = (
+  const flat = useCanvas();
+  const body = (
+    <div className="group-body">
+      {locked ? (
+        <>
+          <p className="hint group-lock-hint" role="note">
+            {locked}
+          </p>
+          <fieldset className="group-locked" disabled>
+            {children}
+          </fieldset>
+        </>
+      ) : (
+        children
+      )}
+    </div>
+  );
+  const group = flat ? (
+    <section
+      className="group flat"
+      aria-label={title}
+      id={id}
+      data-lens-key={info ? undefined : title}
+    >
+      <div className="group-title">{title}</div>
+      {body}
+    </section>
+  ) : (
     <details
       ref={ref}
       className="group"
@@ -364,20 +393,7 @@ export function Group({
         {title}
         <Icon name="chevron-down" className="chev" />
       </summary>
-      <div className="group-body">
-        {locked ? (
-          <>
-            <p className="hint group-lock-hint" role="note">
-              {locked}
-            </p>
-            <fieldset className="group-locked" disabled>
-              {children}
-            </fieldset>
-          </>
-        ) : (
-          children
-        )}
-      </div>
+      {body}
     </details>
   );
   if (!info) return group;
