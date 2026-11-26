@@ -216,9 +216,24 @@ export function stepThemeVar(name: string, dir: 1 | -1): void {
   change([name], (v, n) => stepped(v, n, dir));
 }
 
-/** ±5% of the current value for the named variables (all of them when `names` is omitted). */
-export function scaleThemeVars(dir: 1 | -1, names: string[] = THEME_VARS.map((v) => v.name)): void {
-  change(names, (v, n) => scaled(v, n, dir));
+/**
+ * ±5% of the current value for the named variables (all of them when `names` is omitted). Returns how many of them
+ * stopped at the end of their range (already there, or cut to it), so the dialog can say so instead of clamping
+ * silently (G-598, ADR-008).
+ */
+export function scaleThemeVars(
+  dir: 1 | -1,
+  names: string[] = THEME_VARS.map((v) => v.name),
+): number {
+  let atLimit = 0;
+  change(names, (v, n) => {
+    const grid = v.unit === 'px' ? 1 : v.step;
+    const wanted = Math.round((n * (1 + dir * 0.05)) / grid) * grid;
+    const end = dir > 0 ? v.max : v.min;
+    if (n === end || (dir > 0 ? wanted > v.max : wanted < v.min)) atLimit++;
+    return scaled(v, n, dir);
+  });
+  return atLimit;
 }
 
 export function resetAllThemeVars(): void {

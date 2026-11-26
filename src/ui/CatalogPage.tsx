@@ -1559,8 +1559,8 @@ function FinderPage({
       </div>
       <div className="catalog-toolbar finder-bar">
         {source === 'templates' && search}
-        {sources}
         <div className="finder-filters" role="group" aria-label={t('Filters')}>
+          {sources}
           {source === 'templates' && (
             <>
               <select

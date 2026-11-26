@@ -44,7 +44,7 @@ export function MoreMenu({
   /** Opens the standalone cut list optimizer page. */
   onOptimizer: () => void;
   /** The page the menu leads to that is open now (audit F-29): the menu and its item are marked as current. */
-  current?: 'info' | 'optimizer' | 'gaps';
+  current?: 'info' | 'optimizer';
 }) {
   const [canvasEditor, setCanvasEditor] = useCanvasEditor();
   const [catalogFinder, setCatalogFinder] = useCatalogFinder();
