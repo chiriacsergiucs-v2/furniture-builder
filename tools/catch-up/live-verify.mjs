@@ -377,7 +377,7 @@ for (const width of WIDTHS) {
 
   // N350: Settings › Boards, sheets and saw cut › Common thickness (mm) › 22 sets Thickness to 22.
   await run('N350', width, 'common thickness picker', (page, ok) => commonThickness(page, ok));
-  // N358: View › 3D mounts the lazy 3D preview with a drawing surface of non-zero size.
+  // N358: View › 3D mounts the lazy 3D preview with a drawing surface of non-zero size, and the model is drawn.
   await run('N358', width, '3D preview', async (page, ok) => {
     await newSingle(page, /Sideboard/);
     await page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: '3D' }).click();
@@ -396,6 +396,25 @@ for (const width of WIDTHS) {
       !!b && b.width > 0 && b.height > 0 && !(b.width === 300 && b.height === 150),
       JSON.stringify(b),
     );
+    // The model is drawn: a screenshot of the canvas holds many colours, not one clear colour (the pixel count in the
+    // page, as tools/materials/find-it.mjs does). Allow a few seconds for the first frames.
+    await page.waitForTimeout(3000);
+    const shot = await canvas.screenshot();
+    const colours = await page.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = document.createElement('canvas');
+      c.width = img.width;
+      c.height = img.height;
+      const g = c.getContext('2d');
+      g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      const seen = new Set();
+      for (let i = 0; i < d.length; i += 16) seen.add((d[i] >> 3) * 1024 + (d[i + 1] >> 3) * 32 + (d[i + 2] >> 3));
+      return seen.size;
+    }, shot.toString('base64'));
+    ok('the 3D model is drawn (many colours in the canvas)', colours > 20, `${colours} colours`);
   });
 
   // N359 + N339 smoke: a piece's cut list lists parts; Shopping list CSV downloads a file.

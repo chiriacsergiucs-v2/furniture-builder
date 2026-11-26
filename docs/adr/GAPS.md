@@ -2464,3 +2464,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-599: Settings cannot scroll in the phone canvas editor
+
+- Status: Open
+- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
+- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
+- Request: Canvas on by default (Recommended)
+- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
+- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
+- Work: Low
+- Impact: High
+- Necessity: High
