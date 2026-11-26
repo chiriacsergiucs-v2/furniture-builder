@@ -14,7 +14,10 @@ touched. This skill runs every logged item. Nothing logged may be dropped or rel
 1. **Toggle off.** If the user said "burst off", set `burst` to **off** in _Toggleable rules_ with the date and the
    user's words. "Catch up" alone leaves the state as it is.
 2. **List the debt.** `grep -n "burst-skipped" docs/backlog.md`. Show a table: row id, item, date. The first and last
-   dates are the burst window. No hits: say "no burst debt" and stop.
+   dates are the burst window. Then add every backlog row touched in that window (`git log --since --until` on
+   `docs/backlog.md`) that is not Done, and every Open G id those rows cite: each gets a verdict too (CLAUDE.md, Burst
+   mode, Paying the debt; user pick 2026-11-26: N352, N364 and N365 had unmarked live-verify debt that was never paid).
+   No markers and no such rows: say "no burst debt" and stop.
 3. **Branch** `catch-up-<date>` from `origin/main`. All fixes ride one pull request (`auto-open-pr`).
 4. **Pay in dependency order** (a prerequisite first; never cite a blocker a later step removes):
    1. `ship-adr` for each logged `ship ADR-NNN` (the ADR's build is already on `main`; check each `Done when` item
@@ -28,7 +31,7 @@ touched. This skill runs every logged item. Nothing logged may be dropped or rel
       visible text; record what was found.
    6. Full `verify` skill run (format check, lint, full suite, build, docs check) on the catch-up branch.
 5. **Per item:** done → remove its `burst-skipped:` marker and write the evidence that ran (command output, test
-   file, CI run id). Fails → fix the cause, never the check. Cannot be done → the marker stays and the item goes under
+   file, CI run id), close the G id it paid and rewrite row text it made stale (CLAUDE.md, Paying closes). Fails → fix the cause, never the check. Cannot be done → the marker stays and the item goes under
    **Skipped this iteration** with blocker, what unblocks it, and cost (S/M/L).
 6. **Rows:** a row turns **Done** only when none of its gaps remain and the evidence ran. Pushed ≠ merged ≠ deployed ≠
    live-verified; say which is true.
