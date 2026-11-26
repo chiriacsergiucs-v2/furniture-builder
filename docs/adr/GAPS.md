@@ -2007,18 +2007,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-568: Bump @supabase/supabase-js to 2.119.2 once the release ages in
-
-- Status: Open
-- Origin: Dependency health check round 1, 2026-11-19
-- Missing: supabase-js 2.119.2 needs minimumReleaseAgeExclude for six @supabase/* packages in pnpm-workspace.yaml; the project stays on 2.119.0
-- Request: /health-deps, loop prompt; user approved Medium, then chose: drop the bump
-- Questions: None; do not add an exclusion
-- Suggested pick: Bump after the release passes the age policy, no exclusion (Work Low, Value Low)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
@@ -2047,7 +2035,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Dependency health check round 1, 2026-11-19
-- Missing: @testing-library/user-event 14.6.8 to 14.6.13, fake-indexeddb 6.2.5 to 6.2.8, @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
+- Missing: Dev patches done 2026-11-26 (N387). Left: @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
 - Request: /health-deps, loop prompt; user approved Critical and Medium only
 - Questions: Bump the SDK in both places together (backend function)?
 - Suggested pick: Dev patches first, SDK separately with your yes (Work Low, Value Low)
