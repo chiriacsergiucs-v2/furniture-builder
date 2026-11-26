@@ -3870,6 +3870,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-552: look-render find-it incomplete in sandbox
+
+- Status: Done (N398)
+- Origin: catch-up 2026-11-19, tools/look-render/find-it.mjs
+- Missing: Script ran 14 PASS, 0 FAIL, then waited over 280 s for 'Save PNG' (256 path-tracer samples in software GL); end of run unverified
+- Request: Run tools/look-render/find-it.mjs to the end with a longer timeout or a GPU browser
+- Questions: Is a lower sample count in the script acceptable?
+- Suggested pick: Run with a longer timeout
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
 - Status: Done (ADR-281)
