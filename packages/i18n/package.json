@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./print": "./src/print.ts",
+    "./print-text": "./src/print-text.ts",
     "./ru/*": "./src/ru/*.ts"
   },
   "scripts": {

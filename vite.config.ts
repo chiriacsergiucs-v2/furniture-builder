@@ -74,6 +74,7 @@ export default defineConfig(({ mode }) => ({
     // Vitest 4 forces Vite's `base` to '/' for its own server, so `import.meta.env.BASE_URL` would lose the deployed path.
     env: { BASE_URL: BASE },
     include: ['tests/**/*.test.{ts,tsx}', 'packages/*/tests/**/*.test.{ts,tsx}'],
+    setupFiles: ['tests/setup-print.ts'],
     testTimeout: 30000,
   },
 }));

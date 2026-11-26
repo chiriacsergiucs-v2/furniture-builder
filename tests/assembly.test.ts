@@ -27,7 +27,7 @@ import { buildModel } from '../src/core/build';
 import { templates } from '../src/core/design';
 import { fastenerCounts, JOINTS, type FastenerChoice } from '../src/core/fasteners';
 import { setPrintLang } from '@furniture-builder/i18n/print';
-import { PRINT_EN, PRINT_RU } from '@furniture-builder/i18n/print';
+import { PRINT_EN, PRINT_RU } from '@furniture-builder/i18n/print-text';
 import {
   makeItem,
   newProject,

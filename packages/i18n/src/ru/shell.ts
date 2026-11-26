@@ -392,6 +392,8 @@ export const ru_shell = {
   'The setting could not be saved on this device.':
     'Не удалось сохранить настройку на этом устройстве.',
   'Shared links could not be loaded.': 'Не удалось загрузить общие ссылки.',
+  'The print language could not be loaded; try again.':
+    'Не удалось загрузить язык печати. Попробуйте ещё раз.',
   'The language could not be saved in this browser’s storage.':
     'Не удалось сохранить язык в хранилище этого браузера.',
   // Cut list optimizer

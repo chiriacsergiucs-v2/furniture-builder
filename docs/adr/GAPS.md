@@ -1528,17 +1528,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Conflicts: ADR-018: seeded guillotine heuristic with a time budget
 
-### G-496: Print dictionaries are not loaded lazily
-
-- Status: Open
-- Origin: ADR-229 Out of scope, 2026-11-07 (architecture review I-11)
-- Missing: PRINT_RU and PRINT_EN (src/core/i18n/print.ts) stay in the main chunk; ADR-229 makes only the Russian UI dictionary lazy.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should setPrintLang load the print dictionary on demand?
-- Suggested pick: Load them in setPrintLang after ADR-229 measures the saving (estimate: effort +10 %, value +2 %)
-- Work: Low
-- Impact: Low
-
 ### G-498: The design store is not split into slices
 
 - Status: Open
