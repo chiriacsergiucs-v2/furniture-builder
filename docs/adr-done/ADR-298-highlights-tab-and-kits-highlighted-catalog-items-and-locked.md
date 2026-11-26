@@ -1,7 +1,8 @@
 # ADR-298: Highlights tab and kits: highlighted catalog items and locked build templates
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-26
+- Implemented: 2026-11-26
 - Depends on: ADR-032, ADR-034, ADR-282, ADR-292
 - Design: UX design pass 2026-11-26 (Project doc `claude/apl-highlights-templates-v2.md`)
 - Backlog: N405
