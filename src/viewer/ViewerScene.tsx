@@ -115,10 +115,12 @@ import {
 } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import {
-  isOrbiting,
-  orbitDpr,
+  occlusionMounted,
+  orbitFrame,
   orbitMoved,
   orbitReleased,
+  orbitSkipsOcclusion,
+  orbitStartDpr,
   setOrbiting,
   useOrbiting,
 } from './orbiting';
@@ -601,6 +603,8 @@ export function ShadowCatcher({ bounds }: { bounds: Box }) {
 /** Ambient occlusion with three's own GTAO pass: soft darkening where boards meet (ADR-067). */
 export function Occlusion() {
   const { gl, scene, camera, size } = useThree();
+  // The still view's ratio, not the renderer's: a drag may lower that one for a moment (OrbitQuality).
+  const dpr = useThree((s) => s.viewport.dpr);
   const composer = useMemo(() => {
     const c = new EffectComposer(gl);
     c.addPass(new RenderPass(scene, camera));
@@ -613,15 +617,17 @@ export function Occlusion() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gl, scene, camera]);
   useEffect(() => {
-    composer.setPixelRatio(gl.getPixelRatio());
+    composer.setPixelRatio(dpr);
     composer.setSize(size.width, size.height);
-  }, [composer, gl, size.width, size.height]);
+  }, [composer, dpr, size.width, size.height]);
   useEffect(() => () => composer.dispose(), [composer]);
+  useEffect(() => occlusionMounted(), []);
   // Priority 1 takes over drawing from the default renderer. In AR the composer's passes would draw through the XR
   // camera into its own targets and show nothing, so AR draws the scene directly.
-  // While the view is turned (orbiting.ts), the occlusion pass is skipped: it costs most of the frame on a phone.
+  // A drag measured slow (orbiting.ts) skips the occlusion pass: it costs most of the frame on a phone.
   useFrame(
-    () => (gl.xr.isPresenting || isOrbiting() ? gl.render(scene, camera) : composer.render()),
+    () =>
+      gl.xr.isPresenting || orbitSkipsOcclusion() ? gl.render(scene, camera) : composer.render(),
     1,
   );
   return null;
@@ -1242,6 +1248,22 @@ export function Fit({ bounds }: { bounds: Box }) {
   const { camera, size: view } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const pressed = useRef(false);
+  // The pointers down on the view: the controls also start and end on each mouse-wheel notch, which is not a drag.
+  const pointers = useRef(new Set<number>());
+  useEffect(() => {
+    const el = controls.current?.domElement;
+    if (!el) return;
+    const down = (e: PointerEvent) => pointers.current.add(e.pointerId);
+    const up = (e: PointerEvent) => pointers.current.delete(e.pointerId);
+    el.addEventListener('pointerdown', down, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    return () => {
+      el.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
+    };
+  }, []);
   const target = useMemo(
     () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],
@@ -1285,9 +1307,10 @@ export function Fit({ bounds }: { bounds: Box }) {
       minDistance={0.2}
       maxDistance={20}
       // While the view is turned, camera-independent work pauses (OrbitQuality, FloorShadow, Occlusion). Turning
-      // starts with the first camera move after a press, so a tap (press and release, no move) changes nothing.
+      // starts with the first camera move while a pointer is pressed, so a tap (no move) and a wheel notch (no
+      // pointer) change nothing.
       onStart={() => (pressed.current = true)}
-      onChange={() => orbitMoved(pressed.current)}
+      onChange={() => orbitMoved(pressed.current && pointers.current.size > 0)}
       onEnd={() => {
         pressed.current = false;
         orbitReleased();
@@ -1297,8 +1320,9 @@ export function Fit({ bounds }: { bounds: Box }) {
 }
 
 /**
- * While the view is turned (orbiting.ts): the pixel ratio drops (orbitDpr) and the shadow map is not redrawn (the
- * lights and pieces stay still; only the camera moves). Both come back when the drag ends, so the still view is unchanged.
+ * While the view is turned (orbiting.ts): the shadow map is not redrawn (the lights and pieces stay still; only the
+ * camera moves), and the frames are measured; only when they are slow does the pixel ratio drop (never below 0.5).
+ * Everything comes back when the drag ends, so the still view is unchanged.
  */
 export function OrbitQuality() {
   const on = useOrbiting();
@@ -1307,18 +1331,28 @@ export function OrbitQuality() {
     const { gl, viewport } = get();
     // Straight on the renderer, not through the canvas state (setDpr): that would re-render every component reading
     // the whole state at the start and end of each drag. The canvas keeps its CSS size; a resize sets the state's ratio.
-    const dpr = on ? orbitDpr(viewport.dpr) : viewport.dpr;
+    // A drag starts at the ratio earlier drags learned (full on a fast device).
+    const dpr = on ? orbitStartDpr(viewport.dpr) : viewport.dpr;
     // In AR the XR session owns the drawing size.
     if (gl.getPixelRatio() !== dpr && !gl.xr.isPresenting) gl.setPixelRatio(dpr);
     gl.shadowMap.autoUpdate = !on;
     if (!on) gl.shadowMap.needsUpdate = true;
     invalidate();
   }, [on, get]);
+  // Before each frame is drawn: measure the drag and apply the ratio it asks for.
+  useFrame(({ gl, viewport }) => {
+    if (!on || gl.xr.isPresenting) return;
+    const dpr = orbitFrame(performance.now(), viewport.dpr);
+    if (gl.getPixelRatio() !== dpr) gl.setPixelRatio(dpr);
+  });
   useEffect(() => () => setOrbiting(false), []);
   return null;
 }
 
-/** The plain look's floor shadow (drei ContactShadows): it does not depend on the camera, so it is frozen while turning. */
+/**
+ * The plain look's floor shadow (drei ContactShadows): drawn from its own camera above the floor, so it does not depend
+ * on the view's camera and is frozen while turning.
+ */
 export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
   const on = useOrbiting();
   return <ContactShadows {...props} frames={on ? 0 : Infinity} />;

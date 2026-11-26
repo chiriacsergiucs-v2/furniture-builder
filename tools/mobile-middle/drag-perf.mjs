@@ -1,8 +1,11 @@
 // Drag performance of the 3D view on a phone (user report 2026-11-26: orbiting the 3D view on an Android phone lags).
-// Opens a new chest of drawers at 390 × 844, shows the 3D view, and measures four runs: idle (no input) and a 3-second
-// scripted orbit drag on the canvas, each with 4× CPU throttling and without. Per run it reports the page's
-// requestAnimationFrame rate (fps), the long tasks (PerformanceObserver 'longtask', > 50 ms) and the longest one, and
-// the main-thread busy time from a CPU profile (ms per frame), so main-thread cost can be told apart from GPU cost.
+// Opens a new chest of drawers at 390 × 844, shows the 3D view, and measures five runs: idle (no input) and a 3-second
+// scripted orbit drag on the canvas, each with 4× CPU throttling and without, then 5 mouse-wheel zoom notches. Per run it
+// reports the page's requestAnimationFrame rate (fps); the long tasks (PerformanceObserver 'longtask', > 50 ms), the
+// longest one, and the longest that started while the button was held (maxLongTaskHeld; the rest come from the release,
+// when the still view is drawn at full quality again); the main-thread busy time from a CPU profile (ms per frame), so
+// main-thread cost can be told apart from GPU cost; and the canvas's lowest drawing pixel ratio (minDpr: a drag lowers it
+// only when its frames are measured slow, src/viewer/orbiting.ts; the wheel must keep the full ratio).
 // Headless Chromium draws WebGL with SwiftShader (software, on the CPU, in the GPU process, which CDP throttling does
 // not slow down), so absolute fps is pessimistic next to a real phone GPU. Asserts nothing; on demand only.
 //   pnpm build:ci && pnpm preview &  node tools/mobile-middle/drag-perf.mjs [url] [3D|Both] [--json] [--assert] [--profile <file>]
@@ -29,7 +32,8 @@ const IDLE_MS = 2000;
 const browser = await launchBrowser({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+// A touch phone (pointer: coarse), the main target; the drag itself is scripted with the mouse.
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const page = await ctx.newPage();
 await page.goto(url);
 await page.getByRole('button', { name: 'New single piece' }).click();
@@ -81,21 +85,26 @@ function topSelf(profile, n = 25) {
     .map(([name, us]) => ({ name, ms: +(us / 1000).toFixed(1) }));
 }
 
-async function run({ throttle, drag }) {
+async function run({ throttle, drag, wheel = false }) {
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });
   await page.waitForTimeout(300);
   await page.evaluate(() => {
     window.__lt = [];
     window.__obs?.disconnect();
     window.__obs = new PerformanceObserver((l) =>
-      l.getEntries().forEach((e) => window.__lt.push(e.duration)),
+      l.getEntries().forEach((e) => window.__lt.push([e.startTime, e.duration])),
     );
     window.__obs.observe({ type: 'longtask' });
     window.__f = 0;
     window.__run = true;
+    window.__minDpr = Infinity;
+    window.__up = Infinity;
+    const canvas = document.querySelector('canvas');
     const tick = () => {
       if (!window.__run) return;
       window.__f++;
+      if (canvas?.clientWidth)
+        window.__minDpr = Math.min(window.__minDpr, canvas.width / canvas.clientWidth);
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -113,7 +122,14 @@ async function run({ throttle, drag }) {
       moves++;
       await page.mouse.move(cx - 60 + ((moves * 4) % 120), cy + Math.sin(moves / 10) * 20);
     }
+    await page.evaluate(() => (window.__up = performance.now()));
     await page.mouse.up();
+  } else if (wheel) {
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    for (let i = 0; i < 5; i++) {
+      await page.mouse.wheel(0, i % 2 ? 100 : -100);
+      await page.waitForTimeout(120);
+    }
   } else {
     await page.waitForTimeout(IDLE_MS);
   }
@@ -125,7 +141,11 @@ async function run({ throttle, drag }) {
       frames: window.__f,
       ms: Math.round(dt),
       longTasks: window.__lt.length,
-      maxLongTask: Math.round(Math.max(0, ...window.__lt)),
+      maxLongTask: Math.round(Math.max(0, ...window.__lt.map(([, d]) => d))),
+      maxLongTaskHeld: Math.round(
+        Math.max(0, ...window.__lt.filter(([t]) => t < window.__up).map(([, d]) => d)),
+      ),
+      minDpr: Number.isFinite(window.__minDpr) ? +window.__minDpr.toFixed(2) : null,
     };
   });
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
@@ -133,12 +153,14 @@ async function run({ throttle, drag }) {
   await page.waitForTimeout(1500);
   const busy = busyMs(profile);
   return {
-    run: `${drag ? 'drag' : 'idle'} ${throttle}x`,
+    run: `${drag ? 'drag' : wheel ? 'wheel' : 'idle'} ${throttle}x`,
     fps: +((r.frames * 1000) / r.ms).toFixed(1),
     longTasks: r.longTasks,
     maxLongTask: r.maxLongTask,
+    maxLongTaskHeld: r.maxLongTaskHeld,
     mainBusyPct: Math.round((100 * busy) / r.ms),
     mainMsPerFrame: r.frames ? +(busy / r.frames).toFixed(1) : null,
+    minDpr: r.minDpr,
     moves,
     profile,
   };
@@ -147,6 +169,7 @@ async function run({ throttle, drag }) {
 const results = [];
 for (const throttle of [4, 1])
   for (const drag of [false, true]) results.push(await run({ throttle, drag }));
+results.push(await run({ throttle: 1, drag: false, wheel: true }));
 await browser.close();
 
 const dragged = results.find((r) => r.run === 'drag 4x');
