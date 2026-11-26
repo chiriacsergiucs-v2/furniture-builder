@@ -61,7 +61,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `build` (the one flow, ff and auto are its modes), `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `ui-rework` (a whole-flow redesign from findings to fixes on one branch and one pull request), `frontend-design`, `caveman`,
+  counterpart), `security-review`, `architect-review`, `ff`, `auto`, `babysit`, `skip-review`, `catch-up`, `maker` (pick and brief subagents), `ui-rework` (a whole-flow redesign from findings to fixes on one branch and one pull request), `goal-runner` (drives a `goals/<name>.md` file to verified completion by looping checks and fix agents; user 2026-11-26: "Create a reusable goal runner that drives this task, and later tasks, to verified completion"), `frontend-design`, `caveman`,
   the `ecc-*` guidance skills imported from `affaan-m/everything-claude-code` (TypeScript, React, Vite, testing, a11y, errors, security checklist),
   and the health loops `health-bugs`, `health-security`, `health-deps`, `health-cleanup`, `health-reuse` (shared loop in
   `health-bugs/loop.md`; see _Orchestration_)
@@ -362,6 +362,12 @@ asks, never automatic.
   without a citation get one when they are next changed (G-574).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
+- Cover small leftovers (user rule 2026-11-26, PR #325: the final replies listed G-602, G-603, G-604 and G-605 as "still
+  not done" instead of doing the small ones): before the final reply, every item that would go under _Skipped this
+  iteration_ or "still not done" with effort S or lower (gap Work `Low`) is added to the scope and built without asking,
+  with the usual checks. Only items above S, or blocked by something outside the session (a device, the network, a
+  stop condition, a hard rule, a question only the user can answer), stay listed, each with its G id. An item done this
+  way closes its gap with evidence.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
   documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"

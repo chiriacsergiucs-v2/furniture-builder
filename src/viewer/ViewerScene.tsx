@@ -1,6 +1,6 @@
 // The 3D view's scene parts: panels, room, models, handles, overlays and the ⋯ menu (ADR-014): moved out of Viewer3D.tsx unchanged (cleanup audit 2026-11-09, item 13).
 import { invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Html, Line, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Html, Line, OrbitControls } from '@react-three/drei';
 import {
   useContext,
   useEffect,
@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
   type ComponentRef,
   type ReactElement,
   type ReactNode,
@@ -113,6 +114,24 @@ import {
   useARUi,
 } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
+import {
+  edgesMounted,
+  occlusionMounted,
+  orbitFrame,
+  orbitMoved,
+  orbitReleased,
+  orbitSkipsOcclusion,
+  orbitStartDpr,
+  orbitThinEdges,
+  pressDown,
+  pressMoved,
+  pressWasDrag,
+  sameSignature,
+  setOrbiting,
+  shadowSignature,
+  useCameraMoving,
+  useOrbiting,
+} from './orbiting';
 import { type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, Panel, Yaw } from '../core/types';
@@ -592,6 +611,8 @@ export function ShadowCatcher({ bounds }: { bounds: Box }) {
 /** Ambient occlusion with three's own GTAO pass: soft darkening where boards meet (ADR-067). */
 export function Occlusion() {
   const { gl, scene, camera, size } = useThree();
+  // The still view's ratio, not the renderer's: a drag may lower that one for a moment (OrbitQuality).
+  const dpr = useThree((s) => s.viewport.dpr);
   const composer = useMemo(() => {
     const c = new EffectComposer(gl);
     c.addPass(new RenderPass(scene, camera));
@@ -604,13 +625,19 @@ export function Occlusion() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gl, scene, camera]);
   useEffect(() => {
-    composer.setPixelRatio(gl.getPixelRatio());
+    composer.setPixelRatio(dpr);
     composer.setSize(size.width, size.height);
-  }, [composer, gl, size.width, size.height]);
+  }, [composer, dpr, size.width, size.height]);
   useEffect(() => () => composer.dispose(), [composer]);
+  useEffect(() => occlusionMounted(), []);
   // Priority 1 takes over drawing from the default renderer. In AR the composer's passes would draw through the XR
   // camera into its own targets and show nothing, so AR draws the scene directly.
-  useFrame(() => (gl.xr.isPresenting ? gl.render(scene, camera) : composer.render()), 1);
+  // A drag measured slow (orbiting.ts) skips the occlusion pass: it costs most of the frame on a phone.
+  useFrame(
+    () =>
+      gl.xr.isPresenting || orbitSkipsOcclusion() ? gl.render(scene, camera) : composer.render(),
+    1,
+  );
   return null;
 }
 
@@ -707,8 +734,9 @@ function ModelItemMesh({
         onPointerDown={(e) => drag.press(e, item.id)}
         onClick={(e) => {
           e.stopPropagation();
-          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203).
-          if (drag.clicked()) return;
+          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203),
+          // nor does the one ending a mouse drag that turned the view.
+          if (drag.clicked() || pressWasDrag()) return;
           // Select mode or a modifier adds the model to the selection, as for a piece (ADR-159, ADR-246).
           const n = e.nativeEvent;
           if (multi || n.shiftKey || n.ctrlKey || n.metaKey) toggleItem(item.id);
@@ -1228,6 +1256,38 @@ function RoomFloor({ room }: { room: Room }) {
 export function Fit({ bounds }: { bounds: Box }) {
   const { camera, size: view } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const pressed = useRef(false);
+  // The pointers down on the view: the controls also start and end on each mouse-wheel notch, which is not a drag.
+  const pointers = useRef(new Set<number>());
+  const canvasEl = useThree((s) => s.gl.domElement);
+  useEffect(() => {
+    // The canvas the controls and the R3F events listen on (re-review of ADR-295, N2: the controls' own element may
+    // not be connected yet when this runs).
+    const el = controls.current?.domElement ?? canvasEl;
+    const down = (e: PointerEvent) => {
+      // A first finger or the mouse starts afresh: a pointer whose up was never delivered is forgotten.
+      if (e.isPrimary) {
+        pointers.current.clear();
+        pressDown(e.clientX, e.clientY, e.pointerType);
+      }
+      pointers.current.add(e.pointerId);
+    };
+    // How far the press travelled: a press that went further than a tap ends in no selection (pressWasDrag).
+    const move = (e: PointerEvent) => {
+      if (e.isPrimary && pointers.current.has(e.pointerId)) pressMoved(e.clientX, e.clientY);
+    };
+    const up = (e: PointerEvent) => pointers.current.delete(e.pointerId);
+    el.addEventListener('pointerdown', down, true);
+    el.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    return () => {
+      el.removeEventListener('pointerdown', down, true);
+      el.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
+    };
+  }, [canvasEl]);
   const target = useMemo(
     () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],
@@ -1270,8 +1330,99 @@ export function Fit({ bounds }: { bounds: Box }) {
       dampingFactor={0.12}
       minDistance={0.2}
       maxDistance={20}
+      // While the view is turned, camera-independent work pauses (OrbitQuality, FloorShadow, Occlusion). Turning
+      // starts with the first camera move while a pointer is pressed, so a tap (no move) and a wheel notch (no
+      // pointer) change nothing.
+      onStart={() => (pressed.current = true)}
+      onChange={() => orbitMoved(pressed.current && pointers.current.size > 0)}
+      onEnd={() => {
+        pressed.current = false;
+        orbitReleased();
+      }}
     />
   );
+}
+
+/**
+ * While the view is turned (orbiting.ts): the shadow map is not redrawn (the lights and pieces stay still; only the
+ * camera moves), and the frames are measured; only when they are slow does the pixel ratio drop (never below 0.5).
+ * Everything comes back when the drag ends, so the still view is unchanged.
+ */
+export function OrbitQuality() {
+  const on = useOrbiting();
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, viewport } = get();
+    // Straight on the renderer, not through the canvas state (setDpr): that would re-render every component reading
+    // the whole state at the start and end of each drag. The canvas keeps its CSS size; a resize sets the state's ratio.
+    // A drag starts at the ratio earlier drags learned (full on a fast device).
+    const dpr = on ? orbitStartDpr(viewport.dpr) : viewport.dpr;
+    // In AR the XR session owns the drawing size.
+    if (gl.getPixelRatio() !== dpr && !gl.xr.isPresenting) gl.setPixelRatio(dpr);
+    gl.shadowMap.autoUpdate = !on;
+    if (!on) gl.shadowMap.needsUpdate = true;
+    invalidate();
+  }, [on, get]);
+  // Before each frame is drawn: measure the drag and apply the ratio it asks for.
+  useFrame(({ gl, viewport }) => {
+    if (!on || gl.xr.isPresenting) return;
+    const dpr = orbitFrame(performance.now(), viewport.dpr);
+    if (gl.getPixelRatio() !== dpr) gl.setPixelRatio(dpr);
+  });
+  useEffect(() => () => setOrbiting(false), []);
+  return null;
+}
+
+/**
+ * The plain look's floor shadow (drei ContactShadows): drawn from its own camera above the floor, so it does not depend
+ * on the view's camera and is frozen while the camera moves (a drag, its glide, a wheel notch) and in the first still
+ * frame after, which only brings the full quality back. It is drawn again then only if the pieces moved meanwhile
+ * (shadowSignature): on a slow GPU each drawing of it was a long task at the end of every drag and on every wheel notch
+ * (drag-perf.mjs).
+ */
+export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
+  const moving = useCameraMoving();
+  const get = useThree((s) => s.get);
+  const [frozen, setFrozen] = useState(false);
+  if (moving && !frozen) setFrozen(true);
+  const atFreeze = useRef<number[] | null>(null);
+  const afterFrame = useRef<(() => void) | null>(null);
+  // Set when the pieces moved while frozen: the frame after the thaw commits redraws the shadow (frames is not a host
+  // prop, so the commit alone asks for no frame).
+  const redraw = useRef(false);
+  useLayoutEffect(() => {
+    if (frozen) atFreeze.current = shadowSignature(get().scene);
+  }, [frozen, get]);
+  useEffect(() => {
+    if (frozen || !redraw.current) return;
+    redraw.current = false;
+    invalidate();
+  }, [frozen]);
+  useEffect(() => {
+    if (moving || !frozen) return;
+    let done = false;
+    const thaw = () => {
+      if (done) return;
+      done = true;
+      redraw.current = !sameSignature(atFreeze.current, shadowSignature(get().scene));
+      setFrozen(false);
+    };
+    // After the still frame the end of a drag draws (OrbitQuality), or a moment later when none comes (a wheel notch).
+    afterFrame.current = () => setTimeout(thaw);
+    const late = setTimeout(thaw, 100);
+    return () => {
+      done = true;
+      afterFrame.current = null;
+      clearTimeout(late);
+    };
+  }, [moving, frozen, get]);
+  useFrame(() => {
+    const f = afterFrame.current;
+    if (!f) return;
+    afterFrame.current = null;
+    f();
+  });
+  return <ContactShadows {...props} frames={frozen ? 0 : Infinity} />;
 }
 
 export function Panels({
@@ -1446,8 +1597,9 @@ export function Panels({
           // Outside in, one level per tap at the hit point (ADR-083).
           const onClick = (e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
-            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-            if (drag.clicked() || preview) return;
+            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093), nor does
+            // the one ending a mouse drag that turned the view (a touch drag sends no click).
+            if (drag.clicked() || preview || pressWasDrag()) return;
             const at = hitToMm(e.point, built.get(p.id), exploded);
             const n = e.nativeEvent;
             if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
@@ -1601,9 +1753,16 @@ function PanelEdges({ items, deps }: { items: EdgeItem[]; deps: readonly unknown
     for (const l of lines) l.material.resolution.set(size.width, size.height);
     invalidate();
   }, [lines, size]);
+  useEffect(() => edgesMounted(), []);
+
+  // A slow drag draws the plain edges as thin GL lines (orbiting.ts): the same 1-pixel lines, far cheaper to draw.
+  useFrame(() => merged.setThin(orbitThinEdges()));
   return (
     <>
       {lines.map((l) => (
+        <primitive key={l.uuid} object={l} />
+      ))}
+      {[...merged.thin, ...merged.warm].map((l) => (
         <primitive key={l.uuid} object={l} />
       ))}
     </>

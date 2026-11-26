@@ -1803,6 +1803,14 @@ td.note {
   gap: var(--s-3);
   padding: var(--s-2) 0 var(--s-3);
 }
+/* A group that never folds (ADR-295, the canvas editor on a phone): the summary's look, no chevron, no toggle. */
+.group.flat > .group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) 0;
+  font-weight: 600;
+}
 
 .section {
   display: grid;
@@ -5552,6 +5560,57 @@ p > .info-tip {
 .count-anchor .count-stepper {
   max-width: none;
 }
+/* A short landscape screen (ADR-295, 844 × 390): the 3D view is short, so the floating card lays each count out in
+   one line and wraps within the view's width. The view tools sit behind Options there (App.tsx), so their row stays
+   one row with no scroll container, and the Options panel lays its tools in a row so it ends inside the screen. */
+@media (min-width: 761px) and (max-height: 500px) {
+  .stage-tools {
+    padding-block: var(--s-1);
+  }
+  .view-options > .view-options-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .count-anchor .count-stepper {
+    gap: var(--s-1) var(--s-2);
+    max-width: 100%;
+    padding: var(--s-1);
+  }
+  .count-anchor .count-stepper .cs-row {
+    grid-auto-flow: column;
+    align-items: center;
+  }
+  .count-anchor .count-stepper .cs-title {
+    display: none;
+  }
+  .count-anchor .count-stepper .cs-counter {
+    grid-template-columns: 28px 24px 28px;
+  }
+  .count-anchor .count-stepper .cs-counter button {
+    height: 24px;
+  }
+}
+/* With touch, the compact steppers keep a 44 px hit area round their 28 × 24 face (ADR-114): an invisible box 8 px
+   wider and 10 px taller on each side, which neither the counter nor the card clips; the counts sit 20 px apart, so
+   two hit areas never meet. */
+@media (min-width: 761px) and (max-height: 500px) and (pointer: coarse) {
+  .count-anchor .count-stepper {
+    gap: var(--s-5);
+    padding: var(--s-1) var(--s-2);
+  }
+  .count-anchor .count-stepper .cs-counter {
+    overflow: visible;
+  }
+  .count-anchor .count-stepper .cs-counter button {
+    position: relative;
+  }
+  .count-anchor .count-stepper .cs-counter button::before {
+    content: '';
+    position: absolute;
+    inset: -10px -8px;
+  }
+}
 /* Phones: the 3D view's card docks under the view instead of covering it (G-070); the view keeps its size. */
 .count-dock-slot .count-stepper {
   max-width: none;
@@ -5965,10 +6024,13 @@ p > .info-tip {
   opacity: 0.5;
 }
 /* The actions that cannot move the piece now, with their reasons, folded under the working ones (ADR-160). */
-.move-to-off > summary {
-  cursor: pointer;
+.move-to-off > :is(summary, p) {
+  margin: 0;
   font-size: var(--fs-sm);
   color: var(--ink-2);
+}
+.move-to-off > summary {
+  cursor: pointer;
 }
 .move-to-off ul {
   margin: var(--s-1) 0 0;
@@ -7379,8 +7441,9 @@ fieldset.group-locked {
   font-size: 1.1rem;
 }
 
-/* Canvas editor on phones (ADR-283): the Compose sheet becomes a lens card that shows one block at a time, opened
-   from a chip rail; a selection ladder names the level reached. Only while the device flag is on (`.work.canvas`). */
+/* Canvas editor on phones (ADR-283, ADR-295): the Compose sheet becomes a card that shows the whole editor of the
+   selection in one scrolling panel, opened from the edit bar; a selection ladder names the level reached. Only while
+   the device flag is on (`.work.canvas`). */
 [data-lens-off] {
   display: none !important;
 }
@@ -7481,26 +7544,83 @@ fieldset.group-locked {
     color: var(--ink);
     font-weight: 600;
   }
-  .chip-rail {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 4;
+  /* The stage in Compose (ADR-295): ladder, view tools, the view filling the rest, the docked counts, the edit bar.
+     The rows are fixed, so the tools never float mid-screen and the 3D view keeps the free height. */
+  .work.canvas.mode-compose .stage {
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    padding-bottom: 0;
+  }
+  .work.canvas.mode-compose .stage > .ladder {
+    grid-row: 1;
+  }
+  .work.canvas.mode-compose .stage > .stage-tools {
+    grid-row: 2;
+  }
+  /* The tall card leaves the drawing little height: the view tools step aside until it is lowered. */
+  .work.canvas.mode-compose.sheet-full .stage > .stage-tools {
+    display: none;
+  }
+  .work.canvas.mode-compose .stage > .views {
+    grid-row: 3;
+    grid-column: 1 / -1;
+  }
+  .work.canvas.mode-compose .stage > .count-dock-slot {
+    grid-row: 4;
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .work.canvas.mode-compose .stage > .edit-bar {
+    grid-row: 5;
+    grid-column: 1 / -1;
+  }
+  /* The edit bar (ADR-295): one row in a fixed order that never scrolls; Edit and the Checks chip shrink first. */
+  .edit-bar {
     display: flex;
     align-items: center;
-    gap: var(--s-2);
+    gap: var(--s-1);
+    min-width: 0;
     padding: var(--s-1) var(--s-2);
-    overflow-x: auto;
-    scrollbar-width: none;
+    overflow: hidden;
+    border-top: 1px solid var(--line-2);
+    background: var(--bg);
   }
-  .chip-rail .peek-actions {
+  /* Edit gives way first (its large shrink factor), down to one 44 px tap, so the chip and the actions stay whole
+     (360 px with a Checks chip and a selected piece, ADR-114). */
+  .edit-bar .btn.edit-open {
+    display: inline-flex;
+    flex: 1 100 auto;
+    align-items: center;
+    gap: var(--s-1);
+    min-width: 44px;
+    overflow: hidden;
+    min-height: 44px;
+    justify-content: flex-start;
+  }
+  .edit-bar .edit-open .edit-sel {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--ink-2);
+    text-overflow: ellipsis;
+  }
+  .edit-bar .btn.chip.problem {
+    flex: 0 1 auto;
+    min-width: 2.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .edit-bar .peek-actions {
     display: flex;
     flex: none;
-    gap: var(--s-2);
+    gap: var(--s-1);
   }
-  .work.canvas.sheet-open .chip-rail {
-    display: none;
+  @media (max-width: 359px) {
+    .edit-bar {
+      padding-inline: var(--s-1);
+    }
+  }
+  .edit-bar .btn:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
   }
   .btn.chip {
     flex: none;
@@ -7514,33 +7634,33 @@ fieldset.group-locked {
     display: flex;
     flex: none;
     align-items: center;
+    gap: var(--s-1);
     border-bottom: 1px solid var(--line-2);
   }
-  .lens-tabs {
-    display: flex;
-    flex: 1;
+  /* The jump index (ADR-295): a native list, so every section is one tap and a pick away. */
+  .lens-head .jump-index {
+    flex: 1 1 auto;
     min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .lens-tabs button {
-    flex: none;
     min-height: 44px;
-    padding: 0 var(--s-3);
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: none;
-    color: var(--ink-2);
-    font: inherit;
-    white-space: nowrap;
-    cursor: pointer;
   }
-  .lens-tabs button.on {
-    border-bottom-color: var(--primary);
-    color: var(--ink);
-    font-weight: 600;
+  /* One scrolling panel (ADR-295): titled blocks keep their heading in sight while their controls scroll. Only the
+     outermost titled block's heading sticks, so a group's title never covers the title of the section around it. */
+  .work.canvas.mode-compose
+    .side-body
+    :is(
+      .section:not(:is(.section, .group.flat) *) > .card-title,
+      .group.flat:not(:is(.section, .group.flat) *) > .group-title
+    ) {
+    position: sticky;
+    top: calc(-1 * var(--s-3));
+    z-index: 2;
+    background: var(--surface);
   }
-  .lens-tabs button:focus-visible,
+  .results-block {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: var(--s-2);
+  }
   .ladder-crumb:focus-visible {
     outline: 2px solid var(--link);
     outline-offset: -2px;
@@ -7736,9 +7856,6 @@ fieldset.group-locked {
     );
     min-height: 160px;
     padding-bottom: 0;
-  }
-  .work.canvas.out-lens .chip-rail {
-    display: none;
   }
   .lens-out-close {
     position: fixed;

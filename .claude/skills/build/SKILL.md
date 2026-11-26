@@ -50,6 +50,8 @@ only set the mode and point here.
    main once after landing and fixes forward or says it is red.
    When **Skipped this iteration** is not empty, run the `skip-review` skill's stage 03 on it first: each skip
    states its blocker, what unblocks it and its cost, and a premature or avoidance skip is built instead.
+   Then build every remaining item sized S or lower without asking (CLAUDE.md, _Process_, "Cover small leftovers"); only
+   larger or externally blocked items stay listed.
 
 ## Stop conditions (`ff` and `auto`; stop, tell the user, do not land)
 

@@ -25,8 +25,14 @@ for (const width of [360, 390]) {
   page.on('pageerror', (e) => errors.push(e.message));
   const side = page.locator('aside.side');
   const pill = page.getByRole('navigation', { name: 'Selection path' });
-  const rail = page.getByRole('toolbar', { name: 'Editor actions' });
-  const tabs = page.getByRole('tablist', { name: 'Editor card' });
+  const rail = page.getByRole('toolbar', { name: 'Editor bar' });
+  // The panel shows the whole editor (ADR-295): Edit opens it, the jump index goes to a block.
+  const openOn = async (title) => {
+    const edit = rail.getByRole('button', { name: /^Edit/ });
+    if ((await edit.getAttribute('aria-expanded')) !== 'true') await edit.click();
+    await page.getByLabel('Jump to section').selectOption({ label: title });
+    await page.waitForTimeout(150);
+  };
   const tag = (re) => page.locator('svg').getByRole('button', { name: re });
   const focusedIn = (sel) => page.evaluate((s) => !!document.activeElement?.closest(s), sel);
   const closeCard = async () => {
@@ -90,7 +96,7 @@ for (const width of [360, 390]) {
   // 3. Divide the space side by side; a part's width tag opens Division with its size focused.
   const space = page.locator('.el-space').first();
   await tapTo(space, 2);
-  await rail.getByRole('button', { name: 'Divide this space', exact: true }).click();
+  await openOn('Divide this space');
   await side.getByRole('button', { name: 'Side by side', exact: true }).click();
   await closeCard();
   await tapTo(page.locator('.el-space').first(), 3);
@@ -105,14 +111,13 @@ for (const width of [360, 390]) {
   check(
     width,
     'part width tag opens Division with the part size focused',
-    (await tabs.getByRole('tab', { selected: true }).innerText()).trim() === 'Division' &&
-      (await focusedIn('[data-part-id]')),
+    (await focusedIn('[data-lens-key="Division"]')) && (await focusedIn('[data-part-id]')),
   );
   await closeCard();
 
   // 4. Divide a part stacked; a stacked part's height tag does the same.
   await tapTo(page.locator('.el-space').first(), 3);
-  await rail.getByRole('button', { name: 'Divide this space', exact: true }).click();
+  await openOn('Divide this space');
   await side.getByRole('button', { name: 'Stacked', exact: true }).click();
   await closeCard();
   await tapTo(page.locator('.el-space').first(), 4);
@@ -125,8 +130,7 @@ for (const width of [360, 390]) {
   check(
     width,
     'part height tag opens Division with the part size focused',
-    (await tabs.getByRole('tab', { selected: true }).innerText()).trim() === 'Division' &&
-      (await focusedIn('[data-part-id]')),
+    (await focusedIn('[data-lens-key="Division"]')) && (await focusedIn('[data-part-id]')),
   );
   await page.screenshot({ path: `${out}/size-tags-part-${width}.png` });
   check(width, 'no script errors', errors.length === 0, errors.join(' | '));

@@ -3750,3 +3750,15 @@ highest id in either file.
 - Work: Medium
 - Impact: High
 - Necessity: Medium
+
+### G-604: Phone middle ground: layouts not measured (320 px edit bar, room drawings in short landscape)
+
+- Status: Done (N385: `tools/mobile-middle/find-it.mjs` 73/73, 320x640 edit bar and 844x390 room drawings passes; found G-601)
+- Origin: ADR-295, code review round 1
+- Missing: find-it runs at 390x844 and 844x390 only; the edit bar at 320 px and the room drawings view at 844x390 are not measured by a script
+- Request: ADR-295 decision 8
+- Questions: None
+- Suggested pick: Add 320x640 and a room-drawings pass to tools/mobile-middle/find-it.mjs
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium

@@ -170,14 +170,14 @@ export function CanvasHints({ on }: { on: boolean }) {
     }
     setDue(false);
   };
-  const titles = [t('Tap to select'), t('Sizes and handles'), t('Chips do the rest')];
+  const titles = [t('Tap to select'), t('Sizes and handles'), t('Edit opens the editor')];
   const bodies = [
     t(
       'Tap the drawing to select: each tap goes one space deeper. The path at the top goes back up.',
     ),
     t('Yellow sizes open their field. A green + divides a space; drag a divider to resize.'),
     t(
-      'The chips at the bottom open one part of the editor at a time. The magnifier finds any action.',
+      'Edit at the bottom opens the whole editor of the selection; Jump to goes to a section. The magnifier finds any action.',
     ),
   ];
   return (

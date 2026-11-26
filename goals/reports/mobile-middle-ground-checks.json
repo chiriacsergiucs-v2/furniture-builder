@@ -1,0 +1,130 @@
+[
+  {
+    "id": "C1",
+    "statement": "The browser acceptance script runs on a fresh production build.",
+    "command": "rm -f goals/reports/mobile-middle/report.json; bash tools/mobile-middle/with-preview.sh 'node tools/mobile-middle/find-it.mjs \"$URL\" goals/reports/mobile-middle --json goals/reports/mobile-middle/report.json'",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "space | Material       | 1 | button Top\nspace | Material       | 1 | button Bottom\nspace | Material       | 1 | button Sides\nspace | Material       | 1 | button Back\nspace | Material       | 1 | button Drawer boxes\nspace | Material       | 1 | button Drawer bottoms\nspace | Material       | 1 | input Replace parts with their own board too\nspace | Material       | 1 | select Board\nspace | Material       | 1 | select Edge band\nspace | Material       | 1 | button Apply material\nspace | Results output | 2 | button Parts30\nspace | Results output | 2 | button Sheets\nspace | Results output | 2 | button Hardware\nspace | Results output | 2 | button Assembly\nspace | Results output | 2 | button Shopping list\nspace | Results output | 2 | button Checks\nspace | Results output | 2 | button Guidance: hardware counts\nspace | Results output | 2 | button Guidance: fastener counts\n\n63/63 PASS"
+  },
+  {
+    "id": "C2",
+    "statement": "No tab-pill row (chip rail) exists at mobile width and the edit bar does not scroll sideways.",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"chip rail|scroll sideways|Editor bar\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px no chip rail (no \"Editor actions\" toolbar, no .chip-rail)\nPASS 390x844px the edit bar does not scroll sideways\nPASS 844x390px no chip rail and no \"Editor actions\" toolbar"
+  },
+  {
+    "id": "C3",
+    "statement": "Every inventory control is reached in ≤ 2 taps; the script lists each control with its tap count.",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"at most 2 taps|reached\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px every control needs at most 2 taps"
+  },
+  {
+    "id": "C4",
+    "statement": "No accordion inside a drawer or sheet; opened panels show their content expanded.",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"details|expanded|visible with content|opens into a sheet\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px Edit ×3 alternates aria-expanded (false, true, false, true)\nPASS 390x844px goBack closes the panel (aria-expanded false)\nPASS 390x844px rotation and back: no crash, Edit aria-expanded matches the panel\nPASS 390x844px piece: no <details> inside the Edit panel\nPASS 390x844px piece: 2 titled blocks, each visible with content after scrolling\nPASS 390x844px piece: Settings opens into a sheet\nPASS 390x844px piece: no <details> in main.work with Settings open\nPASS 390x844px piece: Material opens into a sheet\nPASS 390x844px piece: no <details> in main.work with Material open\nPASS 390x844px space: no <details> inside the Edit panel\nPASS 390x844px space: 6 titled blocks, each visible with content after scrolling\nPASS 390x844px space: Settings opens into a sheet\nPASS 390x844px space: no <details> in main.work with Settings open\nPASS 390x844px space: Material opens into a sheet\nPASS 390x844px space: no <details> in main.work with Material open"
+  },
+  {
+    "id": "C5",
+    "statement": "Hardware and every other section are found by scrolling, without search; the jump index keeps one order.",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"by scrolling|fixed order|Results|Hardware\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px piece: Results has Parts, Sheets, Hardware, Assembly, Shopping\nPASS 390x844px piece: Hardware (tap 2) shows the hardware output\nPASS 390x844px piece: Results output lists controls in 2 tap(s)\nPASS 390x844px a Hardware button is found by scrolling the panel only\nPASS 390x844px space: Results has Parts, Sheets, Hardware, Assembly, Shopping\nPASS 390x844px space: Hardware (tap 2) shows the hardware output\nPASS 390x844px space: Results output lists controls in 2 tap(s)\nPASS 390x844px Jump to section keeps one fixed order (piece vs space)\nPASS 390x844px section \"Hardware\" is reachable"
+  },
+  {
+    "id": "C6",
+    "statement": "In the 3D view no counter overflows its container at 390×844 and 844×390 (bounding boxes compared).",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"^3D\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px 3D: quick-count card box is inside the viewport\nPASS 390x844px 3D: every card button and output is inside the card box\nPASS 390x844px 3D: card box is inside its host (#count-dock)\nPASS 390x844px 3D: no two stepper controls overlap\nPASS 844x390px 3D: quick-count card box is inside the viewport\nPASS 844x390px 3D: every card button and output is inside the card box\nPASS 844x390px 3D: card box is inside its host (3D pane)\nPASS 844x390px 3D: no two stepper controls overlap"
+  },
+  {
+    "id": "C7",
+    "statement": "Open/close state stays right across repeated taps, back, rotation and a change of selection.",
+    "command": "node tools/mobile-middle/report-check.mjs goals/reports/mobile-middle/report.json \"Edit ×3|goBack|rotat|different space|aria-expanded\"",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390x844px Edit ×3 alternates aria-expanded (false, true, false, true)\nPASS 390x844px after Edit ×3 the panel is visible\nPASS 390x844px panel stays open after tapping a different space\nPASS 390x844px goBack closes the panel (aria-expanded false)\nPASS 390x844px goBack leaves the app on the editor\nPASS 390x844px rotation and back: no crash, Edit aria-expanded matches the panel\nPASS 844x390px rotation 844 to 390 and back keeps the editor and Compose, no errors"
+  },
+  {
+    "id": "C8",
+    "statement": "3D drag: 3-second scripted drag, 4× CPU throttling, average ≥ 50 fps and no long task over 50 ms; report shows before and after.",
+    "command": "bash tools/mobile-middle/with-preview.sh 'node tools/mobile-middle/drag-perf.mjs \"$URL\" --assert'",
+    "exitCode": 1,
+    "pass": false,
+    "tail": "     11.6 ms  uniformMatrix4fv :0:0\n     11.4 ms  drawElements :0:0\n      9.5 ms  MO.render three-D6fz6-m2.js:4225:32835\n        9 ms  (anonymous) Line2-C990J7pf.js:1:12490\n      8.6 ms  evaluate :364:11\n      8.5 ms  cL three-D6fz6-m2.js:4225:42042\n        8 ms  $x three-D6fz6-m2.js:4225:34980\n      7.9 ms  setValue three-D6fz6-m2.js:4123:9093\n      7.6 ms  updateMatrixWorld three-D6fz6-m2.js:1:64478\n      7.4 ms  clear :0:0\n      6.6 ms  (anonymous) :1:1\n      6.3 ms  tick :13:18\n      5.8 ms  u three-D6fz6-m2.js:4174:14511\n      5.2 ms  de client-C9MynfII.js:8:15370\n      5.1 ms  (anonymous) :1:2\n        5 ms  upload three-D6fz6-m2.js:4123:10098\n      4.9 ms  (garbage collector) :0:0\n      4.5 ms  addEventListener :0:0\n      4.5 ms  eO three-D6fz6-m2.js:4174:13287\nTarget (drag 4x ≥ 50 fps, no long task over 50 ms): not met"
+  },
+  {
+    "id": "C9",
+    "statement": "Every rework KEEP item still works (canvas editor find-it script: ladder, size tags, handles, picks, pins, output lenses, Find, hints, More switch).",
+    "command": "bash tools/mobile-middle/with-preview.sh 'node tools/canvas-editor/find-it.mjs \"$URL\" goals/reports/mobile-middle/canvas'",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "PASS 390px jump index offers \"Overview\" — Overview,Structure,Divide this space,Contents,Doors and handles,Layouts,Results\nPASS 390px jump index offers \"Contents\" — Overview,Structure,Divide this space,Contents,Doors and handles,Layouts,Results\nPASS 390px jump index offers \"Results\" — Overview,Structure,Divide this space,Contents,Doors and handles,Layouts,Results\nPASS 390px no folded group in the panel\nPASS 390px selected space in sight with the card compact — space 197–392, card top 523\nPASS 390px selected space in sight with the card tall — space 122–213, card top 312\nPASS 390px ArrowUp keeps it tall\nPASS 390px ArrowDown makes it compact\nPASS 390px card points at the selection\nPASS 390px Esc closes the open card and keeps the level\nPASS 390px Find opens \"Find an action\"\nPASS 390px a tap on empty drawing closes the card\nPASS 390px closing the card collapses Edit\nPASS 390px ↑ and Esc reach the same level — Chest of drawers\nPASS 390px edit bar and ladder buttons are at least 44 px — 0 smaller\nPASS 390px no horizontal page scroll\nPASS 390px flag off: peek row back, no edit bar\nPASS 390px no script errors\n\n58/58 PASS"
+  },
+  {
+    "id": "C10",
+    "statement": "Type-check passes.",
+    "command": "pnpm typecheck",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "$ tsc -b --noEmit"
+  },
+  {
+    "id": "C11",
+    "statement": "Lint passes.",
+    "command": "pnpm lint",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "$ eslint . --cache --cache-strategy content"
+  },
+  {
+    "id": "C12",
+    "statement": "Format passes.",
+    "command": "pnpm format:check",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "Checking formatting...\nAll matched files use Prettier code style!\n$ prettier --check --cache --cache-strategy content ."
+  },
+  {
+    "id": "C13",
+    "statement": "Unit and jsdom tests pass (the full suite also runs in CI).",
+    "command": "pnpm test",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "\n RUN  v4.1.12 /home/user/furniture-builder\n\n\n Test Files  291 passed (291)\n      Tests  2238 passed | 4 skipped (2242)\n   Start at  03:56:18\n   Duration  186.59s (transform 14.23s, setup 0ms, import 42.58s, tests 444.05s, environment 44.31s)\n\n$ vitest run\nNot implemented: navigation to another Document\n(node:514) [THREE_CJS_DEPRECATED] DeprecationWarning: `require(\"three\")` is deprecated and will be removed.\nReplace `const THREE = require(\"three\")` with `import * as THREE from \"three\"`.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n(node:1460) [THREE_CJS_DEPRECATED] DeprecationWarning: `require(\"three\")` is deprecated and will be removed.\nReplace `const THREE = require(\"three\")` with `import * as THREE from \"three\"`.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n(node:1555) [THREE_CJS_DEPRECATED] DeprecationWarning: `require(\"three\")` is deprecated and will be removed.\nReplace `const THREE = require(\"three\")` with `import * as THREE from \"three\"`.\n(Use `node --trace-deprecation ...` to show where the warning was created)"
+  },
+  {
+    "id": "C14",
+    "statement": "Production build passes.",
+    "command": "pnpm build",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "dist/assets/three-D6fz6-m2.js                                           1,641.33 kB │ gzip: 441.82 kB\ndist/assets/regency-B1NqXXgM.js                                         2,705.57 kB │ gzip: 647.87 kB\n✓ built in 8.47s\n\nPWA v2.0.0\nmode      generateSW\nprecache  199 entries (8376.32 KiB)\nfiles generated\n  dist/sw.js\n  dist/workbox-2fbc6a65.js\n$ tsc -b && vite build\nGenerated an empty chunk: \"supabase\".\n[plugin vite:reporter] \n(!) /home/user/furniture-builder/src/store/libraryStore.ts is dynamically imported by /home/user/furniture-builder/src/ui/Account.tsx but also statically imported by /home/user/furniture-builder/src/store/useImageUrls.ts, /home/user/furniture-builder/src/ui/App.tsx, /home/user/furniture-builder/src/ui/CatalogPage.tsx, /home/user/furniture-builder/src/ui/Dialogs.tsx, /home/user/furniture-builder/src/ui/Gaps.tsx, /home/user/furniture-builder/src/ui/History.tsx, /home/user/furniture-builder/src/ui/Inspector.tsx, /home/user/furniture-builder/src/ui/MaterialDialog.tsx, /home/user/furniture-builder/src/ui/Models3D.tsx, /home/user/furniture-builder/src/ui/Project.tsx, /home/user/furniture-builder/src/ui/ProjectTemplates.tsx, /home/user/furniture-builder/src/ui/RoomFill.tsx, /home/user/furniture-builder/src/ui/RoomSurfaces.tsx, /home/user/furniture-builder/src/ui/SavedData.tsx, /home/user/furniture-builder/src/ui/ShareDialogs.tsx, /home/user/furniture-builder/src/ui/Shopping.tsx, /home/user/furniture-builder/src/ui/Variables.tsx, /home/user/furniture-builder/src/ui/WallFill.tsx, /home/user/furniture-builder/src/ui/Wizard.tsx, /home/user/furniture-builder/src/ui/shell/MoreMenu.tsx, /home/user/furniture-builder/src/ui/shell/ProjectsPage.tsx, /home/user/furniture-builder/src/ui/shell/files.ts, /home/user/furniture-builder/src/ui/shell/importFile.ts, dynamic import will not move module into another chunk.\n\n\n(!) Some chunks are larger than 1100 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+  },
+  {
+    "id": "C15",
+    "statement": "Docs check passes.",
+    "command": "pnpm docs:check",
+    "exitCode": 0,
+    "pass": true,
+    "tail": "295 ADRs (286 implemented), 398 backlog ids, 512 gaps\nOK\nid check: no id this branch added is already on origin/main\n$ python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q\nid check failed: this branch added ids that origin/main already holds: N2. Merge origin/main, give each of your rows, gaps or ADRs the next free id (N3), update every reference to it, then push. `pnpm next-id` lists the next free ids.\nid check: git could not compare this branch with origin/main (fetch main with history first)\n----------------------------------------------------------------------\nRan 66 tests in 9.047s\n\nOK"
+  },
+  {
+    "id": "C16",
+    "statement": "The review agent reports no open issues.",
+    "command": null,
+    "exitCode": null,
+    "pass": null,
+    "tail": "`code-reviewer` (not the writing agents) reviews the branch diff against ADR-295 and CLAUDE.md; its findings list is empty, or every finding is fixed and re-reviewed."
+  }
+]

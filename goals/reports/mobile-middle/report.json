@@ -1,0 +1,3235 @@
+{
+  "results": [
+    {
+      "width": "390x844",
+      "name": "edit bar has \"Find an action\" and an Edit button",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "no chip rail (no \"Editor actions\" toolbar, no .chip-rail)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "the edit bar does not scroll sideways",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "nothing in the bottom 120 px of the stage scrolls sideways",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "Edit ×3 alternates aria-expanded (false, true, false, true)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "after Edit ×3 the panel is visible",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "panel stays open after tapping a different space",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "goBack closes the panel (aria-expanded false)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "goBack leaves the app on the editor",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "rotation and back: no crash, Edit aria-expanded matches the panel",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "3D: quick-count card box is inside the viewport",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "3D: every card button and output is inside the card box",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "3D: card box is inside its host (#count-dock)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "3D: no two stepper controls overlap",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "no chip rail and no \"Editor actions\" toolbar",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "Compose side panel is visible",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "no horizontal page scroll",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "no element in the stage scrolls sideways (except the stage-tools radio row)",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "rotation 844 to 390 and back keeps the editor and Compose, no errors",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "3D: quick-count card box is inside the viewport",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "3D: every card button and output is inside the card box",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "3D: card box is inside its host (3D pane)",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "3D: no two stepper controls overlap",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Edit panel lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: no <details> inside the Edit panel",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: 2 titled blocks, each visible with content after scrolling",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Jump to section lists 19 options, disabled ones give a reason",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Settings opens into a sheet",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: no <details> in main.work with Settings open",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Settings lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Material opens into a sheet",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: no <details> in main.work with Material open",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Material lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Results has Parts, Sheets, Hardware, Assembly, Shopping",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Hardware (tap 2) shows the hardware output",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "piece: Results output lists controls in 2 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Edit panel lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: no <details> inside the Edit panel",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: 6 titled blocks, each visible with content after scrolling",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Jump to section lists 19 options, disabled ones give a reason",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "a Hardware button is found by scrolling the panel only",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Settings opens into a sheet",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: no <details> in main.work with Settings open",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Settings lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Material opens into a sheet",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: no <details> in main.work with Material open",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Material lists controls in 1 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Results has Parts, Sheets, Hardware, Assembly, Shopping",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Hardware (tap 2) shows the hardware output",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "space: Results output lists controls in 2 tap(s)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "Jump to section keeps one fixed order (piece vs space)",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Structure\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Divide this space\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Contents\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Doors and handles\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Layouts\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Construction\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Drawers and runners\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Boards, sheets and saw cut\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Fasteners\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Checks\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "section \"Hardware\" is reachable",
+      "ok": true
+    },
+    {
+      "width": "390x844",
+      "name": "every control needs at most 2 taps",
+      "ok": true
+    }
+  ],
+  "taps": [
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Decrease Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Width",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Increase Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Decrease Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Height",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Increase Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Decrease Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Depth",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Increase Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Edit the interior4 drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Parts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Sheets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Hardware",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Assembly",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Edit panel",
+      "label": "Shopping",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "1Size800×900×450",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "2Inside4 drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "3BuildOverlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "4BoardsPAL 18 white",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "5CutReady",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Width",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Bind Width to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Height",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Bind Height to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Depth",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Bind Depth to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Edit the interior",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Fewer bays (divided by uprights)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "More bays (divided by uprights)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Fewer shelves in each bay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "More shelves in each bay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "None",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "One",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Pair",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "The floor",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Wall brackets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "On the sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Between sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "A full panel",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Two rails",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Single",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Doubled",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Under the sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Nailed on",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Set in",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Plinth height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Plinth height",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Plinth height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Plinth set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Plinth set back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Plinth set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Overlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Half overlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Inset",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Gap between fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Gap between fronts",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Gap between fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Shelf set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Shelf set back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Shelf set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Adjustable shelf gap, each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Adjustable shelf gap, each side",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Adjustable shelf gap, each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Pin rows from edges",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Pin rows from edges",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Pin rows from edges",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Runner clearance each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Runner clearance each side",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Runner clearance each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Height clearance",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Height clearance",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Height clearance",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Space behind runner",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Space behind runner",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Space behind runner",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Box has an inner front",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About the inner front",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About runner lengths",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Runner lengths you can buy",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Longest shelf (18 mm board)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Longest shelf (18 mm board)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Longest shelf (18 mm board)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Widest single door",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Widest single door",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Widest single door",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Depth for hangers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Depth for hangers",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Depth for hangers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Room height (0 = not checked)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Room height (0 = not checked)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Room height (0 = not checked)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Guidance: checks",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About variables",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "New variable",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Value or formula",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Choose a board for parts…",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About the saw cut",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Saw cut (kerf)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Saw cut (kerf)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Saw cut (kerf)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About the decor list",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Import decor list (CSV)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About the band list",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Import band list (CSV)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "PAL 18 white colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Name",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Thickness",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Thickness",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Thickness",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "16",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "18",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "22",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Has grain",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Matte",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Satin",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Gloss",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Product from a seller",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Manufacturer",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Type",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Sheet length",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Sheet length",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Sheet length",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Sheet width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Sheet width",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Sheet width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Trim each edge",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Trim each edge",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Trim each edge",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Decrease Sheets in stock",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Sheets in stock",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Increase Sheets in stock",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Band type",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Band from a seller",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Fronts banded differently",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 18 white",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Remove board",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "PAL 18 oak colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 18 oak",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "PAL 16 white colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 16 white",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "MDF 18 painted colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a picture for MDF 18 painted",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "HDF 3 colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a picture for HDF 3",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Add a material",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About boards and sheets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Carcass joint: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Carcass joint: how many per joint",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "From each end (mm)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Shelf pin: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Shelf pin: how many per pin",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Back fixing: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Back fixing: how many per back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Hanging point: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Hanging point: how many per bracket",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Worktop fixing: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Worktop fixing: how many per worktop",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Foot: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Foot: how many per piece on a plinth",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "About fasteners",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Keep saved data",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Choose backup folder",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Back up now",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Restore from backup",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Restore a .zip",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Remind me to back upEvery 7 daysEvery 14 daysEvery 30 daysEvery 90 daysOff",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Settings",
+      "label": "Done",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Part",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Item",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Carcass",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Top",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Bottom",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Drawer boxes",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Drawer bottoms",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Replace parts with their own board too",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Board",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Edge band",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Material",
+      "label": "Apply material",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Parts30",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Sheets",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Hardware",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Assembly",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Shopping list",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Checks",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Guidance: hardware counts",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "piece",
+      "surface": "Results output",
+      "label": "Guidance: fastener counts",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Side by side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Stacked",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Empty",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Shelves",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Hanging",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Fewer drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "More drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Equal",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Choose",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Top drawer is a fixed front (sink false front)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Top drawer cut around a sink trap",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "None",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Door",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Pair",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Sliding",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Flap",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Bar",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Knob",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Push to open",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "About applying a layout",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Apply a layout from the catalog",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Parts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Sheets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Hardware",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Assembly",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Edit panel",
+      "label": "Shopping",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "1Size800×900×450",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "2Inside4 drawers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "3BuildOverlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "4BoardsPAL 18 white",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "5CutReady",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Width",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Bind Width to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Height",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Bind Height to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Depth",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Depth",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Bind Depth to a variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Edit the interior",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Fewer bays (divided by uprights)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "More bays (divided by uprights)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Fewer shelves in each bay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "More shelves in each bay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "None",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "One",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Pair",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "The floor",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Wall brackets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "On the sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Between sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "A full panel",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Two rails",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Single",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Doubled",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Under the sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Nailed on",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Set in",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Plinth height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Plinth height",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Plinth height",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Plinth set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Plinth set back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Plinth set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Overlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Half overlay",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Inset",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Gap between fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Gap between fronts",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Gap between fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Shelf set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Shelf set back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Shelf set back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Adjustable shelf gap, each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Adjustable shelf gap, each side",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Adjustable shelf gap, each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Pin rows from edges",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Pin rows from edges",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Pin rows from edges",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Runner clearance each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Runner clearance each side",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Runner clearance each side",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Height clearance",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Height clearance",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Height clearance",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Space behind runner",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Space behind runner",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Space behind runner",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Box has an inner front",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About the inner front",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About runner lengths",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Runner lengths you can buy",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Longest shelf (18 mm board)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Longest shelf (18 mm board)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Longest shelf (18 mm board)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Widest single door",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Widest single door",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Widest single door",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Depth for hangers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Depth for hangers",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Depth for hangers",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Room height (0 = not checked)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Room height (0 = not checked)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Room height (0 = not checked)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Guidance: checks",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About variables",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "New variable",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Value or formula",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add variable",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Choose a board for parts…",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About the saw cut",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Saw cut (kerf)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Saw cut (kerf)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Saw cut (kerf)",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About the decor list",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Import decor list (CSV)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About the band list",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Import band list (CSV)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "PAL 18 white colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Name",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Thickness",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Thickness",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Thickness",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "16",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "18",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "22",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Has grain",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Matte",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Satin",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Gloss",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Product from a seller",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Manufacturer",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Type",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Sheet length",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Sheet length",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Sheet length",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Sheet width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Sheet width",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Sheet width",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Trim each edge",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Trim each edge",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Trim each edge",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Decrease Sheets in stock",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Sheets in stock",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Increase Sheets in stock",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Band type",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Band from a seller",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Fronts banded differently",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 18 white",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Remove board",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "PAL 18 oak colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 18 oak",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "PAL 16 white colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a picture for PAL 16 white",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "MDF 18 painted colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a picture for MDF 18 painted",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "HDF 3 colour",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a picture for HDF 3",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Add a material",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About boards and sheets",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Carcass joint: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Carcass joint: how many per joint",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "From each end (mm)",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Shelf pin: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Shelf pin: how many per pin",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Back fixing: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Back fixing: how many per back",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Hanging point: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Hanging point: how many per bracket",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Worktop fixing: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Worktop fixing: how many per worktop",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Foot: your fastener",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Foot: how many per piece on a plinth",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "About fasteners",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Keep saved data",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Choose backup folder",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Back up now",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Restore from backup",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Restore a .zip",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Remind me to back upEvery 7 daysEvery 14 daysEvery 30 daysEvery 90 daysOff",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Settings",
+      "label": "Done",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Part",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Item",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Fronts",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Carcass",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Top",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Bottom",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Sides",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Back",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Drawer boxes",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Drawer bottoms",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Replace parts with their own board too",
+      "tag": "input",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Board",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Edge band",
+      "tag": "select",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Material",
+      "label": "Apply material",
+      "tag": "button",
+      "taps": 1
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Parts30",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Sheets",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Hardware",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Assembly",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Shopping list",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Checks",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Guidance: hardware counts",
+      "tag": "button",
+      "taps": 2
+    },
+    {
+      "state": "space",
+      "surface": "Results output",
+      "label": "Guidance: fastener counts",
+      "tag": "button",
+      "taps": 2
+    }
+  ],
+  "jumpOrders": {
+    "piece": [
+      "Overview",
+      "Structure",
+      "Divide this space",
+      "Division",
+      "Contents",
+      "Doors and handles",
+      "Layouts",
+      "Staggered rows",
+      "Bays and shelves",
+      "Construction",
+      "Legs, rails and stretchers",
+      "Drawers and runners",
+      "Boards, sheets and saw cut",
+      "Checks",
+      "Position",
+      "Project settings",
+      "Variables",
+      "Fasteners",
+      "Results"
+    ],
+    "space": [
+      "Overview",
+      "Structure",
+      "Divide this space",
+      "Division",
+      "Contents",
+      "Doors and handles",
+      "Layouts",
+      "Staggered rows",
+      "Bays and shelves",
+      "Construction",
+      "Legs, rails and stretchers",
+      "Drawers and runners",
+      "Boards, sheets and saw cut",
+      "Checks",
+      "Position",
+      "Project settings",
+      "Variables",
+      "Fasteners",
+      "Results"
+    ]
+  },
+  "reached": {
+    "Structure": [
+      "piece panel",
+      "space panel"
+    ],
+    "Hardware": [
+      "piece panel",
+      "space panel"
+    ],
+    "Construction": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Drawers and runners": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Boards, sheets and saw cut": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Fasteners": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Checks": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Divide this space": [
+      "space panel"
+    ],
+    "Contents": [
+      "space panel"
+    ],
+    "Doors and handles": [
+      "space panel"
+    ],
+    "Layouts": [
+      "space panel"
+    ]
+  }
+}

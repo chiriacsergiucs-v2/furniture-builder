@@ -1,16 +1,18 @@
-import { Canvas, invalidate } from '@react-three/fiber';
+import { Canvas, events, invalidate } from '@react-three/fiber';
 import {
   CountsAnchor,
   CUT_ACROSS,
   CUT_POSITION,
   DragNote,
   Fit,
+  FloorShadow,
   HeightHandle,
   HeightNote,
   KeyLight,
   LockAnchors,
   ModelItems,
   Occlusion,
+  OrbitQuality,
   Panels,
   PictureNote,
   ProblemBoxes,
@@ -25,7 +27,7 @@ import {
   ThreeMore,
   ZoneBoxes,
 } from './ViewerScene';
-import { ContactShadows } from '@react-three/drei';
+import { isOrbiting } from './orbiting';
 import {
   Fragment,
   useCallback,
@@ -337,6 +339,27 @@ interface Viewer3DProps {
   countDock?: HTMLElement | null;
 }
 
+/**
+ * The canvas's pointer events, except that a pointer move while the view is turned (orbiting.ts) or while a button or
+ * finger is down does not raycast the scene: a hover tint has no use mid-drag, the drags of pieces, walls and handles
+ * follow the pointer with their own window listeners, and the raycast over every board on every move costs a phone
+ * frame time (the first moves of a drag come before turning starts: drag-perf.mjs, the long task at its start).
+ */
+const orbitEvents: typeof events = (store) => {
+  const manager = events(store);
+  const move = manager.handlers?.onPointerMove;
+  if (!manager.handlers || !move) return manager;
+  return {
+    ...manager,
+    handlers: {
+      ...manager.handlers,
+      onPointerMove: (e: Event) => {
+        if (!isOrbiting() && !(e as PointerEvent).buttons) move(e);
+      },
+    },
+  };
+};
+
 export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer3DProps = {}) {
   const view = useView();
   // A shared item's preview (ADR-143): shown only, nothing selected, no tools or cards.
@@ -522,6 +545,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
         // Draw only when something changes (ADR-121): orbiting, a change in the scene, a drag. Idle = no frames.
         frameloop="demand"
         dpr={[1, 2]}
+        events={orbitEvents}
         shadows={realistic}
         onPointerMissed={() => {
           if (preview) return;
@@ -532,6 +556,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
       >
         <color attach="background" args={[bg]} />
         <Stage />
+        <OrbitQuality />
         {realistic ? (
           <>
             <RoomLight />
@@ -545,7 +570,7 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
             <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
             <directionalLight position={[-3, 2, -1]} intensity={0.35} />
             {!arOn && (
-              <ContactShadows
+              <FloorShadow
                 position={[
                   bounds.x * S + (bounds.w * S) / 2,
                   -0.0005,

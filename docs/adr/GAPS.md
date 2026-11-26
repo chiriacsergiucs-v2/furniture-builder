@@ -2452,6 +2452,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: a general +-5% of current (to closest integer)
 - Questions: Disable a group ±5% when every variable in it is at the limit, or show which variables stopped at their limit?
 - Suggested pick: Show 'n at their limit' next to the group after a press
+
+### G-596: Phone middle-ground editor: device check on a real Android phone
+
+- Status: Open
+- Origin: ADR-295, N385
+- Missing: The middle-ground panel, 3D counters and drag were checked only in headless Chromium (SwiftShader); no check on the user's Android phone in Chrome
+- Request: user 2026-11-26: fix the mobile UI (Android Chrome)
+- Questions: none
+- Suggested pick: User opens the live URL on the phone after merge and reports
+- Work: Low
+- Impact: Medium
+- Necessity: Medium-high
+
+### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
+
+- Status: Open
+- Origin: ADR-295, goal runner loop 4 (C8)
+- Missing: The pixel-ratio change at drag start resizes the canvas (11 ms) and the pointerdown raycast takes 13 ms; with SwiftShader GPU wait the first drag frame is 52-56 ms in 2 of 3 runs. Average fps target (>=50) is met.
+- Request: User 2026-11-26: drag >=50 fps with 4x CPU throttle and no long task >50 ms over a 3 s drag
+- Questions: None
+- Suggested pick: Draw drag frames into a reduced-size render target allocated once and copied to the canvas, so a drag never resizes the canvas
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Medium
+
+### G-603: 3D view: matrixAutoUpdate off for static meshes
+
+- Status: Acknowledged (2026-11-26)
+- Origin: ADR-295, goal runner loop 4
+- Missing: updateMatrixWorld still runs each frame (about 0.1 ms); turning it off on r3f-managed meshes risks stale transforms Decided 2026-11-26 under the S-leftover rule: no change, 0.1 ms per frame is worth less than the stale-transform risk.
+- Request: ADR-295 decision 9 (drag fix)
+- Questions: None
+- Suggested pick: Leave until a profile shows it matters
 - Work: Low
 - Impact: Low
 - Necessity: Low
@@ -2476,6 +2509,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: catch up burst debt
 - Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
 - Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
+
+### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
+
+- Status: Open
+- Origin: ADR-295, code-reviewer re-review of c61d8d0
+- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
+- Request: User 2026-11-26: review reports no open issues
+- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
+- Suggested pick: Add jsdom tests for the glue; build twins in an effect
+- Work: Low-medium
+- Impact: Low
+- Necessity: Medium
+
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Open
+- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
