@@ -2441,18 +2441,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-596: Catalog page over its phone height budget again
-
-- Status: Open
-- Origin: N311 live-verify, catch-up 2026-11-26
-- Missing: On the live site at 390 px the Catalog page opens 19,365 px tall; N311 set the budget at 17,000 px (measured 15,996 px when built). Likely cause: more variants (ADR-281) and the 2-column interior-picture tiles (cd5585e).
-- Request: Implement f9 fulkly, you pick numbers
-- Questions: Lower the families shown per group (4 to 3), page the variant tiles, or raise the budget?
-- Suggested pick: Page the variant tiles inside a family (show 6, then Show more), keeping 4 families per group
-- Work: Low
-- Impact: Medium
-- Necessity: Medium-high
-
 ### G-597: Top-bar name field under 44 px wide on phones
 
 - Status: Open
