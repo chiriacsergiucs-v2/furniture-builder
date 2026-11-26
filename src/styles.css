@@ -4759,8 +4759,9 @@ button.tile:hover {
   .app {
     padding-bottom: var(--actions-h);
   }
+  /* Never narrower than a touch target (G-597: it shrank to 26 px beside the project tools at 390 px). */
   .bar .path .name {
-    min-width: 0;
+    min-width: 44px;
   }
   .bar .lbl-long,
   .bar .family {
@@ -7471,6 +7472,12 @@ fieldset.group-locked {
     height: auto;
     max-height: 55dvh;
   }
+  /* Settings and Material open in the card (ADR-247) and are taller than it: the card scrolls while one is open, so
+     everything below its first screen stays reachable (G-599). The pointer above the card is clipped meanwhile. */
+  .work.canvas.mode-compose .side:has(.sheet-slot > dialog[open]) {
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
   .work.canvas.mode-compose .side-body {
     padding: var(--s-3);
   }
@@ -8009,13 +8016,22 @@ fieldset.group-locked {
 }
 .catalog-page.finder .finder-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 .catalog-page.finder .finder-filters > * {
   flex: none;
+}
+/* Source tabs on their own row and the filters on one row below them, so none sits off-screen on a phone (G-585):
+   the two selects share the width the Ready to open chip leaves; a long option shows in the open list. */
+.catalog-page.finder .finder-filters > [role='tablist'] {
+  flex-basis: 100%;
+}
+.catalog-page.finder .finder-filters > select {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 16rem;
 }
 .catalog-page.finder .finder-filters select,
 .chip-toggle {

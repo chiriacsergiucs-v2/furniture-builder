@@ -1808,18 +1808,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-535: F-29 half fixed: the Gaps page marks no current place
-
-- Status: Open
-- Origin: Catch-up live-verify, 2026-11-17 (N333)
-- Missing: N319 says More is marked as the current place on Information and Gaps. On the live site, #info marks the More button (aria-current=page); #gaps does not (aria-current absent, and the More menu has no Gaps item), because App.tsx passes current only for the info page.
-- Request: Catch up
-- Questions: Which control marks the current place on the Gaps page, now that Gaps is reached from the Information page?
-- Suggested pick: Mark More as current on Gaps too and say it in the page's back link or heading context (estimate: effort +5 %, value +5 %)
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
 
 - Status: Open
@@ -2289,18 +2277,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low-medium
 
-### G-585: Finder filter row scrolls sideways on a phone
-
-- Status: Open
-- Origin: ADR-291, finder-390 screenshot
-- Missing: At 390 px the Type select and Ready to open sit off-screen in the filter row; they are reached by swiping the row.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Wrap the filters onto two rows, or move Source to its own row?
-- Suggested pick: Source tabs on their own row, the three filters below
-- Work: Low
-- Impact: Low-medium
-- Necessity: Low-medium
-
 ### G-586: Grouped catalog page is 19 365 px tall on a phone, over the N311 limit
 
 - Status: Open
@@ -2432,44 +2408,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium-high
 
-### G-597: Top-bar name field under 44 px wide on phones
-
-- Status: Open
-- Origin: N325 live-verify (tools/touch-targets), catch-up 2026-11-26
-- Missing: At 390 px on the live site the top-bar name input is 34 px wide (Name of this piece) and 26 px (Name of this project), under the 44 px touch target; src/styles.css:4754 sets .bar .path .name min-width 0 on phones. 18 other touch-target checks pass.
-- Request: Touch targets (audit F-03, F-21; burst)
-- Questions: Give the name field min-width 44 px (may push a tool button to a second row), or move the name to its own row on phones?
-- Suggested pick: min-width 44 px on phones and check no horizontal scroll at 390 px
-- Work: Low
-- Impact: Medium
-- Necessity: Medium
-
-### G-598: Appearance ±5% buttons clamp silently at the range ends
-
-- Status: Open
-- Origin: N378 catch-up tests, 2026-11-26
-- Missing: The group and all-variables ±5% buttons have no disabled state (src/ui/Appearance.tsx:36-80); at or near a limit place() clamps the result (src/store/themeVars.ts:185) with no message, e.g. --s-4 31 +5% gives 32. The per-variable − / + are disabled at the ends.
-- Request: a general +-5% of current (to closest integer)
-- Questions: Disable a group ±5% when every variable in it is at the limit, or show which variables stopped at their limit?
-- Suggested pick: Show 'n at their limit' next to the group after a press
-
-### G-599: Settings cannot scroll in the phone canvas editor
-
-- Status: Open
-- Origin: Catch-up live-verify 2026-11-26 (tools/catch-up/live-verify.mjs, N318 and N350 at 390 px)
-- Missing: On the live site at 390 px, with the canvas editor (phone default since ADR-290), Settings opens in the editor card but nothing scrolls: the card is capped at 55dvh with overflow visible (src/styles.css:7391-7392, 7407-7409) and .sheet-slot > dialog.sheet-dialog has max-height none (src/styles.css:4872-4878), so Boards, sheets and saw cut and Save as project template stay below the screen. With the sheet editor both are reachable.
-- Request: Canvas on by default (Recommended)
-- Questions: Make the card body scroll inside its 55dvh cap, or let Settings open full screen from the canvas editor?
-- Suggested pick: Card body scrolls inside its cap (overflow auto on the card's content)
-- Work: Low
-- Impact: High
-- Necessity: High
-
 ### G-600: Five browser find-it scripts stale after the navbar change
 
 - Status: Open
 - Origin: pnpm regress, catch-up 2026-11-26 (N366 debt): 86 of 94 pass after the harness sheet-editor default
-- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check.
+- Missing: tools/gaps and tools/editor-nav look for Gaps in the More menu (moved to Information, 234f34d); tools/ui-polish looks for the Furniture Builder brand mark (dropped, 234f34d) and fails 3 more phone checks (G-556); tools/control-rule waits for a Build & Preview radio that no longer exists; tools/wall-background times out on Add a piece at 390 px after 11 passes. tools/catalog-flows fails only the known G-586 height check. Also, after ADR-295 (phone editor middle ground, no chip rail) merged: tools/catch-up/live-verify.mjs fails at 390 px N373 'the canvas editor shows (Editor actions, Selection path)' and N286 'structure tree follows the selection' (click timeout), on the production preview of main plus N386, 2026-11-26.
 - Request: catch up burst debt
 - Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
 - Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover

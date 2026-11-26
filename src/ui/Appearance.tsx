@@ -9,11 +9,22 @@ import {
   THEME_GROUPS,
   useThemeVars,
 } from '../store/themeVars';
+import { useState } from 'react';
 import { Dialog } from './Dialogs';
 
 /** Appearance: change the theme variables (font sizes, gaps, paddings, corners, panel widths) for this device. */
 export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { values, ignored } = useThemeVars();
+  // How many variables the last ±5% press left at the end of their range, per scope ('all' or a group id) (G-598).
+  const [limits, setLimits] = useState<{ scope: string; n: number } | null>(null);
+  const scale = (scope: string, dir: 1 | -1, names?: string[]) =>
+    setLimits({ scope, n: scaleThemeVars(dir, names) });
+  const atLimit = (scope: string) =>
+    limits?.scope === scope && limits.n > 0 ? (
+      <span className="hint" role="status">
+        {t('{n|# at its limit|# at their limit}', { n: limits.n })}
+      </span>
+    ) : null;
   return (
     <Dialog
       open={open}
@@ -33,16 +44,13 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
       <p className="hint">{t('Changes apply at once and stay on this device.')}</p>
       <div className="appearance-scale" role="group" aria-label={t('All variables')}>
         <span>{t('All variables')}</span>
-        <button
-          type="button"
-          onClick={() => scaleThemeVars(-1)}
-          aria-label={t('All variables −5%')}
-        >
+        <button type="button" onClick={() => scale('all', -1)} aria-label={t('All variables −5%')}>
           −5%
         </button>
-        <button type="button" onClick={() => scaleThemeVars(1)} aria-label={t('All variables +5%')}>
+        <button type="button" onClick={() => scale('all', 1)} aria-label={t('All variables +5%')}>
           +5%
         </button>
+        {atLimit('all')}
       </div>
       {ignored > 0 && (
         <p className="alert warn" role="alert">
@@ -56,7 +64,8 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
             <button
               type="button"
               onClick={() =>
-                scaleThemeVars(
+                scale(
+                  g.id,
                   -1,
                   g.vars.map((v) => v.name),
                 )
@@ -68,7 +77,8 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
             <button
               type="button"
               onClick={() =>
-                scaleThemeVars(
+                scale(
+                  g.id,
                   1,
                   g.vars.map((v) => v.name),
                 )
@@ -77,6 +87,7 @@ export function AppearanceDialog({ open, onClose }: { open: boolean; onClose: ()
             >
               +5%
             </button>
+            {atLimit(g.id)}
           </div>
           {g.vars.map((v) => {
             const n = values[v.name] ?? v.def;

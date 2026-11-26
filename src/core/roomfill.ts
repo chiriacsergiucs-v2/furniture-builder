@@ -730,7 +730,7 @@ export function suggestRoomMixes(
  * How much work one `suggestRoomMixes` call did (ADR-242): the whole-room projects it built with `buildProjectModel`.
  * A check on this count does not depend on the machine's speed, as a check in milliseconds does.
  */
-export interface RoomFillWork {
+interface RoomFillWork {
   builds: number;
 }
 
