@@ -122,21 +122,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Egger boards with thickness and pictures are now pickable through the bundled Regency seller catalog (ADR-161, ADR-162; src/core/sellers/regency.json); the 276-row pack itself is not imported. May be obsolete; the user decides.
 
-### G-028: Mobila sample files still in the repo
-
-- Status: Open
-- Origin: D02, 2026-10-24 23:15 UTC; agent default, accepted by the user
-- Missing: “Built in the app” is gone from the screens, but the Mobila sample files stay in docs/samples/ and the tests. The question was asked and never answered.
-- Request: “Remove completely the Built in the app feature”.
-- Questions: Delete the files too, keeping only the test fixtures ADR-041 needs?
-- Suggested pick: Read literally, “completely” means the files too. Move the samples ADR-041's tests need into tests/fixtures/ and delete the rest. Your call. (estimate: effort +3%, value matches your words)
-- Work: Low
-- Impact: Low
-- Necessity: Low-medium
-- Issue: Mobila sample files remain in the repo though the user asked to remove the feature completely.
-- Fix: Move samples the tests need into tests/fixtures and delete the rest, if the user confirms.
-- Conflicts: none
-
 ### G-031: ADR-072 defaults unconfirmed
 
 - Status: Acknowledged (2026-11-23)
@@ -2177,3 +2162,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Leave them as one code each: each is one problem said per place (estimate: effort +0 %, value +0 %)
 - Work: Low
 - Impact: Low
+
+### G-607: Stale browser scripts: ui-polish and control-rule
+
+- Status: Open
+- Origin: N402 regress check 2026-11-26
+- Missing: pnpm regress: tools/control-rule/find-it.mjs waits for the radio 'Build & Preview' (now 'Cut List'); tools/ui-polish/find-it.mjs fails 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line' and 'Hardware: Item column >= 30 %' (21 %: the items table header cells fill half the fixed-layout table at 390 px). critique-bugs and shapes were fixed in N402.
+- Request: Low-work gaps with their suggested picks (user 2026-11-23); scripts found stale while checking G-028
+- Questions: Update the two scripts to the current labels and layout, or retire the checks the newer editor replaced?
+- Suggested pick: Update both scripts to the current UI; investigate the Hardware header widths as a layout bug
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low-medium

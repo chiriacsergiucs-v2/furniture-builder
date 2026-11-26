@@ -311,6 +311,21 @@ highest id in either file.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: 2026-11-06: ADR-211 takes over the bottom-sheet drag (peek, half and full stops); the desktop mode switch in the top bar conflicts with ADR-079 and stays in G-452.
 
+### G-028: Mobila sample files still in the repo
+
+- Status: Done (N402)
+- Origin: D02, 2026-10-24 23:15 UTC; agent default, accepted by the user
+- Missing: “Built in the app” is gone from the screens, but the Mobila sample files stay in docs/samples/ and the tests. The question was asked and never answered.
+- Request: “Remove completely the Built in the app feature”.
+- Questions: Delete the files too, keeping only the test fixtures ADR-041 needs?
+- Suggested pick: Read literally, “completely” means the files too. Move the samples ADR-041's tests need into tests/fixtures/ and delete the rest. Your call. (estimate: effort +3%, value matches your words)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Mobila sample files remain in the repo though the user asked to remove the feature completely.
+- Fix: Move samples the tests need into tests/fixtures and delete the rest, if the user confirms.
+- Conflicts: none
+
 ### G-029: Light acceptance never retired
 
 - Status: Done (obsolete: user 2026-10-28)

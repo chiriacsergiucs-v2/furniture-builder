@@ -47,6 +47,8 @@ const ITEMS = [
 for (const width of [1440, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
+  // This script drives the grouped catalog page; the finder is the default since G-582 and has its own script.
+  await ctx.addInitScript(() => localStorage.setItem('fb:catalogFinder', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -222,7 +224,7 @@ for (const width of [1440, 375]) {
   }
 
   // Pat Noi: Mobila — Dormitor. The in-app "Built in the app" list was removed (D02, 2026-10-24); the project ships as
-  // docs/samples/mobila-dormitor.project.json and is opened with Projects → "Import a file". The bed frame is screwed
+  // tests/fixtures/mobila-dormitor.project.json and is opened with Projects → "Import a file". The bed frame is screwed
   // and listed.
   await page
     .getByRole('navigation', { name: 'Places' })
@@ -231,7 +233,7 @@ for (const width of [1440, 375]) {
   await page
     .getByLabel('Import a design, project or project template file')
     .setInputFiles(
-      new URL('../../docs/samples/mobila-dormitor.project.json', import.meta.url).pathname,
+      new URL('../../tests/fixtures/mobila-dormitor.project.json', import.meta.url).pathname,
     );
   await page
     .locator('main.work')
