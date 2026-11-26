@@ -158,17 +158,19 @@ describe('theme variable steps and ±5%', () => {
     expect(stored('--r-lg')).toBe(9);
   });
 
-  it('±5% at the range end stays at the end (clamps silently)', () => {
+  it('±5% at the range end stays at the end and reports it (G-598)', () => {
     const v = byName('--s-4');
     setThemeVar(v.name, v.max);
-    scaleThemeVars(1, [v.name]);
+    expect(scaleThemeVars(1, [v.name])).toBe(1);
     expect(stored(v.name)).toBe(v.max);
     setThemeVar(v.name, v.min);
-    scaleThemeVars(-1, [v.name]);
+    expect(scaleThemeVars(-1, [v.name])).toBe(1);
     expect(stored(v.name)).toBe(v.min);
     setThemeVar(v.name, 31);
-    scaleThemeVars(1, [v.name]); // 32.55 -> 33, past the end
+    expect(scaleThemeVars(1, [v.name])).toBe(1); // 32.55 -> 33, past the end
     expect(stored(v.name)).toBe(v.max);
+    setThemeVar(v.name, 20);
+    expect(scaleThemeVars(1, [v.name])).toBe(0); // 21, inside the range
   });
 
   it.each(THEME_GROUPS.map((g) => [g.id, g.vars.map((v) => v.name)] as const))(

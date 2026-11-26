@@ -69,6 +69,19 @@ describe.each(WIDTHS)('Appearance dialog at %ipx (find-it, N378)', (width) => {
     expect(rootVar('--s-8')).toBe('');
   });
 
+  it('a group ±5% that leaves variables at the end of their range says how many (G-598)', async () => {
+    const { user } = await renderApp(width);
+    const dlg = await openAppearance(user);
+    const group = within(dlg).getAllByRole('group', { name: 'Gaps and paddings' })[0];
+    const limit = /^\d+ at (its|their) limit$/;
+    expect(within(group).queryByText(limit)).toBeNull();
+    for (let i = 0; i < 30; i++)
+      await user.click(within(dlg).getByRole('button', { name: 'Gaps and paddings +5%' }));
+    expect(within(group).getByText(limit)).toBeTruthy();
+    await user.click(within(dlg).getByRole('button', { name: 'Gaps and paddings −5%' }));
+    expect(within(group).queryByText(limit)).toBeNull();
+  });
+
   it('All variables +5% changes a variable in every group and Reset all puts them back', async () => {
     const { user } = await renderApp(width);
     const dlg = await openAppearance(user);
