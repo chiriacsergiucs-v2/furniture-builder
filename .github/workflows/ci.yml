@@ -110,7 +110,7 @@ jobs:
     if: needs.ship-check.outputs.skip == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - run: python3 -I scripts/check-docs.py
 
   checks:
@@ -121,9 +121,8 @@ jobs:
       DOCS_ONLY: ${{ needs.ship-check.outputs.docs_only }}
 
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/setup@v3
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3
         with:
           runtime: node@24
           cache: true
@@ -131,7 +130,7 @@ jobs:
 
       # ESLint and Prettier caches (ADR-197), restored after the install so it cannot remove them: the newest entry
       # for the same lockfile and configs. Only runs on main save one, so pull requests do not fill the cache store.
-      - uses: actions/cache/restore@v6
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -148,7 +147,7 @@ jobs:
       # ADR-220: the incremental state of `tsc -b` (node_modules/.tmp), restored after the install like the lint cache,
       # so typecheck re-checks only the files whose inputs changed. A lockfile or tsconfig change starts cold.
       - if: env.DOCS_ONLY != 'true'
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.tmp
           key: tsc-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json') }}-${{ github.sha }}
@@ -162,7 +161,7 @@ jobs:
       - run: pnpm docs:check
 
       - if: github.event_name == 'push'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             .eslintcache
@@ -170,7 +169,7 @@ jobs:
           key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', '.prettierrc*') }}-${{ github.sha }}
 
       - if: github.event_name == 'push'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.tmp
           key: tsc-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json') }}-${{ github.sha }}
@@ -188,11 +187,11 @@ jobs:
 
     steps:
       # A core-only pull request (ADR-201) needs its base: the merge commit's first parent, two commits deep.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: ${{ needs.ship-check.outputs.core_only == 'true' && 2 || 1 }}
 
-      - uses: pnpm/setup@v3
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3
         with:
           runtime: node@24
           cache: true
@@ -215,7 +214,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -229,9 +228,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/setup@v3
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3
         with:
           runtime: node@24
           cache: true
