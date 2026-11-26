@@ -17,7 +17,7 @@ import type { Design, Diagnostic } from '../src/core/types';
 import { sampleProjects } from './fixtures/mobila';
 
 /**
- * Codes split on purpose by ADR-225 (one code per kind of problem): new code → the code the golden was written with.
+ * Codes split on purpose by ADR-225 and ADR-296 (one code per kind of problem): new code → the code the golden was written with.
  * Every other code, every severity and every message must match the golden exactly.
  */
 const SPLIT: Record<string, string> = {
@@ -25,6 +25,9 @@ const SPLIT: Record<string, string> = {
   'drawer-heights-count': 'drawer-heights', // "Give one height per drawer" (the count), not "do not fit"
   'inset-doors-depth': 'space-too-small', // "No depth left behind the inset doors."
   'diagonal-proportion': 'corner-size', // "The diagonal needs the width … 300 mm more than the depth"
+  'taller-than-room': 'outside-room', // "… is … mm taller than the room." (ADR-296)
+  'room-island-not-rectangle': 'room-island', // "An island needs a rectangle room." (ADR-296)
+  'room-island-too-small': 'room-island', // "The room is too small for an island …" (ADR-296)
 };
 
 const NOW = '2026-11-07T00:00:00.000Z';

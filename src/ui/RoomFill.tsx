@@ -166,7 +166,7 @@ const WALL_FIELD: Partial<Record<WallField, keyof Form>> = {
 function stepOf(d: RoomIssue): StepId {
   if (d.code === 'room-size') return 'room';
   // The island's walkway is asked on Refine (ADR-210).
-  if (d.code === 'room-island') return 'refine';
+  if (d.code.startsWith('room-island')) return 'refine';
   const f = fieldOf(d);
   return !f || f === 'pieceDepth' || f === 'tallDepth' ? 'walls' : 'refine';
 }
