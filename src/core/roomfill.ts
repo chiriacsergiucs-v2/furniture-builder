@@ -715,7 +715,26 @@ export function trimStretches(
  * ADR-216: a wall too short for a corner cabinet at both ends keeps one of them; each corner plan is filled and the
  * mixes of all plans are ranked together.
  */
-export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFill {
+export function suggestRoomMixes(
+  input: RoomInput,
+  limit = MIXES_FIRST,
+  work?: RoomFillWork,
+): RoomFill {
+  const memo = roomMemo();
+  const out = suggestRoomMixesWith(input, limit, memo);
+  if (work) work.builds = memo.builds;
+  return out;
+}
+
+/**
+ * How much work one `suggestRoomMixes` call did (ADR-242): the whole-room projects it built with `buildProjectModel`.
+ * A check on this count does not depend on the machine's speed, as a check in milliseconds does.
+ */
+export interface RoomFillWork {
+  builds: number;
+}
+
+function suggestRoomMixesWith(input: RoomInput, limit: number, memo: RoomMemo): RoomFill {
   const bad = checkRoom(input);
   if (bad.length) return { mixes: [], problems: bad };
   const room = input.room;
@@ -733,8 +752,8 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   const corners = cornerWalls(input, walls);
   const plans = corner === 'none' ? [[]] : cornerPlans(room, corners, take);
   const depth = runDepth(input, perWall);
-  const memo = roomMemo();
   // The errors the open project already has; a mix that adds one to it is not offered (ADR-248).
+  if (input.into) memo.builds++;
   const intoErrors = input.into ? errorCount(buildProjectModel(input.into)) : 0;
   const ctx: PlanContext = {
     input,
@@ -907,6 +926,7 @@ function fillPlan(
       // A style goes on every piece before the checks (ADR-210).
       if (input.style && project.items.length)
         project = applyStyle(project, project.items[0].id, input.style, 'project').project;
+      memo.builds++;
       const model = buildProjectModel(project);
       b = { project, model, warnings: warningsOf(model, height) };
       builds.set(key, b);
@@ -973,6 +993,7 @@ function fillPlan(
       continue;
     }
     // Added to an open project (ADR-248): checked with its pieces, as `fillRoom` will add it.
+    if (input.into) memo.builds++;
     if (
       input.into &&
       errorCount(
@@ -1079,8 +1100,10 @@ interface RoomMemo {
   /** Null: the catalog has none (a wall corner of that kind), remembered too. */
   designs: Map<string, Design | null>;
   feet: Map<string, Box>;
+  /** Whole-room projects built so far (ADR-242). */
+  builds: number;
 }
-const roomMemo = (): RoomMemo => ({ designs: new Map(), feet: new Map() });
+const roomMemo = (): RoomMemo => ({ designs: new Map(), feet: new Map(), builds: 0 });
 
 /** One mix as a project with the room: pieces along their walls, corner cabinets at the inside corners. */
 function roomProject(

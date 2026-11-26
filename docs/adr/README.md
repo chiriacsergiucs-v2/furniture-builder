@@ -303,7 +303,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-239](../adr-done/ADR-239-allow-an-opt-in-ai-assistant-through-the-backend.md) | Allow an opt-in AI assistant through the backend | ADR-126, ADR-127 | ✅ Implemented |
 | [ADR-240](../adr-done/ADR-240-let-the-assistant-run-every-editor-action-as-a-previewed-cha.md) | Let the assistant run every editor action as a previewed change | ADR-239 | ✅ Implemented |
 | [ADR-241](../adr-done/ADR-241-keep-piece-editing-in-the-project-and-make-the-phone-results.md) | Keep piece editing in the project and make the phone results a Cut list place | ADR-079, ADR-080, ADR-088, ADR-091 | ✅ Implemented |
-| [ADR-242](ADR-242-restore-the-room-fill-100-ms-timing-check.md) | Restore the room-fill 100 ms timing check | ADR-193 | Deferred (temporary: the timing check is skipped since 2026-11-09) |
+| [ADR-242](ADR-242-restore-the-room-fill-100-ms-timing-check.md) | Restore the room-fill 100 ms timing check | ADR-193 | Pending |
 | [ADR-243](../adr-done/ADR-243-keep-locks-in-force-in-every-editing-flow.md) | Keep locks in force in every editing flow | — | ✅ Implemented |
 | [ADR-244](../adr-done/ADR-244-report-every-refused-edit-truthfully.md) | Report every refused edit truthfully | ADR-243 | ✅ Implemented |
 | [ADR-245](../adr-done/ADR-245-keep-editing-state-across-template-edits-reloads-and-piece-r.md) | Keep editing state across template edits, reloads and piece renames | — | ✅ Implemented |
