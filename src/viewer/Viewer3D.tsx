@@ -340,8 +340,10 @@ interface Viewer3DProps {
 }
 
 /**
- * The canvas's pointer events, except that a pointer move while the view is turned (orbiting.ts) does not raycast the
- * scene: a hover tint has no use mid-drag, and the raycast over every board on every move costs a phone frame time.
+ * The canvas's pointer events, except that a pointer move while the view is turned (orbiting.ts) or while a button or
+ * finger is down does not raycast the scene: a hover tint has no use mid-drag, the drags of pieces, walls and handles
+ * follow the pointer with their own window listeners, and the raycast over every board on every move costs a phone
+ * frame time (the first moves of a drag come before turning starts: drag-perf.mjs, the long task at its start).
  */
 const orbitEvents: typeof events = (store) => {
   const manager = events(store);
@@ -352,7 +354,7 @@ const orbitEvents: typeof events = (store) => {
     handlers: {
       ...manager.handlers,
       onPointerMove: (e: Event) => {
-        if (!isOrbiting()) move(e);
+        if (!isOrbiting() && !(e as PointerEvent).buttons) move(e);
       },
     },
   };

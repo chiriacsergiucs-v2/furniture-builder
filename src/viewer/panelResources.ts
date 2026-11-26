@@ -1,8 +1,11 @@
 import {
   BoxGeometry,
-  type BufferGeometry,
+  BufferAttribute,
+  BufferGeometry,
   Color,
   EdgesGeometry,
+  LineBasicMaterial,
+  LineSegments,
   type Material,
   Matrix4,
   MeshPhysicalMaterial,
@@ -186,11 +189,18 @@ function mergeEdges(items: readonly EdgeItem[]): Float32Array {
 
 /**
  * The panels' edges as one line per edge style (plain, selected, each faded or not), rebuilt only when `deps`
- * change; the lines it replaced are disposed then, and all of them by `dispose`.
+ * change; the lines it replaced are disposed then, and all of them by `dispose`. Each plain (1-pixel) line also has a
+ * thin twin, a plain GL line of the same colour, width and points, drawn in its place while a slow drag turns the view
+ * (`setThin`, orbiting.ts): a fat line draws each segment as its own instance, which costs a slow GPU most of a frame.
  */
 export class MergedEdges {
   private deps: readonly unknown[] | null = null;
   lines: LineSegments2[] = [];
+  /** The thin twins of the plain lines, hidden until `setThin(true)`. */
+  thin: LineSegments[] = [];
+  /** One unseen segment per twin that keeps its shader ready (sharing the twin's material). */
+  warm: LineSegments[] = [];
+  private twins: [LineSegments2, LineSegments][] = [];
   update(deps: readonly unknown[], items: () => readonly EdgeItem[]): LineSegments2[] {
     if (this.deps && deps.length === this.deps.length && deps.every((d, i) => d === this.deps![i]))
       return this.lines;
@@ -203,27 +213,63 @@ export class MergedEdges {
     }
     this.lines = [...groups.values()].map((g) => {
       const { selected, faded, fadeOpacity } = g[0];
-      const geometry = new LineSegmentsGeometry().setPositions(mergeEdges(g));
-      const material = new LineMaterial({
+      const points = mergeEdges(g);
+      const style = {
         color: new Color(selected ? SELECT : EDGE).getHex(),
-        linewidth: selected ? 1.6 : 1,
         transparent: faded,
         opacity: faded ? (fadeOpacity ?? FADED) : 1,
-      });
+      };
+      const geometry = new LineSegmentsGeometry().setPositions(points);
+      const material = new LineMaterial({ ...style, linewidth: selected ? 1.6 : 1 });
       const line = new LineSegments2(geometry, material);
       line.computeLineDistances();
       // Display only, never picked (ADR-014).
       line.raycast = () => {};
+      // The selection keeps its wider line in a drag too.
+      if (!selected) {
+        const twinGeometry = new BufferGeometry();
+        twinGeometry.setAttribute('position', new BufferAttribute(points, 3));
+        // Measured now, not lazily on the first frame it is drawn (the first frame of a drag).
+        twinGeometry.computeBoundingSphere();
+        const twin = new LineSegments(twinGeometry, new LineBasicMaterial(style));
+        twin.raycast = () => {};
+        twin.visible = false;
+        this.twins.push([line, twin]);
+        // The twin's first segment, moved far below the floor (beyond any camera's far plane), drawn in every frame
+        // with the twin's material and points: the GPU builds the twin's shader and pipeline and uploads its points
+        // with the still view, not on the first frame of a drag (a long task there on a slow GPU, drag-perf.mjs). It
+        // draws no pixel.
+        const warmGeometry = new BufferGeometry();
+        warmGeometry.setAttribute('position', twinGeometry.getAttribute('position'));
+        warmGeometry.setDrawRange(0, 2);
+        const warm = new LineSegments(warmGeometry, twin.material);
+        warm.position.y = -1e5;
+        warm.frustumCulled = false;
+        warm.raycast = () => {};
+        this.warm.push(warm);
+      }
       return line;
     });
+    this.thin = this.twins.map(([, twin]) => twin);
     return this.lines;
   }
+  /** Draw the thin twins instead of the plain fat lines (true), or the fat lines again (false). */
+  setThin(on: boolean) {
+    for (const [fat, twin] of this.twins) {
+      fat.visible = !on;
+      twin.visible = on;
+    }
+  }
   dispose() {
-    for (const l of this.lines) {
+    for (const l of [...this.lines, ...this.thin]) {
       l.geometry.dispose();
       (l.material as Material).dispose();
     }
+    for (const w of this.warm) w.geometry.dispose();
     this.lines = [];
+    this.thin = [];
+    this.warm = [];
+    this.twins = [];
     this.deps = null;
   }
 }

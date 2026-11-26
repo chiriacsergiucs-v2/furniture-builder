@@ -115,13 +115,21 @@ import {
 } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import {
+  edgesMounted,
   occlusionMounted,
   orbitFrame,
   orbitMoved,
   orbitReleased,
   orbitSkipsOcclusion,
   orbitStartDpr,
+  orbitThinEdges,
+  pressDown,
+  pressMoved,
+  pressWasDrag,
+  sameSignature,
   setOrbiting,
+  shadowSignature,
+  useCameraMoving,
   useOrbiting,
 } from './orbiting';
 import { type SectionAxis } from './section';
@@ -726,8 +734,9 @@ function ModelItemMesh({
         onPointerDown={(e) => drag.press(e, item.id)}
         onClick={(e) => {
           e.stopPropagation();
-          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203).
-          if (drag.clicked()) return;
+          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203),
+          // nor does the one ending a mouse drag that turned the view.
+          if (drag.clicked() || pressWasDrag()) return;
           // Select mode or a modifier adds the model to the selection, as for a piece (ADR-159, ADR-246).
           const n = e.nativeEvent;
           if (multi || n.shiftKey || n.ctrlKey || n.metaKey) toggleItem(item.id);
@@ -1257,15 +1266,24 @@ export function Fit({ bounds }: { bounds: Box }) {
     const el = controls.current?.domElement ?? canvasEl;
     const down = (e: PointerEvent) => {
       // A first finger or the mouse starts afresh: a pointer whose up was never delivered is forgotten.
-      if (e.isPrimary) pointers.current.clear();
+      if (e.isPrimary) {
+        pointers.current.clear();
+        pressDown(e.clientX, e.clientY);
+      }
       pointers.current.add(e.pointerId);
+    };
+    // How far the press travelled: a press that went further than a tap ends in no selection (pressWasDrag).
+    const move = (e: PointerEvent) => {
+      if (e.isPrimary && pointers.current.has(e.pointerId)) pressMoved(e.clientX, e.clientY);
     };
     const up = (e: PointerEvent) => pointers.current.delete(e.pointerId);
     el.addEventListener('pointerdown', down, true);
+    el.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
     window.addEventListener('pointercancel', up, true);
     return () => {
       el.removeEventListener('pointerdown', down, true);
+      el.removeEventListener('pointermove', move, true);
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', up, true);
     };
@@ -1357,11 +1375,41 @@ export function OrbitQuality() {
 
 /**
  * The plain look's floor shadow (drei ContactShadows): drawn from its own camera above the floor, so it does not depend
- * on the view's camera and is frozen while turning.
+ * on the view's camera and is frozen while the camera moves (a drag, its glide, a wheel notch) and in the first still
+ * frame after, which only brings the full quality back. It is drawn again then only if the pieces moved meanwhile
+ * (shadowSignature): on a slow GPU each drawing of it was a long task at the end of every drag and on every wheel notch
+ * (drag-perf.mjs).
  */
 export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
-  const on = useOrbiting();
-  return <ContactShadows {...props} frames={on ? 0 : Infinity} />;
+  const moving = useCameraMoving();
+  const get = useThree((s) => s.get);
+  const [frozen, setFrozen] = useState(false);
+  if (moving && !frozen) setFrozen(true);
+  const atFreeze = useRef<number[] | null>(null);
+  const afterFrame = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    if (frozen) atFreeze.current = shadowSignature(get().scene);
+  }, [frozen, get]);
+  useEffect(() => {
+    if (moving || !frozen) return;
+    let done = false;
+    const thaw = () => {
+      if (done) return;
+      done = true;
+      setFrozen(false);
+      if (!sameSignature(atFreeze.current, shadowSignature(get().scene))) invalidate();
+    };
+    // After the still frame the end of a drag draws (OrbitQuality), or a moment later when none comes (a wheel notch).
+    afterFrame.current = () => setTimeout(thaw);
+    const late = setTimeout(thaw, 100);
+    return () => {
+      done = true;
+      afterFrame.current = null;
+      clearTimeout(late);
+    };
+  }, [moving, frozen, get]);
+  useFrame(() => afterFrame.current?.());
+  return <ContactShadows {...props} frames={frozen ? 0 : Infinity} />;
 }
 
 export function Panels({
@@ -1536,8 +1584,9 @@ export function Panels({
           // Outside in, one level per tap at the hit point (ADR-083).
           const onClick = (e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
-            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-            if (drag.clicked() || preview) return;
+            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093), nor does
+            // the one ending a mouse drag that turned the view (a touch drag sends no click).
+            if (drag.clicked() || preview || pressWasDrag()) return;
             const at = hitToMm(e.point, built.get(p.id), exploded);
             const n = e.nativeEvent;
             if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
@@ -1691,9 +1740,16 @@ function PanelEdges({ items, deps }: { items: EdgeItem[]; deps: readonly unknown
     for (const l of lines) l.material.resolution.set(size.width, size.height);
     invalidate();
   }, [lines, size]);
+  useEffect(() => edgesMounted(), []);
+
+  // A slow drag draws the plain edges as thin GL lines (orbiting.ts): the same 1-pixel lines, far cheaper to draw.
+  useFrame(() => merged.setThin(orbitThinEdges()));
   return (
     <>
       {lines.map((l) => (
+        <primitive key={l.uuid} object={l} />
+      ))}
+      {[...merged.thin, ...merged.warm].map((l) => (
         <primitive key={l.uuid} object={l} />
       ))}
     </>
