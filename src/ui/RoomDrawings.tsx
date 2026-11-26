@@ -65,7 +65,7 @@ import {
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { boxCentre, frontEdge } from '../core/geometry';
 import { FrontModels, PlanModels } from './Models3D';
-import { PlanKitchenMarks } from './RunRequests';
+import { FrontCutoutMarks, PlanKitchenMarks } from './RunRequests';
 import { ZoneOverlay, ZoneToolbar } from './Clearances';
 import { useClearances } from '../store/clearances';
 import { useMediaQuery } from '../store/useMediaQuery';
@@ -1374,6 +1374,7 @@ export function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
           />
         )}
         {project && <FrontConnectionTicks project={project} pieces={pm.pieces} fs={span / 40} />}
+        {project && <FrontCutoutMarks project={project} pieces={pm.pieces} />}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />

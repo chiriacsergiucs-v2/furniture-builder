@@ -7151,6 +7151,16 @@ ul.plain {
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
+/* G-438: sink and hob cut-out widths dashed on the worktop edge in the room front view. */
+.plan .front-cutouts {
+  pointer-events: none;
+}
+.plan .front-cutouts .front-cutout {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
 /* ADR-205: the arc a piece's top sweeps when it is tipped up. */
 .plan .zone .tip-arc {
   fill: none;
