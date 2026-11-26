@@ -25,7 +25,7 @@ Repo: `chiriacsergiucs-v2/furniture-builder`, a phone-first offline PWA (React 1
 lazy, Dexie, no backend except the opt-in `supabase/`). The agent files come from another stack
 (`maslennikov-ig/claude-code-orchestrator-kit`).
 
-## Agent map (pick by task; 26 agents)
+## Agent map (pick by task; 40 agents)
 
 - Bugs: `bug-hunter` (find) → `bug-fixer` (fix approved priorities), via the `health-bugs` skill
 - Security: `security-scanner` → `vulnerability-fixer`, via `health-security`
@@ -41,6 +41,16 @@ lazy, Dexie, no backend except the opt-in `supabase/`). The agent files come fro
 - Backend (`supabase/` only): `supabase-auditor`, `supabase-fixer`, `database-architect`
 - Refactor (only when the user asked for one, ADR-016): `code-structure-refactorer`
 - New agents or skills: `meta-agent-v3`, `skill-builder-v2`
+
+From `affaan-m/everything-claude-code` (`.claude/agents/ecc/`, user 2026-11-26, N383; pick by name, never by default):
+
+- Narrow reviews (read-only, run in parallel): `ecc-typescript-reviewer`, `ecc-react-reviewer`, `ecc-silent-failure-hunter`
+  (swallowed errors, bad fallbacks; ADR-008), `ecc-type-design-analyzer`, `ecc-pr-test-analyzer`, `ecc-comment-analyzer`;
+  `ecc-code-reviewer` as a second opinion next to `code-reviewer`
+- Build or type errors: `ecc-build-error-resolver`, `ecc-react-build-resolver` (minimal diffs)
+- Clean-up of recently changed code (no refactor without the user's ask, ADR-016): `ecc-code-simplifier`
+- Planning and mapping (read-only): `ecc-planner`, `ecc-code-explorer`
+- UI quality second opinion: `ecc-a11y-architect`, `ecc-performance-optimizer` (no Lighthouse against a URL)
 
 Health pairs: run the hunter, show its report to the user, run the fixer only on the priorities the user approves.
 
