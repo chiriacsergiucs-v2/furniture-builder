@@ -4720,6 +4720,36 @@ button.tile:hover {
   margin-left: auto;
 }
 
+/* Desktop: the mode switch sits in the top bar, not in a row of its own (ADR-297). It keeps the control height and the
+   focus ring of every segmented control; the bar's dark surface gets a quiet outline. */
+.bar .segmented.mode-switch {
+  flex: none;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  border-color: var(--bar-line);
+  background: transparent;
+}
+.bar .segmented.mode-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-weight: 600;
+  color: var(--bar-ink-2);
+  overflow: visible;
+}
+.bar .segmented.mode-switch button:hover {
+  color: var(--bar-ink);
+  background: var(--bar-line);
+}
+.bar .segmented.mode-switch button.on {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.bar .segmented.mode-switch button.on .badge {
+  box-shadow: 0 0 0 1px var(--on-primary);
+}
+
 /* Editor modes: Compose · Configure · Build & Preview (ADR-079) */
 .modes {
   padding: var(--s-1) var(--s-4);

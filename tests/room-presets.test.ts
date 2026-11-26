@@ -238,6 +238,9 @@ describe('Fill the room Refine: island (ADR-210, G-342)', () => {
     expect(isRectangle(lRoom())).toBe(false);
     const ds = checkRoom({ ...input(lRoom(), { island: { walkway: 1000 } }), walls: [0] });
     expect(ds.map((d) => d.message)).toContain('An island needs a rectangle room.');
+    // ADR-296: the room wording has its own code, severity unchanged.
+    const rd = ds.find((d) => d.message === 'An island needs a rectangle room.')!;
+    expect([rd.code, rd.severity]).toEqual(['room-island-not-rectangle', 'error']);
   });
 
   it('too small a room for the walkway is the error the ADR names', () => {
@@ -246,6 +249,9 @@ describe('Fill the room Refine: island (ADR-210, G-342)', () => {
     expect(r.problems.map((p) => p.message)).toContain(
       'The room is too small for an island with this walkway.',
     );
+    // ADR-296: its own code, severity unchanged; the walkway codes are not used for it.
+    const small = r.problems.find((p) => p.message.startsWith('The room is too small'))!;
+    expect([small.code, small.severity]).toEqual(['room-island-too-small', 'error']);
   });
 
   it('island mixes: base cabinets only, parallel to the wall, the walkway kept in front and behind', () => {

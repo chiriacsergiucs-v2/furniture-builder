@@ -95,13 +95,12 @@ const SAME_PROBLEM: Record<string, [number, string]> = {
   'material-missing': [6, 'a board the piece uses does not exist, said for each kind of piece'],
   'model-overlap': [2, 'a 3D model overlaps a piece or another model'],
   'opening-blocked': [2, 'a front cannot open fully, against a piece or a wall'],
-  'outside-room': [
-    2,
-    'a piece does not fit in the room, through a wall or above the ceiling (one repair family)',
-  ],
   'room-feature': [3, 'a door, window or obstacle is not inside the walls'],
   'room-input': [3, 'the walls to fill are not usable (one form field)'],
-  'room-island': [4, 'the island cannot be placed (the walkway field, ADR-210)'],
+  'room-island': [
+    2,
+    'the island walkway is missing or not valid (the walkway field, ADR-210, ADR-296)',
+  ],
   'safety-not-checked': [2, 'a safety standard is not checked, for a bunk bed and for a cot'],
   'split-fit': [2, 'the parts of a split do not fit'],
   'variable-problem': [2, 'a variable is not valid, in a set or on the piece'],
