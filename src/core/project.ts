@@ -2618,7 +2618,7 @@ export * from './projectProfiles';
 export * from './projectWorktops';
 
 /** A sink or hob cut-out's width as a dashed line on its worktop's top edge in the room front view (ADR-205, G-438). */
-export interface CutoutFrontLine {
+interface CutoutFrontLine {
   id: string;
   kind: 'sink' | 'hob';
   /** Room mm: the cut-out's left and right ends along the front view's x axis. */
