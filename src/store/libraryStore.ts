@@ -63,7 +63,14 @@ import {
 
 import { loadModelScene as stored_loadModelScene } from '../persist/models';
 
-export type { CopyResult, StoredDesign, StoredModel, StoredProject } from '../persist/db';
+export type {
+  CopyResult,
+  DesignListing,
+  ProjectListing,
+  StoredDesign,
+  StoredModel,
+  StoredProject,
+} from '../persist/db';
 export type { ModelScene } from '../persist/models';
 
 // ---- 3D models for the viewer (ADR-076, G-497) -----------------------------------------------------------------------
@@ -73,6 +80,7 @@ export const loadModelScene = (id: string) => stored_loadModelScene(id);
 // ---- Designs (pieces) ------------------------------------------------------------------------------------------------
 export const saveDesign = (d: Design) => stored_saveDesign(d);
 export const listDesigns = () => stored_listDesigns();
+export { readableDesign } from '../persist/db';
 export const loadDesign = (id: string) => stored_loadDesign(id);
 export const deleteDesign = (id: string) => stored_deleteDesign(id);
 export const copyDesign = (id: string, name: string) => stored_copyDesign(id, name);

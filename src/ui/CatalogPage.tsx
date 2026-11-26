@@ -27,7 +27,7 @@ import {
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
 import { newId } from '../core/design';
 import type { Design } from '../core/types';
-import { listDecors, listDesigns, type StoredDesign } from '../store/libraryStore';
+import { listDecors, listDesigns, readableDesign, type DesignListing } from '../store/libraryStore';
 import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
 import { kindName, type Decor } from '../core/materials';
 import { useDesign } from '../store/designStore';
@@ -1018,11 +1018,14 @@ function BrandBody({
   onTake,
 }: {
   brand: ReturnType<typeof decorBrands>[number];
-  saved: StoredDesign[];
+  saved: DesignListing[];
   savedFailed?: boolean;
   onTake: (d: Design) => void;
 }) {
-  const pieces = useMemo(() => saved.filter((r) => usesBrand(r.design, brand)), [saved, brand]);
+  const pieces = useMemo(
+    () => saved.filter(readableDesign).filter((r) => usesBrand(r.design, brand)),
+    [saved, brand],
+  );
   const decorPage = usePaged(brand.decors);
   const piecePage = usePaged(pieces);
   return (
@@ -1090,7 +1093,7 @@ function DecorBrandList({
   children?: ReactNode;
 }) {
   const [data, setData] = useState<
-    { decors: Decor[]; saved: StoredDesign[]; savedFailed?: boolean } | 'error' | null
+    { decors: Decor[]; saved: DesignListing[]; savedFailed?: boolean } | 'error' | null
   >(null);
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => {
@@ -1158,12 +1161,13 @@ function DecorBrandList({
 }
 
 function SavedList({ onTake }: { onTake: (d: Design) => void }) {
-  const [rows, setRows] = useState<StoredDesign[] | null>(null);
+  const [rows, setRows] = useState<(DesignListing & { design: Design })[] | null>(null);
   const [failed, setFailed] = useState(false);
   const { visible, more } = usePaged(rows ?? []);
   useEffect(() => {
     listDesigns()
-      .then(setRows)
+      // A row the app cannot read is not offered to take (G-493).
+      .then((r) => setRows(r.filter(readableDesign)))
       .catch(() => {
         // A failed read is said as such, never as an empty list (ADR-195).
         setFailed(true);

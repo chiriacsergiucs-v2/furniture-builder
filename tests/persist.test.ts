@@ -36,6 +36,32 @@ describe('local storage', () => {
     await deleteDesign(a.id);
     expect(await loadDesign(a.id)).toBeUndefined();
   });
+  // G-493: a list gives each row's id, name and date, and the design or project only when it still validates; an
+  // unreadable row is listed (it is kept, ADR-012) without its content, so no caller can show or re-save it.
+  it('lists every row, with the content only when it validates', async () => {
+    const d = templates[0].create();
+    await dbm.saveDesign(d);
+    await db.designs.put({
+      id: 'bad',
+      name: 'Bad',
+      updatedAt: '2030',
+      design: { schemaVersion: 99 } as never,
+    });
+    const p = newProject('Kitchen');
+    await dbm.saveProject(p);
+    await db.projects.put({ id: 'badp', name: 'Bad', updatedAt: '2030', project: {} as never });
+    const designs = await dbm.listDesigns();
+    expect(designs.map((r) => [r.id, r.design !== undefined])).toEqual([
+      ['bad', false],
+      [d.id, true],
+    ]);
+    expect(Object.keys(designs[0]).sort()).toEqual(['id', 'name', 'updatedAt']);
+    const projects = await dbm.listProjects();
+    expect(projects.map((r) => [r.id, r.project !== undefined])).toEqual([
+      ['badp', false],
+      [p.id, true],
+    ]);
+  });
   it('skips a corrupt stored row instead of loading it', async () => {
     const d = templates[0].create();
     await db.designs.put({

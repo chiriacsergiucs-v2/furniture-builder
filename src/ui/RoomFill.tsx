@@ -324,7 +324,9 @@ function RoomFill({
   useEffect(() => {
     let live = true;
     listProjects()
-      .then((rows) => live && setMine(yourStyles(rows.map((r) => r.project))))
+      .then(
+        (rows) => live && setMine(yourStyles(rows.flatMap((r) => (r.project ? [r.project] : [])))),
+      )
       .catch(() => live && setMine([]));
     return () => {
       live = false;

@@ -80,7 +80,7 @@ describe('ADR-263 saving, backup and sharing', () => {
     const bytes = new Uint8Array(await z.blob.arrayBuffer());
     const row = (await db.listDesigns())[0];
     await db.saveDesign({
-      ...row.design,
+      ...row.design!,
       name: 'Changed after backup',
       updatedAt: new Date().toISOString(),
     });

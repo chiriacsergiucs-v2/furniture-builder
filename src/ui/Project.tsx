@@ -41,9 +41,10 @@ import { selectionBox } from '../core/selectPath';
 import type { Design, Diagnostic } from '../core/types';
 import {
   listDesigns,
+  readableDesign,
   listProjectTemplates,
   loadDesign,
-  type StoredDesign,
+  type DesignListing,
 } from '../store/libraryStore';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
@@ -1608,12 +1609,13 @@ export function AddPieceList({
     addPiece(d, libraryId);
     return true;
   };
-  const [saved, setSaved] = useState<StoredDesign[]>([]);
+  const [saved, setSaved] = useState<(DesignListing & { design: Design })[]>([]);
   // A read the device refuses is said, not shown as an empty list (ADR-261).
   const [readFailed, setReadFailed] = useState(false);
   useEffect(() => {
     listDesigns()
-      .then(setSaved)
+      // A row the app cannot read is not offered to add (G-493).
+      .then((r) => setSaved(r.filter(readableDesign)))
       .catch(() => {
         setSaved([]);
         setReadFailed(true);
