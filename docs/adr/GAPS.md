@@ -139,7 +139,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-031: ADR-072 defaults unconfirmed
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; the pick confirms the ADR-072 defaults as built
 - Origin: ADR-072, 2026-10-24 23:58 UTC; agent default, accepted by the user
 - Missing: Unconfirmed defaults: a tall unit is 1,600 mm or more; a zone reaches 50 mm from the wall.
 - Request: Pipes and outlets checked against the pieces (context, not a quote)
