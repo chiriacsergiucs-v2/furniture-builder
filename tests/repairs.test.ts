@@ -172,11 +172,27 @@ describe('repairs (ADR-071)', () => {
   it('a wall cabinet hung too high is offered to hang lower', () => {
     const p = { ...run(['wall-cabinet']), room: { ...rect(), height: 2000 } };
     const pm = buildProjectModel(p);
-    const d = pm.diagnostics.find((x) => x.code === 'outside-room');
+    const d = pm.diagnostics.find((x) => x.code === 'taller-than-room');
     expect(d).toBeDefined();
+    expect(pm.diagnostics.some((x) => x.code === 'outside-room')).toBe(false);
+    expect(mayRepair(d!)).toBe(true);
     const reps = expectSound(p, d!);
     expect(reps[0].label).toMatch(/^Hang .* \d+ mm lower$/);
     expect(reps[0].distance).toBe(d!.amount);
+  });
+  it('taller-than-room keeps the repair family outside-room had: hang lower, one piece (ADR-296)', () => {
+    const p = { ...run(['wall-cabinet']), room: { ...rect(), height: 2000 } };
+    const pm = buildProjectModel(p);
+    const d = pm.diagnostics.find((x) => x.code === 'taller-than-room')!;
+    expect(mayRepair(d)).toBe(true);
+    // A repair that clears the problem makes a build without a taller-than-room diagnostic for that piece.
+    const reps = repairsFor(p, pm, d);
+    expect(reps.map((r) => r.label)).toEqual([`Hang ${p.items[0].design.name} 170 mm lower`]);
+    expect(buildProjectModel(settle(reps[0].project)).diagnostics.map((x) => x.code)).not.toContain(
+      'taller-than-room',
+    );
+    // Two pieces are not a repairable room problem, as before.
+    expect(mayRepair({ ...d, itemIds: [...(d.itemIds ?? []), 'x'] })).toBe(false);
   });
   it('a wall unit hung 10 mm into a tall unit below: the amount is 10 mm and it hangs 10 mm higher', () => {
     let p = run(['wardrobe']);
@@ -277,6 +293,7 @@ describe('repairs fuzz over layouts (ADR-071)', () => {
           'pieces-overlap',
           'opening-blocked',
           'outside-room',
+          'taller-than-room',
           'compat-depth-match',
           'compat-height-match',
         ].includes(x.code),

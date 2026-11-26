@@ -30,7 +30,7 @@ import {
   type ProjectModel,
   type RunRequest,
 } from './project';
-import { boxInside, movesInside } from './room';
+import { boxInside, movesInside, ROOM_FIT_CODES } from './room';
 import type { Box, Diagnostic, Material, Mm } from './types';
 
 export interface Repair {
@@ -68,6 +68,7 @@ const REPAIRABLE = new Set([
   'pieces-overlap',
   'opening-blocked',
   'outside-room',
+  'taller-than-room',
   'compat-depth-match',
   'compat-height-match',
   'covers-service',
@@ -82,7 +83,7 @@ export const mayRepair = (d: Diagnostic) =>
   REPAIRABLE.has(d.code) &&
   (d.code === 'covers-service'
     ? !!d.featureId && d.itemIds?.length === 1
-    : (d.itemIds?.length ?? 0) === (d.code === 'outside-room' ? 1 : 2));
+    : (d.itemIds?.length ?? 0) === (ROOM_FIT_CODES.has(d.code) ? 1 : 2));
 
 /** The same problem in another build: same code, and the same front, or else the same pieces. */
 export function sameProblem(a: Diagnostic, b: Diagnostic): boolean {
@@ -421,7 +422,7 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
     // The later-placed piece first, then the other: along its wall, left or right, to the nearest spot (ADR-210).
     for (const m of [b, a])
       for (const dir of [1, -1] as const) out.push(apartCandidate(project, pm, m, dir));
-  } else if (d.code === 'outside-room' && ids.length === 1) {
+  } else if (ROOM_FIT_CODES.has(d.code) && ids.length === 1) {
     const pc = byId.get(ids[0]);
     const room = project.room;
     if (!pc || !room) return [];

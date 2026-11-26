@@ -32,6 +32,9 @@ export const ru_kitchen = {
   'Hob cut-out in the run worktop': 'Вырез под варочную панель в столешнице ряда',
   'Sink and hob cut-outs drawn on the plan': 'Вырезы под мойку и варочную панель на плане',
   '{w} × {d} mm': '{w} × {d} мм',
+  'Sink and hob cut-outs on the worktop': 'Вырезы под мойку и варочную панель на столешнице',
+  'Sink cut-out {w} mm wide': 'Вырез под мойку шириной {w} мм',
+  'Hob cut-out {w} mm wide': 'Вырез под варочную панель шириной {w} мм',
   // Worktop corners (G-010)
   'The worktops over {a} and {b} overlap at the corner: choose a mitred or butt joint.':
     'Столешницы над {a} и {b} перекрываются в углу: выберите соединение под 45° или встык.',
