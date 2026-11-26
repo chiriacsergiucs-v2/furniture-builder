@@ -4018,6 +4018,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-572: Low dev dependency updates
+
+- Status: Done (N403)
+- Origin: Dependency health check round 1, 2026-11-19
+- Missing: Dev patches done 2026-11-26 (N387). Left: @anthropic-ai/sdk 1.6.0 to 1.11.0 (pinned in package.json and supabase/functions/assistant/index.ts:7, touches ADR-239); not approved
+- Request: /health-deps, loop prompt; user approved Critical and Medium only
+- Questions: Bump the SDK in both places together (backend function)?
+- Suggested pick: Dev patches first, SDK separately with your yes (Work Low, Value Low)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-577: Canvas-native editor: slices 2-7 have no ADR yet
 
 - Status: Done (ADR-289)

@@ -4,7 +4,7 @@
 //
 // Deploy: `supabase functions deploy assistant` and `supabase secrets set ANTHROPIC_API_KEY=...`; optional secrets
 // ASSISTANT_MODEL (default claude-opus-5-5), ASSISTANT_DAILY_CAP (default 50) and ASSISTANT_ALLOWED_ORIGIN.
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
+import Anthropic from 'npm:@anthropic-ai/sdk@1.11.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import {
   type ActionSpec,
