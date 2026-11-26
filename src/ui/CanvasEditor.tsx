@@ -9,7 +9,7 @@ import {
   type RefObject,
 } from 'react';
 import { useCanvasEditor } from '../store/useCanvasEditor';
-import { useMediaQuery } from '../store/useMediaQuery';
+import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import { createListeners } from '../store/deviceValue';
 import { t } from '@furniture-builder/i18n';
 import { Icon } from './icons';
@@ -382,7 +382,17 @@ export function useLensAnchor(
 /** True while the canvas editor runs: the device flag is on and the screen is a phone (ADR-283). */
 export function useCanvas(): boolean {
   const [on] = useCanvasEditor();
-  return useMediaQuery('(max-width: 760px)') && on;
+  return useMediaQuery(PHONE) && on;
+}
+// Crossing the phone width (a rotation) turns a Group, Move to and a room between a flat block and a <details>
+// (ADR-295: no folds in the phone panel), so React mounts their controls again. The focused field is left first, while
+// it still stands: its blur commits what was typed, which a new mount would lose. Registered at load, so it runs
+// before the layout's own media listeners re-render.
+if (typeof matchMedia === 'function') {
+  matchMedia(PHONE).addEventListener?.('change', () => {
+    const el = document.activeElement;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.blur();
+  });
 }
 
 /** A request to open the lens card on a block and focus one control in it (ADR-284). */

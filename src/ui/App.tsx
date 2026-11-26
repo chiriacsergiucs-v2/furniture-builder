@@ -188,6 +188,8 @@ const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
     : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
+/** The history entry the open phone card added (ADR-295) is the current one. */
+const onCardEntry = () => !!(history.state as { fbCard?: number } | null)?.fbCard;
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
  * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, #info Information and guides (ADR-158)
@@ -286,6 +288,9 @@ export function App() {
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const setMaterialOpen = useUi((s) => s.setMaterialOpen);
   const phone = useMediaQuery('(max-width: 760px)');
+  // A short screen wider than a phone (844 × 390 landscape, a short desktop window, ADR-295): the view tools go behind
+  // Options as on a phone, so the tool row stays one row and the 3D view keeps its height, with no sideways scroll.
+  const short = useMediaQuery('(min-width: 761px) and (max-height: 500px)');
   // The phone's slot for the 3D view's quick-count card (G-070), handed to the viewer (ADR-230).
   const [countDock, setCountDock] = useState<HTMLDivElement | null>(null);
   // Seams and lit parts the 3D view draws (ADR-230), shown as data attributes for the find-it scripts.
@@ -377,20 +382,48 @@ export function App() {
   }, [canvas, sheetOpen, outOpen]);
   // Back closes the open card (ADR-295): opening it adds one history entry; closing it any other way takes that entry
   // back, once. Never more than one entry, and a back that is ours is never read as a close twice.
+  // `cardEntry` says we stand on our entry, whatever its state now holds: code that replaces the state while the card
+  // is open (the projects page, share and open links, sign-in) must not leave the entry behind. `pendingBack` holds
+  // the address to keep while our own history.back() is on its way, so its popstate is never read as a Back, a reopen
+  // in the meantime pushes after it lands, and an address replaced on our entry stays the address after the back.
   const cardUp = canvas && mode === 'compose' && (sheetOpen || outOpen);
   const cardEntry = useRef(false);
+  const pendingBack = useRef<string | null>(null);
+  const cardUpNow = useRef(cardUp);
   useEffect(() => {
+    // A reload with the card open lands on our old entry: it is a plain entry now.
+    if (onCardEntry()) history.replaceState(null, '');
+  }, []);
+  useEffect(() => {
+    cardUpNow.current = cardUp;
     if (cardUp && !cardEntry.current) {
+      if (pendingBack.current !== null) return; // pushed once our back lands (popstate below)
       cardEntry.current = true;
       history.pushState({ fbCard: 1 }, '');
     } else if (!cardUp && cardEntry.current) {
       cardEntry.current = false;
-      if ((history.state as { fbCard?: number } | null)?.fbCard) history.back();
+      pendingBack.current = location.href;
+      history.back();
     }
   }, [cardUp]);
   useEffect(() => {
     const onPop = () => {
-      if (!cardEntry.current || (history.state as { fbCard?: number } | null)?.fbCard) return;
+      if (pendingBack.current !== null) {
+        const keep = pendingBack.current;
+        pendingBack.current = null;
+        if (location.href !== keep) history.replaceState(history.state, '', keep);
+        if (cardUpNow.current) {
+          cardEntry.current = true;
+          history.pushState({ fbCard: 1 }, '');
+        }
+        return;
+      }
+      if (!cardEntry.current) {
+        // Forward onto an entry of a card that is closed: make it a plain entry.
+        if (onCardEntry()) history.replaceState(null, '');
+        return;
+      }
+      if (onCardEntry()) return;
       cardEntry.current = false;
       setSheetStop('peek');
       setOutOpen(false);
@@ -1178,7 +1211,7 @@ export function App() {
                   <span className="fronts-short">{t('Fronts')}</span>
                 </label>
               )}
-              <ViewOptions menu={inOptions('exploded', phone)}>
+              <ViewOptions menu={inOptions('exploded', phone || short)}>
                 {shows3d(shown) && (
                   <label className="toggle small">
                     <input
