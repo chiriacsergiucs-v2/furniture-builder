@@ -1,6 +1,7 @@
 // Find-it acceptance for the phone editor middle ground (ADR-295, backlog N383), run against a production build:
 //   pnpm build && pnpm preview &  node tools/mobile-middle/find-it.mjs [url] [out dir] [--json report.json]
-// Starts every context from the bare app at 390×844 and 844×390, finds the edit bar, the one scrolling panel, the jump
+// Starts every context from the bare app at 390×844 and 844×390 (plus the edit bar at 320×640 and a project's room
+// drawings at 844×390, G-599), finds the edit bar, the one scrolling panel, the jump
 // index, Results, Settings and Material by role and visible text, counts the taps to every control, and compares the
 // quick-count card box with its host in 3D. Writes `<out dir>/mobile-middle-taps.json` and screenshots
 // `<out dir>/mm-<w>x<h>-<step>.png`. Exit 1 when any check fails; a failing step is a FAIL, never a crash.
@@ -662,11 +663,125 @@ const editorFlow = async (vp) => {
   await ctx.close();
 };
 
+// G-599: the edit bar at the narrowest phone width keeps every button inside the screen and never scrolls.
+const narrowBar = async () => {
+  const vp = { width: 320, height: 640 };
+  const w = tag(vp);
+  const { ctx, page } = await freshPage(vp);
+  try {
+    await selectSpace(page);
+    const r = await page.evaluate(() => {
+      const bar = document.querySelector('[role="toolbar"][aria-label="Editor bar"]');
+      if (!bar) return null;
+      const btns = [...bar.querySelectorAll('button')].filter(
+        (b) => b.getBoundingClientRect().width > 0,
+      );
+      const out = btns.filter((b) => {
+        const x = b.getBoundingClientRect();
+        return x.left < -1 || x.right > innerWidth + 1;
+      });
+      const small = btns.filter((b) => {
+        const x = b.getBoundingClientRect();
+        return x.width < 43.5 || x.height < 43.5;
+      });
+      return {
+        n: btns.length,
+        own: bar.scrollWidth <= bar.clientWidth + 1,
+        page: document.documentElement.scrollWidth <= innerWidth + 1,
+        out: out.map((b) => b.getAttribute('aria-label') || b.textContent.trim()),
+        small: small.map((b) => b.getAttribute('aria-label') || b.textContent.trim()),
+      };
+    });
+    check(w, 'edit bar exists at 320 px', !!r && r.n > 0, r ? `${r.n} buttons` : 'no bar');
+    if (r) {
+      check(w, 'edit bar does not scroll sideways at 320 px', r.own);
+      check(
+        w,
+        'every edit bar button is inside the screen at 320 px',
+        r.out.length === 0,
+        r.out.join(', '),
+      );
+      check(
+        w,
+        'every edit bar button is at least 44 px at 320 px',
+        r.small.length === 0,
+        r.small.join(', '),
+      );
+      check(w, 'no horizontal page scroll at 320 px', r.page);
+    }
+    await shot(page, vp, 'edit-bar');
+    check(w, 'no script errors at 320 px', page.errors.length === 0, page.errors.join(' | '));
+  } finally {
+    await ctx.close();
+  }
+};
+
+// G-599: a project's room drawings (plan and front) at short landscape fit the screen with no sideways page scroll.
+const roomDrawings = async () => {
+  const vp = LANDSCAPE;
+  const w = tag(vp);
+  const ctx = await browser.newContext({ viewport: vp, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  page.setDefaultTimeout(TIMEOUT);
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  try {
+    const dlg = page.locator('dialog[open]');
+    await page.goto(url);
+    await page.getByRole('button', { name: 'Create a new project', exact: true }).click();
+    await dlg.locator('input').fill('Room drawings');
+    await dlg.getByRole('button', { name: 'Create project' }).click();
+    await page.locator('main.work').waitFor({ state: 'visible' });
+    const hints = page.getByRole('dialog', { name: 'Getting started' });
+    if (await hints.isVisible().catch(() => false))
+      await hints.getByRole('button', { name: 'Skip' }).click();
+    await page.getByRole('button', { name: 'Add a piece', exact: true }).first().click();
+    await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
+    await dlg.locator('.start-group .row-btn').first().click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      const box = (label) => {
+        const e = document.querySelector(`[aria-label="${label}"]`);
+        if (!e) return null;
+        const b = e.getBoundingClientRect();
+        return { left: b.left, right: b.right, width: b.width, height: b.height };
+      };
+      return {
+        plan: box('Room plan, seen from above. Select a piece.'),
+        front: box('Room seen from the front. Select a piece.'),
+        page: document.documentElement.scrollWidth <= innerWidth + 1,
+      };
+    });
+    const inside = (b) =>
+      !!b && b.width > 0 && b.height > 0 && b.left >= -1 && b.right <= vp.width + 1;
+    check(
+      w,
+      'room plan is shown and fits the screen width',
+      inside(r.plan),
+      JSON.stringify(r.plan),
+    );
+    check(
+      w,
+      'room front view is shown and fits the screen width',
+      inside(r.front),
+      JSON.stringify(r.front),
+    );
+    check(w, 'room drawings: no horizontal page scroll', r.page);
+    await shot(page, vp, 'room-drawings');
+    check(w, 'room drawings: no script errors', errors.length === 0, errors.join(' | '));
+  } finally {
+    await ctx.close();
+  }
+};
+
 // ---- run ----------------------------------------------------------------------------------------------------------
 for (const vp of [PORTRAIT, LANDSCAPE]) {
   await step(tag(vp), 'editor flow', () => editorFlow(vp));
   await step(tag(vp), '3D counters', () => counters(vp));
 }
+await step('320x640', 'narrow edit bar', narrowBar);
+await step(tag(LANDSCAPE), 'room drawings', roomDrawings);
 // The tap table is read at phone portrait.
 for (const state of ['piece', 'space']) {
   await step(tag(PORTRAIT), `${state} Edit panel`, () => editSurface(PORTRAIT, state));

@@ -47,8 +47,11 @@ then the fat edge lines (`LineSegments2`) and canvas resizes from an oscillating
 | First drag frame 52–66 ms | canvas resize at the ratio change (≈ 11 ms) + needed pointerdown raycast (≈ 13 ms) + SwiftShader GPU wait | draw drag frames into a fixed reduced render target, no canvas resize | M | G-597 |
 | Review nits and glue tests | scope (5-loop limit reached) | jsdom tests for FloorShadow and press wiring; twins built in an effect; mouse-only tap slop | S–M | G-600 |
 | Real Android device check | no device in the sandbox | the user opens the live build on the phone | S | G-596 |
-| 320 px edit bar, room drawings in short landscape | not measured | add those passes to find-it.mjs | S | G-599 |
-| `matrixAutoUpdate` off | low value (≈ 0.1 ms/frame) | a profile showing it matters | S | G-598 |
+| Room drawings 20 px high at 844×390 (also on `main`) | layout decision for the short-landscape work area | pick: minimum stage height, work column scrolls | M | G-601 |
+
+Covered after the report (S-leftover rule, CLAUDE.md): G-599 built (`find-it.mjs` 73/73 with the 320×640 edit bar
+and the 844×390 room drawings passes); G-598 acknowledged (0.1 ms per frame, stale-transform risk); the touch slop
+answered and built (a wobbling touch tap selects).
 
 ## Agents
 

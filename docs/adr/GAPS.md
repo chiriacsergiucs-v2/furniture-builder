@@ -2467,7 +2467,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-598: 3D view: matrixAutoUpdate off for static meshes
 
-- Status: Open
+- Status: Acknowledged (decided 2026-11-26 under the S-leftover rule: measured 0.1 ms per frame, turning matrixAutoUpdate off on r3f meshes risks stale transforms; no change)
 - Origin: ADR-295, goal runner loop 4
 - Missing: updateMatrixWorld still runs each frame (about 0.1 ms); turning it off on r3f-managed meshes risks stale transforms
 - Request: ADR-295 decision 9 (drag fix)
@@ -2479,7 +2479,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-599: Phone middle ground: layouts not measured (320 px edit bar, room drawings in short landscape)
 
-- Status: Open
+- Status: Done (N383: `tools/mobile-middle/find-it.mjs` 73/73, 320x640 edit bar and 844x390 room drawings passes; found G-601)
 - Origin: ADR-295, code review round 1
 - Missing: find-it runs at 390x844 and 844x390 only; the edit bar at 320 px and the room drawings view at 844x390 are not measured by a script
 - Request: ADR-295 decision 8
@@ -2499,4 +2499,16 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Add jsdom tests for the glue; build twins in an effect
 - Work: Low-medium
 - Impact: Low
+- Necessity: Medium
+
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Open
+- Origin: N383 / ADR-295, G-599 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
+- Work: Medium
+- Impact: Medium
 - Necessity: Medium
