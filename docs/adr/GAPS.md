@@ -1876,18 +1876,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-566: Pin GitHub Actions by commit SHA
-
-- Status: Open
-- Origin: Security health check round 1, 2026-11-19 (L-4)
-- Missing: .github/workflows/ci.yml, deploy.yml and deploy-assistant.yml pin actions by tag; supabase/setup-cli runs with a secret (deploy-assistant.yml:20-21)
-- Request: /health-security, loop prompt; user approved Medium only
-- Questions: None
-- Suggested pick: Pin by SHA, verifying each SHA from the upstream release (Work Low, Value Low-medium)
-- Work: Low
-- Impact: Low-medium
-- Necessity: Low
-
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
