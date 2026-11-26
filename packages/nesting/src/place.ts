@@ -425,11 +425,25 @@ const ORDERS: Order[] = ['area', 'maxSide', 'length', 'width', 'perimeter'];
 const FITS: Fit[] = ['area', 'short', 'long'];
 const SPLITS: Split[] = ['maxArea', 'minArea', 'across', 'along'];
 
+/**
+ * Production attempt bound (G-495, N394). The layout is decided by this count, not by the clock, so the same input
+ * gives the same layout on any device. Measured 2026-11-26 on the 21 golden jobs (2 sample projects x 2 materials,
+ * 3 synthetic; seeds 1, 7, 42; tests/fixtures/nesting-golden.json): the old 1500 ms budget reached the full 40
+ * attempts every time (median 40, min 40), and 40 attempts took a median of 3 ms (max 40 ms), so the budget never
+ * cut a search on this machine; a device would have to be about 400 times slower for it to.
+ */
+export const DEFAULT_MAX_ATTEMPTS = 40;
+/**
+ * Safety ceiling only, far above the median (3 ms for 40 attempts, about 10 000 times): it stops a pathological job
+ * on a very slow device and never decides the layout in normal use. Pass `maxMs: Infinity` to remove it.
+ */
+export const SAFETY_MAX_MS = 30_000;
+
 /** Heuristic guillotine layout for one material. Deterministic for a given seed while within the attempt bound. */
 export function nest(job: NestJob, options: NestOptions = {}): NestResult {
   const seed = options.seed ?? 42,
-    maxMs = options.maxMs ?? 1500,
-    maxAttempts = Math.max(1, options.maxAttempts ?? 40);
+    maxMs = options.maxMs ?? SAFETY_MAX_MS,
+    maxAttempts = Math.max(1, options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
   const t0 = now();
   const insts: Inst[] = [];
   for (const p of job.parts) {
