@@ -288,5 +288,14 @@ export const ru_catalog = {
   'Clear filters': 'Сбросить фильтры',
   Families: 'Семейства',
   '{n|# opens right away|# open right away}':
-    '{n|# открывается сразу|# открываются сразу|# открываются сразу}',
+    '{n|# открывается сразу|# открываются сразу|# открываются сразу}', // ADR-298: Highlights and kits.
+  Highlights: 'Избранное',
+  Highlight: 'Избранное',
+  Kit: 'Комплект',
+  'Add kit': 'Добавить комплект',
+  'Add kit {name}': 'Добавить комплект {name}',
+  'Ready-made: only the size and boards change': 'Готовое изделие: меняются только размер и плиты',
+  'Nothing highlighted yet. Mark a template as a highlight in Edit template.':
+    'Пока нет избранного. Отметьте шаблон как избранный в «Изменить шаблон».',
+  'Highlight variant {n}': 'Избранный вариант {n}',
 } satisfies Record<string, string>;

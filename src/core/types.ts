@@ -759,7 +759,16 @@ export interface CatalogMeta {
      */
     rooms?: Room[];
   };
+  /**
+   * A kit (ADR-298, schemaVersion 12): the piece was inserted as a pre-made build and only the listed edits are open;
+   * the store refuses any other change to the product. "Unlock all edits" removes it. Absent = every edit is open.
+   */
+  kit?: { allow: KitEdit[] };
 }
+
+/** The edits a kit keeps open (ADR-298): the outer size and the boards. */
+export type KitEdit = 'size' | 'boards';
+export const KIT_EDITS: readonly KitEdit[] = ['size', 'boards'];
 
 /** Guidance thresholds (ADR-035). Absent = typical defaults; all are warnings, never errors. */
 export interface RuleSettings {
@@ -782,7 +791,7 @@ export interface Design {
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
    * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
   id: string;
   name: string;
   createdAt: string;

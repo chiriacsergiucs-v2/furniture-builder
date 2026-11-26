@@ -2999,6 +2999,36 @@ table.buy {
   border-color: var(--warn);
   color: var(--warn);
 }
+/* ADR-298: a highlighted catalog item and a kit (ready-made build). */
+.kind.highlight {
+  display: inline-flex;
+  gap: var(--s-1);
+  align-items: center;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.kind.highlight .icon {
+  width: 0.9em;
+  height: 0.9em;
+}
+.kind.kit {
+  border-color: var(--ink-2);
+}
+/* With .plain: one column, the text then Unlock all edits under it, so the button never clips on a phone. */
+.kit-banner {
+  justify-items: start;
+}
+.kit-banner .btn {
+  grid-column: 1;
+  min-height: 44px;
+}
+.variant-edit .toggle.small {
+  display: inline-flex;
+  gap: var(--s-1);
+  align-items: center;
+  min-height: 44px;
+}
 .template-editor {
   display: grid;
   gap: var(--s-3);

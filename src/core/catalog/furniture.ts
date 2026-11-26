@@ -291,6 +291,8 @@ export const tables: CatalogFamily[] = [
       },
       {
         id: 'dining-h-stretcher',
+        // The stand-out of its function group, shown under Highlights (ADR-298).
+        highlight: true,
         name: 'With H-stretcher',
         summary: 'Stretchers low between the legs',
         kind: 'construction',
@@ -545,6 +547,8 @@ export const seating: CatalogFamily[] = [
       },
       {
         id: 'garden-bench-back',
+        // The stand-out of its function group, shown under Highlights (ADR-298).
+        highlight: true,
         name: 'With back and arms',
         summary: '1500 × 900 × 620, back raked 15°, arm rests at 650',
         kind: 'construction',
@@ -964,6 +968,8 @@ export const sleeping: CatalogFamily[] = [
     variants: [
       {
         id: 'daybed-three-sided',
+        // The stand-out of its function group, shown under Highlights (ADR-298).
+        highlight: true,
         name: 'Three-sided',
         summary: 'For a 90 × 200 mattress',
         kind: 'construction',

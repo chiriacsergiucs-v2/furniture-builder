@@ -1,4 +1,5 @@
 import { POSITION_MAX } from '../core/limits';
+import { KitBanner, KitEditor } from './KitPanel';
 import { axesText, isSizeLocked, lockedAxes } from '../core/sizeLock';
 import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -152,6 +153,8 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const shownId = useShownId();
   const prod = design.product;
   const found = shownId ? findInProduct(prod, shownId) : undefined;
+  // A kit (ADR-298) shows only its banner (Compose) or its size (Settings); the rest is fixed until unlocked.
+  if (design.catalog?.kit) return mode === 'compose' ? <KitBanner /> : <KitEditor />;
   if (mode === 'compose')
     return found ? (
       <SpaceEditor

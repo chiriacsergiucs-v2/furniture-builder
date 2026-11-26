@@ -723,6 +723,8 @@ export const kitchen: CatalogFamily[] = [
       },
       {
         id: 'tall-drawer-tower',
+        // The stand-out of its function group, shown under Highlights (ADR-298).
+        highlight: true,
         name: 'Drawer tower',
         summary: 'Five drawers, full height',
         kind: 'interior',

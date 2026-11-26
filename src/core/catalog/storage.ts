@@ -536,6 +536,8 @@ export const storage: CatalogFamily[] = [
       },
       {
         id: 'media-wall',
+        // The stand-out of its function group, shown under Highlights (ADR-298).
+        highlight: true,
         name: 'Wall-hung',
         summary: 'On brackets, 300 above the floor',
         kind: 'interior',

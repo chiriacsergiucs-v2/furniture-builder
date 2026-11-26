@@ -3,7 +3,17 @@ import type { Design, Mm, Product } from '../types';
 /** Function groups and rooms used to group the catalog (ADR-032). */
 export type FunctionGroup = 'kitchen' | 'storage' | 'tables' | 'seating' | 'sleeping';
 export type Room =
-  'living' | 'bedroom' | 'dining' | 'office' | 'outdoor' | 'kitchen' | 'hallway' | 'kids' | 'other';
+  | 'living'
+  | 'bedroom'
+  | 'dining'
+  | 'office'
+  | 'outdoor'
+  | 'kitchen'
+  | 'hallway'
+  | 'kids'
+  | 'other'
+  /** Pieces that are neither classic catalog items nor one room's furniture, such as the room divider (ADR-298). */
+  | 'custom';
 export const FUNCTIONS: FunctionGroup[] = ['kitchen', 'storage', 'tables', 'seating', 'sleeping'];
 export const ROOMS: Room[] = [
   'living',
@@ -15,6 +25,7 @@ export const ROOMS: Room[] = [
   'kids',
   'outdoor',
   'other',
+  'custom',
 ];
 export const FUNCTION_LABEL: Record<FunctionGroup, string> = {
   kitchen: 'Kitchen cabinets',
@@ -33,6 +44,7 @@ export const ROOM_LABEL: Record<Room, string> = {
   kids: "Kids' room",
   outdoor: 'Outdoor',
   other: 'Other',
+  custom: 'Custom',
 };
 
 /**
@@ -92,6 +104,10 @@ export interface CatalogVariant {
   hardware?: string;
   /** A complete, self-contained design (ADR-011). Absent when the variant cannot be built yet. */
   create?: () => Design;
+  /** Shown under Catalog › Highlights (ADR-298). */
+  highlight?: true;
+  /** Inserted as a kit: only the outer size and the boards stay editable (ADR-298). */
+  kit?: true;
 }
 
 /** `safety`: built, but every variant waits for safety values the user confirms (ADR-035). */

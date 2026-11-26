@@ -134,6 +134,8 @@ export interface State {
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void;
   setKerf: (kerf: number) => void;
+  /** Unlock all edits of a kit (ADR-298): removes the lock in one step; Undo brings it back. */
+  unlockKit: () => void;
   /** ADR-161: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
   setHardwareProduct: (key: string, hp: HardwareProduct | undefined) => void;
   /** ADR-161: a seller product added to the open piece's shopping list; in a project view, the project's (ADR-210). */

@@ -35,7 +35,7 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Blind corner | kitchen | corner · ✅ ready | 1000 × 820 × 578 | A blind section covered by the neighbouring cabinet, joined to a normal cabinet with a door. | Corner on the left or right; Blind width; Base or wall height | Blind left + shelf **I** · Blind right + shelf **I** · Wall blind corner **I** [hardware:user] |
 | L corner | kitchen | corner · ✅ ready | 900 × 820 × 900 | Two wings open to each other at the corner with a folding door pair. | Wing lengths; Corner side; Base or wall height | Base L, folding doors **I** · Wall L 600 × 600 **I** [hardware:user] · Diagonal front **C** [shape] |
 
-### Storage and display (10 families, 41 variants)
+### Storage and display (12 families, 47 variants)
 
 | Family | Rooms | Root · support | Default size | Structure | Configurations | Variants (≤ 5) |
 |---|---|---|---|---|---|---|
@@ -49,6 +49,8 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Media console | living | cabinet · ✅ ready | 1800 × 450 × 438 | Low long carcass with open niches for devices, drawers, doors or flaps; on the floor or hung on the wall. | Open niches; Drawers; Drop-down flaps; Floor or wall-hung | Open niches + drawers **I** · Doors + open centre **I** · Wall-hung **I** · Drop-down flaps **C** [front:flap, hardware:user] · Three doors **I** · Four open niches **I** · Two drawer stacks **I** · Flaps beside an open centre **C** [front:flap, hardware:user] · Doors outside, drawers inside **I** · Media tower **I** |
 | Filing cabinet | office | cabinet · ✅ ready | 420 × 1000 × 618 | Strong carcass with file drawers on full-extension runners and hanging-file rails. | Drawers 2–4; Vertical or lateral; Under-desk pedestal | 3 file drawers **I** [hardware:user] · Pedestal: box + file drawer **I** · Lateral, 2 drawers **I** [hardware:user] |
 | Loose panels | other | panels · ✅ ready | 600 × 18 × 300 | Parts known only by their cut sizes: listed for cutting and sheets, shown in one pile, not assembled. | Name, length, width, board and quantity per part | One panel **I** |
+| Room divider | custom, living, office | cabinet · ✅ ready | 1600 × 800 × 350 | Open on both sides, no back; staggered rows of open cells, rear edges banded. Stands free: fix it to the floor or ceiling. | Width and height (kit); Boards (kit) | Low **I** · Tall **I** · Wide **I** |
+| Staggered shelving | custom, living, kids | cabinet · ✅ ready | 600 × 2000 × 300 | Back nailed on; staggered rows of open cells whose dividers never line up. | Width and height (kit); Boards (kit) | Narrow tower **I** · Wall **I** · Low bench shelf **I** |
 
 ### Tables and surfaces (6 families, 17 variants)
 
@@ -88,5 +90,5 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Bunk bed | kids, bedroom | frame · 🛡 waits for safety values | — | Two decks between tall ends, guard rails all round the top deck, a ladder. | Tier gap; Ladder side; Guard rail height; Trundle | Standard **C** [root:frame, safety:user-confirmed] ⏳ · With trundle **C** [root:frame, frame:under-storage, safety:user-confirmed] ⏳ |
 | Cradle | bedroom, kids | frame · 🛡 waits for safety values | — | Small bed with tall ends and closed sides on a fixed stand. | Mattress size; Side height | Fixed stand **C** [root:frame, safety:user-confirmed] ⏳ |
 
-**Totals:** 43 families, 154 variants; 90 interior-only, 144 can be inserted today, 10 wait (⏳) for a construction or for safety values.
+**Totals:** 45 families, 160 variants; 96 interior-only, 150 can be inserted today, 10 wait (⏳) for a construction or for safety values.
 <!-- catalog:end -->

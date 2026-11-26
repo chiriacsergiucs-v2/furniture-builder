@@ -92,7 +92,7 @@ function itemFacts(f: ViewFamily, v: CatalogVariant) {
   };
 }
 
-type Source = 'templates' | 'saved' | 'brands';
+type Source = 'templates' | 'saved' | 'brands' | 'highlights';
 
 /**
  * The Catalog page (ADR-027 as amended by ADR-032): a full page, reached from the "Catalog" tab in the top bar or
@@ -187,7 +187,7 @@ export function CatalogPage({
   const ready = all.filter(insertable).length;
   const sources = (
     <div className="segmented small" role="tablist" aria-label={t('Source')} onKeyDown={rovingKeys}>
-      {(['templates', 'saved', 'brands'] as const).map((s, i) => (
+      {(['templates', 'saved', 'brands', 'highlights'] as const).map((s, i) => (
         <button
           key={s}
           type="button"
@@ -204,7 +204,9 @@ export function CatalogPage({
               ? phone
                 ? t('Saved')
                 : t('Saved on this device')
-              : t('Brands')}
+              : s === 'brands'
+                ? t('Brands')
+                : t('Highlights')}
         </button>
       ))}
     </div>
@@ -417,6 +419,54 @@ export function CatalogPage({
       />
     </>
   );
+  // Catalog › Highlights (ADR-298): highlighted versions by function group, kit families first; the search applies.
+  const highlightGroups = FUNCTIONS.map((fn) => ({
+    fn,
+    families: families
+      .filter((f) => f.function === fn && f.variants.some((v) => v.highlight && matches(f, v, q)))
+      .sort(
+        (a, b) => Number(b.variants.some((v) => v.kit)) - Number(a.variants.some((v) => v.kit)),
+      ),
+  })).filter((g) => g.families.length > 0);
+  const highlightsBlock = (
+    <>
+      <div className="catalog-toolbar">{search}</div>
+      {highlightGroups.length === 0 ? (
+        <p className="empty center">
+          <Icon name="star" />
+          {q
+            ? t('Nothing matches “{query}”.', { query })
+            : t('Nothing highlighted yet. Mark a template as a highlight in Edit template.')}
+        </p>
+      ) : (
+        highlightGroups.map((g) => (
+          <section
+            key={g.fn}
+            className="catalog-group highlights"
+            aria-label={tr(FUNCTION_LABEL[g.fn])}
+          >
+            <h2 className="group-head">{tr(FUNCTION_LABEL[g.fn])}</h2>
+            {g.families.map((family) => (
+              <FamilyBlock
+                key={family.id}
+                f={family}
+                q={q}
+                highlightsOnly
+                toProject={toProject}
+                safety={safety}
+                onConfirmSafety={() => toggleSafety(true)}
+                onTake={take}
+                onEdit={() => {
+                  setSource('templates');
+                  startEdit(family);
+                }}
+              />
+            ))}
+          </section>
+        ))
+      )}
+    </>
+  );
   const savedBlock = (
     <>
       <>
@@ -503,6 +553,7 @@ export function CatalogPage({
         {source === 'templates' && editing && templateEditor}
         {source === 'saved' && savedBlock}
         {source === 'brands' && brandsBlock}
+        {source === 'highlights' && highlightsBlock}
       </FinderPage>
     );
   return (
@@ -623,6 +674,7 @@ export function CatalogPage({
         ))}
       {source === 'saved' && savedBlock}
       {source === 'brands' && brandsBlock}
+      {source === 'highlights' && highlightsBlock}
     </main>
   );
 }
@@ -675,6 +727,17 @@ function ItemCard({
             {t('New construction')}
           </span>
         )}
+        {v.highlight && (
+          <span className="kind highlight">
+            <Icon name="star" className="sm" />
+            {t('Highlight')}
+          </span>
+        )}
+        {v.kit && (
+          <span className="kind kit" title={t('Ready-made: only the size and boards change')}>
+            {t('Kit')}
+          </span>
+        )}
       </span>
       {size && <span className="sub num">{size}</span>}
       {v.hardware && (
@@ -689,9 +752,11 @@ function ItemCard({
           type="button"
           className="tile"
           aria-label={
-            toProject
-              ? t('Add {name}', { name: `${tr(v.name)} ${size}`.trim() })
-              : t('Open {name}', { name: `${tr(v.name)} ${size}`.trim() })
+            v.kit
+              ? t('Add kit {name}', { name: `${tr(v.name)} ${size}`.trim() })
+              : toProject
+                ? t('Add {name}', { name: `${tr(v.name)} ${size}`.trim() })
+                : t('Open {name}', { name: `${tr(v.name)} ${size}`.trim() })
           }
           onClick={() => {
             const d = insertVariant(f, v);
@@ -707,9 +772,9 @@ function ItemCard({
             alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
           />
           {text}
-          {verb && (
+          {(verb || v.kit) && (
             <span className="verb" aria-hidden="true">
-              {toProject ? t('Add') : t('Open')}
+              {v.kit ? t('Add kit') : toProject ? t('Add') : t('Open')}
             </span>
           )}
         </button>
@@ -821,9 +886,12 @@ function FamilyBlock({
   onTake,
   onEdit,
   verbs,
+  highlightsOnly,
 }: {
   f: ViewFamily;
   also?: boolean;
+  /** Catalog › Highlights (ADR-298): only the highlighted versions. */
+  highlightsOnly?: boolean;
   /** The finder's family sheet (ADR-291): each tile shows its verb (Add or Open) as well as saying it. */
   verbs?: boolean;
   q: string;
@@ -835,7 +903,7 @@ function FamilyBlock({
   onEdit: () => void;
 }) {
   const remove = useTemplates((s) => s.remove);
-  const items = f.variants.filter((v) => matches(f, v, q));
+  const items = f.variants.filter((v) => matches(f, v, q) && (!highlightsOnly || v.highlight));
   const facts = useMemo(
     () => new Map(f.variants.map((v) => [v.id, itemFacts(f, v)])),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `safety` changes what `itemFacts` can build.
@@ -1369,6 +1437,14 @@ function TemplateEditor({
                 value={v.summary}
                 onChange={(e) => setV(i, { summary: e.target.value })}
               />
+              <label className="toggle small">
+                <input
+                  type="checkbox"
+                  checked={!!v.highlight}
+                  onChange={(e) => setV(i, { highlight: e.target.checked ? true : undefined })}
+                />
+                {t('Highlight variant {n}', { n: i + 1 })}
+              </label>
               <div className="row-actions">
                 <button
                   type="button"

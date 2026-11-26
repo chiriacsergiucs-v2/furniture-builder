@@ -4,8 +4,9 @@
  * The list must match `docs/catalog.md` (a test compares them).
  */
 import { newId, upgradeDesign } from '../design';
-import type { Design } from '../types';
+import { KIT_EDITS, type Design } from '../types';
 import { tables, seating, sleeping } from './furniture';
+import { custom } from './custom';
 import { kitchen } from './kitchen';
 import { storage } from './storage';
 import { insertable, type CatalogFamily, type CatalogVariant } from './types';
@@ -18,6 +19,7 @@ export const catalogFamilies: CatalogFamily[] = [
   ...tables,
   ...seating,
   ...sleeping,
+  ...custom,
 ];
 
 export const findFamily = (id: string) => catalogFamilies.find((f) => f.id === id);
@@ -47,6 +49,8 @@ export function insertVariant(
     catalog: {
       category: family.name,
       ...(variant.hardware ? { hardwareToChoose: variant.hardware } : {}),
+      // A kit keeps only the size and the boards open (ADR-298).
+      ...(variant.kit ? { kit: { allow: [...KIT_EDITS] } } : {}),
       origin: {
         catalogId: family.id,
         variantId: variant.id,
