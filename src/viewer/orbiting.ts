@@ -47,9 +47,10 @@ export function useOrbiting(): boolean {
 }
 
 /**
- * The pixel ratio while turning: at most 0.75, so a phone at 2× draws about a seventh of the pixels per frame. The
- * picture is softer only while it moves; the still view is drawn at the full ratio again (OrbitQuality).
+ * The pixel ratio while turning: at most 0.5. Drawing the pixels is most of a frame's cost (measured with
+ * tools/mobile-middle/drag-perf.mjs: 8 fps at the full ratio, 25 at 0.75, 52 at 0.5, 4× CPU throttling). The picture is
+ * softer only while it moves; the still view is drawn at the full ratio again (OrbitQuality).
  */
 export function orbitDpr(dpr: number): number {
-  return Math.min(dpr, 0.75);
+  return Math.min(dpr, 0.5);
 }
