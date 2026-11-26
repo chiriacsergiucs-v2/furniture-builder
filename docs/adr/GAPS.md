@@ -47,7 +47,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-021, 2026-10-24 15:37 UTC; blocked by the environment
-- Missing: The Fusion 360 export has never been run inside Fusion (N03).
+- Missing: The Fusion 360 export has never been run inside Fusion (N03). The checklist half is done (N401, docs/fusion-check.md); the run in Fusion needs the user.
 - Request: Export to Fusion 360 (context, not a quote)
 - Questions: Can you run the script once in Fusion 360 on two sample designs?
 - Suggested pick: You run the script once in Fusion on two sample designs. Claude adds a checklist of what to compare (part count, sizes, names). (estimate: effort +2%, value +15%)
