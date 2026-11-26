@@ -51,6 +51,8 @@ for (const width of [390, 1280]) {
     hasTouch: phone,
     isMobile: phone,
   });
+  // This script drives the grouped catalog page; the finder is the default since G-582 and has its own script.
+  await ctx.addInitScript(() => localStorage.setItem('fb:catalogFinder', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -130,7 +132,7 @@ for (const width of [390, 1280]) {
   await openTab(page, /^Hardware/);
   await page.waitForTimeout(300);
   const share = await page.evaluate(() => {
-    const t = document.querySelector('.hardware table.cut');
+    const t = document.querySelector('.hardware table.cut.items');
     const th = t?.querySelectorAll('th')[1];
     return t && th ? th.getBoundingClientRect().width / t.getBoundingClientRect().width : 0;
   });

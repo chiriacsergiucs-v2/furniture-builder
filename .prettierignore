@@ -6,7 +6,7 @@ pnpm-lock.yaml
 # Generated and compared byte-for-byte by tests: the catalog list, the sample project files and the
 # catalog pictures.
 docs/catalog.md
-docs/samples/*.project.json
+tests/fixtures/*.project.json
 # The diagnostic and clearance goldens (ADR-225), rewritten by WRITE_GOLDEN=1.
 tests/fixtures/*-golden.json
 public/catalog/

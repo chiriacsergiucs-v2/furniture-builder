@@ -2,7 +2,7 @@
  * The Mobila rooms, rebuilt as native projects from the project file `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json`
  * (format 2.0.0, 2026-10-22). Living was re-done from the catalog's base cabinets at the user's request (2026-10-24);
  * it keeps the file's envelope and boards. Every other size below is taken from that file; where the app builds a part differently
- * from the file, `docs/samples/mobila.md` lists the difference. Nothing here is invented: unknown values (backs,
+ * from the file, `tests/fixtures/mobila.md` lists the difference. Nothing here is invented: unknown values (backs,
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
  * The Pat Noi bed is known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT" in the file), so it is a
@@ -277,7 +277,7 @@ export function mobilaDormitor(): Project {
 }
 
 /**
- * The Mobila rooms as projects. Used by the tests and to regenerate `docs/samples/*.project.json`; the app no longer
+ * The Mobila rooms as projects. Used by the tests and to regenerate `tests/fixtures/mobila-dormitor.project.json`; the app no longer
  * lists them (the "Built in the app" list was removed at the user's request, 2026-10-24, backlog D02).
  */
 export interface SampleProject {
