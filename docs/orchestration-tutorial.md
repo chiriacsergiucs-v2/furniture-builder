@@ -9,6 +9,8 @@ Furniture Builder. The rules themselves live in `CLAUDE.md` › _Orchestration_;
 | Piece               | Where                                | What it does                                                                  |
 | ------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
 | 26 subagents        | `.claude/agents/<area>/workers/*.md` | Specialists the main session delegates to (finders, fixers, testers, writers) |
+| 14 `ecc-*` agents   | `.claude/agents/ecc/*.md`            | Narrow reviewers and resolvers from everything-claude-code (section 8)        |
+| 8 `ecc-*` skills    | `.claude/skills/ecc-*/SKILL.md`      | TypeScript, React, Vite, testing, a11y, error and security guidance           |
 | 5 health loops      | `.claude/skills/health-*/SKILL.md`   | Slash commands that run a finder → you choose → fixer → verify cycle          |
 | Shared loop         | `.claude/skills/health-bugs/loop.md` | The phases, rules and quality gate every health loop follows                  |
 | Orchestration rules | `CLAUDE.md` › _Orchestration_        | Gather context → delegate with a full brief → verify                          |
@@ -205,3 +207,32 @@ session to load it.
 - **An agent's summary and the code disagree.** Trust the code. The orchestrator should already have caught it; if not,
   say "verify the files X changed" and it rereads them.
 - **Too many findings.** Narrow the scope (`/health-bugs src/core/cutlist`) or choose only critical and high.
+
+## 8. Agents and skills from everything-claude-code
+
+A curated subset of the MIT-licensed [`affaan-m/everything-claude-code`](https://github.com/affaan-m/everything-claude-code)
+(commit `4adeee6`, licence in `.claude/agents/ecc/LICENSE`) sits beside the kit (user 2026-11-26, N383). Every file is
+prefixed `ecc-` so nothing shadows a kit agent or a repo skill, and each opens with an adaptation note: repo checks only,
+no `npx`, no network, no new dependency, no E2E suite, the hard rules of `CLAUDE.md`.
+
+| `ecc-*` agent                                                  | Use it for                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------------ |
+| `typescript-reviewer`, `react-reviewer`                        | Language and hook review of a diff                           |
+| `silent-failure-hunter`                                        | Swallowed errors and silent fallbacks (ADR-008)              |
+| `type-design-analyzer`, `comment-analyzer`, `pr-test-analyzer` | Types, comment rot, test coverage of a pull request          |
+| `code-reviewer`                                                | Second opinion next to the kit's `code-reviewer`             |
+| `build-error-resolver`, `react-build-resolver`                 | Red `pnpm typecheck` or `pnpm build`, minimal diffs          |
+| `code-simplifier`                                              | Clarity pass on recently changed code (no refactor, ADR-016) |
+| `planner`, `code-explorer`                                     | Read-only plan or map before a multi-file change             |
+| `a11y-architect`, `performance-optimizer`                      | Second opinion next to the kit's testers                     |
+
+Skills (load by description): `ecc-typescript-patterns`, `ecc-react-patterns`, `ecc-react-performance`,
+`ecc-react-testing`, `ecc-vite-patterns`, `ecc-frontend-a11y`, `ecc-error-handling`, `ecc-security-review` (a checklist;
+the repo's `security-review` and `health-security` stay the review flows).
+
+Not imported: the other 58 agents and 320 skills (other stacks or domains), ECC's hooks (they would collide with
+`.claude/settings.json`), commands, rules, MCP configs and installer. To add one more, copy it from the upstream repo
+with the `ecc-` prefix and the same adaptation note, and list it here and in the `maker` skill.
+
+Example brief: "Run `ecc-silent-failure-hunter` and `ecc-react-reviewer` in parallel on the diff of this branch; report
+file:line findings only, edit nothing."
