@@ -213,4 +213,19 @@ describe('thin twins of the panel edges', () => {
     expect(warmGeometry).toHaveBeenCalledOnce();
     expect(edges.thin).toHaveLength(0);
   });
+
+  it('a rebuild with new deps replaces the twins instead of adding to them', () => {
+    const edges = new MergedEdges();
+    edges.update(['a'], () => [item(false)]);
+    const first = edges.thin[0];
+    edges.update(['a'], () => [item(false)]);
+    expect(edges.thin[0]).toBe(first);
+    edges.update(['b'], () => [item(false)]);
+    expect(edges.thin).toHaveLength(1);
+    expect(edges.warm).toHaveLength(1);
+    expect(edges.thin[0]).not.toBe(first);
+    edges.setThin(true);
+    expect(edges.thin[0].visible).toBe(true);
+    expect(first.visible).toBe(false);
+  });
 });

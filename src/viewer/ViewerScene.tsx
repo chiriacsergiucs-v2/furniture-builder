@@ -1387,17 +1387,25 @@ export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
   if (moving && !frozen) setFrozen(true);
   const atFreeze = useRef<number[] | null>(null);
   const afterFrame = useRef<(() => void) | null>(null);
+  // Set when the pieces moved while frozen: the frame after the thaw commits redraws the shadow (frames is not a host
+  // prop, so the commit alone asks for no frame).
+  const redraw = useRef(false);
   useLayoutEffect(() => {
     if (frozen) atFreeze.current = shadowSignature(get().scene);
   }, [frozen, get]);
+  useEffect(() => {
+    if (frozen || !redraw.current) return;
+    redraw.current = false;
+    invalidate();
+  }, [frozen]);
   useEffect(() => {
     if (moving || !frozen) return;
     let done = false;
     const thaw = () => {
       if (done) return;
       done = true;
+      redraw.current = !sameSignature(atFreeze.current, shadowSignature(get().scene));
       setFrozen(false);
-      if (!sameSignature(atFreeze.current, shadowSignature(get().scene))) invalidate();
     };
     // After the still frame the end of a drag draws (OrbitQuality), or a moment later when none comes (a wheel notch).
     afterFrame.current = () => setTimeout(thaw);
@@ -1408,7 +1416,12 @@ export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
       clearTimeout(late);
     };
   }, [moving, frozen, get]);
-  useFrame(() => afterFrame.current?.());
+  useFrame(() => {
+    const f = afterFrame.current;
+    if (!f) return;
+    afterFrame.current = null;
+    f();
+  });
   return <ContactShadows {...props} frames={frozen ? 0 : Infinity} />;
 }
 

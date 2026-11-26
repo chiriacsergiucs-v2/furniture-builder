@@ -3,6 +3,8 @@
 # preview by its process id (goal file goals/mobile-middle-ground.md, ADR-295). The command gets the URL as $URL.
 #   bash tools/mobile-middle/with-preview.sh 'node tools/mobile-middle/find-it.mjs "$URL" out'
 set -u
+# From the repository root, wherever it is called from.
+cd "$(dirname "$0")/../.." || exit 1
 PORT=${PORT:-4190}
 # Its own output folder, so a build running elsewhere (dist/) never swaps files under the preview.
 OUT=$(mktemp -d)
