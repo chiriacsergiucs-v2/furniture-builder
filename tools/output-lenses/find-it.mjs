@@ -24,8 +24,9 @@ for (const width of [360, 390]) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  const rail = page.getByRole('toolbar', { name: 'Editor actions' });
-  const results_ = page.getByRole('region', { name: 'Results' });
+  const rail = page.getByRole('toolbar', { name: 'Editor bar' });
+  // The output card; the panel's Results block (ADR-295) is a region of that name too.
+  const results_ = page.locator('section.output');
   const toggleFlag = async () => {
     await page.locator('details.more > summary').first().click();
     await page.getByRole('button', { name: /Canvas editor \(preview\)/ }).click();
@@ -47,18 +48,28 @@ for (const width of [360, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await toggleFlag();
 
-  // 1. Every output has a chip in the rail.
+  // The outputs sit in the panel's Results block (ADR-295): Edit opens the panel, the jump index goes there.
+  const resultsBlock = page.locator('aside.side section[aria-label="Results"]');
+  const openResults = async () => {
+    const edit = rail.getByRole('button', { name: /^Edit/ });
+    if ((await edit.getAttribute('aria-expanded')) !== 'true') await edit.click();
+    await page.getByLabel('Jump to section').selectOption({ label: 'Results' });
+    await page.waitForTimeout(150);
+  };
+  // 1. Every output has a button in the Results block.
+  await openResults();
   for (const name of OUTPUTS)
     check(
       width,
-      `rail chip "${name}"`,
-      (await rail.getByRole('button', { name, exact: true }).count()) === 1,
+      `Results button "${name}"`,
+      (await resultsBlock.getByRole('button', { name, exact: true }).count()) === 1,
     );
 
   // 2. Each chip opens that output as a card over the drawing; the drawing stays above it.
   for (const name of OUTPUTS) {
-    if (!(await rail.isVisible())) await closeCard();
-    await rail.getByRole('button', { name, exact: true }).click();
+    if (await page.locator('.lens-out-close').isVisible()) await closeCard();
+    await openResults();
+    await resultsBlock.getByRole('button', { name, exact: true }).click();
     await page.waitForTimeout(300);
     const tab = results_.getByRole('tab', { selected: true });
     const panel = results_.getByRole('tabpanel');

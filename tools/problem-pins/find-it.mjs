@@ -24,7 +24,7 @@ for (const width of [360, 390]) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   const pill = page.getByRole('navigation', { name: 'Selection path' });
-  const rail = page.getByRole('toolbar', { name: 'Editor actions' });
+  const rail = page.getByRole('toolbar', { name: 'Editor bar' });
   const pin = page.locator('figure svg').getByRole('button', { name: /^Problem: / });
   const toggleFlag = async () => {
     await page.locator('details.more > summary').first().click();

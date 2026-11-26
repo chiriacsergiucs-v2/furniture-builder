@@ -64,13 +64,14 @@ for (const width of [360, 390]) {
   await page.waitForTimeout(300);
   check(
     width,
-    'Find › Contents opens the Contents block',
-    (
-      await page
-        .getByRole('tablist', { name: 'Editor card' })
-        .getByRole('tab', { selected: true })
-        .innerText()
-    ).trim() === 'Contents',
+    'Find › Contents opens the panel at the Contents block',
+    await page.evaluate(() => {
+      // The whole editor shows (ADR-295): the Contents block starts at the top of the panel.
+      const body = document.querySelector('.side-body');
+      const el = body?.querySelector('[data-lens-key="Contents"]');
+      if (!body || !el) return false;
+      return Math.abs(el.getBoundingClientRect().top - body.getBoundingClientRect().top) < 24;
+    }),
   );
 
   // 3. Find opens an output.

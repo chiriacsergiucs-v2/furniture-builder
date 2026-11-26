@@ -1,7 +1,7 @@
 // Find-it acceptance for the canvas editor on phones (ADR-283, backlog N366), run against a production build:
 //   pnpm build && pnpm preview &  node tools/canvas-editor/find-it.mjs [url] [out dir]
 // Starts from the bare app at 360 and 390 px, turns the editor on from More by its visible text, and finds the
-// selection ladder, chip rail and lens card by role and text. A last run with the flag off checks today's sheet.
+// selection ladder, edit bar and card by role and text (the chip rail became the edit bar, ADR-295). A last run with the flag off checks today's sheet.
 import { mkdirSync } from 'node:fs';
 import { launchBrowser, makeChecker, outDir, previewUrl } from '../lib/harness.mjs';
 
@@ -43,8 +43,8 @@ const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, heig
   if (await hints.isVisible()) await hints.getByRole('button', { name: 'Skip' }).click();
   check(
     390,
-    'first visit: the chip rail and ladder show, no peek row',
-    (await page.getByRole('toolbar', { name: 'Editor actions' }).isVisible()) &&
+    'first visit: the edit bar and ladder show, no peek row',
+    (await page.getByRole('toolbar', { name: 'Editor bar' }).isVisible()) &&
       (await page.getByRole('navigation', { name: 'Selection path' }).isVisible()) &&
       !(await page.locator('.sheet-peek').isVisible()),
   );
@@ -65,8 +65,15 @@ for (const width of [360, 390]) {
   const shot = (name) => page.screenshot({ path: `${out}/canvas-${name}-${width}.png` });
   const side = page.locator('aside.side');
   const pill = page.getByRole('navigation', { name: 'Selection path' });
-  const rail = page.getByRole('toolbar', { name: 'Editor actions' });
-  const tabs = page.getByRole('tablist', { name: 'Editor card' });
+  const rail = page.getByRole('toolbar', { name: 'Editor bar' });
+  const edit = rail.getByRole('button', { name: /^Edit/ });
+  const jump = page.getByLabel('Jump to section');
+  // Opens the card from Edit (ADR-295) and jumps to a block by its title.
+  const openOn = async (title) => {
+    if ((await edit.getAttribute('aria-expanded')) !== 'true') await edit.click();
+    await jump.selectOption({ label: title });
+    await page.waitForTimeout(150);
+  };
 
   // 1. Turned on from ⋯ More by its visible text.
   await newChest(page);
@@ -102,48 +109,35 @@ for (const width of [360, 390]) {
   );
   await shot('space');
 
-  // 3. Every block of the space editor opens from a chip as one tab of the lens card.
-  // The editor's chips; the output chips after them (ADR-288) open results, not editor blocks.
-  const chips = (await rail.locator('button:not(.out)').allInnerTexts()).map((s) => s.trim());
+  // 3. Edit opens the whole editor in one panel (ADR-295): every block shows, the jump index lists each of them.
+  await edit.click();
+  await page.waitForTimeout(150);
   check(
     width,
-    'chip rail starts with Find, then Overview',
-    chips[0] === '' && chips[1] === 'Overview',
-    chips.join(', '),
+    'Edit is expanded once the card opens',
+    (await edit.getAttribute('aria-expanded')) === 'true',
   );
-  chips.shift();
-  for (const want of ['Divide this space', 'Contents', 'Doors and handles', 'Layouts'])
-    check(width, `chip "${want}" in the rail`, chips.includes(want));
-  for (const chip of chips) {
-    if (!(await rail.isVisible()))
-      await page.getByRole('button', { name: 'Close the card' }).click();
-    await rail.getByRole('button', { name: chip, exact: true }).click();
-    await page.waitForTimeout(150);
-    const selected = await tabs.getByRole('tab', { selected: true }).innerText();
-    const shownBlocks = await side
-      .locator('.side-body [data-lens-key]:visible')
-      .evaluateAll((els) =>
-        els
-          .filter((e) => !e.parentElement?.closest('[data-lens-key]'))
-          .map((e) => e.getAttribute('data-lens-key')),
-      );
-    const ok =
-      chip === 'Overview'
-        ? selected.trim() === 'Overview' && shownBlocks.length === 0
-        : selected.trim() === chip && shownBlocks.length === 1 && shownBlocks[0] === chip;
+  const shownBlocks = await side
+    .locator('.side-body [data-lens-key]:visible')
+    .evaluateAll((els) =>
+      els
+        .filter((e) => !e.parentElement?.closest('[data-lens-key]'))
+        .map((e) => e.getAttribute('data-lens-key')),
+    );
+  for (const want of ['Divide this space', 'Contents', 'Doors and handles', 'Layouts', 'Results'])
     check(
       width,
-      `chip "${chip}" opens one block in the card`,
-      ok,
-      `${selected} | ${shownBlocks.join(',')}`,
+      `block "${want}" shows in the panel`,
+      shownBlocks.includes(want),
+      shownBlocks.join(','),
     );
-  }
+  const options = await jump.locator('option:not([disabled])').allInnerTexts();
+  for (const want of ['Overview', 'Contents', 'Results'])
+    check(width, `jump index offers "${want}"`, options.includes(want), options.join(','));
+  check(width, 'no folded group in the panel', (await side.locator('details').count()) === 0);
 
   // 4. The selected space stays inside the visible stage, compact and tall.
-  await rail.isVisible().catch(() => {});
-  if (await rail.isVisible())
-    await rail.getByRole('button', { name: 'Contents', exact: true }).click();
-  else await tabs.getByRole('tab', { name: 'Contents' }).click();
+  await openOn('Contents');
   for (const stop of ['compact', 'tall']) {
     if (stop === 'tall') await page.getByRole('button', { name: 'Taller card' }).click();
     await page.waitForTimeout(400);
@@ -191,7 +185,7 @@ for (const width of [360, 390]) {
     await page.getByRole('dialog', { name: 'Find an action' }).isVisible(),
   );
   await page.keyboard.press('Escape');
-  await rail.getByRole('button', { name: 'Contents', exact: true }).click();
+  await openOn('Contents');
   const svgBox = await box(page.locator('section.stage svg').first());
   await page.mouse.click(svgBox.x + 4, svgBox.y + 4);
   await page.waitForTimeout(150);
@@ -200,9 +194,13 @@ for (const width of [360, 390]) {
   for (let n = 0; n < 3 && (await pill.getByRole('button').count()) < 2; n++)
     await page.locator('.el-space').first().click({ force: true });
 
-  await rail.getByRole('button', { name: 'Contents', exact: true }).click();
+  await openOn('Contents');
   await page.getByRole('button', { name: 'Close the card' }).click();
-  check(width, 'closing the card brings the rail back', await rail.isVisible());
+  check(
+    width,
+    'closing the card collapses Edit',
+    (await rail.isVisible()) && (await edit.getAttribute('aria-expanded')) === 'false',
+  );
   await page.getByRole('button', { name: 'Up one level' }).click();
   await page.waitForTimeout(150);
   const afterUp = await pill.getByRole('button').allInnerTexts();
@@ -220,12 +218,12 @@ for (const width of [360, 390]) {
   // 6. Touch targets and no side scroll.
   const small = await page.evaluate(
     () =>
-      Array.from(document.querySelectorAll('.chip-rail button, .ladder button'))
+      Array.from(document.querySelectorAll('.edit-bar button, .ladder button'))
         .filter((b) => b.offsetParent)
         .map((b) => b.getBoundingClientRect())
         .filter((r) => r.height < 43.5 || r.width < 43.5).length,
   );
-  check(width, 'chips and ladder buttons are at least 44 px', small === 0, `${small} smaller`);
+  check(width, 'edit bar and ladder buttons are at least 44 px', small === 0, `${small} smaller`);
   check(
     width,
     'no horizontal page scroll',
@@ -242,7 +240,7 @@ for (const width of [360, 390]) {
   await page.waitForTimeout(200);
   check(
     width,
-    'flag off: peek row back, no rail',
+    'flag off: peek row back, no edit bar',
     (await page.locator('.sheet-peek').isVisible()) && (await rail.count()) === 0,
   );
   check(width, 'no script errors', errors.length === 0, errors.join(' | '));
