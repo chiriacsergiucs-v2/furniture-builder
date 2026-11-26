@@ -30,9 +30,42 @@ export function chromiumPath() {
   return SYSTEM_CHROMIUM.find((p) => existsSync(p));
 }
 
-/** Launch the browser (extra launch options, such as `args`, are passed on). */
-export function launchBrowser(options = {}) {
-  return chromium.launch({ executablePath: chromiumPath(), ...options });
+/**
+ * Before the page's own scripts: the sheet editor on phones unless this context already chose. The canvas editor is the
+ * phone default since ADR-290; most scripts were written for the sheet, and 70 of 94 timed out behind the canvas in the
+ * `pnpm regress` run of the catch-up on 2026-11-26. A script that tests the canvas sets `fb:canvasEditor` itself (its own
+ * init script runs after this one) or switches it in More, and a reload keeps that choice.
+ */
+function sheetEditorUnlessChosen() {
+  try {
+    if (localStorage.getItem('fb:canvasEditor') === null)
+      localStorage.setItem('fb:canvasEditor', 'off');
+  } catch {
+    /* storage blocked: the app falls back to its default */
+  }
+}
+
+/**
+ * Launch the browser (extra launch options, such as `args`, are passed on). Every new context and page starts with the
+ * sheet editor (`sheetEditorUnlessChosen`). A script that tests the app's real phone default passes `{ appDefault: true }`;
+ * `CANVAS_DEFAULT=1` does the same for every script.
+ */
+export async function launchBrowser({ appDefault = false, ...options } = {}) {
+  const browser = await chromium.launch({ executablePath: chromiumPath(), ...options });
+  if (appDefault || process.env.CANVAS_DEFAULT === '1') return browser;
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async (...args) => {
+    const ctx = await newContext(...args);
+    await ctx.addInitScript(sheetEditorUnlessChosen);
+    return ctx;
+  };
+  browser.newPage = async (...args) => {
+    const ctx = await browser.newContext(...args);
+    const page = await ctx.newPage();
+    page.on('close', () => ctx.close().catch(() => {}));
+    return page;
+  };
+  return browser;
 }
 
 /** The URL to open: the first argument, else `fallback`. */

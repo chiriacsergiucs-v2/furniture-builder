@@ -9,7 +9,8 @@ import { launchBrowser, makeChecker, outDir, previewUrl } from '../lib/harness.m
 const url = previewUrl();
 const out = outDir();
 mkdirSync(out, { recursive: true });
-const browser = await launchBrowser();
+// This script tests the canvas editor as the phone default (ADR-290): no sheet-editor preset from the harness.
+const browser = await launchBrowser({ appDefault: true });
 const results = [];
 const { check } = makeChecker(results);
 

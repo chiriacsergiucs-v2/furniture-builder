@@ -21,6 +21,12 @@ for (const width of WIDTHS) {
     hasTouch: phone,
     isMobile: phone,
   });
+  // The canvas editor is the phone default and shows first-run hints since ADR-290; this script tests the sheet editor,
+  // so it turns the canvas off and skips the hints, as the other scripts do (catch-up 2026-11-26).
+  await ctx.addInitScript(() => {
+    localStorage.setItem('fb:canvasEditor', 'off');
+    localStorage.setItem('fb:canvas-coach', 'done');
+  });
   const page = await ctx.newPage();
   const dlg = page.locator('dialog[open]');
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });

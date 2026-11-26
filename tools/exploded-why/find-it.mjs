@@ -25,6 +25,12 @@ for (const { width, height, phone } of SIZES) {
     isMobile: phone,
     serviceWorkers: 'block',
   });
+  // The sheet editor holds the 3D toolbar under test; the canvas editor is the phone default since ADR-290 (catch-up
+  // 2026-11-26), so this script turns it off and skips the first-run hints, as the other scripts do.
+  await ctx.addInitScript(() => {
+    localStorage.setItem('fb:canvasEditor', 'off');
+    localStorage.setItem('fb:canvas-coach', 'done');
+  });
   const page = await ctx.newPage();
   const dlg = page.locator('dialog[open]');
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
