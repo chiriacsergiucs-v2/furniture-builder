@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getLang, LANG_NAME, LANGS, t, type Lang } from '@furniture-builder/i18n';
 import {
   getPrintLang,
+  loadPrintTables,
   PRINT_LANG_NAME,
   PRINT_LANGS,
   setPrintLang,
@@ -27,20 +28,32 @@ function switchLang(l: Lang): boolean {
   return true;
 }
 
-/** Keep the print language (ADR-157); sheets and the CSV are made when asked, so no reload. */
-function choosePrintLang(l: PrintLang): void {
+/**
+ * Keep the print language (ADR-157); sheets and the CSV are made when asked, so no reload. Russian and English load
+ * their tables first (a lazy chunk, G-496); false when they could not be loaded, and the language stays as it was.
+ */
+async function choosePrintLang(l: PrintLang): Promise<boolean> {
+  if (l !== 'ro') {
+    try {
+      await loadPrintTables();
+    } catch {
+      return false;
+    }
+  }
   setPrintLang(l);
   try {
     localStorage.setItem(PRINT_LANG_KEY, l);
   } catch {
     // Storage blocked: the choice holds for this visit.
   }
+  return true;
 }
 
 /** The More menu's language switches (ADR-153, ADR-157): the app's language and the print language. */
 export function LanguageMenu() {
   const [printLang, setShown] = useState(getPrintLang);
   const [langFailed, setLangFailed] = useState(false);
+  const [printFailed, setPrintFailed] = useState(false);
   return (
     <>
       <p className="menu-head" id="menu-lang">
@@ -74,15 +87,22 @@ export function LanguageMenu() {
             type="button"
             lang={l}
             aria-pressed={printLang === l}
-            onClick={() => {
-              choosePrintLang(l);
-              setShown(l);
-            }}
+            onClick={() =>
+              void choosePrintLang(l).then((ok) => {
+                setPrintFailed(!ok);
+                if (ok) setShown(l);
+              })
+            }
           >
             {PRINT_LANG_NAME[l]}
           </button>
         ))}
       </div>
+      {printFailed && (
+        <p className="alert error" role="alert">
+          {t('The print language could not be loaded; try again.')}
+        </p>
+      )}
     </>
   );
 }

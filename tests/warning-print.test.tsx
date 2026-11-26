@@ -10,7 +10,7 @@ import { templates } from '../src/core/design';
 import { loadDictionary, setLang, t as tt, tr } from '@furniture-builder/i18n';
 import { PRINT_LANGS, setPrintLang, type PrintLang } from '@furniture-builder/i18n/print';
 import { warningText } from '../src/core/ro';
-import { PRINT_EN, PRINT_RU } from '@furniture-builder/i18n/print';
+import { PRINT_EN, PRINT_RU } from '@furniture-builder/i18n/print-text';
 import { WARNING_RO } from '@furniture-builder/i18n/print';
 import { buildProjectModel, makeItem, newProject, type Project } from '../src/core/project';
 import type { Diagnostic } from '../src/core/types';

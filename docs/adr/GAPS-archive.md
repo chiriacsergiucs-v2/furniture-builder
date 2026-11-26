@@ -3563,6 +3563,17 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 
+### G-496: Print dictionaries are not loaded lazily
+
+- Status: Done (N391)
+- Origin: ADR-229 Out of scope, 2026-11-07 (architecture review I-11)
+- Missing: PRINT_RU and PRINT_EN (src/core/i18n/print.ts) stay in the main chunk; ADR-229 makes only the Russian UI dictionary lazy.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should setPrintLang load the print dictionary on demand?
+- Suggested pick: Load them in setPrintLang after ADR-229 measures the saving (estimate: effort +10 %, value +2 %)
+- Work: Low
+- Impact: Low
+
 ### G-497: The 3D viewer still imports persist directly
 
 - Status: Done (PR #329, N388)
