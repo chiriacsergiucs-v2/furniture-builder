@@ -72,8 +72,28 @@
     },
     {
       "width": "844x390",
-      "name": "editor flow (script error)",
-      "ok": false
+      "name": "no chip rail and no \"Editor actions\" toolbar",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "Compose side panel is visible",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "no horizontal page scroll",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "no element in the stage scrolls sideways (except the stage-tools radio row)",
+      "ok": true
+    },
+    {
+      "width": "844x390",
+      "name": "rotation 844 to 390 and back keeps the editor and Compose, no errors",
+      "ok": true
     },
     {
       "width": "844x390",
@@ -112,8 +132,8 @@
     },
     {
       "width": "390x844",
-      "name": "piece: Jump to section lists 18 options, disabled ones give a reason",
-      "ok": false
+      "name": "piece: Jump to section lists 19 options, disabled ones give a reason",
+      "ok": true
     },
     {
       "width": "390x844",
@@ -177,8 +197,8 @@
     },
     {
       "width": "390x844",
-      "name": "space: Jump to section lists 18 options, disabled ones give a reason",
-      "ok": false
+      "name": "space: Jump to section lists 19 options, disabled ones give a reason",
+      "ok": true
     },
     {
       "width": "390x844",
@@ -263,32 +283,32 @@
     {
       "width": "390x844",
       "name": "section \"Construction\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
       "name": "section \"Drawers and runners\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
       "name": "section \"Boards, sheets and saw cut\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
       "name": "section \"Fasteners\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
       "name": "section \"Checks\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
       "name": "section \"Hardware\" is reachable",
-      "ok": false
+      "ok": true
     },
     {
       "width": "390x844",
@@ -3128,7 +3148,6 @@
   ],
   "jumpOrders": {
     "piece": [
-      "Jump to section",
       "Overview",
       "Structure",
       "Divide this space",
@@ -3141,6 +3160,8 @@
       "Construction",
       "Legs, rails and stretchers",
       "Drawers and runners",
+      "Boards, sheets and saw cut",
+      "Checks",
       "Position",
       "Project settings",
       "Variables",
@@ -3148,7 +3169,6 @@
       "Results"
     ],
     "space": [
-      "Jump to section",
       "Overview",
       "Structure",
       "Divide this space",
@@ -3161,6 +3181,8 @@
       "Construction",
       "Legs, rails and stretchers",
       "Drawers and runners",
+      "Boards, sheets and saw cut",
+      "Checks",
       "Position",
       "Project settings",
       "Variables",
@@ -3170,20 +3192,44 @@
   },
   "reached": {
     "Structure": [
-      "piece",
-      "space"
+      "piece panel",
+      "space panel"
+    ],
+    "Hardware": [
+      "piece panel",
+      "space panel"
+    ],
+    "Construction": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Drawers and runners": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Boards, sheets and saw cut": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Fasteners": [
+      "piece Settings",
+      "space Settings"
+    ],
+    "Checks": [
+      "piece Settings",
+      "space Settings"
     ],
     "Divide this space": [
-      "space"
+      "space panel"
     ],
     "Contents": [
-      "space"
+      "space panel"
     ],
     "Doors and handles": [
-      "space"
+      "space panel"
     ],
     "Layouts": [
-      "space"
+      "space panel"
     ]
   }
 }

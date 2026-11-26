@@ -152,6 +152,29 @@ const listControls = (page, rootSel) =>
       .map((e) => ({ label: labelOf(e), tag: e.tagName.toLowerCase() }));
   }, rootSel);
 
+// Section titles shown in `rootSel`: aria-label groups, .group-title, .card-title, headings, and the Results buttons
+// (Hardware is a button in the Results block).
+const collectTitles = (page, rootSel) =>
+  page.evaluate((sel) => {
+    const root = document.querySelector(sel);
+    if (!root) return [];
+    const t = (e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim();
+    const out = [];
+    for (const e of root.querySelectorAll(
+      'section[aria-label], div[aria-label], fieldset[aria-label]',
+    ))
+      out.push(e.getAttribute('aria-label'));
+    for (const e of root.querySelectorAll('.group-title, .card-title, h1,h2,h3,h4,h5,h6,summary'))
+      out.push(t(e));
+    for (const b of root.querySelectorAll('section[aria-label="Results"] button')) out.push(t(b));
+    return out;
+  }, rootSel);
+const markReached = (where, titles) => {
+  for (const sec of SECTIONS)
+    if (titles.some((x) => x.trim().toLowerCase() === sec.toLowerCase()))
+      reached.set(sec, [...new Set([...(reached.get(sec) ?? []), where])]);
+};
+
 const record = (w, state, surface, n, list) => {
   const seen = new Set();
   for (const c of list ?? []) {
@@ -206,18 +229,16 @@ const editSurface = async (vp, state) => {
       n > 0 && bad.length === 0,
       bad.join(', '),
     );
-    const headings = await panel(page)
-      .locator('h1,h2,h3,h4,h5,h6')
-      .allInnerTexts()
-      .catch(() => []);
-    for (const s of SECTIONS) {
-      const hit = [...titles, ...headings].some((t) => t.trim().toLowerCase() === s.toLowerCase());
-      if (hit) reached.set(s, [...(reached.get(s) ?? []), state]);
-    }
+    markReached(`${state} panel`, [
+      ...titles,
+      ...(await collectTitles(page, 'aside[aria-label="Compose"]')),
+    ]);
     // Jump index: fixed order, disabled ones give a reason.
     const jump = panel(page).getByRole('combobox', { name: 'Jump to section' });
     const opts = await jump.evaluate((s) =>
-      [...s.options].map((o) => ({ t: o.text.trim(), d: o.disabled })),
+      [...s.options]
+        .filter((o) => o.value !== '' && !o.hidden)
+        .map((o) => ({ t: o.text.trim(), d: o.disabled })),
     );
     jumpOrders[state] = opts.map((o) => o.t.split(' — ')[0]);
     const noReason = opts.filter((o) => o.d && !o.t.includes(' — ')).map((o) => o.t);
@@ -294,7 +315,8 @@ const sheetSurface = async (vp, state, button) => {
           'dialog[open], [role="dialog"], aside:not([aria-label="Compose"])',
         ),
       ].filter(vis);
-      const el = cand[cand.length - 1];
+      const slot = document.querySelector('#sheet-slot');
+      const el = slot && vis(slot) && slot.children.length ? slot : cand[cand.length - 1];
       if (!el) return null;
       el.setAttribute('data-mm-root', '1');
       return '[data-mm-root="1"]';
@@ -309,6 +331,7 @@ const sheetSurface = async (vp, state, button) => {
       details === 0,
       `${details} found`,
     );
+    markReached(`${state} ${button}`, root ? await collectTitles(page, root) : []);
     record(w, state, button, 1, await listControls(page, root ?? 'main.work'));
   } catch (e) {
     check(w, `${state}: ${button} (script error)`, false, msg(e));
@@ -458,6 +481,63 @@ const editorFlow = async (vp) => {
   try {
     await selectSpace(page);
     await shot(page, vp, 'editor');
+    if (vp.width > 760) {
+      // Desktop layout (the canvas editor is phone-only, <= 760 px): Compose is the always-visible side panel.
+      console.log(`INFO ${w} Edit x3 / goBack checks: n/a at desktop layout`);
+      check(
+        w,
+        'no chip rail and no "Editor actions" toolbar',
+        (await page.getByRole('toolbar', { name: 'Editor actions' }).count()) === 0 &&
+          (await page.locator('.chip-rail').count()) === 0,
+      );
+      check(w, 'Compose side panel is visible', await visible(panel(page)));
+      const sx = await page.evaluate(() => {
+        const page = document.documentElement.scrollWidth <= innerWidth + 1;
+        const stage = document.querySelector('main.work') ?? document.body;
+        const bad = [...stage.querySelectorAll('*')]
+          .filter((e) => {
+            const r = e.getBoundingClientRect();
+            const ox = getComputedStyle(e).overflowX;
+            return (
+              r.height > 0 &&
+              (ox === 'auto' || ox === 'scroll') &&
+              e.scrollWidth > e.clientWidth + 1
+            );
+          })
+          .map((e) => ({
+            name: `${e.tagName.toLowerCase()}.${String(e.className).trim().replace(/\s+/g, '.')}`,
+            tools:
+              !!e.closest('[role="radiogroup"], .stage-tools') ||
+              !!e.querySelector('[role="radio"]'),
+          }));
+        return { page, bad };
+      });
+      check(w, 'no horizontal page scroll', sx.page);
+      const info = sx.bad.filter((x) => x.tools).map((x) => x.name);
+      if (info.length)
+        console.log(`INFO ${w} stage-tools radio row scrolls sideways: ${info.join(', ')}`);
+      const other = sx.bad.filter((x) => !x.tools).map((x) => x.name);
+      check(
+        w,
+        'no element in the stage scrolls sideways (except the stage-tools radio row)',
+        other.length === 0,
+        other.join(', '),
+      );
+      await page.setViewportSize(PORTRAIT);
+      await page.waitForTimeout(500);
+      await page.setViewportSize(vp);
+      await page.waitForTimeout(500);
+      check(
+        w,
+        'rotation 844 to 390 and back keeps the editor and Compose, no errors',
+        (await visible(panel(page))) &&
+          (await visible(page.locator('main.work'))) &&
+          page.errors.length === 0,
+        page.errors.join(' | '),
+      );
+      await ctx.close();
+      return;
+    }
     const b = bar(page);
     await b.waitFor({ state: 'visible' });
     check(
@@ -513,6 +593,14 @@ const editorFlow = async (vp) => {
     await shot(page, vp, 'panel-open');
 
     // Panel open: tap a different space keeps it open.
+    // The new chest has one space: Stacked (Divide this space, in the open panel) makes a second one first.
+    if ((await page.locator('.el-space').count()) < 2)
+      await panel(page)
+        .getByRole('button', { name: 'Stacked', exact: true })
+        .first()
+        .click()
+        .catch(() => {});
+    await page.waitForTimeout(400);
     const n = await page.locator('.el-space').count();
     if (n > 1) {
       await page
@@ -538,7 +626,7 @@ const editorFlow = async (vp) => {
     check(
       w,
       'panel stays open after tapping a different space',
-      (await visible(panel(page))) && (await ex()) === 'true',
+      n > 1 && (await visible(panel(page))) && (await ex()) === 'true',
       `${n} spaces`,
     );
 

@@ -144,6 +144,8 @@ export function jumpSections(): { key: string; title: string; where: JumpWhere }
     [t('Construction'), 'settings'],
     [t('Legs, rails and stretchers'), 'settings'],
     [t('Drawers and runners'), 'settings'],
+    [t('Boards, sheets and saw cut'), 'settings'],
+    [t('Checks'), 'settings'],
     [t('Position'), 'project'],
     [t('Project settings'), 'project'],
     [t('Variables'), 'settings'],
