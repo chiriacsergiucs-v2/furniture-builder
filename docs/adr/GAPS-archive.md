@@ -3778,6 +3778,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-517: The reply-length and id-collision hooks have bypasses
+
+- Status: Done (N399)
+- Origin: Behavior audit findings 1 and 2, 2026-11-16 (N315)
+- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes (kept as is, the suggested pick, 2026-11-16). The id check is now hard: the CI job `id-check` runs it on every pull request and the hook falls back to the last fetched origin/main offline (N316). Neither hook nor the CI job was observed catching a real collision.
+- Request: Enforce #1 and #2 now
+- Questions: Should the length hook also check the reply against the user's last message (a report was asked), and should the id check also run in CI against the merge ref?
+- Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Low
+
 ### G-518: Audit pass 3 findings F-24 to F-30 not fixed
 
 - Status: Done (N319)
@@ -4077,6 +4089,30 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-587: Appearance dialog: find-it test
+
+- Status: Done (N399)
+- Origin: N378, PR #317, 2026-11-22
+- Missing: jsdom find-it test (tests/find-it/appearance.test.tsx, 390 and 1280 px) that finds More > Appearance, moves a slider, resets it
+- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
+- Questions: none
+- Suggested pick: Write the jsdom find-it test (catch-up acceptance)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+
+### G-590: Appearance: tests for − / + and ±5% controls
+
+- Status: Done (N399)
+- Origin: N378, 2026-11-22
+- Missing: unit tests for stepThemeVar and scaleThemeVars (whole px rounding, range ends, always moves) and a find-it for the buttons
+- Request: Add also a+- to the input for ease, and a general +-5% of current (to closest integer)
+- Questions: none
+- Suggested pick: Add the unit tests with the G-587 find-it
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
 
 ### G-597: Top-bar name field under 44 px wide on phones
 

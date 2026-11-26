@@ -1560,18 +1560,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-517: The reply-length and id-collision hooks have bypasses
-
-- Status: Open
-- Origin: Behavior audit findings 1 and 2, 2026-11-16 (N315)
-- Missing: The reply-length hook blocks once per stop and a reply that opens with [long] passes (kept as is, the suggested pick, 2026-11-16). The id check is now hard: the CI job `id-check` runs it on every pull request and the hook falls back to the last fetched origin/main offline (N316). Neither hook nor the CI job was observed catching a real collision.
-- Request: Enforce #1 and #2 now
-- Questions: Should the length hook also check the reply against the user's last message (a report was asked), and should the id check also run in CI against the merge ref?
-- Suggested pick: Run the id check in CI on the pull request (git fetch origin main, same script); keep the length hook as it is (estimate: effort +10 %, value +15 %)
-- Work: Low
-- Impact: Medium
-- Necessity: Low
-
 ### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
 
 - Status: Open
@@ -2023,18 +2011,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low-medium
 
-### G-587: Appearance dialog: find-it test
-
-- Status: Open
-- Origin: N378, PR #317, 2026-11-22
-- Missing: jsdom find-it test (tests/find-it/appearance.test.tsx, 390 and 1280 px) that finds More > Appearance, moves a slider, resets it
-- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
-- Questions: none
-- Suggested pick: Write the jsdom find-it test (catch-up acceptance)
-- Work: Low
-- Impact: Medium
-- Necessity: Medium
-
 ### G-588: Appearance dialog: colours and control height not editable
 
 - Status: Open
@@ -2058,18 +2034,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low-medium
 
-### G-590: Appearance: tests for − / + and ±5% controls
-
-- Status: Open
-- Origin: N378, 2026-11-22
-- Missing: unit tests for stepThemeVar and scaleThemeVars (whole px rounding, range ends, always moves) and a find-it for the buttons
-- Request: Add also a+- to the input for ease, and a general +-5% of current (to closest integer)
-- Questions: none
-- Suggested pick: Add the unit tests with the G-587 find-it
-- Work: Low
-- Impact: Medium
-- Necessity: Medium
-
 ### G-591: Room divider: Open both sides on corner units
 
 - Status: Open
@@ -2084,7 +2048,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-592: Room divider: racking check for back-less pieces
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-292
 - Missing: No diagnostic when a tall piece has no back; the height figure is a physical fact not in the repo (ADR-010).
 - Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
@@ -2120,7 +2085,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-595: Room divider: printed rear sheet in the review pack
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-294
 - Missing: The Rear elevation is on screen only; the review pack prints the front.
 - Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
@@ -2201,7 +2167,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-606: Four diagnostic codes still cover more than one wording
 
-- Status: Open
+- Status: Acknowledged (2026-11-23)
+- Answer (user, 2026-11-23): build every Low-work gap with its suggested pick; this pick keeps it as it is
 - Origin: ADR-296 implementation, 2026-11-26 (G-505 remainder)
 - Missing: After ADR-296 split outside-room, taller-than-room and room-island, four codes keep more than one wording (SAME_PROBLEM in tests/diagnostic-codes.test.ts): worktop-corner-joint (no joint vs butt joint without the part that runs through), worktop-edge-size (no size vs too large), drawer-low (all drawers vs one box) and corner-size (diagonal, blind and L corner sizes). Splitting them changes what repairs, checks and tests key on.
 - Request: G-505: current code structure/architecture modularity ... No regressions shall be introduced, ensure before and after testing tdd style
