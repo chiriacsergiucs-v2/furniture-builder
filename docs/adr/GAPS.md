@@ -2464,3 +2464,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-598: Appearance ±5% buttons clamp silently at the range ends
+
+- Status: Open
+- Origin: N378 catch-up tests, 2026-11-26
+- Missing: The group and all-variables ±5% buttons have no disabled state (src/ui/Appearance.tsx:36-80); at or near a limit place() clamps the result (src/store/themeVars.ts:185) with no message, e.g. --s-4 31 +5% gives 32. The per-variable − / + are disabled at the ends.
+- Request: a general +-5% of current (to closest integer)
+- Questions: Disable a group ±5% when every variable in it is at the limit, or show which variables stopped at their limit?
+- Suggested pick: Show 'n at their limit' next to the group after a press
+- Work: Low
+- Impact: Low
+- Necessity: Low
