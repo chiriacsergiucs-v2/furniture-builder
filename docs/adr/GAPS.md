@@ -2452,3 +2452,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Medium
 - Necessity: Medium-high
+
+### G-597: Top-bar name field under 44 px wide on phones
+
+- Status: Open
+- Origin: N325 live-verify (tools/touch-targets), catch-up 2026-11-26
+- Missing: At 390 px on the live site the top-bar name input is 34 px wide (Name of this piece) and 26 px (Name of this project), under the 44 px touch target; src/styles.css:4754 sets .bar .path .name min-width 0 on phones. 18 other touch-target checks pass.
+- Request: Touch targets (audit F-03, F-21; burst)
+- Questions: Give the name field min-width 44 px (may push a tool button to a second row), or move the name to its own row on phones?
+- Suggested pick: min-width 44 px on phones and check no horizontal scroll at 390 px
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
