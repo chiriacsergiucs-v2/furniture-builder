@@ -341,6 +341,10 @@ asks, never automatic.
     **Partially done**.
   - Paying the debt: the user says "burst off" or "catch up"; the `catch-up` skill runs every logged item and the row
     turns **Done** only with evidence that ran. "Catch up acceptance" (ADR-066) still pays the find-it items alone.
+    The catch-up covers the whole burst window, not only the markers: every backlog row touched in the window that is
+    not Done, and every Open G id those rows cite, gets a verdict (paid, or still open with its blocker) (user pick
+    2026-11-26, skip-review of the 2026-11-16/23 burst: live-verify debt written as row text in N352, N364 and N365 had
+    no marker and was never paid).
 - Skips and proof (user rule 2026-11-10, from the cleanup-skip review in `docs/research/2026-11-09-cleanup-audit.md`):
   - Every skip states its blocker, what unblocks it, and its cost (S/M/L). "Not started" is not a reason; when the
     reason is scope, write "scope".
@@ -348,6 +352,9 @@ asks, never automatic.
     skip only if that fails, and say what was tried.
   - Judge duplicates segment by segment, and check each difference against the code before calling it intentional.
   - A change that makes tests or scripts stale fixes them in the same pull request, or lists each one as a blocker.
+  - A step of a skill used for the request is skipped only with the user's word in that request or a named external
+    blocker; otherwise it runs (user pick 2026-11-26, skip-review of the 2026-11-16/23 burst: the catalog rework, PR
+    #319, skipped the `ui-rework` research and spec steps with no blocker, G-583).
   - Order work by dependency: prerequisites first; never cite a blocker that a later item of the same plan removes.
   - "Decide and go" means finishing every low-risk item; stop only for consent items (deleting, branch-wide moves).
 - Always pick (user rule 2026-11-10, narrowed 2026-11-15): an obvious choice, one that the user's earlier answers, a repo rule
@@ -370,6 +377,10 @@ asks, never automatic.
   way closes its gap with evidence.
 - Change a status in `docs/backlog.md` only with evidence (command output or a CI run id). Label evidence from
   documents differently from evidence you ran.
+- Paying closes (user pick 2026-11-26, skip-review of the 2026-11-16/23 burst: G-528, G-529, G-550 and G-551 stayed
+  Open after they were paid or made obsolete, and rows N331, N364 and N365 kept stale "not merged" or "not run" text):
+  the commit that pays an item also closes its G id (status Done with the evidence, then `pnpm gaps archive`) and
+  rewrites the row text it made stale.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
   only if someone opened the published URL and checked it.
 - Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
