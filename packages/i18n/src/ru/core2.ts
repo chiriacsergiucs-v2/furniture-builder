@@ -695,6 +695,9 @@ export const ru_core2 = {
   'Invalid piece bindings': 'Неверные привязки изделия',
   'Invalid staggered rows': 'Неверные смещённые ряды',
   'Staggered rows need schemaVersion 10': 'Смещённые ряды требуют schemaVersion 10',
+  'Open both sides needs a piece with no back':
+    'Открыто с двух сторон — только для изделия без задней стенки',
+  'Open both sides needs schemaVersion 11': 'Открыто с двух сторон требует schemaVersion 11',
   'Row {i} does not follow the widths {a}, {b} and {c} mm: no mix of them fills {w} mm. Change the widths, or keep the row as set by hand.':
     'Ряд {i} не соответствует ширинам {a}, {b} и {c} мм: никакое их сочетание не заполняет {w} мм. Измените ширины или оставьте ряд заданным вручную.',
   'A divider in row {i} lines up with one in the row above.':

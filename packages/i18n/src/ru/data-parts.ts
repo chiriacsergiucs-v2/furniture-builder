@@ -193,6 +193,10 @@ const FIXED: Record<string, string> = {
   'usually supplied with the appliance — check the front size and the fixing points against its installation drawing':
     'обычно поставляется с техникой — сверьте размер фасада и точки крепления с её монтажным чертежом',
   'Anti-tip wall fixing': 'Крепление к стене от опрокидывания',
+  'Free-standing fixing: floor or ceiling':
+    'Крепление отдельностоящего изделия: к полу или потолку',
+  'the piece is {h} mm tall and open both sides — fix it to the floor or ceiling; choose the fixing for your floor or ceiling type (typical guidance)':
+    'высота изделия {h} мм, оно открыто с двух сторон — закрепите его к полу или потолку; подберите крепёж под тип пола или потолка (типичная рекомендация)',
   'Bar handle, 128 mm centres': 'Ручка-скоба, 128 мм между отверстиями',
   'Screws: Laterală pat dreapta to Cap pe picioare': 'Шурупы: правая боковина кровати к изножью',
   'Screws: Laterală pat stânga to Cap pe picioare': 'Шурупы: левая боковина кровати к изножью',

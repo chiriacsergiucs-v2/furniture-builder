@@ -154,13 +154,25 @@ const rules: Rule[] = [
       const p = d.product;
       const tall = (p.kind === 'cabinet' || p.kind === 'corner') && p.params.mount !== 'wall';
       if (tall && model.bounds.h > ANTI_TIP_HEIGHT) {
-        out.hardware.push({
-          nodeId: p.id,
-          kind: 'wall-fixing',
-          label: 'Anti-tip wall fixing',
-          quantity: 1,
-          note: `the piece is ${model.bounds.h} mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)`,
-        });
+        // Open both sides (ADR-292): a free-standing piece has no wall behind it; it is fixed to the floor or ceiling.
+        const free = p.kind === 'cabinet' && p.params.twoFaced === true;
+        out.hardware.push(
+          free
+            ? {
+                nodeId: p.id,
+                kind: 'floor-fixing',
+                label: 'Free-standing fixing: floor or ceiling',
+                quantity: 1,
+                note: `the piece is ${model.bounds.h} mm tall and open both sides — fix it to the floor or ceiling; choose the fixing for your floor or ceiling type (typical guidance)`,
+              }
+            : {
+                nodeId: p.id,
+                kind: 'wall-fixing',
+                label: 'Anti-tip wall fixing',
+                quantity: 1,
+                note: `the piece is ${model.bounds.h} mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)`,
+              },
+        );
       }
       return out;
     },

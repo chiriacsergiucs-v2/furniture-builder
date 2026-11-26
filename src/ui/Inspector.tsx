@@ -1362,15 +1362,22 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           ]}
           onChange={(v) => set({ bottom: v })}
         />
-        <Segmented
+        <Segmented<CabinetParams['back'] | 'both'>
           label={t('Back@@panel')}
-          value={p.back}
+          value={p.twoFaced ? 'both' : p.back}
           options={[
             { value: 'applied', label: t('Nailed on') },
             { value: 'inset', label: t('Set in') },
             { value: 'none', label: t('None') },
+            {
+              value: 'both',
+              label: t('Open both sides'),
+              title: t('No back; rear edges banded too, for a room divider'),
+            },
           ]}
-          onChange={(v) => set({ back: v })}
+          onChange={(v) =>
+            set(v === 'both' ? { back: 'none', twoFaced: true } : { back: v, twoFaced: undefined })
+          }
         />
         {p.back === 'inset' && (
           <MmField

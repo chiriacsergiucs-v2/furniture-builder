@@ -257,6 +257,8 @@ export type HardwareKind =
   | 'corner-hinge'
   /** ADR-035 anti-tip fixing, ADR-036 appliance and front fixing, ADR-037 sliding track and flap stay, ADR-038/039 purchased items. */
   | 'wall-fixing'
+  /** ADR-292: a tall piece open on both sides is fixed to the floor or ceiling; the fixing is the user's choice. */
+  | 'floor-fixing'
   | 'appliance'
   | 'front-fixing'
   | 'sliding-track'
@@ -494,6 +496,11 @@ export interface CabinetParams {
   /** 'under': the bottom runs the full width and the sides stand on it. 'none': no bottom (over-hood units). Absent = between the sides. */
   bottom?: 'between' | 'under' | 'none';
   back: 'none' | 'applied' | 'inset';
+  /**
+   * Open both sides (ADR-292, schemaVersion 11), only with `back: 'none'`: the rear edges of the sides, top, bottom,
+   * dividers and shelves are banded too, and a tall piece gets a floor or ceiling fixing instead of a wall fixing.
+   */
+  twoFaced?: true;
   /** Distance of an inset back from the rear edge of the carcass. */
   backInset: Mm;
   plinthHeight: Mm;
@@ -775,7 +782,7 @@ export interface Design {
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
    * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
   id: string;
   name: string;
   createdAt: string;

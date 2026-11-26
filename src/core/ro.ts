@@ -297,6 +297,11 @@ export function hardwareRo(h: Pick<HardwareItem, 'kind' | 'label' | 'note'>): {
         item: pt('Prindere anti-răsturnare în perete'),
         note: pt('alegeți diblurile după tipul peretelui (orientativ)'),
       };
+    case 'floor-fixing':
+      return {
+        item: pt('Prindere de sine stătătoare: în podea sau tavan'),
+        note: pt('alegeți prinderea după tipul podelei sau al tavanului (orientativ)'),
+      };
     case 'appliance':
       return {
         item: h.label.replace(/^Built-in /, pt('Electrocasnic încorporat: ')),

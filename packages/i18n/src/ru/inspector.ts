@@ -117,6 +117,9 @@ export const ru_inspector = {
   'Under the sides': 'Под боковинами',
   'Nailed on': 'Накладная (на гвоздях)',
   'Set in': 'Вставная',
+  'Open both sides': 'Открыто с двух сторон',
+  'No back; rear edges banded too, for a room divider':
+    'Без задней стенки; задние кромки тоже облицованы — для перегородки',
   'Back set in from rear': 'Отступ задней стенки от тыла',
   '0 for no plinth': '0 — без цоколя',
   'Plinth set back': 'Отступ цоколя',
