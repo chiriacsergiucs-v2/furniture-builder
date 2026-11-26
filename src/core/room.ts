@@ -335,6 +335,9 @@ export function rectInside(outline: Pt[], x0: number, z0: number, x1: number, z1
   return true;
 }
 
+/** The codes of a piece that does not fit the room, through a wall or above the ceiling: one repair family (ADR-296). */
+export const ROOM_FIT_CODES: ReadonlySet<string> = new Set(['outside-room', 'taller-than-room']);
+
 /**
  * A box's floor outline lies inside the room (ADR-121): a turned box by its four corners, and no corner of the walls
  * strictly inside it (walls are straight along x or z, so that is the only way one can pass through it).
@@ -601,7 +604,7 @@ export function roomChecks(
     } else if (b.y + b.h > room.height)
       diagnostics.push({
         severity: 'error',
-        code: 'outside-room',
+        code: 'taller-than-room',
         message: t('{name} is {mm} mm taller than the room.', {
           name: pc.name,
           mm: b.y + b.h - room.height,

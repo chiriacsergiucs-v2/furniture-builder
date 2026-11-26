@@ -1052,6 +1052,7 @@ const POSITION_ERRORS = new Set([
   'pieces-overlap',
   'below-floor',
   'outside-room',
+  'taller-than-room',
   'hits-obstacle',
 ]);
 /** Error codes about a piece's clearances, shown and opened in its Clearance group (ADR-117, ADR-008). */

@@ -3634,6 +3634,28 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 
+### G-502: No frame-time profile of the 3D viewer
+
+- Status: Done (N395)
+- Origin: ADR-238 Out of scope, 2026-11-07 (architecture review I-20)
+- Missing: ADR-238's saving is reasoned from object counts; no browser profile of frame time on a 20-piece room was taken before or after.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Profile the viewer in Chromium before and after ADR-238?
+- Suggested pick: Record draw calls and frame time in the browser find-it run (estimate: effort +5 %, value +2 %)
+- Work: Low
+- Impact: Low
+
+### G-505: Some diagnostic codes still cover more than one wording
+
+- Status: Done (N396)
+- Origin: ADR-225 implementation, 2026-11-07 (architecture review I-07)
+- Missing: Six codes keep more than one wording because Claude judged each one problem (SAME_PROBLEM in tests/diagnostic-codes.test.ts); the closest calls are outside-room (through a wall vs taller than the room, one repair family in repairs.ts), room-island (walkway missing/invalid vs rectangle room vs room too small), worktop-corner-joint (no joint vs butt joint without the part that runs through), worktop-edge-size (no size vs too large), drawer-low (all drawers vs one box) and corner-size (diagonal, blind and L corner sizes). Splitting them changes what repairs.ts, RoomFill.tsx and the tests key on.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should any of these codes be split further, and if so should repairs and the Fill the room steps treat the new codes like the old one?
+- Suggested pick: Split outside-room into outside-room and taller-than-room with repairs keyed on both, and room-island's rectangle and too-small cases, in a follow-up ADR (estimate: effort +10 %, value +3 %)
+- Work: Low
+- Impact: Low
+
 ### G-506: Duplicate backlog id D02
 
 - Status: Done (N299)
