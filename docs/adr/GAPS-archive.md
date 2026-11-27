@@ -3433,6 +3433,23 @@ highest id in either file.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
 
+### G-420: Run parts read connections
+
+- Status: Done (N423)
+- Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
+- Missing: Suggest run parts (ADR-061) groups runs with groupRuns (src/core/project.ts:2201): base pieces turned the same way, in line, with gaps up to 150 mm; it does not read stored connections.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Should run parts treat side- and corner-connected pieces as one run?
+- Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Run parts ignore stored connections.
+- Fix: Let groupRuns read side and corner connections.
+- Conflicts: none
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
+- Note: Built 2026-11-27 (N423): `groupRunLegs`/`groupRuns` in src/core/project.ts read the stored side and corner connections that still hold; Suggest run parts, run handles and "the run" scope use them; tests/run-connections.test.ts.
+
 ### G-438: Sink and hob cut-outs in the room front view
 
 - Status: Done (N393)
