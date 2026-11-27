@@ -3988,6 +3988,19 @@ highest id in either file.
 - Necessity: Low
 - Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
 
+### G-547: H1 leftovers: Seating, Sleeping and lying, stored Wardrobe name (context-key pass)
+
+- Status: Done (N409)
+- Origin: reuse health 2026-11-18 H1, context-key pass
+- Missing: FUNCTION_LABEL (src/core/catalog/types.ts:23-24) is stored in designs as catalog.category (src/core/wizard/steps.ts:358-362); stored Wardrobe names (storage.ts:56, registry.ts:136). Plain keys Seating and Sleeping and lying keep two Russian wordings in data-catalog and data-wizard
+- Request: Separate stored labels from display labels, then tag
+- Questions: Change stored category labels, or keep them as they are?
+- Suggested pick: User decides (stored data)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
+
 ### G-550: Audit advisories left after dependency health
 
 - Status: Done (N410)

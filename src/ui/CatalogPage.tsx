@@ -4,7 +4,8 @@ import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import {
   catalogFamilies,
-  FUNCTION_LABEL,
+  categoryLabel,
+  functionLabel,
   FUNCTIONS,
   insertable,
   insertVariant,
@@ -440,12 +441,8 @@ export function CatalogPage({
         </p>
       ) : (
         highlightGroups.map((g) => (
-          <section
-            key={g.fn}
-            className="catalog-group highlights"
-            aria-label={tr(FUNCTION_LABEL[g.fn])}
-          >
-            <h2 className="group-head">{tr(FUNCTION_LABEL[g.fn])}</h2>
+          <section key={g.fn} className="catalog-group highlights" aria-label={functionLabel(g.fn)}>
+            <h2 className="group-head">{functionLabel(g.fn)}</h2>
             {g.families.map((family) => (
               <FamilyBlock
                 key={family.id}
@@ -496,7 +493,7 @@ export function CatalogPage({
                       {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
                     </strong>
                     <span className="sub">
-                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
+                      {e.design.catalog!.category ? categoryLabel(e.design.catalog!.category) : ''}
                       {e.design.catalog!.articleNumber
                         ? ` · ${e.design.catalog!.articleNumber}`
                         : ''}
@@ -1366,7 +1363,7 @@ function TemplateEditor({
         >
           {FUNCTIONS.map((fn) => (
             <option key={fn} value={fn}>
-              {tr(FUNCTION_LABEL[fn])}
+              {functionLabel(fn)}
             </option>
           ))}
         </select>
@@ -1665,7 +1662,7 @@ function FinderPage({
                 <option value="">{t('All types')}</option>
                 {types.map((fn) => (
                   <option key={fn} value={fn}>
-                    {tr(FUNCTION_LABEL[fn])}
+                    {functionLabel(fn)}
                   </option>
                 ))}
               </select>
