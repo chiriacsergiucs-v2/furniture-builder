@@ -19,7 +19,7 @@ import {
 } from './projectProfiles';
 import { buildModel } from './build';
 import { compatChecks } from './compat';
-import { localClearances, type Clearance } from './clearance';
+import { localClearances, reachesArc, type Clearance } from './clearance';
 import {
   BODY_CODES,
   envelopeChecks,
@@ -1041,6 +1041,11 @@ export function rotateBox(b: Box, r: QuarterTurn): Box {
   }
 }
 
+/** A plan point (x, z) turned as `rotateBox` turns a box. */
+function rotatePoint([x, z]: [Mm, Mm], r: QuarterTurn): [Mm, Mm] {
+  return r === 90 ? [z, -x] : r === 180 ? [-x, -z] : r === 270 ? [-z, x] : [x, z];
+}
+
 const FACING: Record<QuarterTurn, PlacedPiece['facing']> = {
   0: { axis: 'z', sign: 1 },
   90: { axis: 'x', sign: 1 },
@@ -1259,12 +1264,16 @@ function placeItemOnce(item: ProjectItem, opts: PlaceOptions | undefined): Place
   }));
   const panels = all.slice(0, model.panels.length);
   const full = { x: rb.x + dx, y: rb.y + dy, z: rb.z + dz, w: rb.w, h: rb.h, d: rb.d };
-  const clearances = localClearances(model).map((c) => {
+  const clearances = localClearances(model).map((c): Clearance => {
     const rc = rotateBox(c.box, r);
+    const { arc, ...rest } = c;
+    // The swing's hinge turns and moves with the piece (G-011); a piece typed at an angle keeps the box.
+    const pivot = arc && !item.angle ? rotatePoint(arc.pivot, r) : null;
     return {
-      ...c,
+      ...rest,
       panelId: `${item.id}:${c.panelId}`,
       box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }),
+      ...(arc && pivot ? { arc: { pivot: [pivot[0] + dx, pivot[1] + dz], r2: arc.r2 } } : {}),
     };
   });
   const facing = FACING[r];
@@ -2006,7 +2015,8 @@ function openingChecks(
     for (const c of pc.clearances) {
       const hits = [
         ...allPanels
-          .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
+          // A door's swing (G-011): only what reaches into the quarter circle about its hinge.
+          .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box) && reachesArc(c, aabbOf(q)))
           .map((q) => ({
             box: aabbOf(q),
             exact: q.shape ? aabbOf(q) : q.box,
@@ -2018,7 +2028,7 @@ function openingChecks(
               : (pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.design.name ?? q.label),
           })),
         ...obstacles
-          .filter((o) => overlaps(o.box, c.box))
+          .filter((o) => overlaps(o.box, c.box) && reachesArc(c, o.box))
           .map((o) => ({ box: o.box, exact: o.box, itemId: undefined, name: o.label })),
       ];
       if (!hits.length) continue;

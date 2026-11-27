@@ -9,8 +9,11 @@
  * follow (ADR-111).
  * ADR-209 (replaces ADR-071's "only with automatic refresh off"): the filler repair adds a run request of kind `filler`,
  * planned with the run parts, so automatic refresh keeps it and the repair is offered with refresh on too.
+ * G-436: a single door blocked by a neighbour can have its hinge reversed, offered when the reversed swing (G-011)
+ * clears; nothing moves.
  */
 import { carryUnits } from './connections';
+import { findInProduct, mapProductSpace } from './design';
 import { t as tx } from '@furniture-builder/i18n';
 import { propagateLinks } from './linked';
 import { resizeProduct } from './pieceSize';
@@ -147,6 +150,8 @@ type Candidate = Omit<Repair, 'project' | 'preview' | 'id' | 'refused'> & {
   lead: string;
   /** Listed refused with this reason whatever it would do (ADR-204: a size bound to a variable). */
   refusedWhy?: string;
+  /** Offered though nothing moves (distance 0): the piece it changes, previewed as it is (G-436). */
+  inPlace?: boolean;
 };
 
 const side = (axis: 'x' | 'z', s: number) =>
@@ -308,6 +313,34 @@ function matchCandidate(
   return { ...base, project: propagateLinks(project, next, true) };
 }
 
+/**
+ * Reverse the hinge of the single door `panelId` of `pc` (G-436): the door's space hinges on the other side. Null when
+ * the front is not one hinged door of a space. Linked copies take the same change (ADR-111).
+ */
+function hingeCandidate(project: Project, pc: PlacedPiece, panelId: string): Candidate | null {
+  const panel = pc.panels.find((q) => q.id === panelId);
+  const prod = pc.item.design.product;
+  if (!panel || panel.role !== 'door' || (prod.kind !== 'cabinet' && prod.kind !== 'corner'))
+    return null;
+  const spaceId = panel.nodeId.slice(pc.item.id.length + 1);
+  const front = findInProduct(prod, spaceId)?.space.front;
+  if (front?.kind !== 'doors' || front.count !== 1) return null;
+  const hinge: 'left' | 'right' = front.hinge === 'right' ? 'left' : 'right';
+  const product = mapProductSpace(prod, spaceId, (s) => ({ ...s, front: { ...front, hinge } }));
+  const design = { ...pc.item.design, product };
+  const next: Project = {
+    ...project,
+    items: project.items.map((i) => (i.id === pc.item.id ? { ...i, design } : i)),
+  };
+  return {
+    label: tx('Reverse the hinge of {name}', { name: pieceName(project, pc.item.id) }),
+    distance: 0,
+    project: propagateLinks(project, next, true),
+    lead: pc.item.id,
+    inPlace: true,
+  };
+}
+
 /** Whether two boxes share volume. */
 const boxesOverlap = (a: Box, b: Box) =>
   a.x < b.x + b.w &&
@@ -389,6 +422,8 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
       door = byId.get(ids[1]);
     const c = door?.clearances.find((x) => x.panelId === d.panelIds?.[0]);
     if (!other || !door || !c) return [];
+    // A single door may swing the other way instead (G-436); offered only if that swing clears.
+    if (c.arc) out.push(hingeCandidate(project, door, c.panelId));
     const f = door.facing.axis,
       across = f === 'x' ? 'z' : 'x';
     // The neighbour moves out of the space the front needs: away from it, or sideways.
@@ -447,7 +482,7 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
         });
     }
   }
-  return out.filter((c): c is Candidate => !!c && c.distance > 0);
+  return out.filter((c): c is Candidate => !!c && (c.distance > 0 || !!c.inPlace));
 }
 
 /**
@@ -533,7 +568,8 @@ export function repairsFor(
     const preview: Repair['preview'] = [];
     for (const [id, b] of boundsOf(after)) {
       const o = was.get(id);
-      if (!o || JSON.stringify(o) !== JSON.stringify(b)) preview.push({ id, box: b });
+      if (!o || JSON.stringify(o) !== JSON.stringify(b) || (c.inPlace && id === c.lead))
+        preview.push({ id, box: b });
     }
     for (const r of next.runParts ?? [])
       if (r.key === c.added) preview.push({ id: `run:${r.id}`, box: r.box });

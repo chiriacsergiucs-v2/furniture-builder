@@ -119,6 +119,22 @@ highest id in either file.
 - Fix: L-shaped corner runs with a user-picked mitred or butt worktop joint, drawn on the plan and cut list.
 - Conflicts: none
 
+### G-011: Handle projection and exact swing arcs in the check
+
+- Status: Done (N421)
+- Note: Built 2026-11-27 (N421): a hinged door's clearance carries its quarter circle about the hinge edge (`arc` in `src/core/clearance.ts`, turned with the piece in `placeItem`), and `opening-blocked` counts only pieces, run parts and obstacles that reach into it (squared distances). The handle schedule (ADR-024) holds no handle depth, so no projection is added (ADR-010). Still the box: two pieces' swings meeting (`openings-clash`), a swing through a wall (room outline check), a piece typed at an angle and the tilted diagonal corner door.
+- Origin: ADR-057, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: No handle projection; door swings are not exact arcs in the check (drawn arcs were fixed, the check still uses a box).
+- Request: Opening clearance for doors, drawers, flaps (context, not a quote)
+- Questions: Use the handle depth from the handle schedule and the real arc on the hinge side?
+- Suggested pick: Check the real quarter-circle on the hinge side plus the handle depth from the handle schedule (ADR-024). This also unblocks the ADR-071 “reverse the hinge” repair. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Door clearance check uses a box, not the real swing arc, and ignores handle projection.
+- Fix: Check the hinge-side quarter-circle plus a user-entered handle depth from the handle schedule.
+- Conflicts: ADR-057: decided clearances are axis-aligned boxes; an arc check changes that decision.
+
 ### G-012: Angled walls and plan tracing
 
 - Status: Done (ADR-208)
@@ -3477,6 +3493,21 @@ highest id in either file.
 - Issue: Formulas cannot branch or round to a step.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
+
+### G-436: Reverse-the-hinge repair
+
+- Status: Done (N422)
+- Origin: ADR-209, 2026-11-06; remainder of G-034 (the coordinator split it: the repair needs G-011)
+- Missing: A door blocked by a neighbour has no "Reverse the hinge" repair. The ADR-057 clearance is a box as deep as the door is wide on both sides, so reversing the hinge never clears it.
+- Request: “Explainable warnings with repairs”.
+- Questions: Build the hinge-side clearance (G-011, which changes ADR-057's box decision) and then this repair?
+- Suggested pick: Once G-011 is decided, offer the hinge repair for single doors. (estimate: effort +10%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Reversing the hinge is not offered as a repair.
+- Fix: After G-011, add the hinge repair to `repairsFor`.
+- Conflicts: ADR-057 (clearances are axis-aligned boxes on both hinge sides)
 
 ### G-438: Sink and hob cut-outs in the room front view
 

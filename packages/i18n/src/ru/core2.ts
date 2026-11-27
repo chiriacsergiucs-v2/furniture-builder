@@ -323,6 +323,8 @@ export const ru_core2 = {
   // ADR-204: match-the-neighbour repairs.
   'Make {name} {mm} mm deep like {other}': 'Сделать «{name}» глубиной {mm} мм, как «{other}»',
   'Make {name} {mm} mm high like {other}': 'Сделать «{name}» высотой {mm} мм, как «{other}»',
+  // G-436: the reverse-the-hinge repair.
+  'Reverse the hinge of {name}': 'Перевесить дверь «{name}» на другую сторону',
   'The size follows a project variable; change the variable instead.':
     'Размер следует переменной проекта; измените переменную.',
 

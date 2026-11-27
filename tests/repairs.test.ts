@@ -454,3 +454,57 @@ describe('match-the-neighbour repairs (ADR-204)', () => {
     expect(cabOf(r.project, copy.id)!.depth).toBe(560);
   });
 });
+
+describe('reverse the hinge (G-436)', () => {
+  /** A single-door base cabinet hinged on `hinge`, a second one 50 mm into its door box's corner on the hinge side. */
+  function blockedOnHinge(hinge: 'left' | 'right'): Project {
+    const base = t('base-door');
+    if (base.product.kind !== 'cabinet') throw new Error('cabinet expected');
+    const design: Design = {
+      ...base,
+      product: {
+        ...base.product,
+        params: {
+          ...base.product.params,
+          interior: { ...base.product.params.interior, front: { kind: 'doors', count: 1, hinge } },
+        },
+      },
+    };
+    let p = newProject('Hinge');
+    p = { ...p, items: [makeItem(p, design)] };
+    const c = placeItem(p.items[0]).clearances[0];
+    const other = makeItem(p, t('base-door'));
+    const w = placeItem(other).bounds.w;
+    const x = hinge === 'right' ? c.box.x + c.box.w - 50 : c.box.x + 50 - w;
+    return {
+      ...p,
+      items: [...p.items, { ...other, position: { x, y: 0, z: c.box.z + c.box.d - 50 } }],
+    };
+  }
+  const hingeOf = (p: Project) => {
+    const prod = p.items[0].design.product;
+    const f = prod.kind === 'cabinet' ? prod.params.interior.front : null;
+    return f?.kind === 'doors' ? f.hinge : undefined;
+  };
+  for (const hinge of ['left', 'right'] as const)
+    it(`a single door hinged ${hinge} and blocked by a neighbour can have its hinge reversed`, () => {
+      const p = blockedOnHinge(hinge);
+      const d = find(p, 'opening-blocked').find((x) => x.nodeId === p.items[0].id)!;
+      expect(d).toBeTruthy();
+      expect(mayRepair(d)).toBe(true);
+      const reps = expectSound(p, d);
+      const r = reps.find((x) => x.label === `Reverse the hinge of ${pieceName(p, p.items[0].id)}`);
+      expect(r).toBeTruthy();
+      expect(r!.distance).toBe(0);
+      expect(reps[0]).toBe(r);
+      expect(hingeOf(r!.project)).toBe(hinge === 'left' ? 'right' : 'left');
+      // Nothing moves: both pieces stay where they were.
+      expect(r!.project.items.map((i) => i.position)).toEqual(p.items.map((i) => i.position));
+    });
+  it('is not offered when the reversed swing is blocked too', () => {
+    const p = facing(200);
+    const pm = buildProjectModel(p);
+    for (const d of pm.diagnostics.filter((x) => x.code === 'opening-blocked'))
+      expect(repairsFor(p, pm, d).some((r) => r.label.startsWith('Reverse the hinge'))).toBe(false);
+  });
+});

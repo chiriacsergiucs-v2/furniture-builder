@@ -124,3 +124,98 @@ describe('opening clearance (ADR-057)', () => {
     expect(codes(p)).toContain('openings-clash');
   });
 });
+
+/** A base cabinet whose single door hinges on `hinge`. */
+function hinged(hinge: 'left' | 'right'): Design {
+  const d = t('base-door');
+  if (d.product.kind !== 'cabinet') throw new Error('cabinet expected');
+  const interior = d.product.params.interior;
+  return {
+    ...d,
+    product: {
+      ...d.product,
+      params: {
+        ...d.product.params,
+        interior: { ...interior, front: { kind: 'doors', count: 1, hinge } },
+      },
+    },
+  };
+}
+
+/**
+ * A base cabinet hinged on `hinge` and a second one standing with its near corner 50 mm into the far corner (on the
+ * `corner` side) of the first one's door box: outside the swing of a door hinged on the other side, inside the swing
+ * of one hinged on that side.
+ */
+function cornerProject(hinge: 'left' | 'right', corner: 'left' | 'right' = 'right'): Project {
+  let p = newProject('Swing');
+  p = { ...p, items: [makeItem(p, hinged(hinge))] };
+  const c = placeItem(p.items[0]).clearances[0];
+  const other = makeItem(p, t('base-door'));
+  const w = placeItem(other).bounds.w;
+  const x = corner === 'right' ? c.box.x + c.box.w - 50 : c.box.x + 50 - w;
+  return {
+    ...p,
+    items: [...p.items, { ...other, position: { x, y: 0, z: c.box.z + c.box.d - 50 } }],
+  };
+}
+const blockedDoor = (p: Project) =>
+  buildProjectModel(p).diagnostics.filter(
+    (d) => d.code === 'opening-blocked' && d.nodeId === p.items[0].id,
+  );
+
+describe('door swing arc (G-011)', () => {
+  it('a single door swings a quarter circle about its hinge edge, a pair about their outer edges', () => {
+    for (const hinge of ['left', 'right'] as const) {
+      const [c] = localClearances(buildModel(hinged(hinge)));
+      expect(c.arc).toEqual({
+        pivot: [hinge === 'left' ? c.box.x : c.box.x + c.box.w, c.box.z],
+        r2: c.box.w * c.box.w,
+      });
+    }
+    const d = t('base-door');
+    const pair: Design =
+      d.product.kind === 'cabinet'
+        ? {
+            ...d,
+            product: {
+              ...d.product,
+              params: {
+                ...d.product.params,
+                width: 900,
+                interior: { ...d.product.params.interior, front: { kind: 'doors', count: 2 } },
+              },
+            },
+          }
+        : d;
+    const [l, r] = localClearances(buildModel(pair));
+    expect(l.arc?.pivot).toEqual([l.box.x, l.box.z]);
+    expect(r.arc?.pivot).toEqual([r.box.x + r.box.w, r.box.z]);
+  });
+  it('drawers and flaps keep the whole box', () => {
+    for (const c of localClearances(buildModel(t('chest')))) expect(c.arc).toBeUndefined();
+  });
+  it('a piece in the box corner away from the hinge, outside the swing, does not block the door', () => {
+    expect(blockedDoor(cornerProject('left'))).toEqual([]);
+    expect(blockedDoor(cornerProject('right', 'left'))).toEqual([]);
+  });
+  it('the same piece on the hinge side of the swing blocks it, as a warning', () => {
+    for (const [h, side] of [
+      ['right', 'right'],
+      ['left', 'left'],
+    ] as const) {
+      const ds = blockedDoor(cornerProject(h, side));
+      expect(ds).toHaveLength(1);
+      expect(ds[0].severity).toBe('warning');
+    }
+  });
+  it('the swing turns and moves with the piece', () => {
+    let p = newProject('Turned');
+    const it = makeItem(p, hinged('left'));
+    p = { ...p, items: [{ ...it, rotationY: 90, position: { x: 0, y: 0, z: 1000 } }] };
+    const [c] = placeItem(p.items[0]).clearances;
+    // Facing +x, the door's left edge (seen from the front) is at the far z end of its box.
+    expect(c.arc?.pivot).toEqual([c.box.x, c.box.z + c.box.d]);
+    expect(c.arc?.r2).toBe(c.box.d * c.box.d);
+  });
+});
