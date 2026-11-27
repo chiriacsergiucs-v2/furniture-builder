@@ -3949,6 +3949,32 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-544: Security low items: migration grants, workflow pins, dev dependency advisories, localhost redirect (security L-2, L-4, L-5, L-6)
+
+- Status: Done (N410)
+- Origin: security health 2026-11-18 L-2, L-4, L-5, L-6
+- Missing: L-2 records write grant (supabase/migrations/20261028000000_accounts.sql:100); L-4 workflow actions pinned to tags and CLI latest (.github/workflows/deploy-assistant.yml:34); L-5 dev-only advisories (see dependency health); L-6 localhost redirect in supabase/config.toml:164
+- Request: Route writes through save_record; pin actions to SHAs; upgrade dev deps; remove localhost redirect outside dev
+- Questions: Approve migration and workflow changes?
+- Suggested pick: User decides per item
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Note: User 2026-11-27: fix L-6, L-5 and L-2; L-4 (workflow pins) already done by G-566. L-2: new migration supabase/migrations/20261127000000_records_writes_via_functions.sql makes save_record, trash_record and purge_trash security definer, limits them to signed-in users and revokes insert, update and delete on records from authenticated; the shipped migration is unchanged. Tested with `bash tools/supabase/test-sql.sh` (exit 0, direct writes refused with 42501). Not applied anywhere: no live Supabase project (G-277). L-5: already built by N354 (e40de8b8, vitest 4.1.12); `pnpm audit` 2026-11-27: "No known vulnerabilities found". L-6: supabase/config.toml is read only by the CLI's local stack; no workflow pushes it (deploy-assistant.yml:38 runs only `supabase functions deploy`), so the localhost redirect stays for local dev with a comment, and docs/supabase-setup.md no longer tells the owner to add localhost to the hosted project.
+
+### G-550: Audit advisories left after dependency health
+
+- Status: Done (N410)
+- Origin: catch-up 2026-11-19, pnpm audit
+- Missing: pnpm audit: 2 critical (tinypool via vitest 3, prototype pollution RCE), 3 moderate (vitest, @vitest/mocker x2). Fix needs vitest 4, blocked by G-545. Also missing from G-545: plugin-react 6.3.0 upgrade
+- Request: Upgrade vitest to a patched version, then re-run pnpm audit
+- Questions: Do the vitest 4 fix (seller-pictures BASE_URL expectation) now?
+- Suggested pick: Fix vitest 4 first
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Note: Fixed by N354 (e40de8b8): vitest and @vitest/* 4.1.12 in the root and both packages; plugin-react is 5.2.0 (package.json:63) and its upgrade stays with G-545. `pnpm audit` 2026-11-27 (N410): "No known vulnerabilities found", 0 critical, 0 moderate.
+
 ### G-552: look-render find-it incomplete in sandbox
 
 - Status: Done (N398)

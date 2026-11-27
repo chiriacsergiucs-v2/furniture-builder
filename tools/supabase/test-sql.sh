@@ -15,4 +15,5 @@ PSQL=(psql -h "$DIR" -p 54329 -U postgres -v ON_ERROR_STOP=1 -q -X)
 "${PSQL[@]}" -c 'create database t' >/dev/null
 "${PSQL[@]}" -d t -f tools/supabase/stub-auth.sql >/dev/null
 "${PSQL[@]}" -d t -f supabase/migrations/20261028000000_accounts.sql >/dev/null
+"${PSQL[@]}" -d t -f supabase/migrations/20261127000000_records_writes_via_functions.sql >/dev/null
 "${PSQL[@]}" -d t -f tools/supabase/test.sql
