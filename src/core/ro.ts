@@ -3,7 +3,7 @@
  * (ADR-157): Romanian by default, Russian or English when chosen. Romanian text is the key of `pt()`. Pure
  * functions, no UI imports.
  */
-import { baseLabel, boardBandText, type CutRow } from './cutlist';
+import { baseLabel, boardBands, boardBandText, type CutRow } from './cutlist';
 import { dataSource, recordedMessage } from '@furniture-builder/i18n';
 import { getPrintLang, pt, WARNING_RO, type PrintKey } from '@furniture-builder/i18n/print';
 import { tenthsText } from './materials';
@@ -366,6 +366,36 @@ export const boardBandRo = (rows: CutRow[]) =>
     unnamed: pt('nespecificat'),
     someUnnamed: pt('unele piese: nespecificat'),
   });
+
+/** "ABS 0,8 × 22 mm: grosime ±0,1 mm, …" — the guidance the user typed on a band (ADR-301); null when none. */
+const bandGuideRo = (b: EdgeBand): string | null => {
+  const mm = (v: number) => `${tenthsText(v, getPrintLang() === 'en' ? '.' : ',')} ${pt('mm')}`;
+  const parts = [
+    b.thicknessTolerance ? pt('grosime ±{v}', { v: mm(b.thicknessTolerance) }) : '',
+    b.widthTolerance ? pt('lățime ±{v}', { v: mm(b.widthTolerance) }) : '',
+    b.overhang ? pt('surplus de tăiat {v} pe parte', { v: mm(b.overhang) }) : '',
+    b.edgebander ? pt('mașina de cantuit: {s}', { s: b.edgebander }) : '',
+  ].filter(Boolean);
+  return parts.length ? `${bandRo(b)}: ${parts.join(', ')}` : null;
+};
+
+/**
+ * The tolerances and edgebander settings the user typed on a board's bands (ADR-301), for the printed sheet, labelled
+ * guidance; null when none is filled.
+ */
+export const boardBandGuideRo = (rows: CutRow[]): string | null => {
+  const b = boardBands(rows);
+  const list = [
+    ...b.bands.map(bandGuideRo),
+    ...b.fronts.map((f) => {
+      const g = bandGuideRo(f);
+      return g && `${pt('fronturi')} ${g}`;
+    }),
+  ].filter(Boolean);
+  return list.length
+    ? pt('cant, după fișa dvs. (orientativ): {list}', { list: list.join(' · ') })
+    : null;
+};
 
 /** The CSV header in Romanian (ADR-020); `csvHeaders()` gives it in the print language. */
 export const CSV_HEADERS_RO = [

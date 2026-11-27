@@ -280,6 +280,13 @@ export const ru_editors = {
   'e.g. 1.5': 'напр. 1.5',
   'Band code (optional)': 'Код кромки (необязательно)',
   'Trim allowance per edge (mm)': 'Припуск на обрезку на кромку (мм)',
+  'Tolerances and edgebander (guidance)': 'Допуски и кромкооблицовочный станок (ориентир)',
+  "Optional, from your band's datasheet. The app fills nothing in and checks nothing against them; they print on the cut sheet.":
+    'Необязательно, из технического листа вашей кромки. Приложение ничего не заполняет и ничего по ним не проверяет; они печатаются на листе раскроя.',
+  'Thickness tolerance ± (mm)': 'Допуск по толщине ± (мм)',
+  'Width tolerance ± (mm)': 'Допуск по ширине ± (мм)',
+  'Overhang to trim per side (mm)': 'Свес под обрезку на сторону (мм)',
+  'Edgebander settings': 'Настройки кромкооблицовочного станка',
   'Whole mm from 0 to {max}.': 'Целое число мм от 0 до {max}.',
   'Enter the band {list} to name it.': 'Введите {list} кромки, чтобы указать её.',
   'Your fastener list could not be read from this browser.':

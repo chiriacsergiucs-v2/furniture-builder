@@ -6,7 +6,14 @@ import { nest } from '../core/nesting';
 import { t } from '@furniture-builder/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '@furniture-builder/i18n/print';
 import { warningText } from '../core/ro';
-import { boardBandRo, drillingRo, hardwareRo, partRo, printedPartLabel } from '../core/ro';
+import {
+  boardBandGuideRo,
+  boardBandRo,
+  drillingRo,
+  hardwareRo,
+  partRo,
+  printedPartLabel,
+} from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
@@ -105,6 +112,7 @@ export function PrintSheet() {
                 {bands.get(mid) ? `, ${pt('cant {m} m', { m: bands.get(mid)!.toFixed(1) })}` : ''}
                 {list[0].grain ? `, ${pt('fibră pe lungime')}` : ''}
                 {boardBandRo(list) ? `; ${boardBandRo(list)}` : ''}
+                {boardBandGuideRo(list) ? `; ${boardBandGuideRo(list)}` : ''}
               </caption>
               <thead>
                 <tr>

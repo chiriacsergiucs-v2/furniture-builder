@@ -53,15 +53,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 12 adds a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
+ * The document shape this app writes: 13 adds a band's tolerances and edgebander settings (ADR-301); 12 added a kit
+ * lock and the room Custom (ADR-298); 11 added a cabinet's Open
  * both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
- * mount (ADR-177); 6 added role boards (ADR-163); 1 to 10 still load.
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 12 still load.
  */
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 
 /**
- * Older versions → 11 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 10 add only optional fields
+ * Older versions → 13 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 12 add only optional fields
  * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
  * frame ends, a split's remainder order, staggered rows, Open both sides), so nothing else changes.
  * Returns the same object when already current.
@@ -816,6 +817,26 @@ function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
 }
 
+/** Every band of a design document: the boards' and fronts' bands, and the role and part bands (ADR-077, ADR-188). */
+function bandsOf(d: Record<string, unknown>): unknown[] {
+  const out: unknown[] = [];
+  if (Array.isArray(d.materials))
+    for (const m of d.materials) if (isObj(m)) out.push(m.band, m.frontBand);
+  for (const k of ['roleBands', 'partBands'])
+    if (isObj(d[k])) out.push(...Object.values(d[k] as Record<string, unknown>));
+  return out;
+}
+/** A band carries any of the ADR-301 fields (schemaVersion 13). */
+const hasBandGuide = (d: Record<string, unknown>) =>
+  bandsOf(d).some(
+    (b) =>
+      isObj(b) &&
+      (b.thicknessTolerance !== undefined ||
+        b.widthTolerance !== undefined ||
+        b.overhang !== undefined ||
+        b.edgebander !== undefined),
+  );
+
 /** Edge bands per role and per part (schemaVersion 8, ADR-188); checked when present, never throws. */
 function validateBands(d: Record<string, unknown>, errs: string[]) {
   const rb = d.roleBands,
@@ -1139,8 +1160,11 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
+  // A band's tolerances and edgebander settings (ADR-301) came with schemaVersion 13.
+  if ((d.schemaVersion as number) < 13 && hasBandGuide(d))
+    errs.push(t('Band tolerances and edgebander settings need schemaVersion 13'));
   // Staggered rows (ADR-282) came with schemaVersion 10.
   if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))
     errs.push(t('Staggered rows need schemaVersion 10'));

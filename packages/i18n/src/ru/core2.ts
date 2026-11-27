@@ -402,6 +402,10 @@ export const ru_core2 = {
   'band code must be text up to 60 characters': 'код кромки должен быть текстом до 60 символов',
   'band allowance must be whole mm from 0 to 100':
     'припуск кромки должен быть целым числом мм от 0 до 100',
+  'band tolerances and overhang must be 0.1 to 10 mm, in tenths':
+    'допуски и свес кромки должны быть от 0,1 до 10 мм, в десятых долях',
+  'edgebander settings must be text up to 200 characters':
+    'настройки кромкооблицовочного станка должны быть текстом до 200 символов',
   'The file is empty.': 'Файл пуст.',
   'The first row must name the columns {cols}; missing: {missing}.':
     'В первой строке должны быть названия столбцов {cols}; не хватает: {missing}.',

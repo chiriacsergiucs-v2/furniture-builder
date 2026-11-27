@@ -1240,21 +1240,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Suggested pick accepted (add Lock insides when a real project needs it); auto-accepted 2026-11-27.
 
-### G-460: Band tolerances and edgebander settings
-
-- Status: Open
-- Origin: ADR-212, 2026-11-06; agent scoped it out (remainder of G-038)
-- Missing: No band tolerances (thickness or width deviation, overhang to trim) and no edgebander settings; ADR-212 takes over only the band-list CSV import and its decor match.
-- Request: “Check the European standards for ABS, apply them accordingly”.
-- Questions: Add fields for tolerances and edgebander settings, filled only from values you type or your band list holds?
-- Suggested pick: Add them only as fields you fill, labelled guidance, nothing shipped (ADR-010). (estimate: effort +15%, value +5%)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Issue: Band tolerances and edgebander settings are not recorded anywhere.
-- Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
-- Conflicts: none
-
 ### G-462: Fill the room starts U and Alcove with an offset the size check rejects
 
 - Status: Acknowledged (2026-11-06)

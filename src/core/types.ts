@@ -104,6 +104,15 @@ export interface EdgeBand {
   allowance?: Mm;
   /** The seller's product this band was taken from (ADR-161, schemaVersion 5). */
   product?: ProductRef;
+  /**
+   * ADR-301 (schemaVersion 13): guidance the user types from the band's datasheet, never filled in (ADR-010). The ±
+   * thickness and ± width deviation and the overhang left to trim per side, in tenths of a mm (1–100). Absent = not given.
+   */
+  thicknessTolerance?: number;
+  widthTolerance?: number;
+  overhang?: number;
+  /** ADR-301 (schemaVersion 13): the user's edgebander settings for this band, as they write them. */
+  edgebander?: string;
 }
 
 export type BoardFinish = 'matte' | 'satin' | 'gloss';
@@ -791,7 +800,7 @@ export interface Design {
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
    * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
   id: string;
   name: string;
   createdAt: string;
