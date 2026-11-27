@@ -11,7 +11,8 @@
 //   `startNewWith`, `retype`, `step`, `openCatalog`) live here;
 //   import them instead of copying them into a test file.
 import 'fake-indexeddb/auto';
-import { IDBFactory } from 'fake-indexeddb';
+import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
+import Dexie from 'dexie';
 import { cleanup, configure, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, vi } from 'vitest';
@@ -79,12 +80,16 @@ function stubBrowser(width: number) {
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 /** The bare app at `width`: fresh modules, storage and URL, so each run starts as a first visit. */
 export async function renderApp(width: number) {
   stubBrowser(width);
   globalThis.indexedDB = new IDBFactory();
+  Dexie.dependencies.indexedDB = globalThis.indexedDB;
+  Dexie.dependencies.IDBKeyRange = IDBKeyRange;
   window.history.replaceState(null, '', '/');
   vi.resetModules();
   // These tests find features in the phone sheet; the canvas editor is the phone default since ADR-290 and has its

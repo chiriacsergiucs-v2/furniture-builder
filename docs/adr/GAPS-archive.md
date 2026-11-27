@@ -3223,6 +3223,23 @@ highest id in either file.
 - Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
 - Conflicts: none
 
+### G-371: Cheaper find-it runs (stopped before it was built)
+
+- Status: Done (N436)
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
+- Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
+- Questions: Resume the cheaper find-it runs later?
+- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
+- Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+- Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
+- Note: 2026-11-27, measured (N436): `pnpm exec vitest run tests/find-it` (114 files, 476 tests), CPU = user + sys of the whole run, median of 3 runs on a 2-core machine shared with other agents. As-is: 535.0 s (594.8, 535.0, 508.6). `userEvent.setup({ delay: null })`: 549.1 s (+3 %) and 2 tests in `catch-up-editor.test.tsx` failed in all 3 runs, not kept. Find-it as its own vitest project (jsdom, `isolate: false`) alone: 310.3 s (-42 %) but 12, 26 and 16 tests failed (spies, stubbed globals and Dexie's IndexedDB factory carried from one file to the next); with the find-it setup restoring spies and stubbed globals after each test and pointing Dexie at each test's fresh factory, all 476 passed in 6 of 6 runs, final median 256.7 s (256.7, 256.1, 262.3; -52 %): kept. Cheaper module reset: Vitest 4 has no partial `vi.resetModules`, and skipping the reset would drop the bare-app start (ADR-108); measured upper bound on 8 files, 62 renders, the warm reset plus re-import is 5.1 s of 42 s test time with isolation (12 %) and about 3 s of 37 s without (8 %), so with the kept lever it cannot reach 10 % even at zero cost: not applied.
+
 ### G-372: Wall picture: stale notice on a deliberate change or leaving the page
 
 - Status: Done (PR #329, N388)
@@ -3748,6 +3765,18 @@ highest id in either file.
 - Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
 - Work: Medium
 - Impact: Low-medium
+
+### G-487: The project cut list and hardware are not derived once in the store
+
+- Status: Done (N435)
+- Origin: ADR-221 Out of scope, 2026-11-07 (architecture review I-03)
+- Missing: The review's third step, deriving projectCutlist/projectHardware once in commitProject and storing them, and deriving the view once instead of per mounted useView(), is not built; ADR-221 memoises placeItem and reads projectModel only.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the derived cut list and hardware move into the store after ADR-221 is measured?
+- Suggested pick: Measure after ADR-221; build only if a 60-item edit still takes over 10 ms (estimate: effort +15 %, value +10 %)
+- Work: Medium
+- Impact: Low-medium
+- Note: 2026-11-27, measured (N435, `tests/project-edit-time.test.ts`, median of 21 edits per run after 5 warm-ups, 60 pieces of six kinds, one piece moved through `updateItem`): before, commit 12.6-18.5 ms plus 1.2-1.6 ms per mounted `useView()` to derive the cut list and hardware (one-mount total, median of 5 runs, 18.65 ms), so over the 10 ms threshold and the pick was built. `viewOf` (`src/store/useView.ts`) now makes the view once per state and every mounted `useView()` shares it, so the project cut list and hardware are derived once per edit; done in the shared view rather than as new store fields, so the four places that set `projectModel` need no second value kept in step. After, with 6 mounts, median of 3 runs: 25.8 ms against 35.1 ms derived per mount on the same runs (machine shared, so absolute times vary 13-24 ms for the commit alone). The commit itself (`commitProject` with `buildProjectModel`) is still over 10 ms on a 60-item project; that cost is not part of this pick.
 
 ### G-489: Restoring a backup writes rows without a transaction
 
