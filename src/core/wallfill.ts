@@ -646,6 +646,23 @@ const wallFamily = kitchen.find((f) => f.id === 'wall-cabinet')!;
 export const WALL_VARIANTS = WALL_ORDER.map((id) => wallFamily.variants.find((v) => v.id === id))
   .filter((v) => !!v)
   .filter(insertable);
+/** The catalog's lowest wall cabinet (the wall-cabinet family's minimum height): a wall row is never shortened below it. */
+export const WALL_MIN_HEIGHT = wallFamily.dims.min[1];
+
+/**
+ * The wall cabinet height a wall row uses (G-124): the entered one, or, when that would reach into the base row, the
+ * room left above the base row, labelled on the card (`from` is the entered height). Never below `WALL_MIN_HEIGHT`:
+ * null when even that does not fit, and the wizard says so (ADR-008, never clamped silently).
+ */
+export function wallRowHeight(
+  input: Pick<WallInput, 'height' | 'baseHeight' | 'wallHeight'>,
+): { height: Mm; from?: Mm } | null {
+  const h = input.wallHeight ?? WALL_HEIGHT;
+  const room = input.height - (input.baseHeight ?? BASE_HEIGHT);
+  if (h <= room) return { height: h };
+  if (room < WALL_MIN_HEIGHT) return null;
+  return { height: room, from: h };
+}
 
 /** Best number of equal pieces for a stretch of wall: round widths near 600 first, then no odd mm, then fewer. */
 function bestSplit(S: Mm, min: Mm, max: Mm): number | null {
@@ -840,18 +857,22 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
   // "any": each base row once without and once with a wall row, so the cards show both (ADR-104).
   const withWall = row === 'never' ? [false] : row === 'always' ? [true] : [false, true];
   const tries = list.flatMap((c) => withWall.map((w) => ({ c, w })));
+  // Wall cabinets that would reach into the base row are shortened to the room above it (G-124); when even the catalog
+  // minimum does not fit, the row is still tried at the entered height, its overlap error drops it, and the wizard says why.
+  const rowH = wallRowHeight(input);
+  const rowInput = rowH ? { ...input, wallHeight: rowH.height } : input;
   for (const { c, w } of tries) {
     if (mixes.length >= limit || built >= MAX_BUILDS) break;
     const key = `${c.signature}${w ? '|wall' : ''}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const wall = w ? wallRowFor(c.slots, input) : null;
+    const wall = w ? wallRowFor(c.slots, rowInput) : null;
     if (w && !wall) {
       wallFailed++;
       continue;
     }
     built++;
-    const project = mixProject(c.slots, input, wall);
+    const project = mixProject(c.slots, rowInput, wall);
     const model = buildProjectModel(project);
     if (model.diagnostics.some((d) => d.severity === 'error')) {
       failed++;
@@ -884,6 +905,16 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
           itemIds: [pc.item.id],
         });
     }
+    // The shortened wall row is labelled on its card (G-124).
+    if (wall && rowH?.from !== undefined)
+      tallWarn.push({
+        severity: 'warning',
+        code: 'wall-row-short',
+        message: t(
+          'Wall cabinets shortened from {from} to {h} mm to fit the room above the base row (catalog minimum {min} mm).',
+          { from: rowH.from, h: rowH.height, min: WALL_MIN_HEIGHT },
+        ),
+      });
     mixes.push({
       key,
       slots: c.slots,
@@ -951,17 +982,20 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     );
   const wallH = input.wallHeight ?? WALL_HEIGHT,
     baseTop = input.baseHeight ?? BASE_HEIGHT;
-  // A wall cabinet reaching into the base row would overlap it, an error (ADR-008): such mixes are not offered.
-  if (row !== 'never' && input.height - wallH < baseTop)
+  // Even the catalog's lowest wall cabinet would reach into the base row: the overlap is an error, so such mixes are
+  // not offered (ADR-008), and the wizard says why (G-124).
+  if (row !== 'never' && !rowH)
     problems.push(
       info(
         'wall-row-low',
         t(
-          'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row; lower the wall cabinet height to show a wall row.',
+          'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row, and the room above it is only {room} mm, under the catalog minimum of {min} mm; raise the height or lower the base height to show a wall row.',
           {
             wh: wallH,
             h: input.height,
             over: baseTop - (input.height - wallH),
+            room: input.height - baseTop,
+            min: WALL_MIN_HEIGHT,
           },
         ),
       ),

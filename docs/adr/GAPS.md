@@ -424,21 +424,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep the 40-piece limit; longer runs are better split into several walls.
 - Conflicts: none
 
-### G-124: Fill a wall: wall row reaching into the base row
-
-- Status: Open
-- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
-- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
-- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
-- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
-- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
-- Work: Low-medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Wall rows that would reach into the base row are dropped, so low walls get no wall row.
-- Fix: Shorten wall cabinets to the room above the base row, never below catalog minimum, labelled on the card.
-- Conflicts: ADR-104: decided overlapping wall rows are not offered and nothing is clamped; user chose height field
-
 ### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
 
 - Status: Acknowledged (2026-11-23)

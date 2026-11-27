@@ -179,6 +179,7 @@ export const DIAGNOSTIC_CODES = [
   'wall-range',
   'wall-row-low',
   'wall-row-none',
+  'wall-row-short',
   'wall-too-tall',
   'wall-top-box-small',
   'worktop-board',
