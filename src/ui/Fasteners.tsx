@@ -85,14 +85,19 @@ function FastenerRow({
   const [per, setPer] = useState(String(choice?.per ?? 1));
   // Carcass joints (ADR-209): mm from each end of a joint to the first and last fixing; empty = no drilling positions.
   const [edge, setEdge] = useState(choice?.edge !== undefined ? String(choice.edge) : '');
+  // Back fixings (G-439): the largest gap between fixings along each side; empty = no drilling positions.
+  const [spacing, setSpacing] = useState(
+    choice?.spacing !== undefined ? String(choice.spacing) : '',
+  );
   // The saved choice changed from outside (a failed save re-read from storage, ADR-256): the row shows what is saved.
   // A save the user just made changes it to what the fields already hold, so nothing moves and focus stays.
-  const savedKey = `${choice?.name ?? ''}|${choice?.per ?? ''}|${choice?.edge ?? ''}`;
+  const savedKey = `${choice?.name ?? ''}|${choice?.per ?? ''}|${choice?.edge ?? ''}|${choice?.spacing ?? ''}`;
   const [seen, setSeen] = useState(savedKey);
   const reset = () => {
     setName(choice?.name ?? '');
     setPer(String(choice?.per ?? 1));
     setEdge(choice?.edge !== undefined ? String(choice.edge) : '');
+    setSpacing(choice?.spacing !== undefined ? String(choice.spacing) : '');
   };
   if (seen !== savedKey) {
     setSeen(savedKey);
@@ -109,7 +114,11 @@ function FastenerRow({
   const perOk = per.trim() !== '' && Number.isSafeInteger(perN) && perN >= 1;
   const edgeN = Number(edge);
   const edgeOk = edge.trim() === '' || (Number.isSafeInteger(edgeN) && edgeN >= 0 && edgeN <= 5000);
-  const drills = joint.id === 'carcass-joint';
+  const spacingN = Number(spacing);
+  const spacingOk =
+    spacing.trim() === '' || (Number.isSafeInteger(spacingN) && spacingN >= 1 && spacingN <= 5000);
+  const back = joint.id === 'back-fixing';
+  const drills = joint.id === 'carcass-joint' || back;
   const commit = (nextName = name, nextPer = per) => {
     const n = nextName.trim();
     const p = Number(nextPer);
@@ -118,10 +127,24 @@ function FastenerRow({
       return;
     }
     if (!(nextPer.trim() !== '' && Number.isSafeInteger(p) && p >= 1)) return;
-    if (!edgeOk) return;
+    if (!edgeOk || (back && !spacingOk)) return;
     const e = drills && edge.trim() !== '' ? edgeN : undefined;
-    if (choice && choice.name === n && choice.per === p && choice.edge === e) return;
-    setChoice({ joint: joint.id, name: n, per: p, ...(e !== undefined ? { edge: e } : {}) });
+    const sp = back && spacing.trim() !== '' ? spacingN : undefined;
+    if (
+      choice &&
+      choice.name === n &&
+      choice.per === p &&
+      choice.edge === e &&
+      choice.spacing === sp
+    )
+      return;
+    setChoice({
+      joint: joint.id,
+      name: n,
+      per: p,
+      ...(e !== undefined ? { edge: e } : {}),
+      ...(sp !== undefined ? { spacing: sp } : {}),
+    });
   };
   return (
     <li className="fastener">
@@ -173,7 +196,9 @@ function FastenerRow({
       )}
       {drills && (
         <div className="field">
-          <label htmlFor={`${id}-edge`}>{t('From each end (mm)')}</label>
+          <label htmlFor={`${id}-edge`}>
+            {back ? t('In from each edge (mm)') : t('From each end (mm)')}
+          </label>
           <input
             id={`${id}-edge`}
             inputMode="numeric"
@@ -186,11 +211,38 @@ function FastenerRow({
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
           <p className={edgeOk ? 'hint' : 'field-error'} id={`${id}-edge-hint`}>
-            {edgeOk
+            {!edgeOk
+              ? t('Whole number from 0 to 5000. Not saved until it is.')
+              : back
+                ? t(
+                    'Guidance: with your fastener named and both distances typed, Parts shows drilling positions round each back from your values. No diameter, depth or screw is given.',
+                  )
+                : t(
+                    'Guidance: with your fastener named and this typed, Parts shows drilling positions from your values. No diameter, depth or screw is given.',
+                  )}
+          </p>
+        </div>
+      )}
+      {back && (
+        <div className="field">
+          <label htmlFor={`${id}-spacing`}>{t('Largest spacing (mm)')}</label>
+          <input
+            id={`${id}-spacing`}
+            inputMode="numeric"
+            value={spacing}
+            placeholder={t('Not set')}
+            aria-invalid={!spacingOk}
+            aria-describedby={`${id}-spacing-hint`}
+            onChange={(e) => setSpacing(e.target.value.replace(/[^\d.,-]/g, ''))}
+            onBlur={() => commit()}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          />
+          <p className={spacingOk ? 'hint' : 'field-error'} id={`${id}-spacing-hint`}>
+            {spacingOk
               ? t(
-                  'Guidance: with your fastener named and this typed, Parts shows drilling positions from your values. No diameter, depth or screw is given.',
+                  'A fixing at each corner, the ones between no more than this apart. Positions only; your count per back is what the shopping list buys.',
                 )
-              : t('Whole number from 0 to 5000. Not saved until it is.')}
+              : t('Whole number from 1 to 5000. Not saved until it is.')}
           </p>
         </div>
       )}

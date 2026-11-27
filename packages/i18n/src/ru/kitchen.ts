@@ -167,4 +167,15 @@ export const ru_kitchen = {
   '{n|# joint is|# joints are} shorter than twice your distance from each end: no drilling positions there.':
     '{n|# соединение короче|# соединения короче|# соединений короче} двойного расстояния от конца: мест сверления там нет.',
   'Project fasteners and drilling positions': 'Крепёж проекта и места сверления',
+  // Back fixing drilling positions (G-439)
+  'In from each edge (mm)': 'Отступ от каждого края (мм)',
+  'Largest spacing (mm)': 'Наибольший шаг (мм)',
+  'Guidance: with your fastener named and both distances typed, Parts shows drilling positions round each back from your values. No diameter, depth or screw is given.':
+    'Ориентир: когда крепёж назван и оба расстояния введены, в «Детали» показаны места сверления по периметру каждой задней стенки по вашим значениям. Диаметр, глубина и шуруп не указываются.',
+  'A fixing at each corner, the ones between no more than this apart. Positions only; your count per back is what the shopping list buys.':
+    'Крепёж в каждом углу, между ними — не дальше этого шага. Только места; в список покупок идёт ваше количество на заднюю стенку.',
+  'Whole number from 1 to 5000. Not saved until it is.':
+    'Целое число от 1 до 5000. Не сохраняется, пока не так.',
+  '{n|# back is|# backs are} too small for your distance from the edges, or not a rectangle: no drilling positions there.':
+    '{n|# задняя стенка слишком мала|# задние стенки слишком малы|# задних стенок слишком малы} для вашего отступа от краёв или не прямоугольна: мест сверления там нет.',
 };

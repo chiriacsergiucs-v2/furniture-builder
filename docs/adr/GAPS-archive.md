@@ -3496,6 +3496,21 @@ highest id in either file.
 - Fix: Draw each cut-out's width dashed on the worktop in the room front view.
 - Conflicts: none
 
+### G-439: Drilling positions for joints other than carcass joints
+
+- Status: Done (N424)
+- Note: 2026-11-27, N424: back fixings now get drilling positions round each back's perimeter from the user's own "In from each edge (mm)" and "Largest spacing (mm)" (Settings › Fasteners › Back fixing, both empty until typed, guidance; `backFixingPositions` in `src/core/fasteners.ts`, tests `tests/back-fixings.test.ts` and `tests/find-it/back-fixings.test.tsx`). Hanging points, worktop fixings and feet still have none; no request asked for them yet.
+- Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
+- Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
+- Request: “Hardware and fastener completeness”.
+- Questions: Which values would you enter for each of those joint types (for example distance from the edge for back fixings)?
+- Suggested pick: Back fixings next, around the back's perimeter, from an edge distance you enter. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Only carcass joints show drilling positions.
+- Fix: Add user-value drilling positions to the other joint types, one at a time.
+
 ### G-452: Desktop mode switch in the top bar
 
 - Status: Done (N397)
