@@ -2,7 +2,7 @@
 // Find-it for the Appearance dialog (N378) at 1280 and 390 px: More › Appearance opens a dialog whose − / + steps one
 // variable and whose ±5% buttons scale a group or all variables; each change shows at once as a CSS variable on <html>
 // and as the value beside the slider.
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openMore, renderApp, WIDTHS } from './setup';
 
@@ -11,6 +11,7 @@ const rootVar = (name: string) => document.documentElement.style.getPropertyValu
 describe.each(WIDTHS)('Appearance dialog at %ipx (find-it, N378)', (width) => {
   beforeEach(() => {
     localStorage.removeItem('fb:theme-vars');
+    localStorage.removeItem('fb:theme-colours');
     document.documentElement.removeAttribute('style');
   });
 
@@ -94,5 +95,23 @@ describe.each(WIDTHS)('Appearance dialog at %ipx (find-it, N378)', (width) => {
     await user.click(within(dlg).getByRole('button', { name: 'Reset all' }));
     for (const n of ['--fs-md', '--s-4', '--r-lg', '--side']) expect(rootVar(n)).toBe('');
     expect(within(dlg).getByText('360px')).toBeTruthy();
+  });
+
+  it('Colours › Light theme: Accent sets --accent on the page and Reset restores the default (G-588)', async () => {
+    const { user } = await renderApp(width);
+    const dlg = await openAppearance(user);
+    const style = () => document.getElementById('fb-theme-colours')?.textContent ?? '';
+    const input = within(dlg).getByLabelText('Light theme: Accent') as HTMLInputElement;
+    expect(input.value).toBe('#f2c230');
+    const reset = within(dlg).getByRole('button', { name: 'Reset Light theme: Accent' });
+    expect(reset).toHaveProperty('disabled', true);
+    fireEvent.change(input, { target: { value: '#ff0000' } });
+    expect(style()).toContain(':root { --accent: #ff0000;');
+    expect(within(dlg).getByText('#ff0000')).toBeTruthy();
+    expect(within(dlg).getByLabelText('Dark theme: Accent')).toHaveProperty('value', '#f2c230');
+    await user.click(reset);
+    expect(document.getElementById('fb-theme-colours')).toBeNull();
+    expect(input.value).toBe('#f2c230');
+    expect(within(dlg).getByRole('button', { name: 'Reset all' })).toHaveProperty('disabled', true);
   });
 });

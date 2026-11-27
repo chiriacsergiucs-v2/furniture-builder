@@ -1866,18 +1866,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Note: Suggested pick accepted (research only if the finder becomes the default); auto-accepted 2026-11-27.
 
-### G-588: Appearance dialog: colours and control height not editable
-
-- Status: Open
-- Origin: N378, PR #317, 2026-11-22
-- Missing: Colour tokens and --control-h are not in the Appearance dialog: the dark set overrides colours, touch targets stay 44 px (ADR-114)
-- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
-- Questions: Should colours be editable per light and dark set? Allow --control-h below 44 px on touch screens?
-- Suggested pick: Add editable accent and primary colours for light and dark, keep --control-h fixed
-- Work: Medium
-- Impact: Medium
-- Necessity: Low
-
 ### G-589: Phone capture of room, 3D, results, Gaps and Research states
 
 - Status: Open

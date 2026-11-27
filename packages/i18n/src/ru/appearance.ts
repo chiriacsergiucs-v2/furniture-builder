@@ -39,4 +39,10 @@ export const ru_appearance = {
   'Panel widths': 'Ширина панелей',
   'Side panel': 'Боковая панель',
   'Output panel': 'Панель результата',
+  Colours: 'Цвета',
+  'Light theme': 'Светлая тема',
+  'Dark theme': 'Тёмная тема',
+  Accent: 'Акцент',
+  Primary: 'Основной',
+  '{set}: {colour}': '{set}: {colour}',
 };
