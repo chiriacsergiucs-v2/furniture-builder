@@ -3960,7 +3960,7 @@ highest id in either file.
 - Work: Medium
 - Impact: Low
 - Necessity: Low
-- Note: User 2026-11-27: "Display-only mapping". Stored values unchanged; categoryLabel/functionLabel (src/core/catalog/types.ts) are the one display lookup; Russian unified on the wording shown today (Сиденья, Сон и отдых); tests/category-labels.test.ts
+- Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
 
 ### G-552: look-render find-it incomplete in sandbox
 
