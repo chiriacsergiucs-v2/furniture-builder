@@ -1733,18 +1733,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low
 
-### G-570: Reuse findings M1 to M10
-
-- Status: Open
-- Origin: Reuse health check round 1, 2026-11-20 (medium)
-- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
-- Request: /health-reuse, loop prompt; user approved high items only
-- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
-- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low
-
 ### G-573: Legacy rows and ADRs that fail the 2026-11-20 evidence gates
 
 - Status: Open
