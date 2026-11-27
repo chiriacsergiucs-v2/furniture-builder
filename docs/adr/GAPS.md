@@ -92,6 +92,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Egger boards with thickness and pictures are now pickable through the bundled Regency seller catalog (ADR-161, ADR-162; src/core/sellers/regency.json); the 276-row pack itself is not imported. May be obsolete; the user decides.
 - Note: User 2026-11-27: "PAL 18 only".
 
+- Note: 2026-11-27: blocked: the 276-row Egger pack is not in the repo or this sandbox (searched the repo, /mnt/user-data and the filesystem); attach the pack file to build the "PAL 18 only" pick.
+
 ### G-031: ADR-072 defaults unconfirmed
 
 - Status: Acknowledged (2026-11-23)
@@ -1868,3 +1870,123 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
+
+### G-610: Project editor 1035 px wide at 844x390 on a phone
+
+- Status: Open
+- Origin: G-601 build (N415), 2026-11-27
+- Missing: In the project editor at 844x390 with mobile emulation the page is 1035 px wide; the top bar runs off the right edge and redo is cut off. tools/mobile-middle/find-it.mjs compares against innerWidth, which the emulation widens, so its no-sideways-scroll check passes
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Fix the phone landscape top bar so it fits 844 px?
+- Suggested pick: Wrap or collapse the top bar tools at short landscape widths, and make the script compare against the viewport meta width
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-611: Drilling positions for hanging points, worktop fixings and feet
+
+- Status: Open
+- Origin: G-439 remainder (N424), 2026-11-27
+- Missing: User-value drilling positions exist for carcass joints and back fixings only
+- Request: Hardware and fastener completeness
+- Questions: Which values would you enter for each (edge distance, spacing)?
+- Suggested pick: One joint type at a time, from values you enter, nothing shipped (ADR-010)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-612: Door swing check: handle depth and the cases still using the box
+
+- Status: Open
+- Origin: G-011 remainder (N421), 2026-11-27
+- Missing: The swing arc ignores handle depth because the handle schedule has no depth field (a types.ts change, ADR); swing-against-swing, walls, angled pieces and the diagonal corner door still use the stricter box
+- Request: Opening clearance for doors, drawers, flaps
+- Questions: Add a handle depth field to the handle schedule (ADR), and move the remaining cases to the arc?
+- Suggested pick: Add an optional user-entered handle depth (ADR) and use the arc in the other cases one by one
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-613: Type-only import cycle types.ts, diagnosticCodes.ts, catalog/types.ts
+
+- Status: Open
+- Origin: G-485 remainder (N419), 2026-11-27
+- Missing: The cycle guard allow-lists a type-only cycle between src/core/types.ts, diagnosticCodes.ts and catalog/types.ts; breaking it changes types.ts
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Break it as part of the G-548 types.ts split?
+- Suggested pick: Break it in the G-548 split
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-614: Row-button body repeated in 9 UI files
+
+- Status: Open
+- Origin: G-570 remainder (N441), 2026-11-27
+- Missing: The row-button body (glyph, title, sub line, chevron) repeats 17 times in 9 UI files with variants (picture or icon, number sub lines, extra lines, drag props); it may be what the original reuse M6 meant
+- Request: Reuse health check round 1
+- Questions: Extract one RowButton with slots?
+- Suggested pick: Extract RowButton with slots for the glyph and sub lines, no visible change
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
+
+- Status: Open
+- Origin: G-049 remainder (N437), 2026-11-27
+- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
+- Request: G ids on pre-ADR-082 notes
+- Questions: Give each its own gap, or mark them obsolete?
+- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-616: Diagonal corner doors are not an exact split
+
+- Status: Open
+- Origin: G-534 architecture check D1 (N439), 2026-11-27
+- Missing: src/core/corner.ts:341 gives all leftover millimetres to the right end gap: width 901 with two doors gives leaves 238 + 238 on a 477 mm opening, right gap 2 mm, left 1 mm (ADR-003 exact splits)
+- Request: Integer millimetres, exact splits (ADR-003)
+- Questions: Spread the leftover like other splits?
+- Suggested pick: Use the shared exact-split helper so leftovers spread as elsewhere; fuzz
+- Work: Low
+- Impact: Low
+- Necessity: Medium
+
+### G-617: Project commit takes 13-24 ms on a 60-item project
+
+- Status: Open
+- Origin: G-487 remainder (N435), 2026-11-27
+- Missing: After one view per state (N435), commitProject with buildProjectModel alone takes 13-24 ms for a 60-item edit, over the 10 ms target
+- Request: Architecture review I-03
+- Questions: Profile buildProjectModel and cache per item?
+- Suggested pick: Profile first; cache unchanged items' built models across commits
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+
+### G-618: UI audit: signed-in, live-site and gesture states not captured
+
+- Status: Open
+- Origin: G-509 remainder (N444), 2026-11-27
+- Missing: Not captured: signed-in Account, making/copying/stopping share links, Assistant replies, any live-URL check (need an account or the published site); error and repair states, placing and dragging, Move mode, Render and AR export (need scripted gestures or a seeded design with errors)
+- Request: UI audit coverage
+- Questions: Provide a test account, and allow scripted gesture captures?
+- Suggested pick: Script the gesture and error states now; the account states once a test account exists (G-277)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-619: 3D more-actions menu clipped at 390 px
+
+- Status: Open
+- Origin: UI audit F-31 (G-589, N443), 2026-11-27
+- Missing: At 390 px the 3D view's more-actions menu (Export for AR, Export scene) opens but cannot be seen or tapped: the phone rule .three-tools { overflow-x: auto } in src/styles.css clips the panel; fine at 1280 px
+- Request: UI review
+- Questions: Render the menu outside the scrolling tool row?
+- Suggested pick: Portal the menu panel out of .three-tools on phones
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
