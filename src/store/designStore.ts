@@ -50,7 +50,7 @@ import {
 } from '../core/selection';
 import { replaceItem, replaceReport } from '../core/replace';
 import { catalogFamilies } from '../core/catalog';
-import { carryEdits, carryText, ownEdits, SIZE_SKIP, syncRef } from '../core/ownEdits';
+import { carryEdits, carryText, ownEdits, syncRef } from '../core/ownEdits';
 import { setProjectSetting, SETTING_LABEL, withSettings } from '../core/projectSettings';
 import { countRows, countSubject, stepCount } from '../core/counts';
 import { deepestAt, drill, drillIn, insidePiece, type Selection } from '../core/selectPath';
@@ -698,9 +698,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const { project: p, projectModel: pm } = get();
       const item = p?.items.find((i) => i.id === id);
       if (!p || !pm || !item) return null;
-      // The piece's own edits go onto the new design where it has them (ADR-124, G-160).
+      // The piece's own edits go onto the new design where it has them (ADR-124, G-160), its own outer size too
+      // (G-202): a size the new design cannot take is listed as not kept, never clamped (ADR-008).
       const edits = ownEdits(item, opts?.families ?? catalogFamilies);
-      const carry = carryEdits(design, edits, opts?.keepSize ? {} : SIZE_SKIP);
+      const carry = carryEdits(design, edits);
       if (
         commitProject(
           replaceItem(p, id, carry.design),

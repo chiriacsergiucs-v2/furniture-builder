@@ -295,10 +295,10 @@ export interface State {
     id: string,
     design: Design,
     /**
-     * Carry the piece's own edits (ADR-124): `families` the catalog as this device shows it; `keepSize` false on
-     * Replace (the new item's size is used), true for a newer revision of the same template.
+     * Carry the piece's own edits (ADR-124), its own outer size included (G-202): `families` the catalog as this
+     * device shows it.
      */
-    opts?: { families?: CatalogFamily[]; keepSize?: boolean },
+    opts?: { families?: CatalogFamily[] },
   ) => ReplaceReport | null;
   /** Set or clear a project-wide setting (ADR-124); returns the names of the pieces that took it. One undo step. */
   setProjectSetting: (key: SettingKey, value: ProjectSettings[SettingKey] | undefined) => string[];
