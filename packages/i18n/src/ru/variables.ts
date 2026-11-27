@@ -145,7 +145,7 @@ export const ru_variables = {
   'used by {n|# size|# sizes}': 'используют {n|# размер|# размера|# размеров}',
   'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.':
     'Именованные числа или формулы этого изделия. Привяжите к ним ширину, высоту, глубину или высоту низа кнопкой ƒ рядом с полем; они переходят вместе с изделием в проекты и шаблоны.',
-  // definition lists (ADR-306)
+  // definition lists (ADR-307)
   'List {tag}': 'Список {tag}',
   'A definition list needs a name.': 'Списку определений нужно имя.',
   'A definition list name is at most {n} characters.':

@@ -7,14 +7,8 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { groupOf, movedTo } from './selection';
-import {
-  moveBlocked,
-  pieceName,
-  resolvePlacements,
-  type MoveResult,
-  type Project,
-  type ProjectItem,
-} from './project';
+import { moveBlocked, pieceName, resolvePlacements, type MoveResult } from './projectMove';
+import { type Project, type ProjectItem } from './projectDoc';
 
 type Offset = { dx: number; dy: number; dz: number };
 

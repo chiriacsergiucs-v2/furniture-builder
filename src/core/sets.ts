@@ -8,17 +8,17 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
+import { placedBounds } from './projectPlace';
 import {
-  placedBounds,
   pruneGroups,
-  pruneRunExtras,
   requestKey,
   type Project,
   type ProjectItem,
   type RunHandle,
   type RunRequest,
   type RunSink,
-} from './project';
+} from './projectDoc';
+import { pruneRunExtras } from './projectRuns';
 import { evaluateVariables, readTarget, writeTarget } from './variables';
 import type { Design } from './types';
 import type { VariableSet } from './setRoom';
@@ -126,7 +126,7 @@ function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
     linkId: _k,
     turnLocked: _t,
     sizeLocks: _a,
-    // A duplicate shows its set's values, never a definition list's (ADR-306).
+    // A duplicate shows its set's values, never a definition list's (ADR-307).
     list: _li,
     ...rest
   } = structuredClone(src);

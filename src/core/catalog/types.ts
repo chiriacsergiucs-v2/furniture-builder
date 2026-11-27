@@ -1,20 +1,12 @@
 import { tr } from '@furniture-builder/i18n';
-import type { Design, Mm, Product } from '../types';
+import type { Design, Room } from '../designTypes';
+import type { Mm } from '../kernelTypes';
+import type { Product } from '../productTypes';
+
+export type { Room };
 
 /** Function groups and rooms used to group the catalog (ADR-032). */
 export type FunctionGroup = 'kitchen' | 'storage' | 'tables' | 'seating' | 'sleeping';
-export type Room =
-  | 'living'
-  | 'bedroom'
-  | 'dining'
-  | 'office'
-  | 'outdoor'
-  | 'kitchen'
-  | 'hallway'
-  | 'kids'
-  | 'other'
-  /** Pieces that are neither classic catalog items nor one room's furniture, such as the room divider (ADR-298). */
-  | 'custom';
 export const FUNCTIONS: FunctionGroup[] = ['kitchen', 'storage', 'tables', 'seating', 'sleeping'];
 export const ROOMS: Room[] = [
   'living',

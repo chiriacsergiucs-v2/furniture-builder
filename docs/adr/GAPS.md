@@ -1477,18 +1477,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
 
-### G-548: The types.ts and project.ts hubs are not split
-
-- Status: Open
-- Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
-- Missing: src/core/types.ts (141 importers) and src/core/project.ts (2614 lines, 83 importers) are hubs; a kernel package cannot be cut while every domain imports them
-- Request: This repo and architecture structure seems to be way too interdependent
-- Questions: Split types.ts by domain, and project.ts into project model, validation and templates?
-- Suggested pick: Split types.ts into kernel types plus one type file per domain; split project.ts along its existing projectX siblings (estimate: effort +20 %, value +15 %)
-- Work: Medium
-- Impact: Medium
-- Note: User 2026-11-27: "Split as picked".
-
 ### G-549: The other workspace packages are not extracted
 
 - Status: Open
@@ -1871,18 +1859,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low-medium
 
-### G-610: Project editor 1035 px wide at 844x390 on a phone
-
-- Status: Open
-- Origin: G-601 build (N415), 2026-11-27
-- Missing: In the project editor at 844x390 with mobile emulation the page is 1035 px wide; the top bar runs off the right edge and redo is cut off. tools/mobile-middle/find-it.mjs compares against innerWidth, which the emulation widens, so its no-sideways-scroll check passes
-- Request: User 2026-11-27: "Also do the medium work"
-- Questions: Fix the phone landscape top bar so it fits 844 px?
-- Suggested pick: Wrap or collapse the top bar tools at short landscape widths, and make the script compare against the viewport meta width
-- Work: Low-medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-611: Drilling positions for hanging points, worktop fixings and feet
 
 - Status: Open
@@ -1907,18 +1883,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-613: Type-only import cycle types.ts, diagnosticCodes.ts, catalog/types.ts
-
-- Status: Open
-- Origin: G-485 remainder (N419), 2026-11-27
-- Missing: The cycle guard allow-lists a type-only cycle between src/core/types.ts, diagnosticCodes.ts and catalog/types.ts; breaking it changes types.ts
-- Request: User 2026-11-27: "Also do the medium work"
-- Questions: Break it as part of the G-548 types.ts split?
-- Suggested pick: Break it in the G-548 split
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-614: Row-button body repeated in 9 UI files
 
 - Status: Open
@@ -1930,30 +1894,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
-
-### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
-
-- Status: Open
-- Origin: G-049 remainder (N437), 2026-11-27
-- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
-- Request: G ids on pre-ADR-082 notes
-- Questions: Give each its own gap, or mark them obsolete?
-- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
-### G-616: Diagonal corner doors are not an exact split
-
-- Status: Open
-- Origin: G-534 architecture check D1 (N439), 2026-11-27
-- Missing: src/core/corner.ts:341 gives all leftover millimetres to the right end gap: width 901 with two doors gives leaves 238 + 238 on a 477 mm opening, right gap 2 mm, left 1 mm (ADR-003 exact splits)
-- Request: Integer millimetres, exact splits (ADR-003)
-- Questions: Spread the leftover like other splits?
-- Suggested pick: Use the shared exact-split helper so leftovers spread as elsewhere; fuzz
-- Work: Low
-- Impact: Low
-- Necessity: Medium
 
 ### G-617: Project commit takes 13-24 ms on a 60-item project
 
@@ -1979,14 +1919,62 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-619: 3D more-actions menu clipped at 390 px
+### G-620: Catalog copy: what differs from the original
 
 - Status: Open
-- Origin: UI audit F-31 (G-589, N443), 2026-11-27
-- Missing: At 390 px the 3D view's more-actions menu (Export for AR, Export scene) opens but cannot be seen or tapped: the phone rule .three-tools { overflow-x: auto } in src/styles.css clips the panel; fine at 1280 px
-- Request: UI review
-- Questions: Render the menu outside the scrolling tool row?
-- Suggested pick: Portal the menu panel out of .three-tools on phones
+- Origin: G-615 re-check of N15 (N448), 2026-11-27
+- Missing: A catalog piece keeps its origin (ADR-028) and Replace and a newer revision carry its own edits (src/core/ownEdits.ts:109), but no screen lists what a piece changed from the item it was taken from (the N15 note's Differs from original)
+- Request: Catalog metadata and origin link kept on edited copies (N15)
+- Questions: Show a list of the piece's own changes against its catalog item?
+- Suggested pick: A Differs from original list under the piece's template line, from ownEdits, no model change
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
+### G-621: Drawers built into a frame
+
+- Status: Open
+- Origin: G-615 re-check of N28 (N448), 2026-11-27
+- Missing: The catalog's bed item 2 drawers under requires frame:under-storage, which no product provides, so it cannot be made (src/core/catalog/furniture.ts:947); ADR-038 lists it as not built
+- Request: Frame root with drawers under a bed or in a table (N28, ADR-038)
+- Questions: Build drawers in a frame by holding a cabinet under the bed or table (a model change, ADR)?
+- Suggested pick: A frame holds a cabinet for under-storage, built with buildCabinet (ADR-007), through a new ADR
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-622: Printed full-size template tiles not measured on paper
+
+- Status: Open
+- Origin: G-615 re-check of N30 (N448), 2026-11-27
+- Missing: Profiled boards print as 1:1 outlines cut into A4 tiles with 10 mm overlap (src/core/template.ts:1-10); no printed tile has been measured on paper to confirm the scale
+- Request: Shaped parts with full-size templates (N30, ADR-040)
+- Questions: Can you print one template tile and measure a known length on it?
+- Suggested pick: You print one tile from a shaped catalog piece and measure it; a wrong scale becomes a bug
 - Work: Low
-- Impact: Medium
-- Necessity: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-623: Legs under a carcass
+
+- Status: Open
+- Origin: G-615 re-check of N34 (N448), 2026-11-27
+- Missing: A cabinet stands on a plinth, none or a wall mount only (src/core/types.ts:503-537); legs come only with frames. ADR-044 open question 2 was answered not now (docs/adr-done/ADR-044-new-piece-is-a-data-driven-wizard-a-step-library-and-a-const.md:115)
+- Request: New-piece wizard bases (N34, ADR-044)
+- Questions: Offer legs under cabinets now (a model change, ADR)?
+- Suggested pick: Not now, as answered for ADR-044; recorded so it is findable
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-624: tools/mobile-middle/find-it.mjs: 16 checks fail at 390x844 and 320x640
+
+- Status: Open
+- Origin: G-610 build (N447), 2026-11-27
+- Missing: 16 checks fail before and after G-610: at 390x844 the editor flow, the Edit panel, Settings, Results, Jump-to-section order, five section-reachable checks and the quick-count card (23 px below the viewport); at 320x640 'edit bar exists'. Most are 10 s timeouts finding controls (stale selectors after the canvas editor became the phone default)
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Repair the script's phone steps for the canvas editor, and check the quick-count card position?
+- Suggested pick: Repair the phone steps against the canvas chip rail (as G-589 did for flows3); keep any check that shows a real bug failing and record it
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low

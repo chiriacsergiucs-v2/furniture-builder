@@ -1,5 +1,5 @@
 /**
- * The values side of definition lists (ADR-306), kept free of `project.ts` so `variables.ts` and `projectSettings.ts`
+ * The values side of definition lists (ADR-307), kept free of `project.ts` so `variables.ts` and `projectSettings.ts`
  * can use it without joining the model import cycle (tests/core-boundary.test.ts): a linked piece's variable values,
  * where each comes from, the lists' diagnostics and dropping a deleted variable's values. Structural types only.
  */

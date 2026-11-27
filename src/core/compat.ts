@@ -17,7 +17,8 @@ import {
   type FunctionGroup,
   type Room,
 } from './catalog';
-import { isWallHung, type PlacedPiece, type ProjectItem, type RunPart } from './project';
+import { isWallHung, type ProjectItem, type RunPart } from './projectDoc';
+import { type PlacedPiece } from './projectPlace';
 import type { Box, Diagnostic, Mm, Product } from './types';
 
 /** How a piece hangs for the side-to-side rules. */

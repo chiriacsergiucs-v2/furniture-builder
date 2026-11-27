@@ -12,7 +12,9 @@ import { newId } from './design';
 import { evaluate, mountOf, sideJoin, touchSideBySide, type JoinKind } from './compat';
 import { carryGroups } from './groupMove';
 import { groupOf } from './selection';
-import { pieceName, placeItem, type MoveResult, type PlacedPiece, type Project } from './project';
+import { pieceName, type MoveResult } from './projectMove';
+import { placeItem, type PlacedPiece } from './projectPlace';
+import { type Project } from './projectDoc';
 import { wallEnds, wallInward } from './room';
 import type { Box, Diagnostic } from './types';
 

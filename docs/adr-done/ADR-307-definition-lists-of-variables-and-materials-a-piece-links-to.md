@@ -1,11 +1,11 @@
-# ADR-306: Definition lists of variables and materials a piece links to
+# ADR-307: Definition lists of variables and materials a piece links to
 
 - Status: Implemented
 - Date: 2026-11-27
 - Implemented: 2026-11-27
 - Depends on: ADR-124, ADR-166, ADR-170
 - Design: docs/ui-design.md (Configure, selected-piece card)
-- Backlog: N445
+- Backlog: N451
 
 ## Context
 

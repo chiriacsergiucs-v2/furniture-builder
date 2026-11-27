@@ -18,17 +18,10 @@ import { errorDiag as err, warnDiag as note } from './diagnosticCodes';
 import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
 import { t } from '@furniture-builder/i18n';
-import {
-  buildProjectModel,
-  isPieceWarning,
-  makeItem,
-  newProject,
-  type Project,
-  type ProjectItem,
-  type ProjectModel,
-  type QuarterTurn,
-  placedBounds,
-} from './project';
+import { buildProjectModel, type ProjectModel } from './projectModel';
+import { isPieceWarning } from './projectMove';
+import { makeItem, placedBounds } from './projectPlace';
+import { newProject, type Project, type ProjectItem, type QuarterTurn } from './projectDoc';
 import {
   checkRoomSizes,
   inside,

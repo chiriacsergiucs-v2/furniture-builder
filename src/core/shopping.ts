@@ -6,7 +6,7 @@
 import { t } from '@furniture-builder/i18n';
 import { areaM2, bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
-import type { Project, RunPart } from './project';
+import type { Project, RunPart } from './projectDoc';
 import { runPartNames, worktopCorners } from './projectWorktops';
 import {
   fastenerShopLines,
@@ -16,7 +16,8 @@ import {
 } from './fasteners';
 import { printBoardName, pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
-import { materialKey, runPartKey } from './project';
+import { materialKey } from './projectModel';
+import { runPartKey } from './projectWorktops';
 import type { ShopLine, ShopSection, ShopUnit } from './shopping-types';
 import type {
   Diagnostic,

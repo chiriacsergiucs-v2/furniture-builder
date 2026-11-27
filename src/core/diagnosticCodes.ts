@@ -1,4 +1,22 @@
-import type { Diagnostic } from './types';
+import type { Box, Mm } from './kernelTypes';
+
+export type Severity = 'error' | 'warning';
+
+export interface Diagnostic {
+  severity: Severity;
+  code: DiagnosticCode;
+  message: string;
+  nodeId?: string;
+  panelIds?: string[];
+  /** Project pieces involved (ADR-071): the problem piece is listed last. */
+  itemIds?: string[];
+  /** Where the problem is, room mm (ADR-071): the overlap, the blocked zone or the piece outside the room. */
+  box?: Box;
+  /** How much, mm (ADR-071): the overlap, the missing opening space or the distance outside the room. */
+  amount?: Mm;
+  /** The room pipe or outlet a back covers (ADR-205): what "Cut the back around it" cuts round. */
+  featureId?: string;
+}
 
 /**
  * Every diagnostic code (ADR-225). A code names one kind of problem: two different problems never share one, so checks,

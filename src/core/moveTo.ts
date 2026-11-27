@@ -12,16 +12,13 @@ import {
   carriedBy,
   moveBlocked,
   pieceName,
-  placeItem,
   placementBases,
   resolvePlacements,
   type MoveResult,
-  type PlacedPiece,
-  type Placement,
-  type Project,
-  type ProjectItem,
-  type QuarterTurn,
-} from './project';
+} from './projectMove';
+import { placeItem, type PlacedPiece } from './projectPlace';
+import { type Placement } from './placement';
+import { type Project, type ProjectItem, type QuarterTurn } from './projectDoc';
 import { roomConnectors, type Axis } from './snap';
 import type { Box, Mm } from './types';
 

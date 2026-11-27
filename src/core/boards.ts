@@ -7,7 +7,8 @@ import { t, tr } from '@furniture-builder/i18n';
 import { defaultMaterials } from './design';
 import { projectBoards } from './finish';
 import { decorPatch, type Decor } from './materials';
-import { materialKey, type Project } from './project';
+import { materialKey } from './projectModel';
+import { type Project } from './projectDoc';
 import { bandKey } from './cutlist';
 import type { Design, EdgeBand, Material } from './types';
 

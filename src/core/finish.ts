@@ -5,14 +5,9 @@
 import { t, tr } from '@furniture-builder/i18n';
 import { buildModel } from './build';
 import { newId, SCHEMA_VERSION } from './design';
-import {
-  materialKey,
-  requestKey,
-  runOf,
-  type Project,
-  type ProjectItem,
-  type RunPart,
-} from './project';
+import { materialKey } from './projectModel';
+import { requestKey, type Project, type ProjectItem, type RunPart } from './projectDoc';
+import { runOf } from './projectRuns';
 import { ROLE_PANELS, MATERIAL_ROLES, type MaterialRole, type MaterialScope } from './roles';
 import type { Design, EdgeBand, Material, RoleBoardRole } from './types';
 

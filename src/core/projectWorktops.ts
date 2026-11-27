@@ -15,22 +15,23 @@ import { t, type Key } from '@furniture-builder/i18n';
 import {
   FILLER_MAX_GAP,
   groupRunLegs,
-  isWallHung,
-  materialKey,
-  type PlacedPiece,
-  placeItem,
-  type Project,
-  requestKey,
-  resolvePlacements,
   RUN_MAX_HEIGHT,
   runFrame,
-  type RunPart,
-  type RunRequest,
   spans,
   WORKTOP_OVERHANG,
-  type WorktopJoint,
   worktopMaterial,
-} from './project';
+} from './projectRuns';
+import {
+  isWallHung,
+  type Project,
+  requestKey,
+  type RunPart,
+  type RunRequest,
+  type WorktopJoint,
+} from './projectDoc';
+import { materialKey } from './projectModel';
+import { type PlacedPiece, placeItem } from './projectPlace';
+import { resolvePlacements } from './projectMove';
 
 // ---------------------------------------------------------------------------
 // Worktop corners (ADR-205)

@@ -323,7 +323,7 @@ export interface State {
     patch: Partial<Pick<VariableSet, 'name' | 'values' | 'origin'>>,
   ) => void;
   removeVariableSet: (id: string) => void;
-  /** Definition lists (ADR-306); each is one undo step. Removing a list unlinks its pieces; they keep their values. */
+  /** Definition lists (ADR-307); each is one undo step. Removing a list unlinks its pieces; they keep their values. */
   addDefinitionList: () => string;
   renameDefinitionList: (id: string, name: string) => void;
   setDefinitionListValue: (listId: string, variableId: string, expr: string | null) => void;

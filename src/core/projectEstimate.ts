@@ -5,14 +5,10 @@
  */
 import { nest } from '@furniture-builder/nesting';
 import { estimate, type Estimate, type PriceEntry, type SellerLookup } from './prices';
-import {
-  projectCutlist,
-  projectHardware,
-  projectNestingJobs,
-  sinkList,
-  type Project,
-  type ProjectModel,
-} from './project';
+import { projectCutlist, projectHardware, projectNestingJobs } from './projectProfiles';
+import { sinkList } from './projectRuns';
+import { type Project } from './projectDoc';
+import { type ProjectModel } from './projectModel';
 import { projectSellerChoices } from './sellers/choices';
 import { shoppingList, worktopJointList, type ShopLine } from './shopping';
 

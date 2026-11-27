@@ -412,7 +412,7 @@ export const CATALOG: Record<string, Entry> = {
   addVariableSet: { description: 'Add a value set.', args: [] },
   updateVariableSet: { description: 'Change a value set.', args: [str('id'), obj('patch')] },
   removeVariableSet: { description: 'Remove a value set and its pieces.', args: [str('id')] },
-  addDefinitionList: { description: 'Add a definition list (ADR-306).', args: [] },
+  addDefinitionList: { description: 'Add a definition list (ADR-307).', args: [] },
   renameDefinitionList: {
     description: 'Rename a definition list.',
     args: [str('id'), str('name')],

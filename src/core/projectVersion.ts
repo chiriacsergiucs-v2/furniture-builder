@@ -5,7 +5,8 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
-import { validateProject, type Project } from './project';
+import { validateProject } from './projectValidate';
+import { type Project } from './projectDoc';
 
 /** `session`: the project as it was opened, kept at the first change after opening (G-155). */
 type VersionKind = 'session' | 'manual' | 'before-restore';

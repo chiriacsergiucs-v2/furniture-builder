@@ -1,5 +1,5 @@
 /**
- * Definition lists (ADR-306): named lists of values for the project's variables (ADR-166) and the project settings
+ * Definition lists (ADR-307): named lists of values for the project's variables (ADR-166) and the project settings
  * (ADR-124). A piece links to one list: its bindings are evaluated with the list's values and it follows the list's
  * settings. Precedence for a variable: the piece's own override › the list's value › the project's value; for a
  * setting: the list's › the project's. Lists change pieces in place; value sets (ADR-167) are a separate thing and a
@@ -7,7 +7,7 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
-import type { DefinitionList, Project, ProjectItem } from './project';
+import type { DefinitionList, Project, ProjectItem } from './projectDoc';
 import { withSettings } from './projectSettings';
 import { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES } from './variableCore';
 

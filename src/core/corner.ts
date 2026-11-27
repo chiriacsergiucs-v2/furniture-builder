@@ -341,19 +341,24 @@ function buildDiagonal(
     const r = lo(g),
       n = doors.count,
       dh = H - ph - 2 * r;
-    const leaf = Math.floor((span - 2 * r - (n - 1) * g) / n);
+    // An exact split (ADR-003, G-616): the leftover millimetres go one per leaf from the left, as in a cabinet.
+    const leaves = equalParts(span - 2 * r - (n - 1) * g, n);
+    const leaf = Math.min(...leaves);
     // A gap that leaves the doors no size (ADR-196) names the gap and the diagonal opening.
     if (leaf <= 0 || dh <= 0) return err('front-gap', noFrontRoomMessage(g, span, H - ph));
     if (leaf < 100 || dh < 100)
       return err('door-small', tx('Door {w}×{h} mm is too small.', { w: leaf, h: dh }));
+    let k = r;
     for (let i = 0; i < n; i++) {
-      const [dx, dz] = along(r + i * (leaf + g), 1);
+      const w = leaves[i];
+      const [dx, dz] = along(k, 1);
+      k += w + g;
       add(
         `door/${i}`,
         'door',
         n > 1 ? `Door ${i ? 'right' : 'left'} (diagonal)` : 'Door (diagonal)',
         front.id,
-        box(dx, ph + r, dz, leaf, dh, tf),
+        box(dx, ph + r, dz, w, dh, tf),
         'z',
         'y',
         ['-x', '+x', '-y', '+y'],
@@ -366,7 +371,7 @@ function buildDiagonal(
         local.panels[local.panels.length - 1],
         s.handle,
         'door',
-        leaf,
+        w,
         dh,
         n === 2 ? (i === 0 ? 'right' : 'left') : doors.hinge === 'right' ? 'left' : 'right',
         local.diagnostics,

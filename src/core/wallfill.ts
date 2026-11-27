@@ -28,14 +28,10 @@ import {
 import { kitchen } from './catalog/kitchen';
 import { insertable } from './catalog/types';
 import { newId, renew } from './design';
-import {
-  buildProjectModel,
-  isPieceWarning,
-  makeItem,
-  newProject,
-  type Project,
-  type ProjectModel,
-} from './project';
+import { buildProjectModel, type ProjectModel } from './projectModel';
+import { isPieceWarning } from './projectMove';
+import { makeItem } from './projectPlace';
+import { newProject, type Project } from './projectDoc';
 import type { Design, Diagnostic, Mm, Space } from './types';
 
 type PieceKind = 'tall' | 'shelves' | 'drawers' | 'door';

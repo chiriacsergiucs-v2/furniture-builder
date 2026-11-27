@@ -59,7 +59,7 @@ import {
   type TrimKind,
   VARIABLES_SINCE,
   WALLS_SINCE,
-} from './project';
+} from './projectDoc';
 import { isObj, isInt } from './guards';
 
 // ---------------------------------------------------------------------------
@@ -809,7 +809,7 @@ export function validateProject(p: unknown): string[] {
   return errs;
 }
 
-/** Definition lists and the pieces' links to them (ADR-306). */
+/** Definition lists and the pieces' links to them (ADR-307). */
 function validateLists(p: Record<string, unknown>): string[] {
   const errs: string[] = [];
   const ids = new Set<string>();

@@ -4250,6 +4250,18 @@ highest id in either file.
 - Necessity: Low
 - Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
 
+### G-548: The types.ts and project.ts hubs are not split
+
+- Status: Done (N449)
+- Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
+- Missing: src/core/types.ts (141 importers) and src/core/project.ts (2614 lines, 83 importers) are hubs; a kernel package cannot be cut while every domain imports them
+- Request: This repo and architecture structure seems to be way too interdependent
+- Questions: Split types.ts by domain, and project.ts into project model, validation and templates?
+- Suggested pick: Split types.ts into kernel types plus one type file per domain; split project.ts along its existing projectX siblings (estimate: effort +20 %, value +15 %)
+- Work: Medium
+- Impact: Medium
+- Note: User 2026-11-27: "Split as picked".
+
 ### G-550: Audit advisories left after dependency health
 
 - Status: Done (N410)
@@ -4548,3 +4560,63 @@ highest id in either file.
 - Work: Low-medium
 - Impact: Low
 - Necessity: Low-medium
+
+### G-610: Project editor 1035 px wide at 844x390 on a phone
+
+- Status: Done (N447)
+- Origin: G-601 build (N415), 2026-11-27
+- Missing: In the project editor at 844x390 with mobile emulation the page is 1035 px wide; the top bar runs off the right edge and redo is cut off. tools/mobile-middle/find-it.mjs compares against innerWidth, which the emulation widens, so its no-sideways-scroll check passes
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Fix the phone landscape top bar so it fits 844 px?
+- Suggested pick: Wrap or collapse the top bar tools at short landscape widths, and make the script compare against the viewport meta width
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-613: Type-only import cycle types.ts, diagnosticCodes.ts, catalog/types.ts
+
+- Status: Done (N450)
+- Origin: G-485 remainder (N419), 2026-11-27
+- Missing: The cycle guard allow-lists a type-only cycle between src/core/types.ts, diagnosticCodes.ts and catalog/types.ts; breaking it changes types.ts
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Break it as part of the G-548 types.ts split?
+- Suggested pick: Break it in the G-548 split
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
+
+- Status: Done (N448)
+- Origin: G-049 remainder (N437), 2026-11-27
+- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
+- Request: G ids on pre-ADR-082 notes
+- Questions: Give each its own gap, or mark them obsolete?
+- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-616: Diagonal corner doors are not an exact split
+
+- Status: Done (N445)
+- Origin: G-534 architecture check D1 (N439), 2026-11-27
+- Missing: src/core/corner.ts:341 gives all leftover millimetres to the right end gap: width 901 with two doors gives leaves 238 + 238 on a 477 mm opening, right gap 2 mm, left 1 mm (ADR-003 exact splits)
+- Request: Integer millimetres, exact splits (ADR-003)
+- Questions: Spread the leftover like other splits?
+- Suggested pick: Use the shared exact-split helper so leftovers spread as elsewhere; fuzz
+- Work: Low
+- Impact: Low
+- Necessity: Medium
+
+### G-619: 3D more-actions menu clipped at 390 px
+
+- Status: Done (N446)
+- Origin: UI audit F-31 (G-589, N443), 2026-11-27
+- Missing: At 390 px the 3D view's more-actions menu (Export for AR, Export scene) opens but cannot be seen or tapped: the phone rule .three-tools { overflow-x: auto } in src/styles.css clips the panel; fine at 1280 px
+- Request: UI review
+- Questions: Render the menu outside the scrolling tool row?
+- Suggested pick: Portal the menu panel out of .three-tools on phones
+- Work: Low
+- Impact: Medium
+- Necessity: Medium

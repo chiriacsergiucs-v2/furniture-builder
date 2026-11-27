@@ -12,14 +12,14 @@ import { newId } from './design';
 import {
   REQUEST_RANGE,
   requestKey,
-  requestName,
   SIZE_AXES,
   type Project,
   type ProjectItem,
   type RequestTarget,
   type RunRequest,
   type SizeAxis,
-} from './project';
+} from './projectDoc';
+import { requestName } from './projectWorktops';
 import { isAxisLocked } from './sizeLock';
 import type { Diagnostic, Mm } from './types';
 import {
@@ -53,7 +53,7 @@ export function scopeFor(
 ): Map<string, number> {
   const vars = project.variables ?? [];
   const vs = item.set ? project.variableSets?.find((s) => s.id === item.set!.id) : undefined;
-  // A value-set duplicate keeps its set's values; otherwise a linked piece takes its definition list's (ADR-306).
+  // A value-set duplicate keeps its set's values; otherwise a linked piece takes its definition list's (ADR-307).
   return variableScope(vars, vs ? vs.values : listValues(project, item));
 }
 
@@ -458,7 +458,7 @@ export function deleteVariable(project: Project, id: string): Project {
     void _gone;
     return { ...s, values };
   });
-  // Its values leave every definition list and every piece's override (ADR-306).
+  // Its values leave every definition list and every piece's override (ADR-307).
   const lists = dropListValues({ ...project, items }, id);
   return {
     ...lists,

@@ -10,11 +10,9 @@
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
+import { planRuns } from './projectWorktops';
 import {
-  planRuns,
   PROJECT_SCHEMA,
-  validateProject,
-  type Placement,
   type DefinitionList,
   type Project,
   type QuarterTurn,
@@ -22,7 +20,9 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
-} from './project';
+} from './projectDoc';
+import { validateProject } from './projectValidate';
+import { type Placement } from './placement';
 import { validateRoom, type Room } from './room';
 import type { Connection, ConnectionKind } from './connections';
 import {
@@ -54,14 +54,14 @@ interface TemplateItem {
   bindings?: Binding[];
   /** Its chair, service and installation settings (ADR-073, ADR-205; schemaVersion 3). */
   zones?: ItemZones;
-  /** Its definition list, by the template's list id, and its own values (ADR-306; schemaVersion 4). */
+  /** Its definition list, by the template's list id, and its own values (ADR-307; schemaVersion 4). */
   list?: { id: string; values?: Record<string, string> };
 }
 
 /**
  * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
  * kinds and wall connections (ADR-207), 3D models (ADR-208), item clearance zones (ADR-205) and the project's
- * seller items (ADR-210); 4 = definition lists and the pieces' links to them (ADR-306). An older app refuses a version
+ * seller items (ADR-210); 4 = definition lists and the pieces' links to them (ADR-307). An older app refuses a version
  * it does not know.
  */
 export const TEMPLATE_SCHEMA = 4 as const;
@@ -71,7 +71,7 @@ const VARS_SINCE = 2;
 /** The version that first stores run handles and sinks (ADR-204), connection kinds and wall connections (ADR-207). */
 export const TEMPLATE_RUN_EXTRAS = 3;
 const RUN_EXTRAS_SINCE = TEMPLATE_RUN_EXTRAS;
-/** The version that first stores definition lists and the pieces' links to them (ADR-306). */
+/** The version that first stores definition lists and the pieces' links to them (ADR-307). */
 const LISTS_SINCE_T = 4;
 
 /** A display-only 3D model kept in a template (ADR-208): a project's model item with an offset; `ref` is its id. */
@@ -117,7 +117,7 @@ export interface ProjectTemplate {
   room?: Room;
   /** The project's variables (ADR-166), every one (schemaVersion 2). */
   variables?: ProjectVariable[];
-  /** The project's definition lists (ADR-306, schemaVersion 4). */
+  /** The project's definition lists (ADR-307, schemaVersion 4). */
   definitionLists?: DefinitionList[];
   /** Connections between pieces (ADR-168), over template refs (schemaVersion 2; kinds and walls 3, ADR-207). */
   connections?: TemplateConnection[];
@@ -217,7 +217,7 @@ export function templateFromProject(
       ...(c.wall !== undefined ? { wall: c.wall } : {}),
     }));
   const bound = p.items.some((i) => i.bindings?.length);
-  // Definition lists and links (ADR-306) need version 4.
+  // Definition lists and links (ADR-307) need version 4.
   const lists = p.definitionLists?.length ? structuredClone(p.definitionLists) : undefined;
   const zoned = p.items.some((i) => i.zones);
   // Run handles and sinks over template refs (ADR-204): pieces no longer there are dropped.
@@ -301,7 +301,7 @@ export function templateFromProject(
 export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project {
   const now = new Date().toISOString();
   const ids = new Map(t.items.map((i) => [i.ref, newId()]));
-  // Lists get new ids too; links follow (ADR-306).
+  // Lists get new ids too; links follow (ADR-307).
   const listIds = new Map((t.definitionLists ?? []).map((l) => [l.id, newId()]));
   const definitionLists = (t.definitionLists ?? []).map((l) => ({
     ...structuredClone(l),
@@ -505,7 +505,7 @@ export function validateProjectTemplate(t: unknown): string[] {
     // Zones need version 3 (ADR-205); their values are checked on the project the template makes.
     if (it.zones !== undefined && (!v3 || !isObj(it.zones)))
       errs.push(`${name}: clearance zones need template schemaVersion ${RUN_EXTRAS_SINCE}`);
-    // A definition list link (ADR-306): version 4, to a list of the template; values are checked on the project.
+    // A definition list link (ADR-307): version 4, to a list of the template; values are checked on the project.
     if (it.list !== undefined && (!v4 || !isObj(it.list) || !listIds.has(it.list.id as string)))
       errs.push(`${name}: definition list links need template schemaVersion ${LISTS_SINCE_T}`);
   }

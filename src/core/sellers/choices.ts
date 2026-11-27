@@ -3,8 +3,8 @@
  * Pure updates of the design document; a project's choices are gathered from its pieces.
  */
 import { SCHEMA_VERSION } from '../design';
-import { PROJECT_SCHEMA } from '../project';
-import type { Project } from '../project';
+import { PROJECT_SCHEMA } from '../projectDoc';
+import type { Project } from '../projectDoc';
 import type { Design, HardwareProduct, SellerItem } from '../types';
 
 /** Links a seller product to a hardware line, or removes the link (undefined). */

@@ -1,5 +1,6 @@
 import { newId, validateDesign } from './design';
-import { validateProject, type Project } from './project';
+import { validateProject } from './projectValidate';
+import { type Project } from './projectDoc';
 import { templateProblemTexts, validateLocalTemplate, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
 import { validateGapMark } from './gaps';
