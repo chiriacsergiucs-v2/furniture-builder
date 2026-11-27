@@ -46,7 +46,7 @@ interface StoredTemplate {
   template: LocalTemplate;
 }
 /**
- * A project or single piece deleted on the Projects page (ADR-302): its stored row exactly as it was, readable or not,
+ * A project or single piece deleted on the Projects page (ADR-305): its stored row exactly as it was, readable or not,
  * kept until it is restored, deleted forever, or purged at start-up 30 days later.
  */
 export interface RecentlyDeleted {
@@ -237,7 +237,7 @@ class FurnitureDb extends Dexie {
       accountLinks: '[accountId+table+localId], accountId, remoteId',
       bands: 'id',
     });
-    // v13 (ADR-302, G-014): projects and pieces deleted on the Projects page, kept 30 days. Earlier tables untouched
+    // v13 (ADR-305, G-014): projects and pieces deleted on the Projects page, kept 30 days. Earlier tables untouched
     // (additive, no upgrade function).
     this.version(13).stores({
       designs: 'id, updatedAt, name',
@@ -359,13 +359,13 @@ export async function loadProject(id: string, database = db): Promise<Project | 
 export const deleteProject = (id: string, database = db) =>
   database.projects.delete(id).then(saved('projects', [id], true));
 
-// ---- Recently deleted (ADR-302, G-014) -------------------------------------------------------------------------------
+// ---- Recently deleted (ADR-305, G-014) -------------------------------------------------------------------------------
 
 /** How long a deleted project or piece stays in Recently deleted before the start-up purge may remove it. */
 const RECENTLY_DELETED_DAYS = 30;
 
 /**
- * Delete on the Projects page (ADR-302): the stored row, as it is, moves to Recently deleted in one transaction, and
+ * Delete on the Projects page (ADR-305): the stored row, as it is, moves to Recently deleted in one transaction, and
  * the design or project is reported deleted as `deleteDesign`/`deleteProject` report it (ADR-235). A missing row moves
  * nothing.
  */
@@ -401,7 +401,7 @@ export async function listRecentlyDeleted(database = db): Promise<RecentlyDelete
 }
 
 /**
- * Restore (ADR-302): the stored row goes back under its own id, unchanged, and is reported saved. Refused, with
+ * Restore (ADR-305): the stored row goes back under its own id, unchanged, and is reported saved. Refused, with
  * nothing written, when the row is gone or its id is taken again.
  */
 export async function restoreRecentlyDeleted(
@@ -429,11 +429,11 @@ export async function restoreRecentlyDeleted(
   return { ok: true };
 }
 
-/** Delete forever (ADR-302): only on the user's confirm. Not backed up, so no change is reported. */
+/** Delete forever (ADR-305): only on the user's confirm. Not backed up, so no change is reported. */
 export const deleteForever = (key: string, database = db) => database.recentlyDeleted.delete(key);
 
 /**
- * The 30-day purge (ADR-302), run once at app start: removes the rows deleted more than 30 × 24 h before `now` whose
+ * The 30-day purge (ADR-305), run once at app start: removes the rows deleted more than 30 × 24 h before `now` whose
  * date and document the app can read, and returns how many. A row the app cannot read is kept (ADR-012).
  */
 export async function purgeRecentlyDeleted(now = new Date(), database = db): Promise<number> {
@@ -760,7 +760,7 @@ export async function unusedImageIds(
     ...(await database.projectTemplates.toArray()),
     // A kept project version holds a whole project: its pictures are in use too (ADR-263).
     ...(await database.projectVersions.toArray()),
-    // So does a project or piece in Recently deleted (ADR-302): it can still be restored.
+    // So does a project or piece in Recently deleted (ADR-305): it can still be restored.
     ...(await database.recentlyDeleted.toArray()),
   ]
     .map((r) => JSON.stringify(r))

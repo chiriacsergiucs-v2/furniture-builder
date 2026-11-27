@@ -11,7 +11,7 @@ vi.mock('../src/persist/db', async (orig) => {
   const real = await orig<typeof import('../src/persist/db')>();
   return {
     ...real,
-    // The Projects page delete moves the row to Recently deleted (ADR-302).
+    // The Projects page delete moves the row to Recently deleted (ADR-305).
     moveToRecentlyDeleted: (...a: Parameters<typeof real.moveToRecentlyDeleted>) =>
       store.failDelete
         ? Promise.reject(new Error('QuotaExceededError'))

@@ -1,4 +1,4 @@
-// ADR-302 (G-014): deleting a project or piece on the Projects page moves it to Recently deleted for 30 days.
+// ADR-305 (G-014): deleting a project or piece on the Projects page moves it to Recently deleted for 30 days.
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ beforeEach(async () => {
   await Promise.all(db.tables.map((table) => table.clear()));
 });
 
-describe('Dexie v13 adds Recently deleted (ADR-302)', () => {
+describe('Dexie v13 adds Recently deleted (ADR-305)', () => {
   it('opening a v12 database keeps every row of every table, unreadable rows too', async () => {
     const V12 = {
       designs: 'id, updatedAt, name',
@@ -113,7 +113,7 @@ describe('Dexie v13 adds Recently deleted (ADR-302)', () => {
   });
 });
 
-describe('Recently deleted: move, list, restore, delete forever, purge (ADR-302)', () => {
+describe('Recently deleted: move, list, restore, delete forever, purge (ADR-305)', () => {
   const d = templates[0].create();
   const p = newProject('Pantry');
 

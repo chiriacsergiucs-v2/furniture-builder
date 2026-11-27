@@ -97,7 +97,7 @@ export function App() {
     const offs = [startAutoBackup(), startChangeClock()];
     return () => offs.forEach((off) => off());
   }, []);
-  // The 30-day purge of Recently deleted runs once at start, and says how many it removed (ADR-302).
+  // The 30-day purge of Recently deleted runs once at start, and says how many it removed (ADR-305).
   useEffect(() => {
     purgeRecentlyDeleted()
       .then((n) => {

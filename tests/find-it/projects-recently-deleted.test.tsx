@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for ADR-302 (G-014), in jsdom (ADR-108), at 390 and 1280 px: Projects → Delete a saved project → it is
+// Find-it for ADR-305 (G-014), in jsdom (ADR-108), at 390 and 1280 px: Projects → Delete a saved project → it is
 // listed under "Recently deleted (1)" → Restore brings it back to the Projects list; Delete forever asks first.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -18,7 +18,7 @@ async function deleteRow(user: User, name: string, width: number) {
   } else await user.click(await within(page).findByRole('button', { name: `Delete ${name}` }));
 }
 
-describe.each(WIDTHS)('Recently deleted on Projects at %ipx (find-it, ADR-302)', (width) => {
+describe.each(WIDTHS)('Recently deleted on Projects at %ipx (find-it, ADR-305)', (width) => {
   it('Projects › Delete → Recently deleted → Restore brings the project back', async () => {
     const { user } = await renderApp(width);
     const dbm = await import('../../src/persist/db');

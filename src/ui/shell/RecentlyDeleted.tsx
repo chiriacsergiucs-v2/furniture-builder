@@ -16,7 +16,7 @@ const when = (iso: unknown) => {
 };
 
 /**
- * Recently deleted (ADR-302, G-014): projects and single pieces deleted on the Projects page, kept 30 days, with
+ * Recently deleted (ADR-305, G-014): projects and single pieces deleted on the Projects page, kept 30 days, with
  * Restore and Delete forever. Rows the app cannot read are listed too and never removed without the user (ADR-012).
  */
 export function RecentlyDeletedList({

@@ -343,7 +343,7 @@ describe('every write reports its change (ADR-235)', () => {
       () => dbm.deleteAccountLink({ accountId: 'a', table: 'designs', localId: 'l1' }),
       () => [],
     ],
-    // Recently deleted is not backed up (ADR-302): the move reported the delete already; this reports nothing.
+    // Recently deleted is not backed up (ADR-305): the move reported the delete already; this reports nothing.
     ['deleteForever', () => dbm.deleteForever('designs:x'), () => []],
     // Device settings are not saved work: no change reported.
     ['setSetting', () => dbm.setSetting('k', 1), () => []],

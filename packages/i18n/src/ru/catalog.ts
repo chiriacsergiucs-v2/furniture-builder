@@ -178,7 +178,7 @@ export const ru_catalog = {
     'Удалить проект «{name}»? Он останется в «Недавно удалённых» на 30 дней.',
   'Delete “{name}”? It stays in Recently deleted for 30 days.':
     'Удалить «{name}»? Оно останется в «Недавно удалённых» на 30 дней.',
-  // Recently deleted (ADR-302)
+  // Recently deleted (ADR-305)
   'Recently deleted': 'Недавно удалённые',
   'Recently deleted ({n})': 'Недавно удалённые ({n})',
   'About Recently deleted': 'О недавно удалённых',

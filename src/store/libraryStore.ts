@@ -98,7 +98,7 @@ export const loadProject = (id: string) => stored_loadProject(id);
 export const deleteProject = (id: string) => stored_deleteProject(id);
 export const copyProject = (id: string, name: string) => stored_copyProject(id, name);
 
-// ---- Recently deleted (ADR-302) -------------------------------------------------------------------------------------
+// ---- Recently deleted (ADR-305) -------------------------------------------------------------------------------------
 export const moveToRecentlyDeleted = (table: 'designs' | 'projects', id: string) =>
   stored_moveToRecentlyDeleted(table, id);
 export const listRecentlyDeleted = () => stored_listRecentlyDeleted();

@@ -24,7 +24,7 @@ vi.mock('../src/persist/db', async (orig) => {
       flags.failFastener
         ? Promise.reject(new Error('QuotaExceededError'))
         : real.saveFastener(...a),
-    // The Projects page delete moves the row to Recently deleted (ADR-302).
+    // The Projects page delete moves the row to Recently deleted (ADR-305).
     moveToRecentlyDeleted: (...a: Parameters<typeof real.moveToRecentlyDeleted>) =>
       flags.failDeleteDesign
         ? Promise.reject(new Error('QuotaExceededError'))

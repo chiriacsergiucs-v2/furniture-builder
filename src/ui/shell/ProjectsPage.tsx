@@ -68,7 +68,7 @@ export function ProjectsPage({
   const lastSync = useAccount((s) => s.sync?.lastSyncAt);
   const [pieces, setPieces] = useState<DesignListing[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  // Read Recently deleted again after a delete (ADR-302).
+  // Read Recently deleted again after a delete (ADR-305).
   const [deletedRead, setDeletedRead] = useState(0);
   const unreadable = t('Saved work could not be read from this browser.');
   // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
@@ -173,7 +173,7 @@ export function ProjectsPage({
             cancelFirst: true,
           },
         ));
-      // A failed delete is said; the list is read again either way (ADR-261). It moves to Recently deleted (ADR-302).
+      // A failed delete is said; the list is read again either way (ADR-261). It moves to Recently deleted (ADR-305).
       try {
         await moveToRecentlyDeleted('projects', r.id);
       } catch {

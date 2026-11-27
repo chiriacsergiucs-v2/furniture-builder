@@ -1,4 +1,4 @@
-# ADR-302: Move deleted projects and pieces to a 30-day Recently deleted list
+# ADR-305: Move deleted projects and pieces to a 30-day Recently deleted list
 
 - Status: Implemented
 - Date: 2026-11-27
