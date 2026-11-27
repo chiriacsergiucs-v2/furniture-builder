@@ -3952,7 +3952,6 @@ highest id in either file.
 ### G-542: Picture and row validation on file import and restore (security M-1, M-4)
 
 - Status: Done (N407)
-- Note: User 2026-11-27: "Re-encode + per-table". Built in N407: pictures in imported files and backups are decoded and drawn again (`encodePicture`, src/persist/images.ts); restore checks each non-design row against its table (`rowProblems`, src/core/backup.ts)
 - Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
 - Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
 - Request: Route file pictures through the decode/re-encode path; validate rows per table
@@ -3961,6 +3960,7 @@ highest id in either file.
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+- Note: User 2026-11-27: re-encode file pictures through the decode path and validate restored rows per table.
 
 ### G-552: look-render find-it incomplete in sandbox
 
@@ -4001,7 +4001,6 @@ highest id in either file.
 ### G-565: Re-encode or sniff pictures inside imported files
 
 - Status: Done (N407)
-- Note: Built in N407 with G-542: picture bytes sniffed against the declared type (`sniffPictureType`, src/core/surface.ts) and at most `MAX_FILE_PICTURES` (200, not a physical fact) read per file
 - Origin: Security health check round 1, 2026-11-19 (L-2)
 - Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
 - Request: /health-security, loop prompt; user approved Medium only
@@ -4010,6 +4009,7 @@ highest id in either file.
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Covered with G-542 by the user's 2026-11-27 pick (re-encode, which also sniffs and caps).
 
 ### G-566: Pin GitHub Actions by commit SHA
 
