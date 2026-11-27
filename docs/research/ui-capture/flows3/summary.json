@@ -4,7 +4,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "project-plan",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -12,7 +12,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "piece-list",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -20,7 +20,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "piece-selected",
-      "elements": 233,
+      "elements": 235,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -28,7 +28,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "settings-populated",
-      "elements": 196,
+      "elements": 200,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -36,7 +36,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "room-empty",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -44,14 +44,6 @@
       "width": 1280,
       "scheme": "light",
       "name": "room-added",
-      "elements": 187,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "light",
-      "name": "room-draw",
       "elements": 189,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -59,7 +51,23 @@
     {
       "width": 1280,
       "scheme": "light",
+      "name": "room-draw",
+      "elements": 191,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
       "name": "room-fill-dialog",
+      "elements": 206,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "3d-view",
       "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -67,16 +75,8 @@
     {
       "width": 1280,
       "scheme": "light",
-      "name": "3d-view",
-      "elements": 202,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "light",
       "name": "3d-more-menu",
-      "elements": 202,
+      "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -84,7 +84,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "results-parts",
-      "elements": 202,
+      "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -92,7 +92,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "copy-code",
-      "elements": 212,
+      "elements": 214,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -100,7 +100,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "info",
-      "elements": 258,
+      "elements": 261,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -108,7 +108,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "info-domain-open",
-      "elements": 258,
+      "elements": 261,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -116,7 +116,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "gaps",
-      "elements": 829,
+      "elements": 646,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -124,7 +124,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "account-sign-in",
-      "elements": 142,
+      "elements": 144,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -132,22 +132,6 @@
       "width": 1280,
       "scheme": "light",
       "name": "account-create",
-      "elements": 141,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "light",
-      "name": "account-forgot",
-      "elements": 138,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "light",
-      "name": "account-privacy",
       "elements": 143,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -155,8 +139,24 @@
     {
       "width": 1280,
       "scheme": "light",
+      "name": "account-forgot",
+      "elements": 140,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
+      "name": "account-privacy",
+      "elements": 145,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "light",
       "name": "share-link-invalid",
-      "elements": 136,
+      "elements": 138,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -164,7 +164,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "share-link-unreachable",
-      "elements": 136,
+      "elements": 139,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -172,7 +172,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "assistant-off",
-      "elements": 131,
+      "elements": 133,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -180,7 +180,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "assistant-consent",
-      "elements": 133,
+      "elements": 135,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -188,7 +188,7 @@
       "width": 1280,
       "scheme": "light",
       "name": "assistant-signed-out",
-      "elements": 133,
+      "elements": 136,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -196,7 +196,7 @@
       "width": 390,
       "scheme": "light",
       "name": "project-plan",
-      "elements": 128,
+      "elements": 232,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -204,7 +204,7 @@
       "width": 390,
       "scheme": "light",
       "name": "piece-list",
-      "elements": 128,
+      "elements": 232,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -212,7 +212,7 @@
       "width": 390,
       "scheme": "light",
       "name": "piece-selected",
-      "elements": 210,
+      "elements": 249,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -220,7 +220,7 @@
       "width": 390,
       "scheme": "light",
       "name": "settings-populated",
-      "elements": 182,
+      "elements": 297,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -228,7 +228,7 @@
       "width": 390,
       "scheme": "light",
       "name": "room-empty",
-      "elements": 128,
+      "elements": 161,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -236,7 +236,7 @@
       "width": 390,
       "scheme": "light",
       "name": "room-added",
-      "elements": 167,
+      "elements": 198,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -244,7 +244,7 @@
       "width": 390,
       "scheme": "light",
       "name": "room-draw",
-      "elements": 169,
+      "elements": 200,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -252,7 +252,7 @@
       "width": 390,
       "scheme": "light",
       "name": "room-fill-dialog",
-      "elements": 184,
+      "elements": 215,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -260,7 +260,7 @@
       "width": 390,
       "scheme": "light",
       "name": "3d-view",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -268,7 +268,7 @@
       "width": 390,
       "scheme": "light",
       "name": "3d-more-menu",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -276,7 +276,7 @@
       "width": 390,
       "scheme": "light",
       "name": "results-parts",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -284,7 +284,7 @@
       "width": 390,
       "scheme": "light",
       "name": "copy-code",
-      "elements": 208,
+      "elements": 236,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -292,7 +292,7 @@
       "width": 390,
       "scheme": "light",
       "name": "info",
-      "elements": 266,
+      "elements": 284,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -300,7 +300,7 @@
       "width": 390,
       "scheme": "light",
       "name": "info-domain-open",
-      "elements": 266,
+      "elements": 284,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -308,7 +308,7 @@
       "width": 390,
       "scheme": "light",
       "name": "gaps",
-      "elements": 837,
+      "elements": 680,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -316,7 +316,7 @@
       "width": 390,
       "scheme": "light",
       "name": "account-sign-in",
-      "elements": 122,
+      "elements": 152,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -324,7 +324,7 @@
       "width": 390,
       "scheme": "light",
       "name": "account-create",
-      "elements": 121,
+      "elements": 151,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -332,7 +332,7 @@
       "width": 390,
       "scheme": "light",
       "name": "account-forgot",
-      "elements": 118,
+      "elements": 148,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -340,7 +340,7 @@
       "width": 390,
       "scheme": "light",
       "name": "account-privacy",
-      "elements": 123,
+      "elements": 153,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -348,7 +348,7 @@
       "width": 390,
       "scheme": "light",
       "name": "share-link-invalid",
-      "elements": 116,
+      "elements": 146,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -356,7 +356,7 @@
       "width": 390,
       "scheme": "light",
       "name": "share-link-unreachable",
-      "elements": 116,
+      "elements": 147,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -364,7 +364,7 @@
       "width": 390,
       "scheme": "light",
       "name": "assistant-off",
-      "elements": 112,
+      "elements": 142,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -372,7 +372,7 @@
       "width": 390,
       "scheme": "light",
       "name": "assistant-consent",
-      "elements": 114,
+      "elements": 144,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -380,7 +380,7 @@
       "width": 390,
       "scheme": "light",
       "name": "assistant-signed-out",
-      "elements": 114,
+      "elements": 145,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -388,7 +388,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "project-plan",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -396,7 +396,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "piece-list",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -404,7 +404,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "piece-selected",
-      "elements": 233,
+      "elements": 235,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -412,7 +412,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "settings-populated",
-      "elements": 196,
+      "elements": 200,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -420,7 +420,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "room-empty",
-      "elements": 148,
+      "elements": 150,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -428,14 +428,6 @@
       "width": 1280,
       "scheme": "dark",
       "name": "room-added",
-      "elements": 187,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "dark",
-      "name": "room-draw",
       "elements": 189,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -443,7 +435,23 @@
     {
       "width": 1280,
       "scheme": "dark",
+      "name": "room-draw",
+      "elements": 191,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
       "name": "room-fill-dialog",
+      "elements": 206,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "3d-view",
       "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -451,16 +459,8 @@
     {
       "width": 1280,
       "scheme": "dark",
-      "name": "3d-view",
-      "elements": 202,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "dark",
       "name": "3d-more-menu",
-      "elements": 202,
+      "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -468,7 +468,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "results-parts",
-      "elements": 202,
+      "elements": 204,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -476,7 +476,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "copy-code",
-      "elements": 212,
+      "elements": 214,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -484,7 +484,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "info",
-      "elements": 258,
+      "elements": 261,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -492,7 +492,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "info-domain-open",
-      "elements": 258,
+      "elements": 261,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -500,15 +500,15 @@
       "width": 1280,
       "scheme": "dark",
       "name": "gaps",
-      "elements": 829,
+      "elements": 646,
       "horizontalScroll": false,
-      "contrastFail": 1
+      "contrastFail": 0
     },
     {
       "width": 1280,
       "scheme": "dark",
       "name": "account-sign-in",
-      "elements": 142,
+      "elements": 144,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -516,22 +516,6 @@
       "width": 1280,
       "scheme": "dark",
       "name": "account-create",
-      "elements": 141,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "dark",
-      "name": "account-forgot",
-      "elements": 138,
-      "horizontalScroll": false,
-      "contrastFail": 0
-    },
-    {
-      "width": 1280,
-      "scheme": "dark",
-      "name": "account-privacy",
       "elements": 143,
       "horizontalScroll": false,
       "contrastFail": 0
@@ -539,8 +523,24 @@
     {
       "width": 1280,
       "scheme": "dark",
+      "name": "account-forgot",
+      "elements": 140,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
+      "name": "account-privacy",
+      "elements": 145,
+      "horizontalScroll": false,
+      "contrastFail": 0
+    },
+    {
+      "width": 1280,
+      "scheme": "dark",
       "name": "share-link-invalid",
-      "elements": 136,
+      "elements": 138,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -548,7 +548,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "share-link-unreachable",
-      "elements": 136,
+      "elements": 139,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -556,7 +556,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "assistant-off",
-      "elements": 131,
+      "elements": 133,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -564,7 +564,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "assistant-consent",
-      "elements": 133,
+      "elements": 135,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -572,7 +572,7 @@
       "width": 1280,
       "scheme": "dark",
       "name": "assistant-signed-out",
-      "elements": 133,
+      "elements": 136,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -580,7 +580,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "project-plan",
-      "elements": 128,
+      "elements": 232,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -588,7 +588,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "piece-list",
-      "elements": 128,
+      "elements": 232,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -596,7 +596,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "piece-selected",
-      "elements": 210,
+      "elements": 249,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -604,7 +604,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "settings-populated",
-      "elements": 182,
+      "elements": 297,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -612,7 +612,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "room-empty",
-      "elements": 128,
+      "elements": 161,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -620,7 +620,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "room-added",
-      "elements": 167,
+      "elements": 198,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -628,7 +628,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "room-draw",
-      "elements": 169,
+      "elements": 200,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -636,7 +636,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "room-fill-dialog",
-      "elements": 184,
+      "elements": 215,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -644,7 +644,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "3d-view",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -652,7 +652,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "3d-more-menu",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -660,7 +660,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "results-parts",
-      "elements": 209,
+      "elements": 231,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -668,7 +668,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "copy-code",
-      "elements": 208,
+      "elements": 236,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -676,7 +676,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "info",
-      "elements": 266,
+      "elements": 284,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -684,7 +684,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "info-domain-open",
-      "elements": 266,
+      "elements": 284,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -692,15 +692,15 @@
       "width": 390,
       "scheme": "dark",
       "name": "gaps",
-      "elements": 837,
+      "elements": 680,
       "horizontalScroll": false,
-      "contrastFail": 1
+      "contrastFail": 0
     },
     {
       "width": 390,
       "scheme": "dark",
       "name": "account-sign-in",
-      "elements": 122,
+      "elements": 152,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -708,7 +708,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "account-create",
-      "elements": 121,
+      "elements": 151,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -716,7 +716,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "account-forgot",
-      "elements": 118,
+      "elements": 148,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -724,7 +724,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "account-privacy",
-      "elements": 123,
+      "elements": 153,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -732,7 +732,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "share-link-invalid",
-      "elements": 116,
+      "elements": 146,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -740,7 +740,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "share-link-unreachable",
-      "elements": 116,
+      "elements": 147,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -748,7 +748,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "assistant-off",
-      "elements": 112,
+      "elements": 142,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -756,7 +756,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "assistant-consent",
-      "elements": 114,
+      "elements": 144,
       "horizontalScroll": false,
       "contrastFail": 0
     },
@@ -764,7 +764,7 @@
       "width": 390,
       "scheme": "dark",
       "name": "assistant-signed-out",
-      "elements": 114,
+      "elements": 145,
       "horizontalScroll": false,
       "contrastFail": 0
     }

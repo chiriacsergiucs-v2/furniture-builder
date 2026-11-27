@@ -408,8 +408,8 @@ Severity: High = blocks a task or breaks a standard; Medium = a real obstacle wi
 | F-14 | Keyboard: only leaf spaces are tab stops on the elevation; the rotate handle is `tabIndex=-1` with R or buttons as the alternative; typed rotation is switched off. Alternatives exist, so 2.1.1 is likely met. | [R] `Elevation.tsx:185-214`, `Project.tsx:573, 617-618` | F5, F8 | 2.1.1 | Low | Proven (checked 2026-11-16: `TYPED_ROTATION = false` at `Project.tsx:573`, the rotate slider `tabIndex={-1}` at `Project.tsx:617-618`); that 2.1.1 is met stays likely, not tested |
 | F-15 | No skip link was found. Landmarks exist (header, nav, main, aside, measured), which can satisfy 2.4.1, and the header adds about 12 tab stops before the content. | [M] landmarks and tab order; [R] no skip link | All | 2.4.1 | Low | Suspected |
 | F-16 | Language switching reloads the page without an on-screen notice (a user decision in ADR-153). | [C ✔] `LanguageMenu.tsx:12-26` | F20 | H1 | Low | Proven; decision recorded |
-| F-17 | Browser Back: Projects uses `replaceState`, so Back from Projects can leave the app; no `popstate` handler found. | [R] `App.tsx:172-184` | Navigation | H3 | Low | No `popstate` handler: proven (grep of `src`, 2026-11-16); Back leaving the app: Suspected |
-| F-18 | Error repair banner only on the project plan; a single piece shows problems inline. Two patterns for the same problem. | [R] `Project.tsx:1553`, `Inspector.tsx:459` | F13 | H4 | Low | Reported |
+| F-17 | Browser Back: Projects uses `replaceState`, so Back from Projects can leave the app; no `popstate` handler found. | [R] `App.tsx:172-184` | Navigation | H3 | Low | No `popstate` handler: proven (grep of `src`, 2026-11-16); Back leaving the app: Suspected. Rechecked 2026-11-27: a `popstate` handler now exists for phone cards (ADR-295), Projects still uses `replaceState` (section 13) |
+| F-18 | Error repair banner only on the project plan; a single piece shows problems inline. Two patterns for the same problem. | [R] `Project.tsx:1553`, `Inspector.tsx:459` | F13 | H4 | Low | Proven (pass 3; rechecked 2026-11-27 at `Project.tsx:1398` and `Inspector.tsx:620`, section 13) |
 | F-19 | Save to catalog is not available while editing a single piece in Compose. | [R] `Project.tsx:1027` | F12 | H7 | Low | Proven (checked 2026-11-16: `SaveToCatalogDialog` is used only at `Project.tsx:1027`) |
 | F-20 | In the dark theme the Catalog chips ("Ready", the type labels) are `#3a7260` text on `#24403a`, 2.01:1 against the 4.5:1 minimum, at both widths: 62 texts on the Catalog page. Cause: `.chip { color: var(--primary) }` on `var(--primary-soft)` (`src/styles.css:3046-3054`); the design document names `--link` as the dark text colour. **Fixed 2026-11-16 (N314):** `.chip` uses `--link` (5.9:1 in both themes); the contrast check then read 7,438 texts in 32 states with 0 below AA. | [M] `docs/research/ui-capture/contrast.json` before and after; a browser probe of `span.chip` (`rgb(58,114,96)` on `rgb(36,64,58)`) | F22 | 1.4.3 (AA) | Medium | Proven, fixed |
 | F-21 | On touch at 390 px, number fields are 32 px tall in the wizard's Size and Base steps (44×32) and in Settings (180×32 and 206×32), and two checkboxes are 18×18 ("Same plinth height for every piece", "Replace parts with their own board too"). The project's rule is 44 px; this extends F-03.**Fixed 2026-11-16 (N325):** the inner input of `.mm` and search fields stretches to its 44 px wrapper under `pointer: coarse`; `tools/touch-targets/find-it.mjs` fails before and passes after. Checkboxes: the label row is 44 px. | [M] `docs/research/ui-capture/flows/*-390-light.json` | F2, F16 | 2.5.8 passes at 24 px; the 18 px checkboxes rely on the spacing exception; 2.5.5 (AAA) fails | Low | Proven **Fixed 2026-11-16 (N325)** |
@@ -529,6 +529,67 @@ Pass 3 also noted these points without making them findings:
   `tools/*/find-it.mjs` acceptance scripts, which this audit did not run.
 - **The online screens come from a build with a placeholder backend origin, not the published build.** Their
   layout is the same code, but anything that depends on the real backend's answers is not shown.
+
+## 13. Coverage pass 4 (2026-11-27, G-509, N444)
+
+**Why.** Passes 2 and 3 ran on the sheet editor. Since ADR-290 the phone's default is the canvas editor with its chip
+rail, and since 2026-11-26 the shared harness starts every script on the sheet unless it asks for the app default
+(`tools/lib/harness.mjs`, `launchBrowser`). This pass captures the real phone default and checks every finding whose
+evidence was only [R] against the code as it is today.
+
+**Tool and run.** `pnpm build`, then `pnpm exec vite preview` (base `/furniture-builder/`). `tools/capture/flows.mjs`,
+`tools/capture/contrast.mjs` and `tools/capture/flows3.mjs` now pass `launchBrowser({ appDefault: true })`, and close
+the phone's Settings and Material cards with their Close button, since Escape leaves them open (the first run of
+`flows.mjs` captured Settings under the name `material` at 390 px for that reason). `flows3.mjs` was brought to the
+chip rail in N443 (G-589). Runs, each exit 0:
+
+- `CAPTURE_DARK=1 node tools/capture/flows.mjs`: an empty project, Settings, Material and the wizard (8 steps after
+  Cabinet) at 390 and 1280 px, light and dark: 44 screenshots and element maps in `docs/research/ui-capture/flows/`.
+  None skipped, no horizontal scroll, no page errors logged.
+- `node tools/capture/contrast.mjs`: 32 states (Projects, Catalog, Editor, More, New, the wizard's first step,
+  Settings, Material; both widths and themes): 3,734 texts read, 0 below AA, 66 unread. The unread texts are the
+  phone More menu's (33 per theme), whose background is the scroll-cue gradient that F-01's fix added; the measure
+  does not read text over a gradient (section 11).
+- `CAPTURE_DARK=1 node tools/capture/flows3.mjs` with a placeholder-backend build (N443): a project seeded with two
+  base cabinets through the UI, the room, 3D, results, Copy code, Information, Gaps and the signed-out Account, Share
+  and Assistant screens: 96 states, 10,900 texts, 0 below AA, no horizontal scroll, 4 blocked requests (the share-link
+  fetch). Research: no page (#227).
+
+**Seen in the captures.**
+
+- F-22 still holds: at 390 px the wizard's 8 steps wrap to three rows above the step (`flows/wizard-step-02-390-light.png`).
+- F-23 still holds for an empty project: Settings lists the five run-part actions (`flows/settings-390-light.png`).
+- On the phone canvas, Settings and Material open as cards over the drawing, under the chip rail; the 1280 px
+  layout is unchanged (`flows/material-390-light.png`, `flows/settings-1280-dark.png`).
+
+**New finding** (continues the register):
+
+| ID | Finding | Evidence | Flow | WCAG 2.2 / Heur. | Severity | Status |
+|---|---|---|---|---|---|---|
+| F-31 | At 390 px the 3D view's ⋯ menu ("More 3D actions": Export for AR, Export scene) opens but cannot be seen or tapped: the tool row it hangs from scrolls sideways on a phone (`overflow-x: auto`, which also clips vertically), so the absolutely placed panel is clipped. At 1280 px it shows. | [M] a browser probe at 390 px: the `details` is open, `.three-more-panel` is `display: grid`, 167×108 at (8, 174), and `elementFromPoint` there returns the canvas; `flows3/3d-more-menu-390-light.png` against `3d-more-menu-1280-light.png`; [C ✔] `src/styles.css` `.three-tools:not(:has(...))` under `@media (max-width: 760px)` (the F-30 fix) and `.three-more-panel { position: absolute }` | 3D | H1, H7 | Medium | Proven; not fixed (found by N443, outside its gap) |
+
+**Citation check of the findings with [R] evidence** (each cited line read again on 2026-11-27):
+
+| ID | Verdict | Where it is now |
+|---|---|---|
+| F-06 | Still holds; citations moved | Import: `src/ui/shell/MoreMenu.tsx:288`, `src/ui/shell/ProjectsPage.tsx:312`. Shopping: the Shopping tab and the header chip `src/ui/shell/EstimateChip.tsx:33`. New piece: `ProjectsPage.tsx:307`, `MoreMenu.tsx:165`, `src/ui/CatalogPage.tsx:525`. Materials: the header button `src/ui/shell/AppBar.tsx:253` and the Settings link `src/ui/Dialogs.tsx:429-435`. `App.tsx` is 212 lines since the split (N430) and no longer holds these |
+| F-07 | Still holds; citations moved | "Edit this piece" `src/ui/Project.tsx:374`, "Edit {name}" `:544`, "Open in the piece editor" `:758`, "Remove from project" `:874`; multi-select "Delete" `src/ui/Selection.tsx:151` (its confirm at `:142`) |
+| F-11 | Mostly fixed (N327); one line left | `docs/architecture.md` is 102 lines with a section "Shell: places, modes and the phone sheet" (`:36`). `docs/ui-design.md:312` still says "Phone top bar still takes three rows" in its open questions; the 390 px header is one 52 px row (`flows3/project-plan-390-light.json`) |
+| F-12 | Partly contradicted, as in pass 2; citations moved | The visible hint once a piece is selected: `src/ui/Inspector.tsx:261`. The peek text "Tap a space to edit it": `src/ui/shell/EditorWork.tsx:419`, shown only by the sheet editor; the canvas editor (the phone default) has no peek row |
+| F-13 | Still holds; citation moved | The phone's quick actions are Add, Edit, Duplicate and Turn (`src/ui/Project.tsx:532-568`, the same row on the canvas chip rail, `flows3/piece-selected-390-light.png`); Delete and lock stay in ⋯ |
+| F-14 | Still holds; one citation moved | `TYPED_ROTATION = false` at `src/ui/Project.tsx:573`; the turn handle is `role="slider"` with `tabIndex={-1}` at `src/ui/RoomDrawingParts.tsx:60-61` (it was in `Project.tsx`) |
+| F-15 | Still holds (Suspected) | No "Skip to" link or `skip-link` class in `src/ui` (grep) |
+| F-17 | Partly fixed | A `popstate` handler now exists: `src/ui/shell/useCardHistory.ts:65` (ADR-295, Back closes an open phone card), and pages listen to `hashchange` (`src/ui/shell/usePage.ts:20`). Projects still uses `replaceState` (`usePage.ts:24`), so Back from Projects leaving the app stays Suspected |
+| F-18 | Still holds (Proven); citations moved | `ProblemBanner` is rendered only at `src/ui/Project.tsx:1398` (imported at `:83`); a single piece shows a space's problems inline at `src/ui/Inspector.tsx:620` (`ul.inline-diags`) |
+| F-19 | Still holds; citation moved | `SaveToCatalogDialog` is used only at `src/ui/Project.tsx:884` |
+
+**Still not covered, and why** (the remainder of G-509):
+
+- Needs a signed-in account or the published site: signed-in Account; making, copying and stopping share links; the
+  Assistant chat with replies; any check against https://chiriacsergiucs-v2.github.io/furniture-builder/ rather than a
+  local preview. These need a real account and requests to the backend, which this pass did not make.
+- Needs scripted gestures or a design with errors, not done in this pass: the error and repair states in the browser
+  (F-18 seen on screen), placing and dragging, Move mode in 3D, Render and AR export (now also blocked on phones by F-31).
 
 ## 10. Appendix: file index
 

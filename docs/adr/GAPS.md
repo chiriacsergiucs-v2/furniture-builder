@@ -1322,18 +1322,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
-
-- Status: Open
-- Origin: UI flow audit, 2026-11-15 (G-508)
-- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
-- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
-- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
-- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-523: Two backlog rows share id N326
 
 - Status: Open
@@ -1558,18 +1546,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-556: Browser scripts editor-modes and ui-polish fail on main
-
-- Status: Open
-- Origin: N352, found by pnpm regress 2026-11-20
-- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
-- Request: Repair both scripts or the app, whichever is stale
-- Questions: none
-- Suggested pick: Repair the scripts against the current UI
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-557: Variants for sink-base, desk and chest
 
 - Status: Acknowledged (2026-11-27)
@@ -1721,17 +1697,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low
-
-### G-589: Phone capture of room, 3D, results, Gaps and Research states
-
-- Status: Open
-- Origin: N379 UI review 2026-11-23
-- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
-- Request: Scheduled UI review: capture every department at 390 and 1280 px
-- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
-- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
-- Work: Medium
-- Impact: Low-medium
 
 ### G-591: Room divider: Open both sides on corner units
 

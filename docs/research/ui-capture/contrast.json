@@ -12,7 +12,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "catalog",
-    "texts": 887,
+    "texts": 64,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -21,7 +21,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "editor",
-    "texts": 92,
+    "texts": 95,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -30,6 +30,24 @@
     "scheme": "light",
     "width": 1280,
     "state": "more-menu",
+    "texts": 130,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "new-dialog",
+    "texts": 571,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 1280,
+    "state": "wizard-type",
     "texts": 121,
     "unread": 0,
     "fail": 0,
@@ -38,142 +56,142 @@
   {
     "scheme": "light",
     "width": 1280,
-    "state": "new-dialog",
-    "texts": 645,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 1280,
-    "state": "wizard-type",
-    "texts": 118,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 1280,
     "state": "settings",
-    "texts": 93,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 1280,
-    "state": "material",
-    "texts": 45,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "projects",
-    "texts": 11,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "catalog",
-    "texts": 958,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "editor",
-    "texts": 9,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "more-menu",
-    "texts": 38,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "new-dialog",
-    "texts": 562,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "wizard-type",
-    "texts": 35,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "settings",
-    "texts": 71,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "material",
-    "texts": 23,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 1280,
-    "state": "projects",
-    "texts": 11,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 1280,
-    "state": "catalog",
-    "texts": 887,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 1280,
-    "state": "editor",
     "texts": 92,
     "unread": 0,
     "fail": 0,
     "worst": []
   },
   {
+    "scheme": "light",
+    "width": 1280,
+    "state": "material",
+    "texts": 46,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "projects",
+    "texts": 10,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "catalog",
+    "texts": 63,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "editor",
+    "texts": 10,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "more-menu",
+    "texts": 12,
+    "unread": 33,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "new-dialog",
+    "texts": 486,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "wizard-type",
+    "texts": 36,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "settings",
+    "texts": 98,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "material",
+    "texts": 22,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "projects",
+    "texts": 11,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "catalog",
+    "texts": 64,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "editor",
+    "texts": 95,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
     "scheme": "dark",
     "width": 1280,
     "state": "more-menu",
+    "texts": 130,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "new-dialog",
+    "texts": 571,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 1280,
+    "state": "wizard-type",
     "texts": 121,
     "unread": 0,
     "fail": 0,
@@ -182,26 +200,8 @@
   {
     "scheme": "dark",
     "width": 1280,
-    "state": "new-dialog",
-    "texts": 645,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 1280,
-    "state": "wizard-type",
-    "texts": 118,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 1280,
     "state": "settings",
-    "texts": 93,
+    "texts": 92,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -210,7 +210,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "material",
-    "texts": 45,
+    "texts": 46,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -219,7 +219,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "projects",
-    "texts": 11,
+    "texts": 10,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -228,7 +228,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "catalog",
-    "texts": 958,
+    "texts": 63,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -237,7 +237,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "editor",
-    "texts": 9,
+    "texts": 10,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -246,8 +246,8 @@
     "scheme": "dark",
     "width": 390,
     "state": "more-menu",
-    "texts": 38,
-    "unread": 0,
+    "texts": 12,
+    "unread": 33,
     "fail": 0,
     "worst": []
   },
@@ -255,7 +255,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "new-dialog",
-    "texts": 562,
+    "texts": 486,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -264,7 +264,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "wizard-type",
-    "texts": 35,
+    "texts": 36,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -273,7 +273,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "settings",
-    "texts": 71,
+    "texts": 98,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -282,7 +282,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "material",
-    "texts": 23,
+    "texts": 22,
     "unread": 0,
     "fail": 0,
     "worst": []

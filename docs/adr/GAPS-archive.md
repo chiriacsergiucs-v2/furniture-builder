@@ -3947,6 +3947,19 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
+
+- Status: Done (N444)
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Note: 2026-11-27 (N444): the suggested pick is done. Second capture pass on the app's phone default (canvas editor): `tools/capture/flows.mjs` (empty project, Settings, Material, the 8 wizard steps; 390 and 1280 px, light and dark; 44 states, none skipped), `tools/capture/contrast.mjs` (32 states, 3,734 texts, 0 below AA) and `tools/capture/flows3.mjs` (seeded project with two pieces, room, 3D, results, pages, signed-out online screens; 96 states, via N443). Citation check of every [R] finding (F-06, F-07, F-11, F-12, F-13, F-14, F-15, F-17, F-18, F-19) with today's file:line, and a new finding F-31 (the 3D ⋯ menu clipped at 390 px): `docs/research/2026-11-15-ui-flow-audit.md` section 13. Remainder, for a new gap (no G id given here): signed-in Account, making and stopping share links, Assistant replies and any check on the published site need a real account or the live URL; error and repair states seen in the browser, placing and dragging, Move mode, Render and AR export need scripted gestures or a design with errors; F-31 is not fixed.
+
 ### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
 
 - Status: Done (N321)
@@ -4261,6 +4274,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-556: Browser scripts editor-modes and ui-polish fail on main
+
+- Status: Done (N442)
+- Origin: N352, found by pnpm regress 2026-11-20
+- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
+- Request: Repair both scripts or the app, whichever is stale
+- Questions: none
+- Suggested pick: Repair the scripts against the current UI
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Note: 2026-11-27 (N442): both scripts pass against `pnpm build` + `vite preview` (editor-modes 164/164, ui-polish 52/52). The 'places Editor · Cut list' and brand checks were already brought to the current UI (234f34d rename, N404); editor-modes still timed out on the catalog's `Add …` button since the finder became the default (G-582), fixed by opening the grouped catalog (`fb:catalogFinder` off) as N402 did. No app bug found.
+
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
 - Status: Done (ADR-281)
@@ -4441,6 +4467,18 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-589: Phone capture of room, 3D, results, Gaps and Research states
+
+- Status: Done (N443)
+- Origin: N379 UI review 2026-11-23
+- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
+- Request: Scheduled UI review: capture every department at 390 and 1280 px
+- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
+- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
+- Work: Medium
+- Impact: Low-medium
+- Note: 2026-11-27 (N443): `tools/capture/flows3.mjs` now runs on the app's real phone default (the canvas editor, `launchBrowser({ appDefault: true })`) and its phone steps follow the chip rail: the catalog finder tiles in Add a piece, Close for the Settings card (Escape leaves it open), a tap on the plan piece for piece-selected, the chip rail's "Edit <project>" for the Room card (a flat `.room-fold` there), the Information page's Gaps button. Run with `CAPTURE_DARK=1` and the placeholder-backend build: 96 states captured (24 per width and scheme, light and dark, 390 and 1280), 0 texts below AA of 10,900, no sideways scroll, 4 blocked requests (the share-link fetch). Research: no Research page exists (#227), so the state still logs its absence; removing it stays the gap's open question. Found on the way (not fixed, outside this gap): at 390 px the 3D view's ⋯ menu (`More 3D actions`: Export for AR, Export scene) opens but is clipped by the tool row, whose phone rule sets `overflow-x: auto` (`src/styles.css` `.three-tools`, audit F-30); `elementFromPoint` on the open panel returns the canvas, see `3d-more-menu-390-*.png`.
 
 ### G-590: Appearance: tests for − / + and ±5% controls
 
