@@ -303,6 +303,17 @@ export function notCountedPrint(): string {
   );
 }
 
+/** A whole number from `min` to `max` (ADR-003), the one rule for the fastener fields. */
+function wholeIn(n: unknown, min: number, max: number): n is number {
+  return typeof n === 'number' && Number.isSafeInteger(n) && n >= min && n <= max;
+}
+/** Fixings per joint: whole, 1 or more. */
+export const fastenerPerOk = (n: unknown): n is number => wholeIn(n, 1, Number.MAX_SAFE_INTEGER);
+/** Distance from each end or edge to the first fixing (ADR-209): whole mm from 0 to 5000. */
+export const fastenerEdgeOk = (n: unknown): n is number => wholeIn(n, 0, 5000);
+/** Largest spacing between back fixings (G-439): whole mm from 1 to 5000. */
+export const fastenerSpacingOk = (n: unknown): n is number => wholeIn(n, 1, 5000);
+
 /** A choice the app can use: a joint type it knows, a name, a whole count per joint ≥ 1. */
 export function validFastenerChoice(c: unknown): c is FastenerChoice {
   if (!c || typeof c !== 'object') return false;
@@ -312,19 +323,9 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
     JOINT_BY_ID.has(r.joint as JointType) &&
     typeof r.name === 'string' &&
     !!r.name.trim() &&
-    typeof r.per === 'number' &&
-    Number.isSafeInteger(r.per) &&
-    r.per >= 1 &&
-    (r.edge === undefined ||
-      (typeof r.edge === 'number' &&
-        Number.isSafeInteger(r.edge) &&
-        r.edge >= 0 &&
-        r.edge <= 5000)) &&
-    (r.spacing === undefined ||
-      (typeof r.spacing === 'number' &&
-        Number.isSafeInteger(r.spacing) &&
-        r.spacing >= 1 &&
-        r.spacing <= 5000))
+    fastenerPerOk(r.per) &&
+    (r.edge === undefined || fastenerEdgeOk(r.edge)) &&
+    (r.spacing === undefined || fastenerSpacingOk(r.spacing))
   );
 }
 

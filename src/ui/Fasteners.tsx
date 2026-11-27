@@ -1,5 +1,8 @@
 import { useId, useMemo, useState } from 'react';
 import {
+  fastenerEdgeOk,
+  fastenerPerOk,
+  fastenerSpacingOk,
   fastenerCounts,
   GUIDANCE,
   JOINT_BY_ID,
@@ -111,12 +114,11 @@ function FastenerRow({
     if (storeError) reset();
   }
   const perN = Number(per);
-  const perOk = per.trim() !== '' && Number.isSafeInteger(perN) && perN >= 1;
+  const perOk = per.trim() !== '' && fastenerPerOk(perN);
   const edgeN = Number(edge);
-  const edgeOk = edge.trim() === '' || (Number.isSafeInteger(edgeN) && edgeN >= 0 && edgeN <= 5000);
+  const edgeOk = edge.trim() === '' || fastenerEdgeOk(edgeN);
   const spacingN = Number(spacing);
-  const spacingOk =
-    spacing.trim() === '' || (Number.isSafeInteger(spacingN) && spacingN >= 1 && spacingN <= 5000);
+  const spacingOk = spacing.trim() === '' || fastenerSpacingOk(spacingN);
   const back = joint.id === 'back-fixing';
   const drills = joint.id === 'carcass-joint' || back;
   const commit = (nextName = name, nextPer = per) => {
@@ -126,7 +128,7 @@ function FastenerRow({
       if (choice) clear(joint.id);
       return;
     }
-    if (!(nextPer.trim() !== '' && Number.isSafeInteger(p) && p >= 1)) return;
+    if (!(nextPer.trim() !== '' && fastenerPerOk(p))) return;
     if (!edgeOk || (back && !spacingOk)) return;
     const e = drills && edge.trim() !== '' ? edgeN : undefined;
     const sp = back && spacing.trim() !== '' ? spacingN : undefined;
