@@ -936,22 +936,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Add distances that the user enters, checked as warnings, with no built-in values.
 - Conflicts: none
 
-### G-420: Run parts read connections
-
-- Status: Open
-- Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
-- Missing: Suggest run parts (ADR-061) groups runs with groupRuns (src/core/project.ts:2201): base pieces turned the same way, in line, with gaps up to 150 mm; it does not read stored connections.
-- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
-- Questions: Should run parts treat side- and corner-connected pieces as one run?
-- Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low
-- Issue: Run parts ignore stored connections.
-- Fix: Let groupRuns read side and corner connections.
-- Conflicts: none
-- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
-
 ### G-421: L-shape and diagonal corners and desk pedestal ends share no side
 
 - Status: Open

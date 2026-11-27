@@ -14,7 +14,7 @@ import { t, type Key } from '@furniture-builder/i18n';
 
 import {
   FILLER_MAX_GAP,
-  groupRuns,
+  groupRunLegs,
   isWallHung,
   materialKey,
   type PlacedPiece,
@@ -289,9 +289,15 @@ export function planRuns(
     ...(project.runParts ?? []).flatMap((rp) => rp.from ?? []),
     ...requests.filter((r) => r.kind !== 'filler').flatMap((r) => r.from),
   ]);
-  const runs = groupRuns(placed).filter(
-    (run) => run[0].item.rotationY === 0 || !!opts.sides || run.some((pc) => had.has(pc.item.id)),
-  );
+  // A run joined in a corner (G-420) is planned when any of its legs is, each leg in its own frame.
+  const runs = groupRunLegs(placed, project.connections)
+    .filter(
+      (run) =>
+        run.some((leg) => leg[0].item.rotationY === 0) ||
+        !!opts.sides ||
+        run.some((leg) => leg.some((pc) => had.has(pc.item.id))),
+    )
+    .flat();
   const unmade: Record<string, string> = {};
   const fail = (r: RunRequest, why: string) => {
     const note = t('{part}: {why}.', { part: requestName(r, project), why });
@@ -660,7 +666,10 @@ export function requestCandidates(project: Project): { runs: string[][]; trims: 
     else trims.push([pc]);
   }
   return {
-    runs: groupRuns(placed).map((r) => r.map((pc) => pc.item.id)),
+    // One worktop runs along one leg, so a run joined in a corner offers its legs (G-420).
+    runs: groupRunLegs(placed, project.connections)
+      .flat()
+      .map((r) => r.map((pc) => pc.item.id)),
     trims: trims.map((r) => r.map((pc) => pc.item.id)),
   };
 }

@@ -18,7 +18,7 @@ import {
   worktopFront,
 } from './projectProfiles';
 import { buildModel } from './build';
-import { compatChecks } from './compat';
+import { compatChecks, touchSideBySide } from './compat';
 import { localClearances, reachesArc, type Clearance } from './clearance';
 import {
   BODY_CODES,
@@ -64,7 +64,12 @@ import {
   pruneCommon,
   type CommonBuild,
 } from './common';
-import { connectionDiagnostics, pruneConnections, type Connection } from './connections';
+import {
+  connectionDiagnostics,
+  meetInCorner,
+  pruneConnections,
+  type Connection,
+} from './connections';
 import { bounds2 } from './outline';
 import {
   pruneShared,
@@ -2265,7 +2270,7 @@ const RUN_TURNS = [0, 90, 270] as const;
  * left → right, then (ADR-205) those turned a quarter (`rotationY` 90 or 270) along a side wall, side by side along z.
  * Every piece of a run has the same turn.
  */
-export function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
+function touchingRuns(placed: PlacedPiece[]): PlacedPiece[][] {
   const runs: PlacedPiece[][] = [];
   for (const r of RUN_TURNS) {
     const alongX = r === 0;
@@ -2290,6 +2295,69 @@ export function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
     runs.push(...mine);
   }
   return runs;
+}
+
+/**
+ * Runs of base units as legs (G-420): the touching runs above, joined by the stored connections that still hold
+ * (ADR-168, ADR-207). Side-connected pieces put their runs in one leg (one turn, ordered along it); corner-connected
+ * pieces put their legs in one run, legs in the order of the touching runs (back wall first). Without connections each
+ * run is one leg, as before. Wall and stacked connections, and connections to pieces that are not base units, join
+ * nothing.
+ */
+export function groupRunLegs(
+  placed: PlacedPiece[],
+  connections: readonly Connection[] = [],
+): PlacedPiece[][][] {
+  const runs = touchingRuns(placed);
+  if (!connections.length) return runs.map((r) => [r]);
+  const at = new Map<string, number>();
+  runs.forEach((r, i) => r.forEach((pc) => at.set(pc.item.id, i)));
+  // Two union-finds over run indices; each root is the smallest index of its set.
+  const side = runs.map((_, i) => i),
+    all = runs.map((_, i) => i);
+  const find = (up: number[], i: number): number => (up[i] === i ? i : (up[i] = find(up, up[i])));
+  const join = (up: number[], i: number, j: number) => {
+    const a = find(up, i),
+      b = find(up, j);
+    if (a !== b) up[Math.max(a, b)] = Math.min(a, b);
+  };
+  for (const c of connections) {
+    const kind = c.kind ?? 'side';
+    if (kind !== 'side' && kind !== 'corner') continue;
+    const i = at.get(c.itemIds[0]),
+      j = at.get(c.itemIds[1]);
+    if (i === undefined || j === undefined || i === j) continue;
+    const a = runs[i].find((pc) => pc.item.id === c.itemIds[0])!,
+      b = runs[j].find((pc) => pc.item.id === c.itemIds[1])!;
+    // A connection that no longer holds has its warning (ADR-168) and joins nothing.
+    if (kind === 'side' ? !touchSideBySide(a, b) : !meetInCorner(a, b)) continue;
+    if (kind === 'side') join(side, i, j);
+    join(all, i, j);
+  }
+  const legs = new Map<number, PlacedPiece[]>();
+  runs.forEach((r, i) => {
+    const k = find(side, i);
+    legs.set(k, [...(legs.get(k) ?? []), ...r]);
+  });
+  const out = new Map<number, PlacedPiece[][]>();
+  for (const [k, leg] of legs) {
+    const lo = (pc: PlacedPiece) => (pc.item.rotationY === 0 ? pc.bounds.x : pc.bounds.z);
+    const r = find(all, k);
+    out.set(r, [...(out.get(r) ?? []), [...leg].sort((a, b) => lo(a) - lo(b))]);
+  }
+  return [...out.values()];
+}
+
+/**
+ * Runs of base units (ADR-036, ADR-205): pieces in line with gaps up to 150 mm, joined by the stored side and corner
+ * connections that hold (G-420). A run joined in a corner holds pieces of two turns, one leg after the other
+ * (`groupRunLegs` keeps them apart).
+ */
+export function groupRuns(
+  placed: PlacedPiece[],
+  connections: readonly Connection[] = [],
+): PlacedPiece[][] {
+  return groupRunLegs(placed, connections).map((r) => r.flat());
 }
 
 /**
@@ -2334,7 +2402,10 @@ export function runFrame(r: QuarterTurn): RunFrame {
 
 /** The ids of the run a piece belongs to (the same runs the run parts use), or null. */
 export function runOf(project: Project, id: string): string[] | null {
-  const ids = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)))
+  const ids = groupRuns(
+    resolvePlacements(project).items.map((i) => placeItem(i)),
+    project.connections,
+  )
     .map((r) => r.map((pc) => pc.item.id))
     .find((r) => r.includes(id));
   return ids ?? null;
@@ -2371,7 +2442,10 @@ function withHandle(d: Design, h: Handle): Design {
 
 /** The pieces a run handle reaches now (ADR-125): the run holding any of its pieces, less those keeping their own. */
 export function runHandleMembers(project: Project, rh: RunHandle): string[] {
-  const runs = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)));
+  const runs = groupRuns(
+    resolvePlacements(project).items.map((i) => placeItem(i)),
+    project.connections,
+  );
   const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
   return run ? run.map((pc) => pc.item.id) : [];
 }
@@ -2394,7 +2468,7 @@ export function runHandleFor(project: Project, itemId: string): RunHandle | unde
 export function applyRunHandles(project: Project): Project {
   if (!project.runHandles?.length) return project;
   const placed = resolvePlacements(project).items.map((i) => placeItem(i));
-  const runs = groupRuns(placed);
+  const runs = groupRuns(placed, project.connections);
   const handles = new Map<string, Handle>();
   for (const rh of project.runHandles) {
     const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
