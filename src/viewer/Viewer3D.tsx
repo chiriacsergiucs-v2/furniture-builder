@@ -27,7 +27,7 @@ import {
   ThreeMore,
   ZoneBoxes,
 } from './ViewerScene';
-import { isOrbiting } from './orbiting';
+import { skipDragMoves } from './dragGlue';
 import {
   Fragment,
   useCallback,
@@ -339,26 +339,8 @@ interface Viewer3DProps {
   countDock?: HTMLElement | null;
 }
 
-/**
- * The canvas's pointer events, except that a pointer move while the view is turned (orbiting.ts) or while a button or
- * finger is down does not raycast the scene: a hover tint has no use mid-drag, the drags of pieces, walls and handles
- * follow the pointer with their own window listeners, and the raycast over every board on every move costs a phone
- * frame time (the first moves of a drag come before turning starts: drag-perf.mjs, the long task at its start).
- */
-const orbitEvents: typeof events = (store) => {
-  const manager = events(store);
-  const move = manager.handlers?.onPointerMove;
-  if (!manager.handlers || !move) return manager;
-  return {
-    ...manager,
-    handlers: {
-      ...manager.handlers,
-      onPointerMove: (e: Event) => {
-        if (!isOrbiting() && !(e as PointerEvent).buttons) move(e);
-      },
-    },
-  };
-};
+/** The canvas's pointer events, without the hover raycast while a pointer is down or the view turns (dragGlue.ts). */
+const orbitEvents: typeof events = (store) => skipDragMoves(events(store));
 
 export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer3DProps = {}) {
   const view = useView();

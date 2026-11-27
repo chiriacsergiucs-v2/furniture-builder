@@ -187,20 +187,20 @@ function mergeEdges(items: readonly EdgeItem[]): Float32Array {
   return out;
 }
 
+/** What a plain (1-pixel) edge line's thin twin is built from: its points and style (ThinTwins). */
+interface TwinSource {
+  points: Float32Array;
+  style: { color: number; transparent: boolean; opacity: number };
+}
+
 /**
  * The panels' edges as one line per edge style (plain, selected, each faded or not), rebuilt only when `deps`
- * change; the lines it replaced are disposed then, and all of them by `dispose`. Each plain (1-pixel) line also has a
- * thin twin, a plain GL line of the same colour, width and points, drawn in its place while a slow drag turns the view
- * (`setThin`, orbiting.ts): a fat line draws each segment as its own instance, which costs a slow GPU most of a frame.
+ * change; the lines it replaced are disposed then, and all of them by `dispose`. Each plain (1-pixel) line keeps what
+ * its thin twin is built from (ThinTwins).
  */
 export class MergedEdges {
   private deps: readonly unknown[] | null = null;
   lines: LineSegments2[] = [];
-  /** The thin twins of the plain lines, hidden until `setThin(true)`. */
-  thin: LineSegments[] = [];
-  /** One unseen segment per twin that keeps its shader ready (sharing the twin's material). */
-  warm: LineSegments[] = [];
-  private twins: [LineSegments2, LineSegments][] = [];
   update(deps: readonly unknown[], items: () => readonly EdgeItem[]): LineSegments2[] {
     if (this.deps && deps.length === this.deps.length && deps.every((d, i) => d === this.deps![i]))
       return this.lines;
@@ -226,32 +226,60 @@ export class MergedEdges {
       // Display only, never picked (ADR-014).
       line.raycast = () => {};
       // The selection keeps its wider line in a drag too.
-      if (!selected) {
-        const twinGeometry = new BufferGeometry();
-        twinGeometry.setAttribute('position', new BufferAttribute(points, 3));
-        // Measured now, not lazily on the first frame it is drawn (the first frame of a drag).
-        twinGeometry.computeBoundingSphere();
-        const twin = new LineSegments(twinGeometry, new LineBasicMaterial(style));
-        twin.raycast = () => {};
-        twin.visible = false;
-        this.twins.push([line, twin]);
-        // The twin's first segment, moved far below the floor (beyond any camera's far plane), drawn in every frame
-        // with the twin's material and points: the GPU builds the twin's shader and pipeline and uploads its points
-        // with the still view, not on the first frame of a drag (a long task there on a slow GPU, drag-perf.mjs). It
-        // draws no pixel.
-        const warmGeometry = new BufferGeometry();
-        warmGeometry.setAttribute('position', twinGeometry.getAttribute('position'));
-        warmGeometry.setDrawRange(0, 2);
-        const warm = new LineSegments(warmGeometry, twin.material);
-        warm.position.y = -1e5;
-        warm.frustumCulled = false;
-        warm.raycast = () => {};
-        this.warm.push(warm);
-      }
+      if (!selected) line.userData.twin = { points, style } satisfies TwinSource;
       return line;
     });
-    this.thin = this.twins.map(([, twin]) => twin);
     return this.lines;
+  }
+  dispose() {
+    for (const l of this.lines) {
+      l.geometry.dispose();
+      l.material.dispose();
+    }
+    this.lines = [];
+    this.deps = null;
+  }
+}
+
+/**
+ * The thin twins of the plain edge lines: a plain GL line of the same colour and points as each, drawn in its place
+ * while a slow drag turns the view (`setThin`, orbiting.ts): a fat line draws each segment as its own instance, which
+ * costs a slow GPU most of a frame. Built from the lines (MergedEdges) in an effect and disposed in its cleanup, so a
+ * StrictMode remount builds them again (useThinTwins, G-605). A GL line is 1 device pixel wide (WebGL draws no wider
+ * line on most devices), while the fat line is 1 CSS pixel: on a 2x screen the twin is half as wide (G-605, recorded).
+ */
+export class ThinTwins {
+  /** The thin twins of the plain lines, hidden until `setThin(true)`. */
+  readonly thin: LineSegments[] = [];
+  /** One unseen segment per twin that keeps its shader ready (sharing the twin's material). */
+  readonly warm: LineSegments[] = [];
+  private readonly twins: [LineSegments2, LineSegments][] = [];
+  constructor(lines: readonly LineSegments2[]) {
+    for (const line of lines) {
+      const source = line.userData.twin as TwinSource | undefined;
+      if (!source) continue;
+      const twinGeometry = new BufferGeometry();
+      twinGeometry.setAttribute('position', new BufferAttribute(source.points, 3));
+      // Measured now, not lazily on the first frame it is drawn (the first frame of a drag).
+      twinGeometry.computeBoundingSphere();
+      const twin = new LineSegments(twinGeometry, new LineBasicMaterial(source.style));
+      twin.raycast = () => {};
+      twin.visible = false;
+      this.twins.push([line, twin]);
+      this.thin.push(twin);
+      // The twin's first segment, moved far below the floor (beyond any camera's far plane), drawn in every frame
+      // with the twin's material and points: the GPU builds the twin's shader and pipeline and uploads its points
+      // with the still view, not on the first frame of a drag (a long task there on a slow GPU, drag-perf.mjs). It
+      // draws no pixel.
+      const warmGeometry = new BufferGeometry();
+      warmGeometry.setAttribute('position', twinGeometry.getAttribute('position'));
+      warmGeometry.setDrawRange(0, 2);
+      const warm = new LineSegments(warmGeometry, twin.material);
+      warm.position.y = -1e5;
+      warm.frustumCulled = false;
+      warm.raycast = () => {};
+      this.warm.push(warm);
+    }
   }
   /** Draw the thin twins instead of the plain fat lines (true), or the fat lines again (false). */
   setThin(on: boolean) {
@@ -260,16 +288,16 @@ export class MergedEdges {
       twin.visible = on;
     }
   }
+  /** Disposes the twins and shows the fat lines again. */
   dispose() {
-    for (const l of [...this.lines, ...this.thin]) {
-      l.geometry.dispose();
-      (l.material as Material).dispose();
+    this.setThin(false);
+    for (const t of this.thin) {
+      t.geometry.dispose();
+      (t.material as Material).dispose();
     }
     for (const w of this.warm) w.geometry.dispose();
-    this.lines = [];
-    this.thin = [];
-    this.warm = [];
-    this.twins = [];
-    this.deps = null;
+    this.thin.length = 0;
+    this.warm.length = 0;
+    this.twins.length = 0;
   }
 }

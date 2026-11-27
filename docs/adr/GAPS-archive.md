@@ -4356,6 +4356,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low-medium
 
+### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
+
+- Status: Done (N418)
+- Origin: ADR-295, code-reviewer re-review of c61d8d0
+- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
+- Request: User 2026-11-26: review reports no open issues
+- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
+- Suggested pick: Add jsdom tests for the glue; build twins in an effect
+- Note: Done 2026-11-27 (N418): the glue moved to `src/viewer/dragGlue.ts` (skipDragMoves, trackPresses, useShadowFreeze, useThinTwins) and is tested in `tests/drag-glue.test.tsx` (jsdom, StrictMode); the thin twins are now `ThinTwins` (`src/viewer/panelResources.ts`), built in an effect, so StrictMode's simulated unmount and remount builds them again. The 1 device px thin twin vs the 1 CSS px fat line is recorded, not fixed: WebGL draws no GL line wider than 1 device pixel on most devices (`LineBasicMaterial.linewidth` is ignored), so matching the CSS width would need another fat line, which is what the twin exists to avoid; the twin is drawn only in a slow drag, which may also lower the pixel ratio toward 1.
+- Work: Low-medium
+- Impact: Low
+- Necessity: Medium
+
 ### G-607: Stale browser scripts: ui-polish and control-rule
 
 - Status: Done (N404)
