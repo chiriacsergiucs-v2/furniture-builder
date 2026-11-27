@@ -2109,18 +2109,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
 - Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
 
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Open
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
 
 - Status: Open

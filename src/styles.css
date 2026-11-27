@@ -5652,6 +5652,24 @@ p > .info-tip {
     height: 24px;
   }
 }
+/* A project's room drawings on a short landscape screen (G-601, 844 × 390): split with the results the plan and the
+   front view were about 20 px high. While the stage shows them alone (2D), it is at least 560 px high and the
+   results get a screen of their own below it; the work column scrolls and the side panel stays in sight. The 3D
+   view and Both keep the stage within the screen (ADR-295). */
+@media (min-width: 761px) and (max-width: 1180px) and (max-height: 500px) {
+  .app > .work:has(.views:not(.both) > .view.active > .plan-views) {
+    overflow-y: auto;
+    grid-template-rows:
+      max(calc(100dvh - var(--bar-h, 62px)), 560px)
+      calc(100dvh - var(--bar-h, 62px));
+  }
+  .work:has(.views:not(.both) > .view.active > .plan-views) > .side {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: calc(100dvh - var(--bar-h, 62px));
+  }
+}
 /* With touch, the compact steppers keep a 44 px hit area round their 28 × 24 face (ADR-114): an invisible box 8 px
    wider and 10 px taller on each side, which neither the counter nor the card clips; the counts sit 20 px apart, so
    two hit areas never meet. */

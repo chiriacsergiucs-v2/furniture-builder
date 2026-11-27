@@ -4186,6 +4186,18 @@ highest id in either file.
 - Impact: High
 - Necessity: High
 
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Done (N415)
+- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-604: Phone middle ground: layouts not measured (320 px edit bar, room drawings in short landscape)
 
 - Status: Done (N385: `tools/mobile-middle/find-it.mjs` 73/73, 320x640 edit bar and 844x390 room drawings passes; found G-601)
