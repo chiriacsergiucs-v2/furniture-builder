@@ -28,7 +28,7 @@ export interface Clearance {
  * edges; a single door on the side its hinge plates go on (the hinge schedule's panels, ADR-207). Null when the model
  * does not say (the plates' panel is in another piece, or the door is shaped or faces another way).
  */
-export function hingeSide(
+function hingeSide(
   model: FurnitureModel,
   p: FurnitureModel['panels'][number],
 ): 'left' | 'right' | null {

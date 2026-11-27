@@ -13,7 +13,7 @@ import { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE, SPLIT_TARGET } fro
 import { POSITION_MAX, POSITION_MIN } from './limits';
 
 /** What a binding target reads and writes on a project item (a `ProjectItem` is one). */
-export interface BindItem {
+interface BindItem {
   design: Design;
   position: { x: Mm; y: Mm; z: Mm };
   placement?: Placement;
