@@ -10,7 +10,7 @@ import { t } from '@furniture-builder/i18n';
  * dark, the direction of the default hovers). `--control-h` is not here: touch targets stay 44 px (ADR-114).
  * `light` and `dark` are the defaults in `src/styles.css` (`tests/theme-colours.test.ts` keeps them equal).
  */
-export type ColourSet = 'light' | 'dark';
+type ColourSet = 'light' | 'dark';
 type ThemeColour = {
   name: string;
   hover: string;
@@ -41,7 +41,7 @@ export const THEME_COLOURS: ThemeColour[] = [
 ];
 export const COLOUR_SETS: ColourSet[] = ['light', 'dark'];
 
-export type ColourValues = Record<ColourSet, Record<string, string>>;
+type ColourValues = Record<ColourSet, Record<string, string>>;
 const KEY = 'fb:theme-colours';
 const STYLE_ID = 'fb-theme-colours';
 const HEX = /^#[0-9a-f]{6}$/;
