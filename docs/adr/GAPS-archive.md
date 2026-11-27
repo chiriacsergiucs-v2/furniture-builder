@@ -4548,3 +4548,15 @@ highest id in either file.
 - Work: Low-medium
 - Impact: Low
 - Necessity: Low-medium
+
+### G-616: Diagonal corner doors are not an exact split
+
+- Status: Done (N445)
+- Origin: G-534 architecture check D1 (N439), 2026-11-27
+- Missing: src/core/corner.ts:341 gives all leftover millimetres to the right end gap: width 901 with two doors gives leaves 238 + 238 on a 477 mm opening, right gap 2 mm, left 1 mm (ADR-003 exact splits)
+- Request: Integer millimetres, exact splits (ADR-003)
+- Questions: Spread the leftover like other splits?
+- Suggested pick: Use the shared exact-split helper so leftovers spread as elsewhere; fuzz
+- Work: Low
+- Impact: Low
+- Necessity: Medium
