@@ -6129,15 +6129,16 @@ p > .info-tip {
 }
 
 /* On a phone the tool row is one row that scrolls sideways (audit F-30), so it covers one button's height of the
-   scene and no tool sits alone below. While a panel under it is open (Move to, Section cut) it wraps as before. */
+   scene and no tool sits alone below. While a panel under it is open (Move to, Section cut, the ⋯ menu) it wraps as
+   before: a scrolling row clips what hangs below it, and the ⋯ menu could not be seen or tapped (G-619). */
 @media (max-width: 760px) {
-  .three-tools:not(:has(.three-move-to, .section-tools)) {
+  .three-tools:not(:has(.three-move-to, .section-tools, .three-more[open])) {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-block: var(--s-1);
     scrollbar-width: none;
   }
-  .three-tools:not(:has(.three-move-to, .section-tools)) > * {
+  .three-tools:not(:has(.three-move-to, .section-tools, .three-more[open])) > * {
     flex: 0 0 auto;
   }
 }

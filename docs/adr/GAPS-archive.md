@@ -4560,3 +4560,15 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Medium
+
+### G-619: 3D more-actions menu clipped at 390 px
+
+- Status: Done (N446)
+- Origin: UI audit F-31 (G-589, N443), 2026-11-27
+- Missing: At 390 px the 3D view's more-actions menu (Export for AR, Export scene) opens but cannot be seen or tapped: the phone rule .three-tools { overflow-x: auto } in src/styles.css clips the panel; fine at 1280 px
+- Request: UI review
+- Questions: Render the menu outside the scrolling tool row?
+- Suggested pick: Portal the menu panel out of .three-tools on phones
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
