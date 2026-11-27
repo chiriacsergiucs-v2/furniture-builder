@@ -573,8 +573,11 @@ export function setDrawerCount(s: Space, count: number): Space {
   return { ...s, count, ...(heights ? { heights } : {}) };
 }
 
+/** Most parts one divided space holds (the inspector's Parts counter, the quick-count dividers). */
+export const MAX_SPLIT_PARTS = 8;
+
 export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
-  const n = Math.max(2, Math.min(8, Math.round(parts)));
+  const n = Math.max(2, Math.min(MAX_SPLIT_PARTS, Math.round(parts)));
   const first: Space = { ...s, id: newId(), front: null };
   // New parts start empty (ADR-089): a divider adds a divider and nothing else.
   const children: Space[] = [first, ...Array.from({ length: n - 1 }, () => makeSpace('empty'))];

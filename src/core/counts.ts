@@ -8,6 +8,7 @@ import {
   fr,
   holdsSomething,
   makeSpace,
+  MAX_SPLIT_PARTS,
   productRoots,
   setDrawerCount,
   splitSpace,
@@ -27,10 +28,10 @@ interface CountRow {
   target: string;
 }
 
-/** Same bounds as the inspector's counters (parts 2–8 → dividers 0–7, shelves 0–12, drawers 1–10). */
-export const MAX_DIVIDERS = 7;
-const MAX_SHELVES = 12;
-const MAX_DRAWERS = 10;
+/** The counters' bounds, one source for the inspector and the quick counts (parts 2–8 → dividers 0–7). */
+export const MAX_DIVIDERS = MAX_SPLIT_PARTS - 1;
+export const MAX_SHELVES = 12;
+export const MAX_DRAWERS = 10;
 
 const DIV: Record<'x' | 'y', { key: CountKey; label: string }> = {
   x: { key: 'vdiv', label: t('Vertical dividers') },

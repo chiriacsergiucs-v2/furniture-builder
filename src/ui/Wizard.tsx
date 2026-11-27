@@ -15,6 +15,7 @@ import { boardChoices } from '../core/boards';
 import { roleBoard } from '../core/finish';
 import type { Decor } from '../core/materials';
 import { cutlist } from '../core/cutlist';
+import { MAX_DRAWERS } from '../core/counts';
 import { snapshotSvg } from '../core/snapshot';
 import type { Design, FurnitureModel, Material } from '../core/types';
 import {
@@ -376,7 +377,7 @@ function FieldInput({
                   name={t('Drawers in compartment {n}', { n: i + 1 })}
                   value={c.drawers}
                   min={1}
-                  max={10}
+                  max={MAX_DRAWERS}
                   onChange={(n) => put(i, { ...c, drawers: n })}
                 />
               )}
