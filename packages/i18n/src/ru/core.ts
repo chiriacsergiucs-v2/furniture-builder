@@ -179,6 +179,16 @@ export const ru_core = {
     'Труба за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
   'Outlet behind {name} ({label}): cut the {part} or move the piece.':
     'Розетка за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
+  // ADR-299: outlets nearer than the distance the user set.
+  '{outlet} is {mm} mm from a sink cut-out, closer than the {limit} mm you set (your rule).':
+    '{outlet} в {mm} мм от выреза под мойку, ближе заданных вами {limit} мм (ваше правило).',
+  '{outlet} is {mm} mm from a hob cut-out, closer than the {limit} mm you set (your rule).':
+    '{outlet} в {mm} мм от выреза под варочную панель, ближе заданных вами {limit} мм (ваше правило).',
+  '{outlet} is {mm} mm from {pipe}, closer than the {limit} mm you set (your rule).':
+    '{outlet} в {mm} мм от трубы «{pipe}», ближе заданных вами {limit} мм (ваше правило).',
+  'Invalid outlet distances': 'Неверные расстояния от розеток',
+  'Outlet distances need project schemaVersion {v}':
+    'Для расстояний от розеток нужна версия схемы проекта {v}',
   'Invalid room': 'Неверная комната',
   'Room height must be whole mm': 'Высота комнаты должна быть в целых мм',
   'Room outline must be at least four whole-mm corners':

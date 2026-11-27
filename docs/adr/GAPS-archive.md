@@ -3341,6 +3341,22 @@ highest id in either file.
 - Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
 - Conflicts: none
 
+### G-406: Electrical rules for outlets
+
+- Status: Done (N426)
+- Origin: ADR-205, 2026-11-06; remainder of G-030 (not in its suggested pick)
+- Missing: No electrical rules: distances of outlets from sinks, hobs or water are not checked.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Which rules, and from which regulation? The app must not invent them (ADR-010).
+- Suggested pick: Only the distances the user enters, checked as warnings and labelled as the user's rule. (estimate: effort +20%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Outlets are not checked against sinks, hobs or water.
+- Fix: Add distances that the user enters, checked as warnings, with no built-in values.
+- Note: Built by ADR-299 (N426): `Room.outletDistances` (project schemaVersion 22), warning `outlet-near` labelled "(your rule)", empty = no check; evidence `tests/outlet-distances.test.ts` and `tests/find-it/outlet-distances.test.tsx`.
+- Conflicts: none
+
 ### G-407: Typed position for sink and hob cut-outs
 
 - Status: Done (ADR-209)

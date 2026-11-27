@@ -15,6 +15,7 @@ import {
   makeItem,
   newProject,
   PROJECT_SCHEMA,
+  SELLER_ITEMS_SINCE,
   validateProject,
   type Project,
   type ProjectItem,
@@ -397,10 +398,10 @@ describe('project seller items (ADR-210, G-313)', () => {
     expect(lines.some((l) => l.label.includes('Shelf pin 5 mm'))).toBe(true);
   });
 
-  it(`need project schemaVersion ${PROJECT_SCHEMA}; bad items are refused; older files without them load`, () => {
+  it(`need project schemaVersion ${SELLER_ITEMS_SINCE}; bad items are refused; older files without them load`, () => {
     const p = withItems();
-    expect(validateProject({ ...p, schemaVersion: PROJECT_SCHEMA - 1 })).toContain(
-      `Project seller items need project schemaVersion ${PROJECT_SCHEMA}`,
+    expect(validateProject({ ...p, schemaVersion: SELLER_ITEMS_SINCE - 1 })).toContain(
+      `Project seller items need project schemaVersion ${SELLER_ITEMS_SINCE}`,
     );
     expect(validateProject({ ...p, sellerItems: [{ ...leg, quantity: 0 }] })).toContain(
       'Invalid seller item',
@@ -410,7 +411,7 @@ describe('project seller items (ADR-210, G-313)', () => {
     );
     expect(validateProject({ ...p, sellerItems: 'x' })).toContain('Invalid seller items');
     const plain = project([{ d: tpl('base-door'), x: 0 }]);
-    for (const v of [1, PROJECT_SCHEMA - 1, PROJECT_SCHEMA])
+    for (const v of [1, SELLER_ITEMS_SINCE - 1, SELLER_ITEMS_SINCE, PROJECT_SCHEMA])
       expect(validateProject({ ...plain, schemaVersion: v }), `v${v}`).toEqual([]);
   });
 

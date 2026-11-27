@@ -34,6 +34,7 @@ import {
   featureBox,
   isService,
   outlineIssues,
+  outletDistanceChecks,
   roomChecks,
   serviceChecks,
   type Room,
@@ -369,9 +370,10 @@ export interface WorktopEdge {
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
  * construction locks (ADR-211), the project's own seller items (ADR-210), moulding profiles, request bindings and
- * repair fillers on run requests, cut-out positions and worktop edges (ADR-209).
+ * repair fillers on run requests, cut-out positions and worktop edges (ADR-209); 22 = the outlet distances the user
+ * sets on the room (ADR-299).
  */
-export const PROJECT_SCHEMA = 21 as const;
+export const PROJECT_SCHEMA = 22 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -393,6 +395,7 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   18,
   19,
   20,
+  21,
   PROJECT_SCHEMA,
 ];
 type ProjectSchemaVersion =
@@ -416,6 +419,7 @@ type ProjectSchemaVersion =
   | 18
   | 19
   | 20
+  | 21
   | typeof PROJECT_SCHEMA;
 export const RUN_REQUESTS_SINCE = 4;
 export const MODELS_SINCE = 5;
@@ -442,6 +446,7 @@ export const PIECE_LOCKS_SINCE = 21;
 export const SELLER_ITEMS_SINCE = 21;
 export const FOLLOW_UPS_SINCE = 21;
 export const OWNED_SINCE = 21;
+export const OUTLET_DISTANCES_SINCE = 22;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -1706,6 +1711,9 @@ export function buildProjectModel(input: Project): ProjectModel {
   diagnostics.push(
     ...cutoutChecks(project, placedById, 'sink'),
     ...cutoutChecks(project, placedById, 'hob'),
+    ...(project.room?.outletDistances
+      ? outletDistanceChecks(project.room, cutoutOutlines(project, pieces))
+      : []),
     ...worktopJointChecks(project),
     ...trimProfileChecks(project),
     ...worktopEdgeChecks(project),

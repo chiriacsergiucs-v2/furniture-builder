@@ -432,6 +432,12 @@ export const PRINT_RU = {
     'Труба за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
   'Priză în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
     'Розетка за {name} ({label}): сделайте вырез в {part} или переместите изделие.',
+  '{outlet} este la {mm} mm de decupajul chiuvetei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} в {mm} мм от выреза под мойку, ближе заданных вами {limit} мм (ваше правило).',
+  '{outlet} este la {mm} mm de decupajul plitei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} в {mm} мм от выреза под варочную панель, ближе заданных вами {limit} мм (ваше правило).',
+  '{outlet} este la {mm} mm de {pipe}, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} в {mm} мм от трубы «{pipe}», ближе заданных вами {limit} мм (ваше правило).',
   'Deschiderea raftului de {span} mm este mare pentru {name} de {t} mm și se poate îndoi (limită obișnuită {limit} mm — confirmați pentru placa și sarcina dvs.).':
     'Пролёт полки {span} мм велик для «{name}» {t} мм, полка может прогнуться (типичный предел {limit} мм — уточните для своей плиты и нагрузки).',
   'Ușă de {w} mm lățime; peste ~{max} mm (obișnuit) luați în calcul două uși.':
@@ -950,6 +956,12 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
     'Pipe behind {name} ({label}): cut the {part} or move the piece.',
   'Priză în spatele {name} ({label}): tăiați {part} sau mutați piesa.':
     'Outlet behind {name} ({label}): cut the {part} or move the piece.',
+  '{outlet} este la {mm} mm de decupajul chiuvetei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} is {mm} mm from a sink cut-out, closer than the {limit} mm you set (your rule).',
+  '{outlet} este la {mm} mm de decupajul plitei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} is {mm} mm from a hob cut-out, closer than the {limit} mm you set (your rule).',
+  '{outlet} este la {mm} mm de {pipe}, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).':
+    '{outlet} is {mm} mm from {pipe}, closer than the {limit} mm you set (your rule).',
   'Deschiderea raftului de {span} mm este mare pentru {name} de {t} mm și se poate îndoi (limită obișnuită {limit} mm — confirmați pentru placa și sarcina dvs.).':
     'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).',
   'Ușă de {w} mm lățime; peste ~{max} mm (obișnuit) luați în calcul două uși.':

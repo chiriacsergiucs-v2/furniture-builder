@@ -25,6 +25,7 @@ import {
   placementIssues,
   PROJECT_SCHEMA,
   PROJECT_SCHEMAS,
+  SURFACES_SINCE,
   resolvePlacements,
   validateProject,
   type Project,
@@ -139,10 +140,10 @@ describe('floor background (ADR-208 item 2)', () => {
     expect(
       validateProject({
         ...plain,
-        schemaVersion: (PROJECT_SCHEMA - 1) as never,
+        schemaVersion: (SURFACES_SINCE - 1) as never,
         room: { ...plain.room!, floor },
       }),
-    ).toContain(`Floor backgrounds need project schemaVersion ${PROJECT_SCHEMA}`);
+    ).toContain(`Floor backgrounds need project schemaVersion ${SURFACES_SINCE}`);
   });
   it('a floor picture covers its fit in plan mm (x, then z as y), else the outline’s bounds', () => {
     const r = room();
@@ -262,8 +263,8 @@ describe('plan picture to trace over (ADR-208 item 5)', () => {
       expect(planPictureProblems(bad)).toEqual(['Invalid plan picture']);
       expect(validateProject({ ...p, planPicture: bad })).toContain('Invalid plan picture');
     }
-    expect(validateProject({ ...p, schemaVersion: (PROJECT_SCHEMA - 1) as never })).toContain(
-      `Plan pictures need project schemaVersion ${PROJECT_SCHEMA}`,
+    expect(validateProject({ ...p, schemaVersion: (SURFACES_SINCE - 1) as never })).toContain(
+      `Plan pictures need project schemaVersion ${SURFACES_SINCE}`,
     );
   });
   it('Set the scale: two taps on the plan set a and b in one undo step; the same pixel twice changes nothing and keeps scaling on', () => {
@@ -352,8 +353,8 @@ describe('placed 3D models (ADR-208 item 6)', () => {
       expect(() => validateProject(bad)).not.toThrow();
       expect(validateProject(bad)).toContain('Invalid 3D model item');
     }
-    expect(validateProject({ ...ok, schemaVersion: (PROJECT_SCHEMA - 1) as never })).toContain(
-      `Placed 3D models need project schemaVersion ${PROJECT_SCHEMA}`,
+    expect(validateProject({ ...ok, schemaVersion: (SURFACES_SINCE - 1) as never })).toContain(
+      `Placed 3D models need project schemaVersion ${SURFACES_SINCE}`,
     );
   });
   it('drag snaps to walls, pieces and other models within range; whole mm; Snap off moves in 10 mm steps', () => {

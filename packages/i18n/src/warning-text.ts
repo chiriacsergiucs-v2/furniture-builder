@@ -121,6 +121,12 @@ export const WARNING_RO = {
     'Țeavă în spatele {name} ({label}): tăiați {part} sau mutați piesa.',
   'Outlet behind {name} ({label}): cut the {part} or move the piece.':
     'Priză în spatele {name} ({label}): tăiați {part} sau mutați piesa.',
+  '{outlet} is {mm} mm from a sink cut-out, closer than the {limit} mm you set (your rule).':
+    '{outlet} este la {mm} mm de decupajul chiuvetei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).',
+  '{outlet} is {mm} mm from a hob cut-out, closer than the {limit} mm you set (your rule).':
+    '{outlet} este la {mm} mm de decupajul plitei, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).',
+  '{outlet} is {mm} mm from {pipe}, closer than the {limit} mm you set (your rule).':
+    '{outlet} este la {mm} mm de {pipe}, mai aproape decât cei {limit} mm stabiliți de dvs. (regula dvs.).',
   'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).':
     'Deschiderea raftului de {span} mm este mare pentru {name} de {t} mm și se poate îndoi (limită obișnuită {limit} mm — confirmați pentru placa și sarcina dvs.).',
   'Door {w} mm wide; over ~{max} mm (typical) consider two doors.':
