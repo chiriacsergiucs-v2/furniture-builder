@@ -536,21 +536,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Leave angled pieces out of runs; run parts are straight boards along a wall.
 - Conflicts: none
 
-### G-201: Pictures and 3D models in design codes
-
-- Status: Open
-- Origin: ADR-124 (scope)
-- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
-- Request: Accept default, /batch all ready
-- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
-- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
-- Fix: Keep codes document-only; the project file carries pictures and models.
-- Conflicts: none
-
 ### G-202: Replace and the outer size
 
 - Status: Open

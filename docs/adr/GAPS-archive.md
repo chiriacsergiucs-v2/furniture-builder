@@ -1700,6 +1700,22 @@ highest id in either file.
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
 
+### G-201: Pictures and 3D models in design codes
+
+- Status: Done (N438)
+- Note: 2026-11-27 (N438, user 2026-11-27 "Also do the medium work", suggested pick "Document-only"): codes stay document-only. The Code dialog's info tip already says "Pictures and 3D models stay on this device; a project file carries them." (`src/ui/ShareCode.tsx:54-58`, Russian entry `packages/i18n/src/ru/account.ts:142-143`); docs/architecture.md now explains it; `tests/share-code.test.ts` proves a picture travels only as its id reference.
+- Origin: ADR-124 (scope)
+- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
+- Request: Accept default, /batch all ready
+- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
+- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
+- Fix: Keep codes document-only; the project file carries pictures and models.
+- Conflicts: none
+
 ### G-203: Wizard and template pieces and the project settings
 
 - Status: Done (ADR-170)
