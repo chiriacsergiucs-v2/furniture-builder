@@ -197,6 +197,8 @@ function buildDiagonal(
     grainAxis: Panel['grainAxis'],
     banded: Face[],
     shape?: Panel['shape'],
+    /** A hinged door (ADR-304): the role does not say it. */
+    front?: Panel['front'],
   ) =>
     local.panels.push({
       id: `${id}/${key}`,
@@ -209,6 +211,7 @@ function buildDiagonal(
       grainAxis,
       banded,
       ...(shape ? { shape } : {}),
+      ...(front ? { front } : {}),
     });
   if (bt) {
     add('back-a', 'back', 'Back (back wall)', backM.id, box(0, ph, 0, W, H - ph, bt), 'z', 'x', []);
@@ -355,6 +358,7 @@ function buildDiagonal(
         'y',
         ['-x', '+x', '-y', '+y'],
         { kind: 'tilt', axis: 'y', angleDeg: 45, pivot: [0, 0, 0] },
+        'hinged',
       );
       // The handle on the opening edge, by the cabinet's rule (ADR-196): the meeting edges of a pair, else the
       // edge away from the hinge. Mirroring for a right-hand corner flips it with the door.

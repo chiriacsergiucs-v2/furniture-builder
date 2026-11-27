@@ -3760,6 +3760,17 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 
+### G-492: Some checks still match English panel labels
+
+- Status: Done (N433)
+- Origin: ADR-225 Out of scope, 2026-11-07 (architecture review I-07)
+- Missing: Label regexes in clearance.ts, build.ts, shape.ts, replace.ts and assembly.ts that have no panel role or kind field to key on stay as regexes after ADR-225.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should Panel get a role field for every label a check matches (a model-shape change)?
+- Suggested pick: Add the role field only where a check needs it, in a follow-up ADR (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low
+
 ### G-493: Saved-row list functions still return whole rows
 
 - Status: Done (N392)

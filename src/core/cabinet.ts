@@ -299,6 +299,8 @@ export function buildCabinet(
     grainAxis: Panel['grainAxis'],
     banded: Face[],
     index?: number,
+    /** What the role does not say (ADR-304): the kind of front, a pair door's hinge side, the drawer number. */
+    tag?: Pick<Panel, 'front' | 'hinge' | 'drawer'>,
   ) => {
     const node = nodeId === opts.productNodeId ? nodeId : mapNode(nodeId);
     // Open both sides (ADR-292): a part banded on its front edge is banded on its rear edge too.
@@ -314,6 +316,7 @@ export function buildCabinet(
       thicknessAxis,
       grainAxis,
       banded,
+      ...tag,
     });
   };
   /** Attach handle holes to the front that was just added (positions from the front's left/bottom edges). */
@@ -684,6 +687,7 @@ export function buildCabinet(
             'y',
             ['-x', '+x', '-y', '+y'],
             i,
+            { front: 'sliding' },
           );
           placeHandle(s.handle, 'door', w, h, i % 2 === 0 ? 'right' : 'left', s.id);
           if (w < 100 || h < 100)
@@ -714,6 +718,8 @@ export function buildCabinet(
         'z',
         'x',
         ['-x', '+x', '-y', '+y'],
+        undefined,
+        { front: fl.direction === 'up' ? 'flap-up' : 'flap-down' },
       );
       // A bar across the flap, centred, 40 mm from its free edge (ADR-196): not beside the hinge.
       placeHandle(s.handle, 'drawer', w, h, null, s.id, defaultHandlePosition(fl));
@@ -772,6 +778,7 @@ export function buildCabinet(
           'y',
           ['-x', '+x', '-y', '+y'],
           i,
+          n === 1 ? { front: 'hinged' } : { front: 'hinged', hinge: i === 0 ? 'left' : 'right' },
         );
         placeHandle(s.handle, 'door', w, h, openEdge, s.id);
         if (w < 100 || h < 100)
@@ -1047,6 +1054,7 @@ export function buildCabinet(
               'x',
               ['-x', '+x', '-y', '+y'],
               0,
+              { front: 'fixed' },
             );
             frontTop -= fh + g;
             slotTop = slotBottom;
@@ -1103,6 +1111,7 @@ export function buildCabinet(
             'x',
             [],
             i,
+            { drawer: k },
           );
           const ph2 = bh - tbot,
             py = by + tbot;
@@ -1116,6 +1125,7 @@ export function buildCabinet(
             'z',
             ['+y'],
             2 * i,
+            { drawer: k },
           );
           add(
             s.id,
@@ -1127,6 +1137,7 @@ export function buildCabinet(
             'z',
             ['+y'],
             2 * i + 1,
+            { drawer: k },
           );
           const u = i === 0 && !fixed ? s.uCut : null;
           if (u) {
@@ -1176,6 +1187,7 @@ export function buildCabinet(
               'x',
               ['+y'],
               100,
+              { drawer: k },
             );
             add(
               s.id,
@@ -1187,6 +1199,7 @@ export function buildCabinet(
               'x',
               ['+y'],
               101,
+              { drawer: k },
             );
             add(
               s.id,
@@ -1198,6 +1211,7 @@ export function buildCabinet(
               'z',
               ['+y'],
               102,
+              { drawer: k },
             );
             add(
               s.id,
@@ -1209,6 +1223,7 @@ export function buildCabinet(
               'z',
               ['+y'],
               103,
+              { drawer: k },
             );
             add(
               s.id,
@@ -1220,6 +1235,7 @@ export function buildCabinet(
               'x',
               ['+y'],
               104,
+              { drawer: k },
             );
             warn(
               'u-cut-trap',
@@ -1240,6 +1256,7 @@ export function buildCabinet(
               'x',
               ['+y'],
               i,
+              { drawer: k },
             );
           // ADR-192: with `innerFront: false` the drawer front closes the box; drawers behind doors keep theirs.
           if (ds.innerFront !== false || internal)
@@ -1253,6 +1270,7 @@ export function buildCabinet(
               'x',
               ['+y'],
               i,
+              { drawer: k },
             );
           if (!internal) {
             const fh = frontHeights[i];
@@ -1266,6 +1284,7 @@ export function buildCabinet(
               'x',
               ['-x', '+x', '-y', '+y'],
               i,
+              { drawer: k },
             );
             placeHandle(s.handle, 'drawer', fz.x1 - fz.x0, fh, null, s.id);
             frontTop -= fh + g;

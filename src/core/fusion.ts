@@ -23,7 +23,7 @@ export function fusionGroups(model: FurnitureModel): FusionGroup[] {
   for (const p of model.panels) {
     if (p.role === 'door') doors.push(p);
     else if (p.role.startsWith('drawer')) {
-      const n = /^Drawer (\d+)/.exec(p.label)?.[1] ?? '?';
+      const n = p.drawer ?? '?';
       const key = `${p.nodeId}#${n}`;
       drawers.set(key, [...(drawers.get(key) ?? []), p]);
     } else carcass.push(p);
