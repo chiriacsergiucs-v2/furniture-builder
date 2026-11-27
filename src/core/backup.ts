@@ -177,6 +177,8 @@ interface Existing {
   templates: LocalTemplate[];
   /** Keys already stored in every other table. */
   keys: Partial<Record<BackupTable, Set<string>>>;
+  /** Every id stored for designs, projects and templates, unreadable rows included (never overwritten, ADR-012). */
+  ids?: Partial<Record<'designs' | 'projects' | 'templates', Set<string>>>;
 }
 
 /** An item's content without its id and save time: a restored copy of it counts as the same item. */
@@ -187,9 +189,11 @@ const print = (doc: unknown): string => {
 
 /**
  * Restore never deletes or overwrites a saved row (ADR-012). An item identical to a saved one is skipped; every
- * other design, project or template is restored as a new copy with a new id (ADR-011, G-244). Other rows (pictures,
- * 3D models, prices …) are added only when their key is free, so designs still find their pictures, and only when they
- * have their table's shape (G-542). Invalid files are listed by name, never thrown.
+ * other design, project or template is restored as a copy (G-244) that keeps its id while nothing on the device (or
+ * earlier in the same restore) uses it, so kept versions and template links find it again (G-282), and gets a new
+ * id otherwise (ADR-011). Other rows (pictures, 3D models, prices …) are added only when their key is free, so
+ * designs still find their pictures, and only when they have their table's shape (G-542). Invalid files are listed
+ * by name, never thrown.
  */
 export function planRestore(files: BackupFile[], existing: Existing): RestorePlan {
   const plan: RestorePlan = { actions: [], skipped: [], identical: 0 };
@@ -197,6 +201,14 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
     designs: new Set(existing.designs.map(print)),
     projects: new Set(existing.projects.map(print)),
     templates: new Set(existing.templates.map(print)),
+  };
+  const taken = {
+    designs: new Set([...existing.designs.map((d) => d.id), ...(existing.ids?.designs ?? [])]),
+    projects: new Set([...existing.projects.map((d) => d.id), ...(existing.ids?.projects ?? [])]),
+    templates: new Set([
+      ...existing.templates.map((d) => d.id),
+      ...(existing.ids?.templates ?? []),
+    ]),
   };
   const keys = new Map<string, Set<string>>(
     Object.entries(existing.keys).map(([t, s]) => [t, new Set(s)]),
@@ -231,7 +243,8 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
         continue;
       }
       seen[table].add(print(doc));
-      const copy = { ...doc, id: newId() };
+      const copy = { ...doc, id: taken[table].has(doc.id) ? newId() : doc.id };
+      taken[table].add(copy.id);
       if (table === 'designs') plan.actions.push({ table, design: copy as Design });
       else if (table === 'projects') plan.actions.push({ table, project: copy as Project });
       else plan.actions.push({ table, template: copy as LocalTemplate });

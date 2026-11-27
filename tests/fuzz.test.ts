@@ -24,7 +24,7 @@ import { bandFor } from '../src/core/materials';
 import { frameDefaults, solidMaterials } from '../src/core/design';
 import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape';
 import { catalogFamilies, insertable, insertVariant } from '../src/core/catalog';
-import { carryEdits, resolveItem, settingsDiff, SIZE_SKIP, syncRef } from '../src/core/ownEdits';
+import { carryEdits, resolveItem, settingsDiff, syncRef } from '../src/core/ownEdits';
 import {
   buildProjectModel,
   makeItem,
@@ -835,7 +835,7 @@ it(
         // Carried onto another catalog item: never a new validation problem (G-160).
         const other = pick(variants);
         const target = insertVariant(other.f, other.v)!;
-        const carried = carryEdits(target, item.ref!.overrides, SIZE_SKIP).design;
+        const carried = carryEdits(target, item.ref!.overrides).design;
         if (!validateDesign(target).length && validateDesign(carried).length)
           probs.push(`carry-invalid ${f.id}/${v.id} → ${other.f.id}/${other.v.id}`);
       } catch (e) {
