@@ -3,6 +3,7 @@
  * (bani, cents) so sums are exact. A missing price is listed by name and the total is marked incomplete.
  */
 import { t } from '@furniture-builder/i18n';
+import { csvLines } from './csv';
 import type { ShopLine, ShopUnit } from './shopping-types';
 import type { SellerPrice } from './sellers';
 import type { ProductRef } from './types';
@@ -252,10 +253,7 @@ export function pricesCsv(list: PriceEntry[]): string {
 export function parsePricesCsv(text: string): { prices: PriceEntry[]; problems: string[] } {
   const prices: PriceEntry[] = [],
     problems: string[] = [];
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((l) => l.trim());
+  const lines = csvLines(text);
   let four: boolean | null = null;
   lines.forEach((line, i) => {
     if (i === 0 && /^kind;key;unit;price/i.test(line)) {

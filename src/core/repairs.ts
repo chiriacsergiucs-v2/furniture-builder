@@ -34,6 +34,7 @@ import {
   type RunRequest,
 } from './project';
 import { boxInside, movesInside, ROOM_FIT_CODES } from './room';
+import { sizeOn, startOn } from './geometry';
 import type { Box, Diagnostic, Material, Mm } from './types';
 
 export interface Repair {
@@ -364,8 +365,8 @@ function apartCandidate(
   const axis: 'x' | 'z' = pc.facing.axis === 'z' ? 'x' : 'z';
   const others = pm.pieces.filter((o) => o.item.id !== pc.item.id);
   const m = pc.bounds;
-  const lo = (b: Box) => (axis === 'x' ? b.x : b.z);
-  const len = (b: Box) => (axis === 'x' ? b.w : b.d);
+  const lo = (b: Box) => startOn(b, axis);
+  const len = (b: Box) => sizeOn(b, axis);
   // The spots to try: 1 mm off where it is, and 1 mm past each other piece's edge, in this direction.
   const shifts = new Set<number>([dir]);
   for (const o of others.map((x) => x.bounds)) {

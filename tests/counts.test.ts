@@ -1,8 +1,14 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
-import { countRows, countSubject, stepCount, type CountKey } from '../src/core/counts';
-import { splitSpace, templates } from '../src/core/design';
+import {
+  countRows,
+  countSubject,
+  MAX_DIVIDERS,
+  stepCount,
+  type CountKey,
+} from '../src/core/counts';
+import { makeSpace, MAX_SPLIT_PARTS, splitSpace, templates } from '../src/core/design';
 import type { Design, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
@@ -212,5 +218,13 @@ describe('a new divided part starts empty (ADR-089)', () => {
     const s = splitSpace(interior(byTemplate('bookcase')), 'y', 4);
     if (s.kind !== 'split') throw Error();
     expect(s.children.slice(1).map((c) => c.kind)).toEqual(['empty', 'empty', 'empty']);
+  });
+});
+
+describe('one source for the counter bounds (G-570 M2)', () => {
+  it('splitSpace caps at MAX_SPLIT_PARTS, the dividers row at one less', () => {
+    const s = splitSpace(makeSpace('empty'), 'x', 99);
+    expect(s.kind === 'split' && s.children.length).toBe(MAX_SPLIT_PARTS);
+    expect(MAX_DIVIDERS).toBe(MAX_SPLIT_PARTS - 1);
   });
 });

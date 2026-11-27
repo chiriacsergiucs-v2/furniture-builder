@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { catalogFamilies, insertable, insertVariant } from '../src/core/catalog';
-import { snapshotSvg } from '../src/core/snapshot';
+import { snapshotSvg, svgDataUrl } from '../src/core/snapshot';
 import type { FurnitureModel, Material, Panel } from '../src/core/types';
 
 /**
@@ -100,5 +100,14 @@ describe('snapshot renderer', () => {
     expect(snapshotSvg(m, catalogFamilies[0].variants[0].create!().materials, 200)).toBe(a);
     const [, w, h] = /viewBox="0 0 (\d+) (\d+)"/.exec(a)!.map(Number);
     expect(Math.max(w, h)).toBe(200);
+  });
+});
+
+describe('svgDataUrl (G-570 M5)', () => {
+  it('encodes an SVG as a utf-8 data URL that decodes back', () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"><text>#ă</text></svg>';
+    const url = svgDataUrl(svg);
+    expect(url.startsWith('data:image/svg+xml;charset=utf-8,')).toBe(true);
+    expect(decodeURIComponent(url.split(',')[1])).toBe(svg);
   });
 });

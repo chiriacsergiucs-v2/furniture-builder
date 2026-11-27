@@ -629,3 +629,14 @@ export function GuidanceTip({
     </InfoTip>
   );
 }
+
+/** An error said in one line with its icon, nothing when there is none (G-570 M6). */
+export function ErrorAlert({ message }: { message: string | null | undefined }) {
+  if (!message) return null;
+  return (
+    <p className="alert error" role="alert">
+      <Icon name="alert-circle" className="sm" />
+      <span>{message}</span>
+    </p>
+  );
+}

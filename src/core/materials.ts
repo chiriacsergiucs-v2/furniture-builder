@@ -1,4 +1,6 @@
 import { t } from '@furniture-builder/i18n';
+import { csvLines, csvSeparator } from './csv';
+import { isHexColour } from './guards';
 import type {
   EdgeBand,
   EdgeBandKind,
@@ -242,12 +244,9 @@ export function parseDecorList(
   text: string,
   list: string,
 ): { decors: Decor[]; problems: string[] } {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((l) => l.trim());
+  const lines = csvLines(text);
   if (!lines.length) return { decors: [], problems: [t('The file is empty.')] };
-  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
+  const sep = csvSeparator(lines[0]);
   const head = splitLine(lines[0], sep).map((h) => HEADERS[norm(h)]);
   const missing = ['maker', 'kind', 'code', 'name', 'thickness', 'color'].filter(
     (k) => !head.includes(k as never),
@@ -285,7 +284,7 @@ export function parseDecorList(
           ? t('no name')
           : !(Number.isSafeInteger(thickness) && thickness >= 1 && thickness <= 200)
             ? t('thickness "{v}" is not whole mm from 1 to 200', { v: get('thickness') })
-            : !/^#[0-9a-fA-F]{6}$/.test(color)
+            : !isHexColour(color)
               ? t('color "{v}" is not #rrggbb', { v: color })
               : null;
     if (why) {
@@ -413,12 +412,9 @@ const BAND_COLUMN_NAME: Record<BandColumn, string> = {
  * listed; never throws (ADR-008).
  */
 export function parseBandList(text: string, list: string): { bands: Band[]; problems: string[] } {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((l) => l.trim());
+  const lines = csvLines(text);
   if (!lines.length) return { bands: [], problems: [t('The file is empty.')] };
-  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
+  const sep = csvSeparator(lines[0]);
   const head = splitLine(lines[0], sep).map((h) => BAND_HEADERS[norm(h)]);
   const missing = BAND_REQUIRED.filter((k) => !head.includes(k));
   if (missing.length)
@@ -463,7 +459,7 @@ export function parseBandList(text: string, list: string): { bands: Band[]; prob
                     v: widthText,
                     max: BAND_MAX_WIDTH,
                   })
-                : !/^#[0-9a-fA-F]{6}$/.test(color)
+                : !isHexColour(color)
                   ? t('color "{v}" is not #rrggbb', { v: color })
                   : null;
     if (why || thickness === null) {
@@ -515,8 +511,7 @@ export function validateDecor(v: unknown): v is Decor {
     typeof d.name === 'string' &&
     Number.isSafeInteger(d.thickness) &&
     (d.thickness as number) >= 1 &&
-    typeof d.color === 'string' &&
-    /^#[0-9a-fA-F]{6}$/.test(d.color) &&
+    isHexColour(d.color) &&
     typeof d.list === 'string'
   );
 }
@@ -553,9 +548,7 @@ export const bandFromList = (b: Band): EdgeBand => ({
 });
 
 const rgb = (hex: string) =>
-  /^#[0-9a-f]{6}$/i.test(hex)
-    ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-    : [128, 128, 128];
+  isHexColour(hex) ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) : [128, 128, 128];
 const colourDistance = (a: string, b: string) => {
   const [x, y] = [rgb(a), rgb(b)];
   return x.reduce((s, v, i) => s + (v - y[i]) ** 2, 0);

@@ -4189,6 +4189,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-570: Reuse findings M1 to M10
+
+- Status: Done (N429)
+- Note: 2026-11-27 (N429): the round 1 report (.tmp/current/reuse-hunting-report.md) is not in the repo, so M1-M10 are numbered in the order of the Missing line. Built, one commit each: M7 MaterialDialog uses MATERIAL_ROLES; M1 fastenerPerOk, fastenerEdgeOk, fastenerSpacingOk (src/core/fasteners.ts) used by validFastenerChoice and the Fasteners form; M2 MAX_SHELVES, MAX_DRAWERS (src/core/counts.ts) and MAX_SPLIT_PARTS (src/core/design.ts) used by Inspector and Wizard counters; M4 isTile exported from surface.ts, isHexColour and isInt in guards.ts; M3 sizeOn, startOn, endOn in geometry.ts replace the copies in align, arrange, frame, fusion, merge, project, repairs, surface, template; M5 mixPicture, MixCardFrame, RefineFields, RowAndTallChoices (src/ui/fillParts.tsx) and svgDataUrl (src/core/snapshot.ts); M6 ErrorAlert (src/ui/controls.tsx) for the copied error line in nine UI files; M8 readLocal and writeLocal (src/persist/localPrefs.ts) in 20 files, keys unchanged; M9 stubMatchMedia (tests/helpers/matchMedia.ts) and the setup.tsx helpers in place of copies; M10 csvLines and csvSeparator (src/core/csv.ts). Kept apart because they differ: themeColours accepts lowercase hex only; the assistant's isInt accepts unsafe integers; Sheets accepts 3-digit hex; langInit's boot read sets two values in one try; splitRow (prices) and splitLine (materials) differ in quoting and the neutralising quote; the addPiece copies in group-size and selected-piece skip Place to the right and the All pieces step; audit-rest's toProjects matches Russian names. Not done: the row-button body (glyph, title, sub line, chevron) repeated 17 times in 9 UI files, which M6 may have meant; its variants (picture or icon glyph, num sub lines, extra lines, drag props) need several slots (Work Medium).
+- Origin: Reuse health check round 1, 2026-11-20 (medium)
+- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
+- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+
 ### G-571: Reuse findings L1 to L8
 
 - Status: Done (PR #329, N388)

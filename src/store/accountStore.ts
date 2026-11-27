@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { AccountUser, KnownAccount, RemoteRecord } from '../core/account';
 import { isHttpsOrigin } from '../core/origin';
 import type { ItemSyncState, LocalTable } from '../core/sync';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * The account as the UI sees it (ADR-134, ADR-136, ADR-139, ADR-142). No network here: the online chunk
@@ -57,22 +58,11 @@ interface AccountState {
 const CURRENT_KEY = 'fb:account';
 const KNOWN_KEY = 'fb:accounts';
 
-const read = <T>(key: string, fallback: T): T => {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? (JSON.parse(v) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-const write = (key: string, v: unknown) => {
-  try {
-    if (v === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(v));
-  } catch {
-    /* storage blocked: remembered for this visit only */
-  }
-};
+const read = <T>(key: string, fallback: T): T =>
+  readLocal(key, (v) => (v ? (JSON.parse(v) as T) : fallback), fallback);
+/** Storage blocked: remembered for this visit only. */
+const write = (key: string, v: unknown) =>
+  void writeLocal(key, v === null ? null : JSON.stringify(v));
 
 export const backendConfigured = (): boolean => {
   const url = import.meta.env.VITE_SUPABASE_URL;

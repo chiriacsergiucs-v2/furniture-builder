@@ -1,5 +1,6 @@
 import { t } from '@furniture-builder/i18n';
-import { inPlaneAxes } from './geometry';
+import { isInt } from './guards';
+import { inPlaneAxes, sizeOn } from './geometry';
 import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types';
 
 /**
@@ -80,8 +81,8 @@ export function defaultTile(w: number, h: number): { tileLength: Mm; tileWidth: 
   return { tileLength: DEFAULT_TILE_LENGTH, tileWidth };
 }
 
-const isTile = (v: unknown) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= 1 && v <= MAX_TILE;
+/** A picture size: whole mm from 1 to `MAX_TILE`. */
+export const isTile = (v: unknown) => isInt(v, 1, MAX_TILE);
 
 /** Problems with a stored picture reference (design validation). */
 export function materialImageProblems(img: unknown): string[] {
@@ -97,8 +98,6 @@ export function materialImageProblems(img: unknown): string[] {
     errs.push(t('picture turn must be true or false'));
   return errs;
 }
-
-const size = (p: Panel, a: Axis) => (a === 'x' ? p.box.w : a === 'y' ? p.box.h : p.box.d);
 
 /** The axis the picture's width runs along on this part: its grain axis, or the other in-plane axis when turned. */
 export function imageRunAxis(p: Panel, img: Pick<MaterialImage, 'turn'>): Axis {
@@ -143,8 +142,8 @@ export function boxUvs(p: Panel, img: MaterialImage): number[] {
   const out: number[] = [];
   for (const f of BOX_FACES) {
     const m = faceMapping(p, img, f.s, f.t);
-    const S = size(p, f.s),
-      T = size(p, f.t);
+    const S = sizeOn(p.box, f.s),
+      T = sizeOn(p.box, f.t);
     // BoxGeometry writes each face's corners as (0,1) (1,1) (0,0) (1,0).
     for (const [a, b] of [
       [0, 1],

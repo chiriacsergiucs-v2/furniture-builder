@@ -8,6 +8,7 @@ import type { Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 import { useUi } from '../src/store/uiStore';
 import { StructureTree } from '../src/ui/StructureTree';
+import { stubMatchMedia } from './helpers/matchMedia';
 
 const interior = (): Space => {
   const root = splitSpace({ id: 'r', kind: 'empty' } as Space, 'x', 2);
@@ -18,13 +19,7 @@ const interior = (): Space => {
 let phone = false;
 beforeEach(() => {
   phone = false;
-  window.matchMedia = ((q: string) =>
-    ({
-      matches: phone,
-      media: q,
-      addEventListener() {},
-      removeEventListener() {},
-    }) as never) as never;
+  stubMatchMedia(() => phone);
   useUi.setState({ treeOpen: [], groupOpen: {} });
   useDesign.getState().load(cabinet('c', {}, interior()));
 });

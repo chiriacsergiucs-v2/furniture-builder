@@ -10,6 +10,7 @@
 import { t } from '@furniture-builder/i18n';
 import { groupOf, movedTo } from './selection';
 import { moveBlocked, boundsOf, pieceName, type Project, type ProjectItem } from './project';
+import { endOn, sizeOn, startOn } from './geometry';
 import type { Box } from './types';
 
 export type AlignHow = 'left' | 'centre' | 'right' | 'back' | 'front' | 'top' | 'bottom';
@@ -144,9 +145,6 @@ function wallAxes(it: ProjectItem | undefined): WallAxes {
       return { along: 'x', depth: 'z', left: -1, back: -1 };
   }
 }
-const lo = (b: Box, a: 'x' | 'z') => b[a];
-const len = (b: Box, a: 'x' | 'z') => (a === 'x' ? b.w : b.d);
-const hi = (b: Box, a: 'x' | 'z') => b[a] + len(b, a);
 /** An offset of `v` mm on axis `a`, as `shiftEach` takes it. */
 const on = (a: 'x' | 'z', v: number) => (a === 'x' ? { dx: v, dz: 0 } : { dx: 0, dz: v });
 const itemOf = (project: Project, id: string) => project.items.find((i) => i.id === id);
@@ -199,7 +197,7 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
   }
   // Along the wall the first piece stands on (ADR-251): its own left, right and back, on its wall's axes.
   const ax = wallAxes(itemOf(project, known[0]));
-  const edge = (b: Box, a: 'x' | 'z', side: 1 | -1) => (side < 0 ? lo(b, a) : hi(b, a));
+  const edge = (b: Box, a: 'x' | 'z', side: 1 | -1) => (side < 0 ? startOn(b, a) : endOn(b, a));
   const target = (b: Box): { dx: number; dz: number } => {
     switch (how) {
       case 'left':
@@ -211,9 +209,9 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
       case 'centre':
         return on(
           ax.along,
-          lo(ref, ax.along) +
-            Math.floor((len(ref, ax.along) - len(b, ax.along)) / 2) -
-            lo(b, ax.along),
+          startOn(ref, ax.along) +
+            Math.floor((sizeOn(ref, ax.along) - sizeOn(b, ax.along)) / 2) -
+            startOn(b, ax.along),
         );
       case 'back':
         return on(ax.depth, edge(ref, ax.depth, ax.back) - edge(b, ax.depth, ax.back));
@@ -311,21 +309,22 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
       continue;
     }
     const order = [...row].sort(
-      (a, b) => lo(box.get(a)!, ax) - lo(box.get(b)!, ax) || lead.indexOf(a) - lead.indexOf(b),
+      (a, b) =>
+        startOn(box.get(a)!, ax) - startOn(box.get(b)!, ax) || lead.indexOf(a) - lead.indexOf(b),
     );
     spaced.push(order);
     const first = box.get(order[0])!,
       last = box.get(order[order.length - 1])!;
-    const widths = order.map((id) => len(box.get(id)!, ax));
-    const free = hi(last, ax) - lo(first, ax) - widths.reduce((a, w) => a + w, 0);
+    const widths = order.map((id) => sizeOn(box.get(id)!, ax));
+    const free = endOn(last, ax) - startOn(first, ax) - widths.reduce((a, w) => a + w, 0);
     const n = order.length - 1;
     const each = Math.floor(free / n);
     const extra = free - each * n;
     const gaps = Array.from({ length: n }, (_, i) => each + (i < extra ? 1 : 0));
-    let x = hi(first, ax);
+    let x = endOn(first, ax);
     for (let i = 1; i < order.length - 1; i++) {
       x += gaps[i - 1];
-      moves.set(order[i], on(ax, x - lo(box.get(order[i])!, ax)));
+      moves.set(order[i], on(ax, x - startOn(box.get(order[i])!, ax)));
       x += widths[i];
     }
   }
@@ -335,10 +334,10 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
   const gaps = spaced.flatMap((order) => {
     const after = order.map((id) => {
       const b = box.get(id)!,
-        d = lo(now.get(id)!, ax) - lo(bounds.get(id)!, ax);
+        d = startOn(now.get(id)!, ax) - startOn(bounds.get(id)!, ax);
       return { ...b, [ax]: b[ax] + d };
     });
-    return after.slice(1).map((b, i) => lo(b, ax) - hi(after[i], ax));
+    return after.slice(1).map((b, i) => startOn(b, ax) - endOn(after[i], ax));
   });
   return {
     ...res,

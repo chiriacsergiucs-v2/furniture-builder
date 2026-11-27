@@ -9,6 +9,7 @@ import {
   type PrintLang,
 } from '@furniture-builder/i18n/print';
 import { LANG_KEY, PRINT_LANG_KEY } from '../../langInit';
+import { writeLocal } from '../../persist/localPrefs';
 
 /** The page reload, replaceable in tests (jsdom cannot reload). */
 export const page = { reload: () => location.reload() };
@@ -19,11 +20,7 @@ export const page = { reload: () => location.reload() };
  */
 function switchLang(l: Lang): boolean {
   if (l === getLang()) return true;
-  try {
-    localStorage.setItem(LANG_KEY, l);
-  } catch {
-    return false;
-  }
+  if (!writeLocal(LANG_KEY, l)) return false;
   page.reload();
   return true;
 }
@@ -41,11 +38,8 @@ async function choosePrintLang(l: PrintLang): Promise<boolean> {
     }
   }
   setPrintLang(l);
-  try {
-    localStorage.setItem(PRINT_LANG_KEY, l);
-  } catch {
-    // Storage blocked: the choice holds for this visit.
-  }
+  // Storage blocked: the choice holds for this visit.
+  writeLocal(PRINT_LANG_KEY, l);
   return true;
 }
 

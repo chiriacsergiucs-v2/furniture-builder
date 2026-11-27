@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * Light / dark theme. Follows the system until the user picks one; the choice is kept on this device only
@@ -9,12 +10,7 @@ const KEY = 'fb:theme';
 const listeners = new Set<() => void>();
 
 function stored(): Theme | null {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === 'light' || v === 'dark' ? v : null;
-  } catch {
-    return null;
-  }
+  return readLocal(KEY, (v) => (v === 'light' || v === 'dark' ? v : null), null);
 }
 let chosen: Theme | null = stored();
 
@@ -40,12 +36,7 @@ export function applyTheme() {
 
 export function setTheme(t: Theme | null) {
   chosen = t;
-  try {
-    if (t) localStorage.setItem(KEY, t);
-    else localStorage.removeItem(KEY);
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, t);
   applyTheme();
 }
 

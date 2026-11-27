@@ -14,6 +14,7 @@ import type { BackupTable } from '../core/backup';
 import { emitSavedChange } from './events';
 import type { AccountLink } from '../core/sync';
 import { t } from '@furniture-builder/i18n';
+import { readLocal, writeLocal } from './localPrefs';
 
 /** A device setting kept in IndexedDB (ADR-133): values that localStorage cannot hold, like a folder handle. */
 interface SettingRow {
@@ -703,35 +704,11 @@ export const deleteAccountLink = (l: AccountLink, database = db) =>
 
 const LAST_KEY = 'furniture-builder:last-design';
 const LAST_PROJECT_KEY = 'furniture-builder:last-project';
-export const rememberLastProject = (id: string | null) => {
-  try {
-    if (id) localStorage.setItem(LAST_PROJECT_KEY, id);
-    else localStorage.removeItem(LAST_PROJECT_KEY);
-  } catch {
-    /* private mode */
-  }
-};
-export const lastProjectId = (): string | null => {
-  try {
-    return localStorage.getItem(LAST_PROJECT_KEY);
-  } catch {
-    return null;
-  }
-};
-export const rememberLast = (id: string) => {
-  try {
-    localStorage.setItem(LAST_KEY, id);
-  } catch {
-    /* private mode */
-  }
-};
-export const lastDesignId = (): string | null => {
-  try {
-    return localStorage.getItem(LAST_KEY);
-  } catch {
-    return null;
-  }
-};
+export const rememberLastProject = (id: string | null) =>
+  void writeLocal(LAST_PROJECT_KEY, id || null);
+export const lastProjectId = (): string | null => readLocal(LAST_PROJECT_KEY, (v) => v, null);
+export const rememberLast = (id: string) => void writeLocal(LAST_KEY, id);
+export const lastDesignId = (): string | null => readLocal(LAST_KEY, (v) => v, null);
 
 export async function getSetting<T>(key: string, database = db): Promise<T | undefined> {
   try {
