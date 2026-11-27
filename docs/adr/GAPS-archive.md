@@ -4147,6 +4147,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-534: Architecture checks the review could not cover
+
+- Status: Done (N439)
+- Note: 2026-11-27 (N439): every listed check was run or read and recorded in `docs/research/2026-11-27-architecture-checks.md`: 160 rounding calls in src/core classified (159 conform; defect D1: diagonal corner doors at `src/core/corner.ts`:341 leave up to n − 1 mm unshared, e.g. width 901 with two doors gives 238 + 238 on a 477 mm opening; described, not fixed); build.ts checks present (no committed test fires `non-integer` or `zero-size`); FUZZ_N=30000 9/9 pass; ADR-085 card within its exception (count-stepper find-it 44/44); CSP and service worker tests pass on a fresh build; assistant function read (no defect); 3D chunks load only when 3D is shown, at 1280 and 390 px.
+- Origin: architect-review 2026-11-17
+- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Run each check and record its result in a dated report under docs/research
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-535: F-29 half fixed: the Gaps page marks no current place
 
 - Status: Done (N386, 2026-11-26: on the Gaps page More and Information are marked as the current place, src/ui/App.tsx; tests/find-it/more-current-page.test.tsx 2 passed)

@@ -1401,18 +1401,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
 - Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
 
-### G-534: Architecture checks the review could not cover
-
-- Status: Open
-- Origin: architect-review 2026-11-17
-- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
-- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
-- Questions: None
-- Suggested pick: Run each check and record its result in a dated report under docs/research
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
 
 - Status: Open
