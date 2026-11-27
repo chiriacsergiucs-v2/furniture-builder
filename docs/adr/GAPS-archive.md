@@ -4561,6 +4561,18 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
+
+- Status: Done (N448)
+- Origin: G-049 remainder (N437), 2026-11-27
+- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
+- Request: G ids on pre-ADR-082 notes
+- Questions: Give each its own gap, or mark them obsolete?
+- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
 ### G-616: Diagonal corner doors are not an exact split
 
 - Status: Done (N445)

@@ -1919,18 +1919,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
-
-- Status: Open
-- Origin: G-049 remainder (N437), 2026-11-27
-- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
-- Request: G ids on pre-ADR-082 notes
-- Questions: Give each its own gap, or mark them obsolete?
-- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
-- Work: Low
-- Impact: Low
-- Necessity: Low
-
 ### G-617: Project commit takes 13-24 ms on a 60-item project
 
 - Status: Open
@@ -1951,6 +1939,54 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: UI audit coverage
 - Questions: Provide a test account, and allow scripted gesture captures?
 - Suggested pick: Script the gesture and error states now; the account states once a test account exists (G-277)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-620: Catalog copy: what differs from the original
+
+- Status: Open
+- Origin: G-615 re-check of N15 (N448), 2026-11-27
+- Missing: A catalog piece keeps its origin (ADR-028) and Replace and a newer revision carry its own edits (src/core/ownEdits.ts:109), but no screen lists what a piece changed from the item it was taken from (the N15 note's Differs from original)
+- Request: Catalog metadata and origin link kept on edited copies (N15)
+- Questions: Show a list of the piece's own changes against its catalog item?
+- Suggested pick: A Differs from original list under the piece's template line, from ownEdits, no model change
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+
+### G-621: Drawers built into a frame
+
+- Status: Open
+- Origin: G-615 re-check of N28 (N448), 2026-11-27
+- Missing: The catalog's bed item 2 drawers under requires frame:under-storage, which no product provides, so it cannot be made (src/core/catalog/furniture.ts:947); ADR-038 lists it as not built
+- Request: Frame root with drawers under a bed or in a table (N28, ADR-038)
+- Questions: Build drawers in a frame by holding a cabinet under the bed or table (a model change, ADR)?
+- Suggested pick: A frame holds a cabinet for under-storage, built with buildCabinet (ADR-007), through a new ADR
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-622: Printed full-size template tiles not measured on paper
+
+- Status: Open
+- Origin: G-615 re-check of N30 (N448), 2026-11-27
+- Missing: Profiled boards print as 1:1 outlines cut into A4 tiles with 10 mm overlap (src/core/template.ts:1-10); no printed tile has been measured on paper to confirm the scale
+- Request: Shaped parts with full-size templates (N30, ADR-040)
+- Questions: Can you print one template tile and measure a known length on it?
+- Suggested pick: You print one tile from a shaped catalog piece and measure it; a wrong scale becomes a bug
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-623: Legs under a carcass
+
+- Status: Open
+- Origin: G-615 re-check of N34 (N448), 2026-11-27
+- Missing: A cabinet stands on a plinth, none or a wall mount only (src/core/types.ts:503-537); legs come only with frames. ADR-044 open question 2 was answered not now (docs/adr-done/ADR-044-new-piece-is-a-data-driven-wizard-a-step-library-and-a-const.md:115)
+- Request: New-piece wizard bases (N34, ADR-044)
+- Questions: Offer legs under cabinets now (a model change, ADR)?
+- Suggested pick: Not now, as answered for ADR-044; recorded so it is findable
 - Work: Medium
 - Impact: Low
 - Necessity: Low
