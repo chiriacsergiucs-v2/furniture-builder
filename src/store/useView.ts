@@ -1,12 +1,19 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext } from 'react';
 import { cutlist, hardwareSummary, type CutRow } from '../core/cutlist';
 import { kerfOf } from '../core/design';
 import { nestingJobs } from '../core/nesting/fromDesign';
 import type { NestJob } from '@furniture-builder/nesting';
-import { projectCutlist, projectHardware, projectNestingJobs } from '../core/project';
+import {
+  projectCutlist,
+  projectHardware,
+  projectNestingJobs,
+  type Project,
+  type ProjectModel,
+} from '../core/project';
 import { applyOwned, type OwnedSplit } from '../core/owned';
 import { projectSellerChoices } from '../core/sellers/choices';
 import type {
+  Design,
   Diagnostic,
   FurnitureModel,
   HardwareItem,
@@ -92,6 +99,103 @@ function withFixingNotes(rows: CutRow[], parts: Map<string, FixingPart>): CutRow
  */
 export const ViewOverride = createContext<ViewData | null>(null);
 
+/** What the view is made from: the open piece or project, and the user's fastener choices. */
+interface ViewInputs {
+  design: Design;
+  model: FurnitureModel;
+  project: Project | null;
+  projectModel: ProjectModel | null;
+  editing: string | null;
+  carcass: FastenerChoice | undefined;
+  back: FastenerChoice | undefined;
+}
+const INPUT_KEYS = [
+  'design',
+  'model',
+  'project',
+  'projectModel',
+  'editing',
+  'carcass',
+  'back',
+] as const satisfies readonly (keyof ViewInputs)[];
+
+/** The last view made and what it was made from, shared by every mounted `useView()` (G-487). */
+let shared: { inputs: ViewInputs; view: ViewData } | null = null;
+
+/**
+ * The view of `inputs`, made once per state (G-487): every mounted `useView()` gets the same object, so the project
+ * cut list and hardware are derived once per edit instead of once per mounted result panel.
+ */
+export function viewOf(inputs: ViewInputs): ViewData {
+  const last = shared;
+  if (last && INPUT_KEYS.every((k) => Object.is(last.inputs[k], inputs[k]))) return last.view;
+  const view = makeView(inputs);
+  shared = { inputs, view };
+  return view;
+}
+
+function makeView({
+  design,
+  model,
+  project,
+  projectModel,
+  editing,
+  carcass,
+  back,
+}: ViewInputs): ViewData {
+  if (project && projectModel && !editing) {
+    const fixings = { parts: new Map<string, FixingPart>(), tooShort: 0, backsNotDrawn: 0 };
+    if (carcass?.edge !== undefined || (back?.edge !== undefined && back.spacing !== undefined))
+      for (const item of project.items) {
+        const f = allFixings(buildModel(item.design), carcass, back, `${item.id}:`);
+        for (const [k, v] of f.parts) fixings.parts.set(k, v);
+        fixings.tooShort += f.tooShort;
+        fixings.backsNotDrawn += f.backsNotDrawn;
+      }
+    // Owned parts are taken off before the drilling notes are added: a note must not change a part's key.
+    const base = projectCutlist(project, projectModel);
+    const split = applyOwned(base, project.ownedParts, projectModel.materials);
+    const rows = withFixingNotes(base, fixings.parts);
+    const cutRows = withFixingNotes(split.cut, fixings.parts);
+    return {
+      mode: 'project',
+      title: project.name,
+      model: projectModel.model,
+      pieces: projectModel.piecePanels,
+      materials: projectModel.materials,
+      rows,
+      cutRows,
+      owned: split,
+      hardware: projectHardware(project, projectModel),
+      diagnostics: projectModel.diagnostics,
+      kerf: project.cutting?.kerf ?? 4,
+      jobs: () => projectNestingJobs(project, cutRows, projectModel.materials),
+      ...projectSellerChoices(project),
+      fixings,
+    };
+  }
+  const fixings = allFixings(model, carcass, back);
+  const base = cutlist(model, design.materials);
+  const split = applyOwned(base, design.ownedParts, design.materials);
+  return {
+    mode: 'design',
+    title: design.name,
+    model,
+    pieces: [model.panels],
+    materials: design.materials,
+    rows: withFixingNotes(base, fixings.parts),
+    cutRows: withFixingNotes(split.cut, fixings.parts),
+    owned: split,
+    fixings,
+    hardware: hardwareSummary(model),
+    diagnostics: model.diagnostics,
+    kerf: kerfOf(design),
+    jobs: () => nestingJobs(design, model, split.cut).jobs,
+    hardwareProducts: design.hardwareProducts,
+    sellerItems: design.sellerItems,
+  };
+}
+
 export function useView(): ViewData {
   const override = useContext(ViewOverride);
   const design = useDesign((s) => s.design);
@@ -104,58 +208,5 @@ export function useView(): ViewData {
   const carcass = choices.find((c) => c.joint === 'carcass-joint');
   // The user's back fixing (G-439): positions only once its edge distance and spacing are typed.
   const back = choices.find((c) => c.joint === 'back-fixing');
-  const own = useMemo((): ViewData => {
-    if (project && projectModel && !editing) {
-      const fixings = { parts: new Map<string, FixingPart>(), tooShort: 0, backsNotDrawn: 0 };
-      if (carcass?.edge !== undefined || (back?.edge !== undefined && back.spacing !== undefined))
-        for (const item of project.items) {
-          const f = allFixings(buildModel(item.design), carcass, back, `${item.id}:`);
-          for (const [k, v] of f.parts) fixings.parts.set(k, v);
-          fixings.tooShort += f.tooShort;
-          fixings.backsNotDrawn += f.backsNotDrawn;
-        }
-      // Owned parts are taken off before the drilling notes are added: a note must not change a part's key.
-      const base = projectCutlist(project, projectModel);
-      const split = applyOwned(base, project.ownedParts, projectModel.materials);
-      const rows = withFixingNotes(base, fixings.parts);
-      const cutRows = withFixingNotes(split.cut, fixings.parts);
-      return {
-        mode: 'project',
-        title: project.name,
-        model: projectModel.model,
-        pieces: projectModel.piecePanels,
-        materials: projectModel.materials,
-        rows,
-        cutRows,
-        owned: split,
-        hardware: projectHardware(project, projectModel),
-        diagnostics: projectModel.diagnostics,
-        kerf: project.cutting?.kerf ?? 4,
-        jobs: () => projectNestingJobs(project, cutRows, projectModel.materials),
-        ...projectSellerChoices(project),
-        fixings,
-      };
-    }
-    const fixings = allFixings(model, carcass, back);
-    const base = cutlist(model, design.materials);
-    const split = applyOwned(base, design.ownedParts, design.materials);
-    return {
-      mode: 'design',
-      title: design.name,
-      model,
-      pieces: [model.panels],
-      materials: design.materials,
-      rows: withFixingNotes(base, fixings.parts),
-      cutRows: withFixingNotes(split.cut, fixings.parts),
-      owned: split,
-      fixings,
-      hardware: hardwareSummary(model),
-      diagnostics: model.diagnostics,
-      kerf: kerfOf(design),
-      jobs: () => nestingJobs(design, model, split.cut).jobs,
-      hardwareProducts: design.hardwareProducts,
-      sellerItems: design.sellerItems,
-    };
-  }, [design, model, project, projectModel, editing, carcass, back]);
-  return override ?? own;
+  return override ?? viewOf({ design, model, project, projectModel, editing, carcass, back });
 }

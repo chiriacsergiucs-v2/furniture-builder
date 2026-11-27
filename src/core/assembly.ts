@@ -267,7 +267,7 @@ function groupParts(panels: Panel[]): StepPart[] {
 function groupBoxes(panels: Panel[]): StepBox[] {
   const boxes = new Map<string, Panel[]>();
   for (const p of panels) {
-    const k = `${p.nodeId}|${/^Drawer (\d+)\b/.exec(p.label)?.[1] ?? ''}`;
+    const k = `${p.nodeId}|${p.drawer ?? ''}`;
     boxes.set(k, [...(boxes.get(k) ?? []), p]);
   }
   const same = new Map<string, StepBox>();

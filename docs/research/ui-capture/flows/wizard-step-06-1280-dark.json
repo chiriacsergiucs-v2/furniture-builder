@@ -8,13 +8,13 @@
   "scrollWidth": 1280,
   "scrollHeight": 900,
   "horizontalScroll": false,
-  "totalElements": 138,
+  "totalElements": 140,
   "truncatedBelowY": null,
   "elements": [
     {
       "tag": "header",
       "role": "",
-      "name": "Furniture BuilderProjectsCatalog118EditorNo prices yetNew… p",
+      "name": "ProjectsCatalog160EditorComposeCut ListNo prices yetNew… pie",
       "x": 0,
       "y": 0,
       "w": 1280,
@@ -25,25 +25,12 @@
       "tabOrder": null
     },
     {
-      "tag": "a",
-      "role": "",
-      "name": "Furniture Builder, go to Projects",
-      "x": 16,
-      "y": 4,
-      "w": 26,
-      "h": 38,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 1
-    },
-    {
       "tag": "nav",
       "role": "",
       "name": "Places",
-      "x": 54,
+      "x": 16,
       "y": 4,
-      "w": 306,
+      "w": 309,
       "h": 38,
       "visible": true,
       "inViewport": true,
@@ -54,9 +41,22 @@
       "tag": "a",
       "role": "",
       "name": "Projects",
-      "x": 59,
+      "x": 21,
       "y": 9,
       "w": 96,
+      "h": 28,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": 1
+    },
+    {
+      "tag": "a",
+      "role": "",
+      "name": "Catalog160",
+      "x": 121,
+      "y": 9,
+      "w": 113,
       "h": 28,
       "visible": true,
       "inViewport": true,
@@ -66,10 +66,10 @@
     {
       "tag": "a",
       "role": "",
-      "name": "Catalog118",
-      "x": 159,
+      "name": "Editor",
+      "x": 238,
       "y": 9,
-      "w": 110,
+      "w": 82,
       "h": 28,
       "visible": true,
       "inViewport": true,
@@ -77,30 +77,43 @@
       "tabOrder": 3
     },
     {
-      "tag": "a",
-      "role": "",
-      "name": "Editor",
-      "x": 273,
-      "y": 9,
-      "w": 82,
-      "h": 28,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 4
-    },
-    {
       "tag": "input",
       "role": "",
       "name": "Name of this project",
-      "x": 372,
+      "x": 337,
       "y": 5,
       "w": 381,
       "h": 36,
       "visible": true,
       "inViewport": true,
       "position": "static",
+      "tabOrder": 4
+    },
+    {
+      "tag": "button",
+      "role": "radio",
+      "name": "Compose",
+      "x": 762,
+      "y": 9,
+      "w": 78,
+      "h": 28,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
       "tabOrder": 5
+    },
+    {
+      "tag": "button",
+      "role": "radio",
+      "name": "Cut List",
+      "x": 840,
+      "y": 9,
+      "w": 67,
+      "h": 28,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": null
     },
     {
       "tag": "button",
@@ -183,7 +196,7 @@
     {
       "tag": "details",
       "role": "",
-      "name": "New… piece or projectFilesProject file to open on another de",
+      "name": "New… piece or projectCut list optimizer type sizes, see how ",
       "x": 1226,
       "y": 4,
       "w": 38,
@@ -222,9 +235,9 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Project file to open on another device",
+      "name": "Cut list optimizer type sizes, see how many sheets",
       "x": 989,
-      "y": 141,
+      "y": 110,
       "w": 270,
       "h": 57,
       "visible": false,
@@ -235,7 +248,7 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Hand to a professional… one .zip to check the plan",
+      "name": "Project file to open on another device",
       "x": 989,
       "y": 197,
       "w": 270,
@@ -248,7 +261,7 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Copy code a code or link to open on another device",
+      "name": "Hand to a professional… one .zip to check the plan",
       "x": 989,
       "y": 254,
       "w": 270,
@@ -259,35 +272,35 @@
       "tabOrder": 15
     },
     {
-      "tag": "input",
-      "role": "",
-      "name": "Import a file",
-      "x": 989,
-      "y": 338,
-      "w": 1,
-      "h": 1,
-      "visible": false,
-      "inViewport": false,
-      "position": "absolute",
-      "tabOrder": 16
-    },
-    {
       "tag": "button",
       "role": "",
-      "name": "Clean up unused pictures no piece or project uses them",
+      "name": "Copy code a code or link to open on another device",
       "x": 989,
-      "y": 367,
+      "y": 310,
       "w": 270,
       "h": 57,
       "visible": false,
       "inViewport": false,
       "position": "static",
+      "tabOrder": 16
+    },
+    {
+      "tag": "input",
+      "role": "",
+      "name": "Import a file",
+      "x": 989,
+      "y": 395,
+      "w": 1,
+      "h": 1,
+      "visible": false,
+      "inViewport": false,
+      "position": "absolute",
       "tabOrder": 17
     },
     {
       "tag": "button",
       "role": "",
-      "name": "Saved data and backup keep, back up and restore",
+      "name": "Clean up unused pictures no piece or project uses them",
       "x": 989,
       "y": 424,
       "w": 270,
@@ -300,11 +313,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "English",
-      "x": 997,
-      "y": 520,
-      "w": 66,
-      "h": 32,
+      "name": "Saved data and backup keep, back up and restore",
+      "x": 989,
+      "y": 480,
+      "w": 270,
+      "h": 57,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -313,11 +326,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Русский",
-      "x": 1067,
-      "y": 520,
-      "w": 74,
-      "h": 32,
+      "name": "Canvas editor (preview) on: edit on the drawing",
+      "x": 989,
+      "y": 546,
+      "w": 270,
+      "h": 57,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -326,11 +339,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Română",
-      "x": 997,
-      "y": 605,
-      "w": 72,
-      "h": 32,
+      "name": "Catalog finder (preview) on: search and filters",
+      "x": 989,
+      "y": 602,
+      "w": 270,
+      "h": 57,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -339,11 +352,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Русский",
-      "x": 1073,
-      "y": 605,
-      "w": 74,
-      "h": 32,
+      "name": "Appearance font size, gaps, paddings",
+      "x": 989,
+      "y": 668,
+      "w": 270,
+      "h": 57,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -353,8 +366,8 @@
       "tag": "button",
       "role": "",
       "name": "English",
-      "x": 1151,
-      "y": 605,
+      "x": 997,
+      "y": 755,
       "w": 66,
       "h": 32,
       "visible": false,
@@ -365,11 +378,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Information and guides every feature, by domain",
-      "x": 989,
-      "y": 650,
-      "w": 270,
-      "h": 57,
+      "name": "Русский",
+      "x": 1067,
+      "y": 755,
+      "w": 74,
+      "h": 32,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -378,11 +391,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Gaps what is not built yet",
-      "x": 989,
-      "y": 707,
-      "w": 270,
-      "h": 57,
+      "name": "Română",
+      "x": 997,
+      "y": 841,
+      "w": 72,
+      "h": 32,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -390,38 +403,51 @@
     },
     {
       "tag": "button",
-      "role": "radio",
-      "name": "Compose",
-      "x": 21,
-      "y": 55,
-      "w": 295,
-      "h": 28,
-      "visible": true,
-      "inViewport": true,
+      "role": "",
+      "name": "Русский",
+      "x": 1073,
+      "y": 841,
+      "w": 74,
+      "h": 32,
+      "visible": false,
+      "inViewport": false,
       "position": "static",
       "tabOrder": 26
     },
     {
       "tag": "button",
-      "role": "radio",
-      "name": "Build & Preview",
-      "x": 316,
-      "y": 55,
-      "w": 295,
-      "h": 28,
-      "visible": true,
-      "inViewport": true,
+      "role": "",
+      "name": "English",
+      "x": 1151,
+      "y": 841,
+      "w": 66,
+      "h": 32,
+      "visible": false,
+      "inViewport": false,
       "position": "static",
-      "tabOrder": null
+      "tabOrder": 27
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Information and guides every feature, by domain",
+      "x": 989,
+      "y": 886,
+      "w": 270,
+      "h": 57,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 28
     },
     {
       "tag": "main",
       "role": "",
       "name": "Audit project: 0 piecesProjectPiecesAdd a pieceNo pieces yet",
       "x": 0,
-      "y": 93,
+      "y": 46,
       "w": 1280,
-      "h": 807,
+      "h": 854,
       "visible": true,
       "inViewport": true,
       "position": "static",
@@ -432,9 +458,9 @@
       "role": "",
       "name": "Compose",
       "x": 0,
-      "y": 93,
+      "y": 46,
       "w": 360,
-      "h": 807,
+      "h": 854,
       "visible": true,
       "inViewport": true,
       "position": "static",
@@ -451,14 +477,14 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 27
+      "tabOrder": 29
     },
     {
       "tag": "header",
       "role": "",
       "name": "Project",
       "x": 16,
-      "y": 109,
+      "y": 62,
       "w": 327,
       "h": 25,
       "visible": true,
@@ -471,7 +497,7 @@
       "role": "",
       "name": "Project",
       "x": 16,
-      "y": 109,
+      "y": 62,
       "w": 64,
       "h": 25,
       "visible": true,
@@ -484,20 +510,20 @@
       "role": "",
       "name": "About the project",
       "x": 84,
-      "y": 103,
+      "y": 56,
       "w": 38,
       "h": 38,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 28
+      "tabOrder": 30
     },
     {
       "tag": "h3",
       "role": "",
       "name": "Pieces",
       "x": 16,
-      "y": 161,
+      "y": 114,
       "w": 198,
       "h": 17,
       "visible": true,
@@ -510,34 +536,8 @@
       "role": "",
       "name": "Add a piece",
       "x": 222,
-      "y": 150,
+      "y": 103,
       "w": 121,
-      "h": 38,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 29
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Add the room",
-      "x": 29,
-      "y": 449,
-      "w": 147,
-      "h": 38,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 30
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Draw the room",
-      "x": 184,
-      "y": 449,
-      "w": 147,
       "h": 38,
       "visible": true,
       "inViewport": true,
@@ -545,24 +545,50 @@
       "tabOrder": 31
     },
     {
+      "tag": "button",
+      "role": "",
+      "name": "Add the room",
+      "x": 29,
+      "y": 402,
+      "w": 147,
+      "h": 38,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": 32
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Draw the room",
+      "x": 184,
+      "y": 402,
+      "w": 147,
+      "h": 38,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": 33
+    },
+    {
       "tag": "input",
       "role": "",
       "name": "Add a plan picture",
       "x": 179,
-      "y": 549,
+      "y": 502,
       "w": 1,
       "h": 1,
       "visible": true,
       "inViewport": true,
       "position": "absolute",
-      "tabOrder": 32
+      "tabOrder": 34
     },
     {
       "tag": "details",
       "role": "",
       "name": "HistoryEdit historySave a versionNo versions kept yet.Edit h",
       "x": 16,
-      "y": 597,
+      "y": 550,
       "w": 327,
       "h": 39,
       "visible": true,
@@ -575,7 +601,7 @@
       "role": "",
       "name": "History",
       "x": 16,
-      "y": 606,
+      "y": 559,
       "w": 327,
       "h": 30,
       "visible": true,
@@ -588,26 +614,26 @@
       "role": "",
       "name": "Edit history",
       "x": 16,
-      "y": 644,
+      "y": 597,
       "w": 160,
       "h": 38,
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 33
+      "tabOrder": 35
     },
     {
       "tag": "button",
       "role": "",
       "name": "Save a version",
       "x": 184,
-      "y": 644,
+      "y": 597,
       "w": 160,
       "h": 38,
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 34
+      "tabOrder": 36
     },
     {
       "tag": "dialog",
@@ -659,40 +685,40 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 35
+      "tabOrder": 37
     },
     {
       "tag": "button",
       "role": "",
       "name": "About the history",
       "x": 305,
-      "y": 595,
+      "y": 548,
       "w": 38,
       "h": 38,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 36
+      "tabOrder": 38
     },
     {
       "tag": "button",
       "role": "radio",
       "name": "2D",
       "x": 381,
-      "y": 106,
+      "y": 59,
       "w": 41,
       "h": 20,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 37
+      "tabOrder": 39
     },
     {
       "tag": "button",
       "role": "radio",
       "name": "3D",
       "x": 422,
-      "y": 106,
+      "y": 59,
       "w": 41,
       "h": 20,
       "visible": true,
@@ -705,7 +731,7 @@
       "role": "radio",
       "name": "Both",
       "x": 464,
-      "y": 106,
+      "y": 59,
       "w": 55,
       "h": 20,
       "visible": true,
@@ -718,20 +744,20 @@
       "role": "tab",
       "name": "Parts",
       "x": 889,
-      "y": 93,
+      "y": 46,
       "w": 51,
       "h": 38,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 38
+      "tabOrder": 40
     },
     {
       "tag": "button",
       "role": "tab",
       "name": "Sheets",
       "x": 940,
-      "y": 93,
+      "y": 46,
       "w": 62,
       "h": 38,
       "visible": true,
@@ -744,7 +770,7 @@
       "role": "tab",
       "name": "Hardware",
       "x": 1002,
-      "y": 93,
+      "y": 46,
       "w": 79,
       "h": 38,
       "visible": true,
@@ -757,7 +783,7 @@
       "role": "tab",
       "name": "Assembly",
       "x": 1081,
-      "y": 93,
+      "y": 46,
       "w": 79,
       "h": 38,
       "visible": true,
@@ -770,7 +796,7 @@
       "role": "tab",
       "name": "Shopping list",
       "x": 1160,
-      "y": 93,
+      "y": 46,
       "w": 78,
       "h": 38,
       "visible": true,
@@ -783,7 +809,7 @@
       "role": "tab",
       "name": "Checks",
       "x": 889,
-      "y": 130,
+      "y": 83,
       "w": 64,
       "h": 38,
       "visible": true,
@@ -796,34 +822,8 @@
       "role": "",
       "name": "Download CSV",
       "x": 897,
-      "y": 180,
+      "y": 133,
       "w": 180,
-      "h": 38,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 39
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Print",
-      "x": 1085,
-      "y": 180,
-      "w": 180,
-      "h": 38,
-      "visible": true,
-      "inViewport": true,
-      "position": "static",
-      "tabOrder": 40
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Client sheet",
-      "x": 897,
-      "y": 226,
-      "w": 367,
       "h": 38,
       "visible": true,
       "inViewport": true,
@@ -833,15 +833,41 @@
     {
       "tag": "button",
       "role": "",
-      "name": "About the parts list",
-      "x": 1021,
-      "y": 268,
-      "w": 38,
+      "name": "Print",
+      "x": 1085,
+      "y": 133,
+      "w": 180,
       "h": 38,
       "visible": true,
       "inViewport": true,
       "position": "static",
       "tabOrder": 42
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Client sheet",
+      "x": 897,
+      "y": 179,
+      "w": 367,
+      "h": 38,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": 43
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "About the parts list",
+      "x": 1021,
+      "y": 221,
+      "w": 38,
+      "h": 38,
+      "visible": true,
+      "inViewport": true,
+      "position": "static",
+      "tabOrder": 44
     },
     {
       "tag": "dialog",
@@ -893,38 +919,12 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 43
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Close",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": 44
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "New piece, step by stepSize, type, then only the questions t",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
       "tabOrder": 45
     },
     {
       "tag": "button",
       "role": "",
-      "name": "Project with several piecesA kitchen, a bedroom or a room: p",
+      "name": "Close",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -937,7 +937,7 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Fill a wallEnter a wall's width, depth and height; get sugge",
+      "name": "New piece, step by stepSize, type, then only the questions t",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -950,7 +950,7 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Fill the roomPick a room shape; get suggested mixes for ever",
+      "name": "Project with several piecesA kitchen, a bedroom or a room: p",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -963,7 +963,7 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Room presetA ready room with its pieces against the walls: a",
+      "name": "Fill a wallEnter a wall's width, depth and height; get sugge",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -974,48 +974,9 @@
       "tabOrder": 49
     },
     {
-      "tag": "dialog",
-      "role": "",
-      "name": "Fill a wall",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "absolute",
-      "tabOrder": null
-    },
-    {
-      "tag": "header",
-      "role": "",
-      "name": "Fill a wall",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
-      "tag": "h2",
-      "role": "",
-      "name": "Fill a wall",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
       "tag": "button",
       "role": "",
-      "name": "Close",
+      "name": "Fill the roomPick a room shape; get suggested mixes for ever",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -1026,6 +987,71 @@
       "tabOrder": 50
     },
     {
+      "tag": "button",
+      "role": "",
+      "name": "Room presetA ready room with its pieces against the walls: a",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 51
+    },
+    {
+      "tag": "dialog",
+      "role": "",
+      "name": "Fill a wall",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "absolute",
+      "tabOrder": null
+    },
+    {
+      "tag": "header",
+      "role": "",
+      "name": "Fill a wall",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "h2",
+      "role": "",
+      "name": "Fill a wall",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Close",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 52
+    },
+    {
       "tag": "dialog",
       "role": "",
       "name": "Fill the room",
@@ -1075,7 +1101,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 51
+      "tabOrder": 53
     },
     {
       "tag": "dialog",
@@ -1127,7 +1153,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 52
+      "tabOrder": 54
     },
     {
       "tag": "button",
@@ -1140,7 +1166,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 53
+      "tabOrder": 55
     },
     {
       "tag": "button",
@@ -1153,7 +1179,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 54
+      "tabOrder": 56
     },
     {
       "tag": "button",
@@ -1166,7 +1192,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 55
+      "tabOrder": 57
     },
     {
       "tag": "button",
@@ -1179,7 +1205,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 56
+      "tabOrder": 58
     },
     {
       "tag": "button",
@@ -1192,7 +1218,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 57
+      "tabOrder": 59
     },
     {
       "tag": "button",
@@ -1205,7 +1231,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 58
+      "tabOrder": 60
     },
     {
       "tag": "button",
@@ -1218,7 +1244,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 59
+      "tabOrder": 61
     },
     {
       "tag": "button",
@@ -1231,7 +1257,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 60
+      "tabOrder": 62
     },
     {
       "tag": "h3",
@@ -1257,7 +1283,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 61
+      "tabOrder": 63
     },
     {
       "tag": "button",
@@ -1270,7 +1296,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 62
+      "tabOrder": 64
     },
     {
       "tag": "button",
@@ -1309,7 +1335,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 63
+      "tabOrder": 65
     },
     {
       "tag": "button",
@@ -1322,7 +1348,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 64
+      "tabOrder": 66
     },
     {
       "tag": "button",
@@ -1335,7 +1361,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 65
+      "tabOrder": 67
     },
     {
       "tag": "button",
@@ -1348,7 +1374,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 66
+      "tabOrder": 68
     },
     {
       "tag": "button",
@@ -1361,7 +1387,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 67
+      "tabOrder": 69
     },
     {
       "tag": "button",
@@ -1374,7 +1400,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 68
+      "tabOrder": 70
     },
     {
       "tag": "aside",
@@ -1400,7 +1426,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 69
+      "tabOrder": 71
     },
     {
       "tag": "button",
@@ -1413,7 +1439,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 70
+      "tabOrder": 72
     },
     {
       "tag": "button",
@@ -1426,7 +1452,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 71
+      "tabOrder": 73
     },
     {
       "tag": "dialog",
@@ -1478,7 +1504,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 72
+      "tabOrder": 74
     },
     {
       "tag": "button",
@@ -1491,7 +1517,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 73
+      "tabOrder": 75
     },
     {
       "tag": "button",
@@ -1504,7 +1530,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 74
+      "tabOrder": 76
     },
     {
       "tag": "dialog",
@@ -1556,77 +1582,12 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 75
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Close",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": 76
-    },
-    {
-      "tag": "dialog",
-      "role": "",
-      "name": "Saved data and backup",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "absolute",
-      "tabOrder": null
-    },
-    {
-      "tag": "header",
-      "role": "",
-      "name": "Saved data and backup",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
-      "tag": "h2",
-      "role": "",
-      "name": "Saved data and backup",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
-      "tag": "button",
-      "role": "",
-      "name": "Close",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
       "tabOrder": 77
     },
     {
       "tag": "button",
       "role": "",
-      "name": "Done",
+      "name": "Close",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -1639,7 +1600,7 @@
     {
       "tag": "dialog",
       "role": "",
-      "name": "Assistant",
+      "name": "Saved data and backup",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -1652,7 +1613,7 @@
     {
       "tag": "header",
       "role": "",
-      "name": "Assistant",
+      "name": "Saved data and backup",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -1665,7 +1626,7 @@
     {
       "tag": "h2",
       "role": "",
-      "name": "Assistant",
+      "name": "Saved data and backup",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -1689,6 +1650,71 @@
       "tabOrder": 79
     },
     {
+      "tag": "button",
+      "role": "",
+      "name": "Done",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 80
+    },
+    {
+      "tag": "dialog",
+      "role": "",
+      "name": "Assistant",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "absolute",
+      "tabOrder": null
+    },
+    {
+      "tag": "header",
+      "role": "",
+      "name": "Assistant",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "h2",
+      "role": "",
+      "name": "Assistant",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Close",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 81
+    },
+    {
       "tag": "input",
       "role": "",
       "name": "Use the assistant on this device",
@@ -1699,7 +1725,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 80
+      "tabOrder": 82
     },
     {
       "tag": "dialog",
@@ -1751,7 +1777,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 81
+      "tabOrder": 83
     },
     {
       "tag": "button",
@@ -1764,7 +1790,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 82
+      "tabOrder": 84
     },
     {
       "tag": "button",
@@ -1790,7 +1816,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 83
+      "tabOrder": 85
     },
     {
       "tag": "dialog",

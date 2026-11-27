@@ -610,6 +610,23 @@ highest id in either file.
 - Suggested pick: Same as the row above: one session on your phone, guided by a checklist. (estimate: effort +3%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-047 (the same real-phone session).
 
+### G-049: G ids on pre-ADR-082 notes
+
+- Status: Done (N437)
+- Note: 2026-11-27 (N437): one pass over docs/backlog.md rows F01 to N76 and the Dropped rows: 54 old gap notes on 44 rows now carry their G id (G-005, G-032, G-034, G-035, G-037, G-039, G-040, G-044, G-047), and 25 rows whose ADR is the origin of a seed gap end with "Gaps from the ADR-082 seed: G-…". No seed gap matches the old notes on N15 (_Differs from original_), N17 (real manual, OCR), N21 (mattress, RHS bench, per-panel materials), N28 (drawers in a frame, arm rests), N30 (printed tiles on paper), N33 (PDF papers) or N34 (legs under a carcass), so they stay without a G id; G-015 (Egger import) has no backlog row; G-045 is an obsolete umbrella. Statuses unchanged. Pending ADR open questions were not edited (backlog only).
+- Origin: ADR-082, 2026-10-25; agent scoped it out
+- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
+- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
+- Questions: Add G ids to the old backlog Gap notes and Open questions too?
+- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
+- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
+- Conflicts: none
+- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
+
 ### G-050: No gaps page in the app
 
 - Status: Done (ADR-101)
@@ -1682,6 +1699,22 @@ highest id in either file.
 - Request: Accept default, /batch all ready
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
+
+### G-201: Pictures and 3D models in design codes
+
+- Status: Done (N438)
+- Note: 2026-11-27 (N438, user 2026-11-27 "Also do the medium work", suggested pick "Document-only"): codes stay document-only. The Code dialog's info tip already says "Pictures and 3D models stay on this device; a project file carries them." (`src/ui/ShareCode.tsx:54-58`, Russian entry `packages/i18n/src/ru/account.ts:142-143`); docs/architecture.md now explains it; `tests/share-code.test.ts` proves a picture travels only as its id reference.
+- Origin: ADR-124 (scope)
+- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
+- Request: Accept default, /batch all ready
+- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
+- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
+- Fix: Keep codes document-only; the project file carries pictures and models.
+- Conflicts: none
 
 ### G-203: Wizard and template pieces and the project settings
 
@@ -3223,6 +3256,23 @@ highest id in either file.
 - Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
 - Conflicts: none
 
+### G-371: Cheaper find-it runs (stopped before it was built)
+
+- Status: Done (N436)
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
+- Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
+- Questions: Resume the cheaper find-it runs later?
+- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
+- Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+- Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
+- Note: 2026-11-27, measured (N436): `pnpm exec vitest run tests/find-it` (114 files, 476 tests), CPU = user + sys of the whole run, median of 3 runs on a 2-core machine shared with other agents. As-is: 535.0 s (594.8, 535.0, 508.6). `userEvent.setup({ delay: null })`: 549.1 s (+3 %) and 2 tests in `catch-up-editor.test.tsx` failed in all 3 runs, not kept. Find-it as its own vitest project (jsdom, `isolate: false`) alone: 310.3 s (-42 %) but 12, 26 and 16 tests failed (spies, stubbed globals and Dexie's IndexedDB factory carried from one file to the next); with the find-it setup restoring spies and stubbed globals after each test and pointing Dexie at each test's fresh factory, all 476 passed in 6 of 6 runs, final median 256.7 s (256.7, 256.1, 262.3; -52 %): kept. Cheaper module reset: Vitest 4 has no partial `vi.resetModules`, and skipping the reset would drop the bare-app start (ADR-108); measured upper bound on 8 files, 62 renders, the warm reset plus re-import is 5.1 s of 42 s test time with isolation (12 %) and about 3 s of 37 s without (8 %), so with the kept lever it cannot reach 10 % even at zero cost: not applied.
+
 ### G-372: Wall picture: stale notice on a deliberate change or leaving the page
 
 - Status: Done (PR #329, N388)
@@ -3749,6 +3799,18 @@ highest id in either file.
 - Work: Medium
 - Impact: Low-medium
 
+### G-487: The project cut list and hardware are not derived once in the store
+
+- Status: Done (N435)
+- Origin: ADR-221 Out of scope, 2026-11-07 (architecture review I-03)
+- Missing: The review's third step, deriving projectCutlist/projectHardware once in commitProject and storing them, and deriving the view once instead of per mounted useView(), is not built; ADR-221 memoises placeItem and reads projectModel only.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the derived cut list and hardware move into the store after ADR-221 is measured?
+- Suggested pick: Measure after ADR-221; build only if a 60-item edit still takes over 10 ms (estimate: effort +15 %, value +10 %)
+- Work: Medium
+- Impact: Low-medium
+- Note: 2026-11-27, measured (N435, `tests/project-edit-time.test.ts`, median of 21 edits per run after 5 warm-ups, 60 pieces of six kinds, one piece moved through `updateItem`): before, commit 12.6-18.5 ms plus 1.2-1.6 ms per mounted `useView()` to derive the cut list and hardware (one-mount total, median of 5 runs, 18.65 ms), so over the 10 ms threshold and the pick was built. `viewOf` (`src/store/useView.ts`) now makes the view once per state and every mounted `useView()` shares it, so the project cut list and hardware are derived once per edit; done in the shared view rather than as new store fields, so the four places that set `projectModel` need no second value kept in step. After, with 6 mounts, median of 3 runs: 25.8 ms against 35.1 ms derived per mount on the same runs (machine shared, so absolute times vary 13-24 ms for the commit alone). The commit itself (`commitProject` with `buildProjectModel`) is still over 10 ms on a 60-item project; that cost is not part of this pick.
+
 ### G-489: Restoring a backup writes rows without a transaction
 
 - Status: Done (N390)
@@ -3759,6 +3821,17 @@ highest id in either file.
 - Suggested pick: One transaction over the restored tables, with a test that a failing row leaves the library unchanged (estimate: effort +5 %, value +5 %)
 - Work: Low
 - Impact: Medium
+
+### G-492: Some checks still match English panel labels
+
+- Status: Done (N433)
+- Origin: ADR-225 Out of scope, 2026-11-07 (architecture review I-07)
+- Missing: Label regexes in clearance.ts, build.ts, shape.ts, replace.ts and assembly.ts that have no panel role or kind field to key on stay as regexes after ADR-225.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should Panel get a role field for every label a check matches (a model-shape change)?
+- Suggested pick: Add the role field only where a check needs it, in a follow-up ADR (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low
 
 ### G-493: Saved-row list functions still return whole rows
 
@@ -3873,6 +3946,19 @@ highest id in either file.
 - Work: High
 - Impact: Medium
 - Necessity: Medium
+
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
+
+- Status: Done (N444)
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Note: 2026-11-27 (N444): the suggested pick is done. Second capture pass on the app's phone default (canvas editor): `tools/capture/flows.mjs` (empty project, Settings, Material, the 8 wizard steps; 390 and 1280 px, light and dark; 44 states, none skipped), `tools/capture/contrast.mjs` (32 states, 3,734 texts, 0 below AA) and `tools/capture/flows3.mjs` (seeded project with two pieces, room, 3D, results, pages, signed-out online screens; 96 states, via N443). Citation check of every [R] finding (F-06, F-07, F-11, F-12, F-13, F-14, F-15, F-17, F-18, F-19) with today's file:line, and a new finding F-31 (the 3D ⋯ menu clipped at 390 px): `docs/research/2026-11-15-ui-flow-audit.md` section 13. Remainder, for a new gap (no G id given here): signed-in Account, making and stopping share links, Assistant replies and any check on the published site need a real account or the live URL; error and repair states seen in the browser, placing and dragging, Move mode, Render and AR export need scripted gestures or a design with errors; F-31 is not fixed.
 
 ### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
 
@@ -4114,6 +4200,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-534: Architecture checks the review could not cover
+
+- Status: Done (N439)
+- Note: 2026-11-27 (N439): every listed check was run or read and recorded in `docs/research/2026-11-27-architecture-checks.md`: 160 rounding calls in src/core classified (159 conform; defect D1: diagonal corner doors at `src/core/corner.ts`:341 leave up to n − 1 mm unshared, e.g. width 901 with two doors gives 238 + 238 on a 477 mm opening; described, not fixed); build.ts checks present (no committed test fires `non-integer` or `zero-size`); FUZZ_N=30000 9/9 pass; ADR-085 card within its exception (count-stepper find-it 44/44); CSP and service worker tests pass on a fresh build; assistant function read (no defect); 3D chunks load only when 3D is shown, at 1280 and 390 px.
+- Origin: architect-review 2026-11-17
+- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Run each check and record its result in a dated report under docs/research
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-535: F-29 half fixed: the Gaps page marks no current place
 
 - Status: Done (N386, 2026-11-26: on the Gaps page More and Information are marked as the current place, src/ui/App.tsx; tests/find-it/more-current-page.test.tsx 2 passed)
@@ -4174,6 +4273,19 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-556: Browser scripts editor-modes and ui-polish fail on main
+
+- Status: Done (N442)
+- Origin: N352, found by pnpm regress 2026-11-20
+- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
+- Request: Repair both scripts or the app, whichever is stale
+- Questions: none
+- Suggested pick: Repair the scripts against the current UI
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Note: 2026-11-27 (N442): both scripts pass against `pnpm build` + `vite preview` (editor-modes 164/164, ui-polish 52/52). The 'places Editor · Cut list' and brand checks were already brought to the current UI (234f34d rename, N404); editor-modes still timed out on the catalog's `Add …` button since the finder became the default (G-582), fixed by opening the grouped catalog (`fb:catalogFinder` off) as N402 did. No app bug found.
 
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
@@ -4355,6 +4467,18 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
+
+### G-589: Phone capture of room, 3D, results, Gaps and Research states
+
+- Status: Done (N443)
+- Origin: N379 UI review 2026-11-23
+- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
+- Request: Scheduled UI review: capture every department at 390 and 1280 px
+- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
+- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
+- Work: Medium
+- Impact: Low-medium
+- Note: 2026-11-27 (N443): `tools/capture/flows3.mjs` now runs on the app's real phone default (the canvas editor, `launchBrowser({ appDefault: true })`) and its phone steps follow the chip rail: the catalog finder tiles in Add a piece, Close for the Settings card (Escape leaves it open), a tap on the plan piece for piece-selected, the chip rail's "Edit <project>" for the Room card (a flat `.room-fold` there), the Information page's Gaps button. Run with `CAPTURE_DARK=1` and the placeholder-backend build: 96 states captured (24 per width and scheme, light and dark, 390 and 1280), 0 texts below AA of 10,900, no sideways scroll, 4 blocked requests (the share-link fetch). Research: no Research page exists (#227), so the state still logs its absence; removing it stays the gap's open question. Found on the way (not fixed, outside this gap): at 390 px the 3D view's ⋯ menu (`More 3D actions`: Export for AR, Export scene) opens but is clipped by the tool row, whose phone rule sets `overflow-x: auto` (`src/styles.css` `.three-tools`, audit F-30); `elementFromPoint` on the open panel returns the canvas, see `3d-more-menu-390-*.png`.
 
 ### G-590: Appearance: tests for − / + and ±5% controls
 

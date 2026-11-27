@@ -30,7 +30,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "settings-populated",
-    "texts": 148,
+    "texts": 147,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -111,7 +111,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "info",
-    "texts": 773,
+    "texts": 775,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -120,7 +120,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "info-domain-open",
-    "texts": 773,
+    "texts": 775,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -129,7 +129,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "gaps",
-    "texts": 1057,
+    "texts": 651,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -183,7 +183,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "share-link-unreachable",
-    "texts": 14,
+    "texts": 15,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -210,7 +210,7 @@
     "scheme": "light",
     "width": 1280,
     "state": "assistant-signed-out",
-    "texts": 16,
+    "texts": 18,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -219,60 +219,6 @@
     "scheme": "light",
     "width": 390,
     "state": "project-plan",
-    "texts": 14,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "piece-list",
-    "texts": 28,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "piece-selected",
-    "texts": 90,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "settings-populated",
-    "texts": 76,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "room-empty",
-    "texts": 28,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "room-added",
-    "texts": 76,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "light",
-    "width": 390,
-    "state": "room-draw",
     "texts": 16,
     "unread": 0,
     "fail": 0,
@@ -281,8 +227,62 @@
   {
     "scheme": "light",
     "width": 390,
+    "state": "piece-list",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "piece-selected",
+    "texts": 29,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "settings-populated",
+    "texts": 104,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-empty",
+    "texts": 38,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-added",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
+    "state": "room-draw",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "light",
+    "width": 390,
     "state": "room-fill-dialog",
-    "texts": 34,
+    "texts": 35,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -318,7 +318,7 @@
     "scheme": "light",
     "width": 390,
     "state": "copy-code",
-    "texts": 25,
+    "texts": 27,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -327,7 +327,7 @@
     "scheme": "light",
     "width": 390,
     "state": "info",
-    "texts": 47,
+    "texts": 48,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -336,7 +336,7 @@
     "scheme": "light",
     "width": 390,
     "state": "info-domain-open",
-    "texts": 88,
+    "texts": 89,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -345,7 +345,7 @@
     "scheme": "light",
     "width": 390,
     "state": "gaps",
-    "texts": 1058,
+    "texts": 651,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -354,7 +354,7 @@
     "scheme": "light",
     "width": 390,
     "state": "account-sign-in",
-    "texts": 21,
+    "texts": 20,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -363,7 +363,7 @@
     "scheme": "light",
     "width": 390,
     "state": "account-create",
-    "texts": 21,
+    "texts": 20,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -372,7 +372,7 @@
     "scheme": "light",
     "width": 390,
     "state": "account-forgot",
-    "texts": 15,
+    "texts": 14,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -381,7 +381,7 @@
     "scheme": "light",
     "width": 390,
     "state": "account-privacy",
-    "texts": 30,
+    "texts": 29,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -390,7 +390,7 @@
     "scheme": "light",
     "width": 390,
     "state": "share-link-invalid",
-    "texts": 14,
+    "texts": 13,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -408,7 +408,7 @@
     "scheme": "light",
     "width": 390,
     "state": "assistant-off",
-    "texts": 15,
+    "texts": 14,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -417,7 +417,7 @@
     "scheme": "light",
     "width": 390,
     "state": "assistant-consent",
-    "texts": 18,
+    "texts": 17,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -426,7 +426,7 @@
     "scheme": "light",
     "width": 390,
     "state": "assistant-signed-out",
-    "texts": 17,
+    "texts": 18,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -462,7 +462,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "settings-populated",
-    "texts": 148,
+    "texts": 147,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -543,7 +543,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "info",
-    "texts": 773,
+    "texts": 775,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -552,7 +552,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "info-domain-open",
-    "texts": 773,
+    "texts": 775,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -561,17 +561,10 @@
     "scheme": "dark",
     "width": 1280,
     "state": "gaps",
-    "texts": 1057,
+    "texts": 651,
     "unread": 0,
-    "fail": 1,
-    "worst": [
-      {
-        "text": "Open",
-        "ratio": 2.01,
-        "need": 4.5,
-        "px": 13
-      }
-    ]
+    "fail": 0,
+    "worst": []
   },
   {
     "scheme": "dark",
@@ -622,7 +615,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "share-link-unreachable",
-    "texts": 14,
+    "texts": 15,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -649,7 +642,7 @@
     "scheme": "dark",
     "width": 1280,
     "state": "assistant-signed-out",
-    "texts": 16,
+    "texts": 18,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -658,60 +651,6 @@
     "scheme": "dark",
     "width": 390,
     "state": "project-plan",
-    "texts": 14,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "piece-list",
-    "texts": 28,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "piece-selected",
-    "texts": 90,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "settings-populated",
-    "texts": 76,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "room-empty",
-    "texts": 28,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "room-added",
-    "texts": 76,
-    "unread": 0,
-    "fail": 0,
-    "worst": []
-  },
-  {
-    "scheme": "dark",
-    "width": 390,
-    "state": "room-draw",
     "texts": 16,
     "unread": 0,
     "fail": 0,
@@ -720,8 +659,62 @@
   {
     "scheme": "dark",
     "width": 390,
+    "state": "piece-list",
+    "texts": 16,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "piece-selected",
+    "texts": 29,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "settings-populated",
+    "texts": 104,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-empty",
+    "texts": 38,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-added",
+    "texts": 86,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
+    "state": "room-draw",
+    "texts": 17,
+    "unread": 0,
+    "fail": 0,
+    "worst": []
+  },
+  {
+    "scheme": "dark",
+    "width": 390,
     "state": "room-fill-dialog",
-    "texts": 34,
+    "texts": 35,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -757,7 +750,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "copy-code",
-    "texts": 25,
+    "texts": 27,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -766,7 +759,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "info",
-    "texts": 47,
+    "texts": 48,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -775,7 +768,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "info-domain-open",
-    "texts": 88,
+    "texts": 89,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -784,23 +777,16 @@
     "scheme": "dark",
     "width": 390,
     "state": "gaps",
-    "texts": 1058,
+    "texts": 651,
     "unread": 0,
-    "fail": 1,
-    "worst": [
-      {
-        "text": "Open",
-        "ratio": 2.01,
-        "need": 4.5,
-        "px": 13
-      }
-    ]
+    "fail": 0,
+    "worst": []
   },
   {
     "scheme": "dark",
     "width": 390,
     "state": "account-sign-in",
-    "texts": 21,
+    "texts": 20,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -809,7 +795,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "account-create",
-    "texts": 21,
+    "texts": 20,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -818,7 +804,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "account-forgot",
-    "texts": 15,
+    "texts": 14,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -827,7 +813,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "account-privacy",
-    "texts": 30,
+    "texts": 29,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -836,7 +822,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "share-link-invalid",
-    "texts": 14,
+    "texts": 13,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -854,7 +840,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "assistant-off",
-    "texts": 15,
+    "texts": 14,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -863,7 +849,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "assistant-consent",
-    "texts": 18,
+    "texts": 17,
     "unread": 0,
     "fail": 0,
     "worst": []
@@ -872,7 +858,7 @@
     "scheme": "dark",
     "width": 390,
     "state": "assistant-signed-out",
-    "texts": 17,
+    "texts": 18,
     "unread": 0,
     "fail": 0,
     "worst": []
