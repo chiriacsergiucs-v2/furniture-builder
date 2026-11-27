@@ -38,7 +38,7 @@ const MODEL = [
 const CORE_PACKAGE = /^(react|react-dom|three|dexie|zustand)(\/|$)|^@react-three\/|^@supabase\//;
 const APP = /^src\/(store|ui|persist|viewer|online)(\/|$)/;
 const MODEL_UP =
-  /^src\/core\/(project|room|design)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)|^@furniture-builder\/(nesting(\/|$)|i18n\/print$)/;
+  /^src\/core\/(project\w*|room|design)$|^src\/core\/(catalog|nesting|wizard|sellers)(\/|$)|^@furniture-builder\/(nesting(\/|$)|i18n\/print$)/;
 // ADR-279: a workspace package is reached by its name and exports, never by its files.
 const DEEP = /^@furniture-builder\/[^/]+\/(src|tests)(\/|$)|(^|\/)packages\//;
 // Allowance: src/ui/Gaps.tsx reads the gaps ledger as text (G-503).
@@ -299,16 +299,19 @@ const STATIC = [
 ];
 const ALLOWED_CYCLES: { files: string[]; why: string }[] = [
   {
-    why: 'the project model (project.ts and the files it is split into) is one unit (G-485 pick)',
+    why: 'the project model (the files project.ts re-exports and the files they name) is one unit (G-485 pick, G-548)',
     files: [
       'arrange',
       'common',
       'compat',
       'connections',
       'groupMove',
-      'project',
+      'projectDoc',
+      'projectModel',
+      'projectMove',
+      'projectPlace',
       'projectProfiles',
-      'projectValidate',
+      'projectRuns',
       'projectWorktops',
       'selection',
       'shared',
@@ -316,12 +319,9 @@ const ALLOWED_CYCLES: { files: string[]; why: string }[] = [
       'variables',
     ].map((m) => `src/core/${m}.ts`),
   },
-  {
-    why: 'type-only: the document types and the codes and catalog types they name; moving them changes types.ts (ADR-011)',
-    files: ['src/core/catalog/types.ts', 'src/core/diagnosticCodes.ts', 'src/core/types.ts'],
-  },
 ];
-// Allowances for the transitive model rule: desk.ts reads ./design (G-491), and types.ts names the catalog's types.
+// Allowances for the transitive model rule: desk.ts reads ./design (G-491), and design.ts reads the catalog's room list
+// (`ROOMS`). The document types name no catalog file any more (G-613).
 const MODEL_REACH_ALLOWED = ['src/core/design.ts', 'src/core/catalog/types.ts'];
 
 /** Static import edges between the given files, resolved like Vite does (`.ts`, `.tsx`, `/index`). */
@@ -406,6 +406,28 @@ describe('import cycles (G-485, G-530)', () => {
     const allowed = new Set(ALLOWED_CYCLES.map((c) => [...c.files].sort().join(' ')));
     const found = cycles(GRAPH).map((c) => c.join(' '));
     expect(found.filter((c) => !allowed.has(c))).toEqual([]);
+  });
+
+  it('the document types are in no import cycle (G-613), and no core file imports the project barrel (G-548)', () => {
+    const typeFiles = [
+      'types',
+      'kernelTypes',
+      'materialTypes',
+      'modelTypes',
+      'productTypes',
+      'designTypes',
+      'diagnosticCodes',
+      'catalog/types',
+    ].map((m) => `src/core/${m}.ts`);
+    expect(
+      cycles(GRAPH)
+        .flat()
+        .filter((f) => typeFiles.includes(f)),
+    ).toEqual([]);
+    const barrelUsers = [...GRAPH]
+      .filter(([f, to]) => f.startsWith('src/core/') && to.includes('src/core/project.ts'))
+      .map(([f]) => f);
+    expect(barrelUsers).toEqual([]);
   });
 
   it('no model file reaches the project layer, not even through other files', () => {

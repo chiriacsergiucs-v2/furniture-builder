@@ -4250,6 +4250,18 @@ highest id in either file.
 - Necessity: Low
 - Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
 
+### G-548: The types.ts and project.ts hubs are not split
+
+- Status: Done (N449)
+- Origin: ADR-279 Out of scope, 2026-11-19 (Claude, under the user's autopilot)
+- Missing: src/core/types.ts (141 importers) and src/core/project.ts (2614 lines, 83 importers) are hubs; a kernel package cannot be cut while every domain imports them
+- Request: This repo and architecture structure seems to be way too interdependent
+- Questions: Split types.ts by domain, and project.ts into project model, validation and templates?
+- Suggested pick: Split types.ts into kernel types plus one type file per domain; split project.ts along its existing projectX siblings (estimate: effort +20 %, value +15 %)
+- Work: Medium
+- Impact: Medium
+- Note: User 2026-11-27: "Split as picked".
+
 ### G-550: Audit advisories left after dependency health
 
 - Status: Done (N410)
@@ -4560,6 +4572,18 @@ highest id in either file.
 - Work: Low-medium
 - Impact: Medium
 - Necessity: Medium
+
+### G-613: Type-only import cycle types.ts, diagnosticCodes.ts, catalog/types.ts
+
+- Status: Done (N450)
+- Origin: G-485 remainder (N419), 2026-11-27
+- Missing: The cycle guard allow-lists a type-only cycle between src/core/types.ts, diagnosticCodes.ts and catalog/types.ts; breaking it changes types.ts
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Break it as part of the G-548 types.ts split?
+- Suggested pick: Break it in the G-548 split
+- Work: Low
+- Impact: Low
+- Necessity: Low
 
 ### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
 

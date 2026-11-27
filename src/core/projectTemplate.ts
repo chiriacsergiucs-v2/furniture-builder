@@ -10,18 +10,18 @@
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
+import { planRuns } from './projectWorktops';
 import {
-  planRuns,
   PROJECT_SCHEMA,
-  validateProject,
-  type Placement,
   type Project,
   type QuarterTurn,
   type RunHandle,
   type RunRequest,
   type RunSettings,
   type RunSink,
-} from './project';
+} from './projectDoc';
+import { validateProject } from './projectValidate';
+import { type Placement } from './placement';
 import { validateRoom, type Room } from './room';
 import type { Connection, ConnectionKind } from './connections';
 import {

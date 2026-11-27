@@ -58,7 +58,7 @@ import {
   type TrimKind,
   VARIABLES_SINCE,
   WALLS_SINCE,
-} from './project';
+} from './projectDoc';
 import { isObj, isInt } from './guards';
 
 // ---------------------------------------------------------------------------

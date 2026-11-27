@@ -7,7 +7,8 @@
 import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
 import { roleBoard } from './finish';
-import { materialKey, type Project, type ProjectItem, type ProjectSettings } from './project';
+import { materialKey } from './projectModel';
+import { type Project, type ProjectItem, type ProjectSettings } from './projectDoc';
 import type { Design, FrontStyle, Handle, Material, Mm } from './types';
 import { isObj } from './guards';
 

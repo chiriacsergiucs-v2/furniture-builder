@@ -5,7 +5,8 @@
  * the project has none of its own (ADR-060). Overlaps are left to the project checks (ADR-008).
  */
 import { newId } from './design';
-import { placedBounds, type Project, type ProjectItem } from './project';
+import { placedBounds } from './projectPlace';
+import { type Project, type ProjectItem } from './projectDoc';
 import { withSettings } from './projectSettings';
 import {
   remapRunExtras,

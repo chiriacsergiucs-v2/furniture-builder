@@ -4,7 +4,7 @@
  * Checked wherever the size locks are (`resizeBlocked`, `sizeLockBlocked`). Pure.
  */
 import { t } from '@furniture-builder/i18n';
-import type { Project, ProjectItem } from './project';
+import type { Project, ProjectItem } from './projectDoc';
 import type { Design, Product } from './types';
 
 export const BOARDS_LOCKED_HINT = t('Boards locked — unlock to change');

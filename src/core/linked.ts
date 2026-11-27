@@ -5,7 +5,7 @@
  */
 import { duplicateItem } from './arrange';
 import { newId } from './design';
-import type { Project, ProjectItem } from './project';
+import type { Project, ProjectItem } from './projectDoc';
 import type { Design } from './types';
 
 /** The other items linked to `id` (not `id` itself); empty when it is not linked. */

@@ -4,7 +4,9 @@
  * ADR-070): whole mm, the 10 mm step with Snap off or Alt held, snapping with Snap on. Height is never dragged; it
  * comes from placement.
  */
-import { liftOff, type PlacedPiece, type Project, type ProjectItem } from './project';
+import { liftOff } from './projectMove';
+import { type PlacedPiece } from './projectPlace';
+import { type Project, type ProjectItem } from './projectDoc';
 import { dropTarget, SNAP_RANGE, type SnapResult } from './snap';
 import { modelDrop as placeDrop } from './modelPlace';
 import type { Mm } from './types';

@@ -5,14 +5,9 @@
  * the floor is refused with the reason, never clamped (ADR-008); a locked piece stays (ADR-095).
  */
 import { t } from '@furniture-builder/i18n';
-import {
-  isWallHung,
-  moveBlocked,
-  pieceName,
-  type MoveResult,
-  type PlacedPiece,
-  type Project,
-} from './project';
+import { isWallHung, type Project } from './projectDoc';
+import { moveBlocked, pieceName, type MoveResult } from './projectMove';
+import { type PlacedPiece } from './projectPlace';
 import { SNAP_RANGE } from './snap';
 import type { Box, Mm } from './types';
 

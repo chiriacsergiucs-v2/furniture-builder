@@ -11,7 +11,8 @@ import { buildModel } from './build';
 import { insertable, insertVariant } from './catalog';
 import type { CatalogFamily } from './catalog/types';
 import { newId, upgradeDesign, validateDesign } from './design';
-import { materialKey, type ProjectItem } from './project';
+import { materialKey } from './projectModel';
+import { type ProjectItem } from './projectDoc';
 import type { Design, Material } from './types';
 import { isObj } from './guards';
 

@@ -4,7 +4,8 @@
  * lists them; one becomes a project through `projectFromTemplate`. A preset whose variant is not insertable is not
  * listed. Pure: geometry comes from the pieces' own footprints (`placedBounds`), never computed in the UI.
  */
-import { makeItem, newProject, placedBounds, type Project, type ProjectItem } from '../project';
+import { makeItem, placedBounds } from '../projectPlace';
+import { newProject, type Project, type ProjectItem } from '../projectDoc';
 import { templateFromProject, type ProjectTemplate } from '../projectTemplate';
 import {
   DEFAULT_ROOM_HEIGHT,

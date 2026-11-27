@@ -6,7 +6,8 @@
  */
 import { t, tr } from '@furniture-builder/i18n';
 import { bounds2, footprint, isRect, rectOf, sharedLength, unionOutline, type Pt } from './outline';
-import { placeItem, type CommonPanel, type Project } from './project';
+import { placeItem } from './projectPlace';
+import { type CommonPanel, type Project } from './projectDoc';
 import type { Design, Diagnostic, Face, Panel } from './types';
 
 type CommonKind = CommonPanel['kind'];

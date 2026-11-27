@@ -8,7 +8,10 @@ import { escapeHtml } from './escapeHtml';
 import { snapshotSvg } from './snapshot';
 import { cutlistCsvRo } from './ro';
 import { printPieceNames } from './catalog/printName';
-import { projectCutlist, rotationOf, type Project, type ProjectModel } from './project';
+import { projectCutlist } from './projectProfiles';
+import { rotationOf } from './projectMove';
+import { type Project } from './projectDoc';
+import { type ProjectModel } from './projectModel';
 import { zipStore, type ZipEntry } from './zip';
 
 export interface PackFile {

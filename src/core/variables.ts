@@ -12,14 +12,14 @@ import { newId } from './design';
 import {
   REQUEST_RANGE,
   requestKey,
-  requestName,
   SIZE_AXES,
   type Project,
   type ProjectItem,
   type RequestTarget,
   type RunRequest,
   type SizeAxis,
-} from './project';
+} from './projectDoc';
+import { requestName } from './projectWorktops';
 import { isAxisLocked } from './sizeLock';
 import type { Diagnostic, Mm } from './types';
 import {

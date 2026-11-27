@@ -21,7 +21,7 @@ export const ru_surfaces = {
   '{n} of 2': '{n} из 2',
   'Wall {n} behind the piece': 'Стена {n} за изделием',
 
-  // Checks (src/core/project.ts, src/core/room.ts, src/core/planPicture.ts)
+  // Checks (src/core/project*.ts, src/core/room.ts, src/core/planPicture.ts)
   'Invalid floor background': 'Неверный фон пола',
   'Invalid plan picture': 'Неверное изображение плана',
   'Invalid 3D model placement': 'Неверное размещение 3D-модели',

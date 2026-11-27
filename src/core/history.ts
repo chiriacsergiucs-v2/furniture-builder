@@ -3,7 +3,7 @@
  * name. An action may name its step; otherwise the name is derived here from what changed between the two project
  * states. Pure: compares documents only.
  */
-import type { Project, ProjectItem } from './project';
+import type { Project, ProjectItem } from './projectDoc';
 import { t } from '@furniture-builder/i18n';
 
 const pieces = (n: number) => t('{n|# piece|# pieces}', { n });

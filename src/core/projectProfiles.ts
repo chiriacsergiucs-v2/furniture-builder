@@ -19,30 +19,30 @@ import { t } from '@furniture-builder/i18n';
 
 import {
   applyRunHandles,
-  buildProjectModel,
   type CutoutOutline,
   cutoutOutlines,
-  materialKey,
-  type PlacedPiece,
-  placeItem,
-  planRuns,
   plinthCovered,
-  type Project,
-  type ProjectModel,
-  requestKey,
-  requestName,
-  resolvePlacements,
-  runMaterial,
   runPanel,
-  type RunPart,
+} from './projectRuns';
+import { buildProjectModel, materialKey, type ProjectModel, runMaterial } from './projectModel';
+import { type PlacedPiece, placeItem } from './projectPlace';
+import {
+  planRuns,
+  requestName,
   runPartKey,
   runPartNames,
+  worktopJointCuts,
+} from './projectWorktops';
+import {
+  type Project,
+  requestKey,
+  type RunPart,
   type RunRequest,
   type RunSink,
   TRIM_KINDS,
   type TrimKind,
-  worktopJointCuts,
-} from './project';
+} from './projectDoc';
+import { resolvePlacements } from './projectMove';
 
 // ---------------------------------------------------------------------------
 // Moulding profiles and repair fillers (ADR-209)

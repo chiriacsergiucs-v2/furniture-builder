@@ -86,9 +86,9 @@ export function makeChecker(results) {
 }
 
 /**
- * `PROJECT_SCHEMA` read from the source text of `src/core/project.ts` (the `.mjs` scripts do not import the
+ * `PROJECT_SCHEMA` read from the source text of `src/core/projectDoc.ts` (the `.mjs` scripts do not import the
  * TypeScript app), for scripts that seed saved projects.
  */
 export function projectSchema() {
-  return Number(/PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/project.ts', 'utf8'))[1]);
+  return Number(/PROJECT_SCHEMA = (\d+)/.exec(readFileSync('src/core/projectDoc.ts', 'utf8'))[1]);
 }
