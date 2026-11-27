@@ -18,6 +18,7 @@ import type { Design } from '../core/types';
 import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
 import { db, getSetting, savedRows, setSetting } from './db';
+import { encodePicture, type PictureEncoder } from './images';
 import { onSavedChange, takeDirty } from './events';
 import { t } from '@furniture-builder/i18n';
 
@@ -382,8 +383,37 @@ export class RestoreStopped extends Error {
   }
 }
 
-export async function restoreFiles(files: BackupFile[]): Promise<RestorePlan> {
+export async function restoreFiles(
+  files: BackupFile[],
+  encode: PictureEncoder = encodePicture,
+): Promise<RestorePlan> {
   const plan = planRestore(files, await existing());
+  // Pictures are decoded and drawn again before they are stored, as a picked picture is (G-542); one that cannot be
+  // is listed with the reason. Done before the transaction, which cannot wait on the browser's decoder.
+  const kept: typeof plan.actions = [];
+  for (const a of plan.actions) {
+    if (a.table !== 'images') {
+      kept.push(a);
+      continue;
+    }
+    const r = a.row;
+    const pic = await encode(r.bytes as ArrayBuffer, r.type as string, r.name as string);
+    if (!pic.ok) plan.skipped.push({ path: a.path, reason: pic.problem });
+    else
+      kept.push({
+        ...a,
+        row: {
+          id: r.id,
+          name: r.name,
+          type: pic.type,
+          width: pic.width,
+          height: pic.height,
+          bytes: pic.bytes,
+          createdAt: r.createdAt,
+        },
+      });
+  }
+  plan.actions = kept;
   if (!plan.actions.length) return plan;
   // One transaction over the restored tables (G-489): a row the storage refuses rolls the whole restore back, so the
   // library is never left half restored; nothing was restored before the stop, so `done` is 0.

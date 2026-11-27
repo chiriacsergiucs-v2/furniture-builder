@@ -485,6 +485,26 @@ export function parseBandList(text: string, list: string): { bands: Band[]; prob
   return { bands, problems };
 }
 
+/** A stored decor row the app can read (G-542: checked before a backup restores it). */
+export function validateDecor(v: unknown): v is Decor {
+  if (!v || typeof v !== 'object') return false;
+  const d = v as Record<string, unknown>;
+  const str = (x: unknown) => typeof x === 'string' && x.length > 0;
+  return (
+    str(d.id) &&
+    MAKERS.some((m) => m.value === d.maker) &&
+    typeof d.makerText === 'string' &&
+    KINDS.some((k) => k.value === d.kind) &&
+    str(d.code) &&
+    typeof d.name === 'string' &&
+    Number.isSafeInteger(d.thickness) &&
+    (d.thickness as number) >= 1 &&
+    typeof d.color === 'string' &&
+    /^#[0-9a-fA-F]{6}$/.test(d.color) &&
+    typeof d.list === 'string'
+  );
+}
+
 /** A stored band row the app can read (ADR-012: unreadable rows are skipped, never deleted). */
 export function validateBand(v: unknown): v is Band {
   if (!v || typeof v !== 'object') return false;

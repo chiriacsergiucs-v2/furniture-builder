@@ -6,7 +6,7 @@
 import { newId } from '../core/design';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { db } from './db';
-import { takePictures, withPictures } from './images';
+import { encodePicture, takePictures, withPictures, type PictureEncoder } from './images';
 import { takeModels, withModels } from './models';
 import { t } from '@furniture-builder/i18n';
 
@@ -27,6 +27,7 @@ type ProjectTemplateImport =
 export async function readProjectTemplateFile(
   parsed: unknown,
   database = db,
+  encode: PictureEncoder = encodePicture,
 ): Promise<ProjectTemplateImport> {
   let errs: string[];
   try {
@@ -41,7 +42,7 @@ export async function readProjectTemplateFile(
         problems: errs.slice(0, 3).join('; '),
       }),
     };
-  const pics = await takePictures(parsed, database);
+  const pics = await takePictures(parsed, database, encode);
   // Model files go to this device under new ids; the template's models point at them (ADR-208).
   const { data, problems: modelProblems } = await takeModels(pics.data, database);
   const problems = [...pics.problems, ...modelProblems];

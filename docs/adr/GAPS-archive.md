@@ -3949,6 +3949,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-542: Picture and row validation on file import and restore (security M-1, M-4)
+
+- Status: Done (N407)
+- Note: User 2026-11-27: "Re-encode + per-table". Built in N407: pictures in imported files and backups are decoded and drawn again (`encodePicture`, src/persist/images.ts); restore checks each non-design row against its table (`rowProblems`, src/core/backup.ts)
+- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
+- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
+- Request: Route file pictures through the decode/re-encode path; validate rows per table
+- Questions: Approach for stricter picture and row validation on import and restore?
+- Suggested pick: User approves approach (ADR-011 implication)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-552: look-render find-it incomplete in sandbox
 
 - Status: Done (N398)
@@ -3982,6 +3995,19 @@ highest id in either file.
 - Questions: None; the cap value is MAX_IMPORT_BYTES
 - Suggested pick: Reuse MAX_IMPORT_BYTES in the five handlers with a t() message and Russian entry (Work Low, Value Low)
 - Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-565: Re-encode or sniff pictures inside imported files
+
+- Status: Done (N407)
+- Note: Built in N407 with G-542: picture bytes sniffed against the declared type (`sniffPictureType`, src/core/surface.ts) and at most `MAX_FILE_PICTURES` (200, not a physical fact) read per file
+- Origin: Security health check round 1, 2026-11-19 (L-2)
+- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
+- Request: /health-security, loop prompt; user approved Medium only
+- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
+- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
+- Work: Medium
 - Impact: Low
 - Necessity: Low
 

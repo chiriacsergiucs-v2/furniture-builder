@@ -710,4 +710,20 @@ export const ru_core2 = {
     'Ряд {i} не соответствует ширинам {a}, {b} и {c} мм: никакое их сочетание не заполняет {w} мм. Измените ширины или оставьте ряд заданным вручную.',
   'A divider in row {i} lines up with one in the row above.':
     'Перегородка в ряду {i} совпадает с перегородкой в ряду выше.',
+  'not a valid decor': 'неверный декор',
+  'not a valid gap mark': 'неверная отметка пробела',
+  'Missing template id or name': 'Нет id или названия шаблона',
+  '3D model row must be an object': 'Строка 3D-модели должна быть объектом',
+  '3D model name missing': 'Нет названия 3D-модели',
+  '3D model format must be glb or gltf': 'Формат 3D-модели должен быть glb или gltf',
+  '3D model file missing or too large': 'Файл 3D-модели отсутствует или слишком большой',
+  '3D model size must be whole mm': 'Размер 3D-модели должен быть в целых мм',
+  '3D model triangle count invalid': 'Неверное число треугольников 3D-модели',
+  '3D model thumbnail must be a PNG': 'Миниатюра 3D-модели должна быть PNG',
+  '3D model date missing': 'Нет даты 3D-модели',
+  'picture date missing': 'нет даты картинки',
+  'picture bytes missing': 'нет данных картинки',
+  'picture bytes do not match its type': 'данные картинки не соответствуют её типу',
+  'The file holds {n} pictures; {over} over the limit of {max} were skipped.':
+    'В файле {n} картинок; {over} сверх предела {max} пропущено.',
 } satisfies Record<string, string>;

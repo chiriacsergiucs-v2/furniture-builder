@@ -25,7 +25,18 @@ import {
   saveProject,
   unusedImageIds,
 } from '../src/persist/db';
-import { takePictures, withPictures } from '../src/persist/images';
+import { takePictures, withPictures, type PictureEncoder } from '../src/persist/images';
+
+// The browser's decode and re-encode (G-542) stands in as a pass-through: Node has no picture decoder.
+const passThrough: PictureEncoder = async (bytes, type) => ({
+  ok: true,
+  bytes,
+  type,
+  width: 2,
+  height: 1,
+  color: '#000000',
+});
+
 import { useDesign } from '../src/store/designStore';
 
 const sizes = { width: 3000, depth: 2000, cutWidth: 0, cutDepth: 0, offset: 0 };
@@ -107,7 +118,7 @@ describe('wall backgrounds (ADR-145)', () => {
       type: 'image/jpeg',
       width: 2,
       height: 2,
-      bytes: new Uint8Array([4, 5, 6]).buffer,
+      bytes: new Uint8Array([0xff, 0xd8, 0xff, 4, 5, 6]).buffer,
       createdAt: '',
     });
     const p = withWalls();
@@ -118,9 +129,11 @@ describe('wall backgrounds (ADR-145)', () => {
     const file = JSON.parse(JSON.stringify(await withPictures(p, pictureHolders(p))));
     expect(file.pictures.map((x: { id: string }) => x.id)).toEqual([tiles.id]);
     await deleteImages([tiles.id]); // "another device"
-    const { data, problems } = await takePictures(file);
+    const { data, problems } = await takePictures(file, db, passThrough);
     expect(problems).toEqual([]);
     expect(validateProject(data)).toEqual([]);
-    expect(new Uint8Array((await loadImage(tiles.id))!.bytes)).toEqual(new Uint8Array([4, 5, 6]));
+    expect(new Uint8Array((await loadImage(tiles.id))!.bytes)).toEqual(
+      new Uint8Array([0xff, 0xd8, 0xff, 4, 5, 6]),
+    );
   });
 });

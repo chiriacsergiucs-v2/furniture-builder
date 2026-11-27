@@ -2,6 +2,13 @@ import { newId, validateDesign } from './design';
 import { validateProject, type Project } from './project';
 import { templateProblemTexts, validateLocalTemplate, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
+import { validateGapMark } from './gaps';
+import { validateDecor } from './materials';
+import { modelRowProblems } from './model3d';
+import { validatePrice } from './prices';
+import { validateProjectTemplate } from './projectTemplate';
+import { validateVersion } from './projectVersion';
+import { imageRowProblems } from './surface';
 import { t } from '@furniture-builder/i18n';
 
 /**
@@ -119,15 +126,42 @@ export function tableFiles(
   });
 }
 
+type RowTable = Exclude<BackupTable, 'designs' | 'projects' | 'templates'>;
+
+/**
+ * Problems of a stored row read from a backup, against its table's shape (G-542). Empty = it may be restored. The
+ * retired research tables have no shape in the code (nothing reads them), so only their key is checked.
+ */
+export function rowProblems(table: RowTable, row: Record<string, unknown>): string[] {
+  switch (table) {
+    case 'images':
+      return imageRowProblems(row);
+    case 'models':
+      return modelRowProblems(row);
+    case 'prices':
+      return validatePrice(row);
+    case 'decors':
+      return validateDecor(row) ? [] : [t('not a valid decor')];
+    case 'gapMarks':
+      return validateGapMark(row) ? [] : [t('not a valid gap mark')];
+    case 'projectVersions':
+      return validateVersion(row);
+    case 'projectTemplates':
+      return typeof row.name === 'string' && typeof row.updatedAt === 'string'
+        ? validateProjectTemplate(row.template)
+        : [t('Missing template id or name')];
+    case 'researchMarks':
+    case 'researchDocs':
+      return [];
+  }
+}
+
 /** What a restore stores: whole documents for designs, projects and templates, stored rows for the rest. */
 type RestoreAction =
   | { table: 'designs'; design: Design }
   | { table: 'projects'; project: Project }
   | { table: 'templates'; template: LocalTemplate }
-  | {
-      table: Exclude<BackupTable, 'designs' | 'projects' | 'templates'>;
-      row: Record<string, unknown>;
-    };
+  | { table: RowTable; row: Record<string, unknown>; path: string };
 
 export interface RestorePlan {
   actions: RestoreAction[];
@@ -154,8 +188,8 @@ const print = (doc: unknown): string => {
 /**
  * Restore never deletes or overwrites a saved row (ADR-012). An item identical to a saved one is skipped; every
  * other design, project or template is restored as a new copy with a new id (ADR-011, G-244). Other rows (pictures,
- * 3D models, prices …) are added only when their key is free, so designs still find their pictures. Invalid files
- * are listed by name, never thrown.
+ * 3D models, prices …) are added only when their key is free, so designs still find their pictures, and only when they
+ * have their table's shape (G-542). Invalid files are listed by name, never thrown.
  */
 export function planRestore(files: BackupFile[], existing: Existing): RestorePlan {
   const plan: RestorePlan = { actions: [], skipped: [], identical: 0 };
@@ -208,6 +242,11 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
       plan.skipped.push({ path: f.path, reason: t('no {key}', { key }) });
       continue;
     }
+    const errs = rowProblems(table, value);
+    if (errs.length) {
+      plan.skipped.push({ path: f.path, reason: errs.slice(0, 2).join('; ') });
+      continue;
+    }
     const set = keys.get(table) ?? new Set<string>();
     keys.set(table, set);
     if (set.has(value[key] as string)) {
@@ -215,7 +254,7 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
       continue;
     }
     set.add(value[key] as string);
-    plan.actions.push({ table, row: value });
+    plan.actions.push({ table, row: value, path: f.path });
   }
   return plan;
 }

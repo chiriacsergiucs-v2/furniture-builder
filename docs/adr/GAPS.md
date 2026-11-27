@@ -1672,18 +1672,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-542: Picture and row validation on file import and restore (security M-1, M-4)
-
-- Status: Open
-- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
-- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
-- Request: Route file pictures through the decode/re-encode path; validate rows per table
-- Questions: Approach for stricter picture and row validation on import and restore?
-- Suggested pick: User approves approach (ADR-011 implication)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-543: Hosted Supabase auth settings: confirmations and password length (security M-5)
 
 - Status: Open
@@ -1846,18 +1834,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add variants to these three families once a generator capability makes them genuinely different (e.g. new desk or sink options)
 - Questions: none
 - Suggested pick: Revisit when a new capability lands
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
-### G-565: Re-encode or sniff pictures inside imported files
-
-- Status: Open
-- Origin: Security health check round 1, 2026-11-19 (L-2)
-- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
-- Request: /health-security, loop prompt; user approved Medium only
-- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
-- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
 - Work: Medium
 - Impact: Low
 - Necessity: Low

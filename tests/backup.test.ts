@@ -11,6 +11,9 @@ import {
 } from '../src/core/backup';
 import { daysSince, deviceNoticeShown, reminderDue } from '../src/core/backupReminder';
 import { templates } from '../src/core/design';
+import { newProject } from '../src/core/project';
+import { makeVersion } from '../src/core/projectVersion';
+import { templateFromProject } from '../src/core/projectTemplate';
 import { unzipStore, zipStore } from '../src/core/zip';
 import { db, getSetting, saveDesign, setSetting } from '../src/persist/db';
 import {
@@ -122,8 +125,8 @@ describe('restore plan (ADR-133, G-244)', () => {
   it('other rows are added only when their key is free', () => {
     const files = planBackup({
       prices: [
-        { id: 'p1', price: 1 },
-        { id: 'p2', price: 2 },
+        { id: 'p1', unit: 'piece', amount: 1 },
+        { id: 'p2', unit: 'piece', amount: 2 },
       ],
     });
     const p = planRestore(files, {
@@ -132,7 +135,97 @@ describe('restore plan (ADR-133, G-244)', () => {
       templates: [],
       keys: { prices: new Set(['p1']) },
     });
-    expect(p.actions).toEqual([{ table: 'prices', row: { id: 'p2', price: 2 } }]);
+    expect(p.actions).toEqual([
+      { table: 'prices', row: { id: 'p2', unit: 'piece', amount: 2 }, path: 'prices/p2.json' },
+    ]);
+  });
+});
+
+// G-542: every non-design row is checked against its table's shape before it is restored; a bad row is listed, never
+// stored, and the rows already saved are untouched.
+describe('restore checks each row against its table (G-542)', () => {
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]).buffer;
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]).buffer;
+  const empty = { designs: [], projects: [], templates: [], keys: {} };
+  const p = newProject('Kept');
+  const good: Record<string, Record<string, unknown>> = {
+    prices: { id: 'board:x', unit: 'sheet', amount: 1200 },
+    gapMarks: { gapId: 'G-001', decision: null, note: '', updatedAt: '2026-11-27' },
+    images: {
+      id: 'img-1',
+      name: 'oak.jpg',
+      type: 'image/jpeg',
+      width: 2,
+      height: 1,
+      bytes: jpeg,
+      createdAt: '2026-11-27',
+    },
+    models: {
+      id: 'm1',
+      name: 'Fridge',
+      format: 'glb',
+      bytes: new Uint8Array([1, 2, 3]).buffer,
+      size: { w: 600, h: 1800, d: 650 },
+      triangles: 12,
+      thumb: png,
+      createdAt: '2026-11-27',
+    },
+    decors: {
+      id: 'egger:H1145:18',
+      maker: 'egger',
+      makerText: 'Egger',
+      kind: 'pal',
+      code: 'H1145',
+      name: 'Natural Bardolino Oak',
+      thickness: 18,
+      color: '#a07850',
+      list: 'egger.csv',
+    },
+    projectVersions: { ...makeVersion(p, 'manual'), id: 'v1' },
+    projectTemplates: (() => {
+      const tpl = templateFromProject(p, 'Kit');
+      return { id: tpl.id, name: tpl.name, updatedAt: tpl.updatedAt, template: tpl };
+    })(),
+    researchMarks: { id: 'r1' },
+  };
+  const bad: [string, Record<string, unknown>][] = [
+    ['prices', { id: 'board:y', unit: 'barrel', amount: 1 }],
+    ['gapMarks', { gapId: 'G-002', decision: 'maybe', note: '', updatedAt: '' }],
+    ['images', { ...good.images, id: 'img-2', type: 'image/png' }], // JPEG bytes declared as PNG
+    ['images', { ...good.images, id: 'img-3', bytes: 'not bytes' }],
+    ['images', { ...good.images, id: 'img-4', width: 99999 }],
+    ['models', { ...good.models, id: 'm2', format: 'obj' }],
+    ['models', { ...good.models, id: 'm3', thumb: jpeg }],
+    ['decors', { ...good.decors, id: 'egger:H2:18', thickness: -1 }],
+    ['projectVersions', { ...good.projectVersions, id: 'v2', project: { junk: true } }],
+    ['projectTemplates', { ...good.projectTemplates, id: 't2', template: { kind: 'x' } }],
+  ];
+  const file = (table: string, row: Record<string, unknown>) => ({
+    path: `${table}/${String(row.gapId ?? row.id)}.json`,
+    text: encodeRow(row),
+  });
+
+  it('a row of the right shape is restored', () => {
+    const plan = planRestore(
+      Object.entries(good).map(([t, r]) => file(t, r)),
+      empty,
+    );
+    expect(plan.skipped).toEqual([]);
+    expect(plan.actions.map((a) => a.table).sort()).toEqual(Object.keys(good).sort());
+  });
+
+  it('a row of the wrong shape is listed with its reason and not restored', () => {
+    const plan = planRestore(
+      bad.map(([t, r]) => file(t, r)),
+      empty,
+    );
+    expect(plan.actions).toEqual([]);
+    expect(plan.skipped.map((s) => s.path)).toEqual(bad.map(([t, r]) => file(t, r).path));
+    for (const s of plan.skipped) expect(s.reason.length).toBeGreaterThan(0);
+    const reason = (path: string) => plan.skipped.find((s) => s.path === path)!.reason;
+    expect(reason('images/img-2.json')).toMatch(/do not match its type/);
+    expect(reason('images/img-3.json')).toMatch(/picture bytes missing/);
+    expect(reason('models/m3.json')).toMatch(/thumbnail/);
   });
 });
 
