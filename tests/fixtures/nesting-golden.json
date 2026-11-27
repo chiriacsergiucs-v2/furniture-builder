@@ -286,6 +286,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 2781592,
             "sheetArea": 6832000,
             "trimArea": 160000,
@@ -295,12 +296,12 @@
             "utilisation": 0.40714168618266977,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -565,6 +566,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 2781592,
             "sheetArea": 6832000,
             "trimArea": 160000,
@@ -574,12 +576,12 @@
             "utilisation": 0.40714168618266977,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -844,6 +846,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 2781592,
             "sheetArea": 6832000,
             "trimArea": 160000,
@@ -853,12 +856,12 @@
             "utilisation": 0.40714168618266977,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -1761,6 +1764,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 9556800,
             "sheetArea": 11592000,
             "trimArea": 194000,
@@ -1770,12 +1774,12 @@
             "utilisation": 0.8244306418219461,
             "cuts": 40
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -2700,6 +2704,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 9556800,
             "sheetArea": 11592000,
             "trimArea": 194000,
@@ -2709,12 +2714,12 @@
             "utilisation": 0.8244306418219461,
             "cuts": 47
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -3562,6 +3567,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 2,
+            "leftoversUsed": 0,
             "partArea": 9556800,
             "sheetArea": 11592000,
             "trimArea": 194000,
@@ -3571,12 +3577,12 @@
             "utilisation": 0.8244306418219461,
             "cuts": 40
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -3878,6 +3884,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 799664,
             "sheetArea": 3416000,
             "trimArea": 80000,
@@ -3887,12 +3894,12 @@
             "utilisation": 0.2340936768149883,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -4139,6 +4146,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 799664,
             "sheetArea": 3416000,
             "trimArea": 80000,
@@ -4148,12 +4156,12 @@
             "utilisation": 0.2340936768149883,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -4400,6 +4408,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 799664,
             "sheetArea": 3416000,
             "trimArea": 80000,
@@ -4409,12 +4418,12 @@
             "utilisation": 0.2340936768149883,
             "cuts": 11
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -5368,6 +5377,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 3768336,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -5377,12 +5387,12 @@
             "utilisation": 0.6501614906832298,
             "cuts": 42
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -6268,6 +6278,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 3768336,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -6277,12 +6288,12 @@
             "utilisation": 0.6501614906832298,
             "cuts": 44
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -7135,6 +7146,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 3768336,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -7144,12 +7156,12 @@
             "utilisation": 0.6501614906832298,
             "cuts": 41
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -8126,6 +8138,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 11547040,
             "sheetArea": 17388000,
             "trimArea": 291000,
@@ -8135,12 +8148,12 @@
             "utilisation": 0.6640809753853232,
             "cuts": 44
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -9062,6 +9075,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 11547040,
             "sheetArea": 17388000,
             "trimArea": 291000,
@@ -9071,12 +9085,12 @@
             "utilisation": 0.6640809753853232,
             "cuts": 44
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -9998,6 +10012,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 11547040,
             "sheetArea": 17388000,
             "trimArea": 291000,
@@ -10007,12 +10022,12 @@
             "utilisation": 0.6640809753853232,
             "cuts": 44
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -10639,6 +10654,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 5540000,
             "sheetArea": 8930400,
             "trimArea": 218400,
@@ -10648,12 +10664,12 @@
             "utilisation": 0.6203529517154887,
             "cuts": 27
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -11232,6 +11248,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 5540000,
             "sheetArea": 8930400,
             "trimArea": 218400,
@@ -11241,12 +11258,12 @@
             "utilisation": 0.6203529517154887,
             "cuts": 27
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -11825,6 +11842,7 @@
           "unplaced": [],
           "stats": {
             "sheetsUsed": 3,
+            "leftoversUsed": 0,
             "partArea": 5540000,
             "sheetArea": 8930400,
             "trimArea": 218400,
@@ -11834,12 +11852,12 @@
             "utilisation": 0.6203529517154887,
             "cuts": 27
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]
@@ -12322,6 +12340,7 @@
           ],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 5165400,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -12331,12 +12350,12 @@
             "utilisation": 0.8912008281573499,
             "cuts": 19
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 1
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -12771,6 +12790,7 @@
           ],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 5165400,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -12780,12 +12800,12 @@
             "utilisation": 0.8912008281573499,
             "cuts": 19
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 7
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       },
       {
@@ -13220,6 +13240,7 @@
           ],
           "stats": {
             "sheetsUsed": 1,
+            "leftoversUsed": 0,
             "partArea": 5165400,
             "sheetArea": 5796000,
             "trimArea": 97000,
@@ -13229,12 +13250,12 @@
             "utilisation": 0.8912008281573499,
             "cuts": 19
           },
-          "valid": true,
-          "errors": [],
           "search": {
             "attempts": 40,
             "seed": 42
-          }
+          },
+          "valid": true,
+          "errors": []
         }
       }
     ]

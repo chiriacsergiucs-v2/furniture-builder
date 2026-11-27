@@ -63,7 +63,7 @@ describe('role boards (ADR-163)', () => {
 
   it('are validated: an unknown role or material, and the field in a version-5 file', () => {
     const d = t('bookcase');
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     expect(validateDesign({ ...d, roleMaterials: { shelf: 'nope' } })).toContain(
       'Role board for shelf refers to an unknown role or material',
     );

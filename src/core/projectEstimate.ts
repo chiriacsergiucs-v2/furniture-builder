@@ -38,7 +38,7 @@ export function projectEstimate(
     counts = new Map<string, number>();
     for (const job of projectNestingJobs(project, rows, pm.materials)) {
       const r = nest(job, { seed: 1, maxAttempts: 1 });
-      if (!r.unplaced.length) counts.set(r.materialId, r.stats.sheetsUsed);
+      if (!r.unplaced.length) counts.set(r.materialId, r.stats.sheetsUsed - r.stats.leftoversUsed);
     }
   }
   const lines = shoppingList({

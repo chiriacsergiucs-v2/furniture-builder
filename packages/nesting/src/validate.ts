@@ -34,6 +34,10 @@ function checkJob(job: NestJob, errs: string[]) {
     errs.push(`trim ${job.trim} leaves no usable area`);
   if (s.count !== null && (!int(s.count) || s.count < 0))
     errs.push(`job sheet count ${s.count} is invalid`);
+  (job.leftovers ?? []).forEach((o, i) => {
+    if (!int(o.length) || !int(o.width) || o.length <= 2 * job.trim || o.width <= 2 * job.trim)
+      errs.push(`leftover ${i + 1} ${o.length}×${o.width} has no usable area`);
+  });
   const seen = new Set<string>();
   for (const p of job.parts) {
     if (seen.has(p.key)) errs.push(`duplicate part key ${p.key}`);
@@ -52,8 +56,9 @@ export function validateNest(job: NestJob, result: NestResult): string[] {
     errs.push(`materialId ${result.materialId} ≠ job ${job.materialId}`);
   const parts = new Map(job.parts.map((p) => [p.key, p]));
   const count = job.sheet.count;
-  if (count !== null && result.sheets.length > count)
-    errs.push(`${result.sheets.length} sheets used but only ${count} available`);
+  const full = result.sheets.filter((sh) => sh.leftover === undefined).length;
+  if (count !== null && full > count) errs.push(`${full} sheets used but only ${count} available`);
+  const usedLeftovers = new Set<number>();
 
   let tPart = 0,
     tSheet = 0,
@@ -67,12 +72,21 @@ export function validateNest(job: NestJob, result: NestResult): string[] {
   result.sheets.forEach((sh, si) => {
     const tag = `sheet ${si + 1}`;
     if (sh.index !== si) errs.push(`${tag}: index ${sh.index}`);
-    if (sh.length !== job.sheet.length || sh.width !== job.sheet.width)
+    // A leftover sheet (ADR-302) is that piece's size, each piece used once; any other sheet is the stock size.
+    let stock = job.sheet as { length: number; width: number };
+    if (sh.leftover !== undefined) {
+      const o = job.leftovers?.[sh.leftover];
+      if (!o) errs.push(`${tag}: leftover ${sh.leftover} is not in the job`);
+      else stock = o;
+      if (usedLeftovers.has(sh.leftover)) errs.push(`${tag}: leftover ${sh.leftover} used twice`);
+      usedLeftovers.add(sh.leftover);
+    }
+    if (sh.length !== stock.length || sh.width !== stock.width)
       errs.push(`${tag}: size ${sh.length}×${sh.width} ≠ stock`);
     const u = sh.usable;
     const ux = job.trim,
-      ul = job.sheet.length - 2 * job.trim,
-      uw = job.sheet.width - 2 * job.trim;
+      ul = stock.length - 2 * job.trim,
+      uw = stock.width - 2 * job.trim;
     if (u.x !== ux || u.y !== ux || u.length !== ul || u.width !== uw)
       errs.push(`${tag}: usable area does not match trim ${job.trim}`);
     const sums: Sums = { part: 0, kerf: 0, waste: 0, cuts: 0, largest: 0, leaves: [] };
@@ -157,6 +171,7 @@ export function validateNest(job: NestJob, result: NestResult): string[] {
   const st = result.stats;
   const expect: [string, number, number][] = [
     ['sheetsUsed', st.sheetsUsed, result.sheets.length],
+    ['leftoversUsed', st.leftoversUsed, result.sheets.length - full],
     ['partArea', st.partArea, tPart],
     ['sheetArea', st.sheetArea, tSheet],
     ['trimArea', st.trimArea, tTrim],

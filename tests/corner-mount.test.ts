@@ -102,11 +102,11 @@ describe('hung corner pieces (ADR-177)', () => {
 
 describe('corner mount in the design document (ADR-177, ADR-011)', () => {
   it('corner mount came with schemaVersion 7 (now 14); a v6 corner still loads and builds on the floor', () => {
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     const v6 = { ...corner('blind'), schemaVersion: 6 as const };
     expect(validateDesign(v6)).toEqual([]);
     const up = upgradeDesign(v6);
-    expect(up.schemaVersion).toBe(14);
+    expect(up.schemaVersion).toBe(15);
     expect(up.product).toEqual(v6.product);
     expect(buildModel(up).panels.some((p) => p.role === 'plinth')).toBe(true);
     for (const v of [1, 2, 3, 4, 5, 8] as const)

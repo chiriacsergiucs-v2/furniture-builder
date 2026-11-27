@@ -47,6 +47,11 @@ export interface Material {
   color: string;
   /** Stock sheet bought for this board (ADR-019). Absent in version-1 files; defaults fill it in. */
   sheet?: StockSheet;
+  /**
+   * Leftover pieces of this board the user owns (ADR-302, schemaVersion 15), filled before any full sheet. Length runs
+   * along the grain like `sheet.length`; the board's trim applies. Absent = none.
+   */
+  leftovers?: Leftover[];
   /** 'solid': timber bought in lengths, listed by length instead of nested on sheets (ADR-038). Absent = sheet. */
   stock?: 'sheet' | 'solid';
   /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
@@ -131,6 +136,12 @@ export interface MaterialImage {
   tileLength: Mm;
   tileWidth: Mm;
   turn?: boolean;
+}
+
+/** One leftover piece of a board (ADR-302). */
+export interface Leftover {
+  length: Mm;
+  width: Mm;
 }
 
 /** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-009). */
@@ -798,9 +809,9 @@ export interface Design {
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
    * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210);
-   * 13 adds merged assembly steps (ADR-300). Older files are upgraded in memory on load.
+   * 13 adds merged assembly steps (ADR-300); 15 adds a board's leftover pieces (ADR-302). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   id: string;
   name: string;
   createdAt: string;
