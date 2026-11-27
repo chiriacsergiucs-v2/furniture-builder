@@ -33,9 +33,8 @@ function hingeSide(
   p: FurnitureModel['panels'][number],
 ): 'left' | 'right' | null {
   if (p.role !== 'door' || p.shape || p.thicknessAxis !== 'z') return null;
-  if (p.label === 'Door left') return 'left';
-  if (p.label === 'Door right') return 'right';
-  if (p.label !== 'Door') return null;
+  if (p.hinge) return p.hinge;
+  if (p.front !== 'hinged') return null;
   const plates = model.hardware.find((h) => h.kind === 'hinge' && h.nodeId === p.nodeId)?.panelIds;
   const at = (plates ?? [])
     .map((id) => model.panels.find((q) => q.id === id)?.box)
@@ -70,13 +69,12 @@ export function localClearances(model: FurnitureModel): Clearance[] {
   for (const p of model.panels) {
     const b = p.box;
     const front = b.z + b.d;
-    // The role says door or drawer front; only the label tells a sliding door, a flap, a lift-up flap or a fixed front
-    // apart, so these four tests stay on the English label until a panel kind field exists (ADR-225, G-492).
+    // The role says door or drawer front; the panel's `front` tells a sliding door, a flap and a fixed front apart
+    // (ADR-304, G-492).
     if (p.role === 'door') {
-      if (/^Sliding door/.test(p.label)) continue; // G-492
-      // G-492: a flap and a lift-up flap are told apart by label only.
-      if (/flap/i.test(p.label)) {
-        const up = /^Lift-up/.test(p.label); // G-492
+      if (p.front === 'sliding') continue;
+      if (p.front === 'flap-up' || p.front === 'flap-down') {
+        const up = p.front === 'flap-up';
         out.push({
           panelId: p.id,
           label: p.label,
@@ -95,8 +93,8 @@ export function localClearances(model: FurnitureModel): Clearance[] {
             : {}),
         });
       }
-    } else if (p.role === 'drawer-front' && !/^Fixed front/.test(p.label)) {
-      // G-492: a fixed front has no travel; only its label says so.
+    } else if (p.role === 'drawer-front' && p.front !== 'fixed') {
+      // A fixed front has no travel.
       const travel = Math.max(
         0,
         ...model.panels

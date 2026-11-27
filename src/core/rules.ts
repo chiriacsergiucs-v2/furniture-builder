@@ -105,7 +105,7 @@ const rules: Rule[] = [
     check: (_d, model, s) => {
       const out = none();
       for (const p of model.panels) {
-        if (p.role !== 'door' || !/^Door/.test(p.label)) continue;
+        if (p.role !== 'door' || p.front !== 'hinged') continue;
         const w = faceWidth(p);
         if (w > s.doorMaxWidth)
           out.diagnostics.push(

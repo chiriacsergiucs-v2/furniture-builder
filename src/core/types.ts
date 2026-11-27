@@ -220,6 +220,16 @@ export interface Panel {
   section?: [Mm, Mm][];
   /** A worktop's front edge shape (ADR-209): drawn in 3D on the edge `face`, `size` mm; display only. */
   edgeProfile?: { kind: 'rounded' | 'bevel'; size: Mm; face: Face };
+  /**
+   * What kind of front a door or drawer front is, where its role does not say (ADR-304), set by the generators: a hinged
+   * door, a sliding door, a lift-up or drop-down flap, or a fixed drawer front (no travel). Absent on other parts and on
+   * fronts no cabinet made (an appliance front). Generated, never saved (ADR-011).
+   */
+  front?: 'hinged' | 'sliding' | 'flap-up' | 'flap-down' | 'fixed';
+  /** A door of a pair: the side it hinges on, as seen from the front (ADR-304). Absent: a single door's plates say. */
+  hinge?: 'left' | 'right';
+  /** The drawer a drawer box part or drawer front belongs to, 1 = the top one (ADR-304). */
+  drawer?: number;
 }
 
 /**
