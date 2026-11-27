@@ -44,7 +44,6 @@ import { useCanvas } from './CanvasEditor';
 import { WallBackground } from './WallBackground';
 import { RoomFeatures } from './RoomFeatures';
 import { OutletDistanceFields } from './OutletDistances';
-import { turnedFootprint, type TurnGesture } from '../shared/planDrag';
 import { MoveToButtons } from './MoveTo';
 import { keepSheetClosedOnce, useUi } from '../store/uiStore';
 import { CompatRules } from './CompatRules';
