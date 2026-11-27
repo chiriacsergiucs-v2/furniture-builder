@@ -4,15 +4,7 @@
 // bound to it; Information and guides names what a template keeps.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { openSheet, renderApp, WIDTHS } from './setup';
-
-type User = Awaited<ReturnType<typeof renderApp>>['user'];
-
-async function piecesList(user: User, panel: HTMLElement) {
-  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
-  if (all) await user.click(all);
-  return within(panel).getByRole('list', { name: 'Pieces' });
-}
+import { openSheet, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('templates keep variables at %ipx (find-it, ADR-170)', (width) => {
   it('project → variable bound to Height → Save as project template → insert it → one variable, both pieces bound', async () => {
