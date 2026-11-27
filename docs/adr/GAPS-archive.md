@@ -3960,7 +3960,7 @@ highest id in either file.
 - Work: Medium
 - Impact: Low
 - Necessity: Low
-- Note: User 2026-11-27: fix L-6, L-5 and L-2; L-4 (workflow pins) already done by G-566. L-2: new migration supabase/migrations/20261127000000_records_writes_via_functions.sql makes save_record, trash_record and purge_trash security definer, limits them to signed-in users and revokes insert, update and delete on records from authenticated; the shipped migration is unchanged. Tested with `bash tools/supabase/test-sql.sh` (exit 0, direct writes refused with 42501). Not applied anywhere: no live Supabase project (G-277). L-5: already built by N354 (e40de8b8, vitest 4.1.12); `pnpm audit` 2026-11-27: "No known vulnerabilities found". L-6: supabase/config.toml is read only by the CLI's local stack; no workflow pushes it (deploy-assistant.yml:38 runs only `supabase functions deploy`), so the localhost redirect stays for local dev with a comment, and docs/supabase-setup.md no longer tells the owner to add localhost to the hosted project.
+- Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
 
 ### G-550: Audit advisories left after dependency health
 
@@ -3973,7 +3973,6 @@ highest id in either file.
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
-- Note: Fixed by N354 (e40de8b8): vitest and @vitest/* 4.1.12 in the root and both packages; plugin-react is 5.2.0 (package.json:63) and its upgrade stays with G-545. `pnpm audit` 2026-11-27 (N410): "No known vulnerabilities found", 0 critical, 0 moderate.
 
 ### G-552: look-render find-it incomplete in sandbox
 

@@ -30,7 +30,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-004: Oxlint as in reserv
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-053, 2026-10-24 15:25 UTC; agent scoped it out
 - Missing: Linting stayed on ESLint; reserv uses oxlint.
 - Request: “All three”: ADR format, skills and CI the same as reserv.
@@ -42,6 +42,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Linting uses ESLint while reserv uses oxlint.
 - Fix: Switch to oxlint with reserv's config, keeping ESLint only for rules oxlint lacks.
 - Conflicts: ADR-053: decision says ESLint stays; the user named only pnpm, Prettier, Node 24.
+- Note: User 2026-11-27: "Keep ESLint" (the boundary rules need ESLint; ADR-053).
 
 ### G-005: Fusion export never run in Fusion
 
@@ -105,6 +106,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: ADR-051: decided project history is not saved and starts empty on open.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack).
 
 ### G-015: Egger catalogue import
 
@@ -121,6 +123,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Import rows with code, name, type and user-confirmed thicknesses; or acknowledge as covered by Regency catalog.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Egger boards with thickness and pictures are now pickable through the bundled Regency seller catalog (ADR-161, ADR-162; src/core/sellers/regency.json); the 276-row pack itself is not imported. May be obsolete; the user decides.
+- Note: User 2026-11-27: "PAL 18 only".
 
 ### G-031: ADR-072 defaults unconfirmed
 
@@ -298,7 +301,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-099: Group gaps by origin
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-101, 2026-10-26; user did not pick it
 - Missing: The gaps page has no grouping by origin (the ADR or area a gap came from).
 - Request: “Add a gaps page, similar to reseaech” — offered options: Search + status filter, Group by origin, Overview counts, Full detail per gap
@@ -310,6 +313,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The gaps page cannot group gaps by the ADR or area they came from.
 - Fix: Leave it out as the user chose; search on the Origin field covers it.
 - Conflicts: none
+- Note: Suggested pick accepted (leave it out); auto-accepted, user 2026-11-27 "Auto-accept if confidence > 85%".
 
 ### G-101: Ledger not editable from the app
 
@@ -754,7 +758,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-288: Adjust the wall picture from the front view
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-146 (out of scope)
 - Missing: Dragging the wall picture in the 2D front view; only the 3D view adjusts it
 - Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
@@ -766,10 +770,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The wall picture can only be dragged into place in the 3D view, not in the front view.
 - Fix: Leave as is; the user chose 3D dragging. Add front-view drag only if asked.
 - Conflicts: none
+- Note: Suggested pick accepted (not asked; dragging in 3D covers it); auto-accepted 2026-11-27.
 
 ### G-289: Move to actions on the 2D plan
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-147, 2026-10-29; out of scope
 - Missing: No overlay bar of Move to buttons over the 2D plan; they are in the piece panel and the 3D Move toolbar
 - Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
@@ -781,6 +786,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Move to snap actions are not available as a floating bar over the 2D plan.
 - Fix: Not now; the user picked the piece panel and 3D toolbar. Add a plan bar on request.
 - Conflicts: none
+- Note: Suggested pick accepted (not now; panel + 3D cover it); auto-accepted 2026-11-27.
 
 ### G-301: Third UI language
 
@@ -799,7 +805,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-305: Written guides
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-158 (out of scope)
 - Missing: Written guides on the Information and guides page
 - Request: add a page where you list all the features that the app currently supports
@@ -811,6 +817,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The Information and guides page has the feature tree but no written guides.
 - Fix: Ask the user which guides they want, then write them.
 - Conflicts: none
+- Note: User 2026-11-27: "Save this as a gap, to be done when releasing a stable version". Blocker: no stable release yet.
 
 ### G-306: CSV separator per print language
 
@@ -861,7 +868,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-315: Band and hardware pictures not shipped
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-162, 2026-10-30; agent scoped it out
 - Missing: Only board and worktop pictures ship with the app. Edge band and hardware pictures still load from regencycompany.ro (lists only, never in 3D).
 - Request: You didnt use the image i provided to render
@@ -873,6 +880,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Edge band and hardware pictures still load from the seller's site; only board and worktop pictures ship.
 - Fix: Extend the picture download workflow to bands and hardware, only if bands get their own 3D look.
 - Conflicts: none
+- Note: Suggested pick accepted (only if bands get their own 3D look); auto-accepted 2026-11-27.
 
 ### G-332: No turn gizmo in 3D
 
@@ -906,7 +914,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-355: Shared side with inset and sliding fronts
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-190
 - Missing: At a shared side, inset fronts and sliding doors keep their own rule (no half overlay).
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -918,6 +926,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Inset fronts and sliding doors at a shared side keep their own rule, with no half overlay.
 - Fix: Keep as is unless asked; inset fronts never cover a side, sliding doors run in their own track.
 - Conflicts: none
+- Note: Suggested pick accepted (keep the inset and sliding rules); auto-accepted 2026-11-27.
 
 ### G-364: Shelf pins in a diagonal corner
 
@@ -1035,7 +1044,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-423: Long-press to select several pieces
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-207, 2026-11-06; remainder of G-404 (gesture check)
 - Missing: There is no long-press gesture; on a phone the Select toggle adds pieces (ADR-097, ADR-159).
 - Request: “Duplicate, mirror and predictable rotate operations”.
@@ -1047,6 +1056,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A phone user cannot start selecting several pieces by holding a piece.
 - Fix: Long-press on the plan, front view and 3D turns Select on and adds the piece.
 - Conflicts: none
+- Note: Suggested pick accepted (Select toggle covers the phone); auto-accepted 2026-11-27.
 
 ### G-424: Connector authoring
 
@@ -1095,7 +1105,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-430: Bundled CC0 3D models
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-208, 2026-11-06; remainder of G-040 (ADR-208 takes placement, drag, snap and templates for models)
 - Missing: No 3D models ship with the app; models come only as .glb or .gltf imports (ADR-076).
 - Request: “Import 3D models and model libraries”.
@@ -1107,10 +1117,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: There is no ready model library.
 - Fix: Bundle a few CC0 models in the app once the licence is chosen.
 - Conflicts: none
+- Note: User 2026-11-27: "No, imports only" (no bundled models; models come as imports, ADR-076).
 
 ### G-431: Board pictures in catalog pictures and cut sheets
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-208, 2026-11-06; remainder of G-413 (ADR-208 takes the 2D plan only)
 - Missing: Catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in their average colour.
 - Request: “Render the furniture according to the selected material's color and structure”.
@@ -1122,6 +1133,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Catalog pictures and cut sheets show boards as plain colour.
 - Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
 - Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+- Note: Suggested pick accepted (keep the average colour, ADR-048); auto-accepted 2026-11-27.
 
 ### G-436: Reverse-the-hinge repair
 
@@ -1140,7 +1152,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-437: Bundled CC0 appliance models
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-209, 2026-11-06; remainder of G-412 (ADR-209 takes only the worktop edge profiles)
 - Missing: No appliance models ship with the app; appliances come only as .glb imports (ADR-076).
 - Request: “To sell designed kitchens”.
@@ -1152,6 +1164,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A kitchen shows no appliances unless the user imports a model.
 - Fix: Bundle a few CC0 appliance models as display-only items once the licence is chosen.
 - Conflicts: none
+- Note: User 2026-11-27: "No, imports only" (same answer as G-430).
 
 ### G-439: Drilling positions for joints other than carcass joints
 
@@ -1213,7 +1226,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-453: Lock a piece's insides
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-211, 2026-11-06; remainder of G-337 (its pick covers boards and construction only)
 - Missing: A piece's insides (spaces, dividers, shelves, drawers, doors) cannot be locked against changes.
 - Request: “Separate locks per parameter” (user 2026-11-04).
@@ -1225,6 +1238,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A piece's insides cannot be locked.
 - Fix: A Lock insides toggle in More actions, refused like the other locks.
 - Conflicts: none
+- Note: Suggested pick accepted (add Lock insides when a real project needs it); auto-accepted 2026-11-27.
 
 ### G-460: Band tolerances and edgebander settings
 
@@ -1406,7 +1420,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-488: Research data is not a generated lazy JSON file
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-222 Out of scope, 2026-11-07 (architecture review I-04, section 10 question 5)
 - Missing: ADR-222 loads the research data through a dynamic import (a lazy chunk). The review's generated public/research/*.json, which removes the two ?raw edges and changes a data layout (ADR-043 lineage), is not built.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1414,6 +1428,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Keep the lazy chunk; it gives the same first-load saving with no data-layout change (estimate: JSON +25 % effort, +0-5 % value)
 - Work: Medium
 - Impact: Low
+- Note: Suggested pick accepted (keep the lazy chunk); auto-accepted 2026-11-27.
 
 ### G-490: Width-independent find-it tests still run at both widths
 
@@ -1453,7 +1468,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-494: Nesting is not a workspace package
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-228 Out of scope, 2026-11-07 (architecture review I-10, section 6)
 - Missing: packages/nesting as a pnpm workspace package with its own tsc and Vitest project is not built; ADR-228 keeps it an internal module with a lint boundary.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1461,10 +1476,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Stay internal until a second consumer exists (estimate: effort +25 %, value +2 %)
 - Work: Medium
 - Impact: Low
+- Note: Superseded: nesting is a workspace package since ADR-279 (packages/nesting); nothing left to build.
 
 ### G-498: The design store is not split into slices
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-231 Out of scope, 2026-11-07 (architecture review I-13)
 - Missing: projectSlice, selectionSlice and viewSlice with commit/commitProject as the only seams are not built; designStore.ts stays one file.
 - Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
@@ -1472,6 +1488,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split after ADR-231 if the file is still over 1 500 lines (estimate: effort +20 %, value +3 %)
 - Work: Medium
 - Impact: Low
+- Note: Suggested pick condition not met: src/store/designStore.ts is 1368 lines after ADR-231 (threshold 1 500, wc -l 2026-11-27); no split.
 
 ### G-499: The whole app, seller catalog included, is precached on first visit
 
@@ -1598,6 +1615,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
+- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check).
 
 ### G-534: Architecture checks the review could not cover
 
@@ -1634,6 +1652,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: User 2026-11-27: "Translate on print".
 
 ### G-539: Russian key conflicts with different wording (reuse H1)
 
@@ -1683,6 +1702,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Medium
+- Note: User 2026-11-27: re-encode file pictures through the decode path and validate restored rows per table.
 
 ### G-543: Hosted Supabase auth settings: confirmations and password length (security M-5)
 
@@ -1731,6 +1751,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
 
 ### G-548: The types.ts and project.ts hubs are not split
 
@@ -1742,6 +1763,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Split types.ts into kernel types plus one type file per domain; split project.ts along its existing projectX siblings (estimate: effort +20 %, value +15 %)
 - Work: Medium
 - Impact: Medium
+- Note: User 2026-11-27: "Split as picked".
 
 ### G-549: The other workspace packages are not extracted
 
@@ -1816,7 +1838,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-557: Variants for sink-base, desk and chest
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-281, user 2026-11-20 (cut from the ADR)
 - Missing: No new shipped variants for sink-base, desk and chest: six truly different designs do not exist with today's generators (desk is gables or pedestals only; sink-base and chest differ by count and width)
 - Request: Add variants to these three families once a generator capability makes them genuinely different (e.g. new desk or sink options)
@@ -1825,6 +1847,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Suggested pick accepted (revisit when a new capability lands); auto-accepted 2026-11-27.
 
 ### G-565: Re-encode or sniff pictures inside imported files
 
@@ -1837,6 +1860,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Covered with G-542 by the user's 2026-11-27 pick (re-encode, which also sniffs and caps).
 
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
@@ -1888,6 +1912,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low-medium
 - Necessity: Low
+- Note: User 2026-11-27: "I'll give reasons"; waiting for the 8 reasons.
 
 ### G-575: Extending and L-corner bookcase not modelled
 
@@ -1939,7 +1964,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-583: Catalog rework: web research and published spec/prototype skipped
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-291, ui-rework steps 3 and 7
 - Missing: No 8–12 product research with links, no weighted scoring and doubt rounds, no published spec or interactive prototype; the concept was picked from three previews in a question.
 - Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
@@ -1948,6 +1973,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Suggested pick accepted (research only if the finder becomes the default); auto-accepted 2026-11-27.
 
 ### G-584: Start from dialog and the Materials seller-band select keep the old layout
 
@@ -1986,7 +2012,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-591: Room divider: Open both sides on corner units
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-292
 - Missing: Open both sides (twoFaced) applies to cabinets only; corner units keep front-only banding.
 - Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
@@ -1995,6 +2021,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Suggested pick accepted (later, no request yet); auto-accepted 2026-11-27.
 
 ### G-592: Room divider: racking check for back-less pieces
 
@@ -2011,7 +2038,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-593: Room divider: infill on shelves, drawers or hanging spaces
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-293
 - Missing: A closed panel (infill) is allowed on Empty cells only.
 - Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
@@ -2020,10 +2047,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Suggested pick accepted (later, Empty cells cover it); auto-accepted 2026-11-27.
 
 ### G-594: Room divider: grooves for an infill panel
 
-- Status: Open
+- Status: Acknowledged (2026-11-27)
 - Origin: ADR-293
 - Missing: Infills are fixed between panels with a fixing to choose; no groove option.
 - Request: User 2026-11-24: "unable to create furniture that can be used as room dividers with partial walls on and shelves"
@@ -2032,6 +2060,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: Suggested pick accepted (later, no request); auto-accepted 2026-11-27.
 
 ### G-595: Room divider: printed rear sheet in the review pack
 
