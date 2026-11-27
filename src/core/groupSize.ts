@@ -9,13 +9,9 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { resizeProduct, sizeFields, type SizeField } from './pieceSize';
-import {
-  pieceName,
-  placedBounds,
-  resolvePlacements,
-  type Project,
-  type ProjectItem,
-} from './project';
+import { pieceName, resolvePlacements } from './projectMove';
+import { placedBounds } from './projectPlace';
+import { type Project, type ProjectItem } from './projectDoc';
 import { isAxisLocked } from './sizeLock';
 import type { Design, Mm } from './types';
 

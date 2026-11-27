@@ -15,15 +15,14 @@ import {
   turnBlocked,
   TURN_LOCKED_HINT,
   pieceName,
-  placedOutline,
   quarterTurn,
   resolvePlacements,
   rotationOf,
   splitRotation,
   type MoveResult,
-  type Project,
-  type ProjectItem,
-} from './project';
+} from './projectMove';
+import { placedOutline } from './projectPlace';
+import { type Project, type ProjectItem } from './projectDoc';
 import { placedBox } from './panelset';
 import { withGroups } from './groupMove';
 import type { Box, Design, Product, Space } from './types';

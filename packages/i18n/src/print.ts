@@ -59,7 +59,7 @@ export function pt(ro: PrintKey, params?: Params): string {
 }
 
 /**
- * Built-in board names (src/core/design.ts `defaultMaterials` and `solidMaterials`, src/core/project.ts
+ * Built-in board names (src/core/design.ts `defaultMaterials` and `solidMaterials`, src/core/projectRuns.ts
  * `worktopMaterial`) by their stored English name, with their Romanian print key (G-537, user 2026-11-27: "Translate on
  * print"). Only an exact stored name is looked up; a name the user typed or changed prints as typed.
  */

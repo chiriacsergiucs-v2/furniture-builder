@@ -40,8 +40,8 @@ function keysOfWarnings(): string[] {
   const found = warningSites()
     .filter((s) => !/(wallfill|roomfill)\.ts$/.test(s.file))
     .flatMap((s) => s.keys ?? []);
-  // The sink and hob texts are picked by kind (project.ts CUTOUT_TEXT, CUTOUT_AT_TEXT): the `none` and `wide` ones warn.
-  const src = fs.readFileSync('src/core/project.ts', 'utf8');
+  // The sink and hob texts are picked by kind (projectRuns.ts CUTOUT_TEXT, CUTOUT_AT_TEXT): the `none` and `wide` ones warn.
+  const src = fs.readFileSync('src/core/projectRuns.ts', 'utf8');
   const cutouts = [...src.matchAll(/\b(?:none|wide): '([^']+)'/g)].map((m) => m[1]);
   // The compat rules that warn: their rule text and their Checks message.
   const rules = COMPAT_RULES.filter((r) => r.severity === 'warning' && r.where.includes('checks'));
@@ -56,9 +56,9 @@ function keysOfWarnings(): string[] {
 describe('warning texts have a print entry (ADR-265)', () => {
   it('the only texts chosen at run time are the sink and hob ones, covered by name', () => {
     expect(dynamicSites().map((s) => s.file)).toEqual([
-      'src/core/project.ts',
-      'src/core/project.ts',
-      'src/core/project.ts',
+      'src/core/projectRuns.ts',
+      'src/core/projectRuns.ts',
+      'src/core/projectRuns.ts',
     ]);
   });
 

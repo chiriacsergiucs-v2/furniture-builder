@@ -7,7 +7,7 @@
 import { t } from '@furniture-builder/i18n';
 import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { buildModel } from './build';
-import type { RunPart } from './project';
+import type { RunPart } from './projectDoc';
 import type { ShopLine } from './shopping-types';
 import { AXES, inPlaneAxes } from './geometry';
 import { FRAME_ROLES } from './panelRoles';

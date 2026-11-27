@@ -8,17 +8,17 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { newId } from './design';
+import { placedBounds } from './projectPlace';
 import {
-  placedBounds,
   pruneGroups,
-  pruneRunExtras,
   requestKey,
   type Project,
   type ProjectItem,
   type RunHandle,
   type RunRequest,
   type RunSink,
-} from './project';
+} from './projectDoc';
+import { pruneRunExtras } from './projectRuns';
 import { evaluateVariables, readTarget, writeTarget } from './variables';
 import type { Design } from './types';
 import type { VariableSet } from './setRoom';

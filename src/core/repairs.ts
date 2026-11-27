@@ -20,19 +20,12 @@ import { resizeProduct } from './pieceSize';
 import { isAxisLocked } from './sizeLock';
 import { bindingOf } from './variables';
 import { overlapsBox } from './shape';
-import {
-  buildProjectModel,
-  pieceName,
-  planRuns,
-  refreshRunParts,
-  requestKey,
-  resolvePlacements,
-  type PlacedPiece,
-  type Project,
-  type ProjectItem,
-  type ProjectModel,
-  type RunRequest,
-} from './project';
+import { buildProjectModel, type ProjectModel } from './projectModel';
+import { pieceName, resolvePlacements } from './projectMove';
+import { planRuns } from './projectWorktops';
+import { refreshRunParts } from './projectProfiles';
+import { requestKey, type Project, type ProjectItem, type RunRequest } from './projectDoc';
+import { type PlacedPiece } from './projectPlace';
 import { boxInside, movesInside, ROOM_FIT_CODES } from './room';
 import { sizeOn, startOn } from './geometry';
 import type { Box, Diagnostic, Material, Mm } from './types';

@@ -9,7 +9,8 @@
  * are refused with the reason.
  */
 import { t, tr } from '@furniture-builder/i18n';
-import { placeItem, type Project, type ProjectItem, type SharedSides } from './project';
+import { placeItem } from './projectPlace';
+import { type Project, type ProjectItem, type SharedSides } from './projectDoc';
 import type { Design, Diagnostic, Panel, PinRows } from './types';
 
 /** How a member is built while it shares a side. */

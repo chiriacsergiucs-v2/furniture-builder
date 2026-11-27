@@ -3,7 +3,8 @@
  * a piece shows from above on the plan (G-413). Pure: from the project build, never computed in the UI (ADR-004).
  */
 import { footprintOf } from './geometry';
-import type { PlacedPiece, Project } from './project';
+import type { PlacedPiece } from './projectPlace';
+import type { Project } from './projectDoc';
 import { wallFinish, wallLength, type WallFinish } from './room';
 import { roomConnectors, SNAP_RANGE } from './snap';
 import { wallAxes } from './wallPicture';

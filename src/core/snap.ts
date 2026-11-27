@@ -9,17 +9,9 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { evaluate, mountOf, type Mount } from './compat';
-import {
-  DRAG_STEP,
-  dragPosition,
-  isWallHung,
-  placementBases,
-  rotationOf,
-  tapPosition,
-  type PlacedPiece,
-  type Project,
-  type ProjectItem,
-} from './project';
+import { DRAG_STEP, dragPosition, placementBases, rotationOf, tapPosition } from './projectMove';
+import { isWallHung, type Project, type ProjectItem } from './projectDoc';
+import { type PlacedPiece } from './projectPlace';
 import type { Room } from './room';
 import { hasAnyLock } from './sizeLock';
 import type { Box, Mm } from './types';

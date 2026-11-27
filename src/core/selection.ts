@@ -11,15 +11,13 @@ import {
   carriedBy,
   liftOff,
   moveBlocked,
-  placedBounds,
-  placedOutline,
   quarterTurn,
   resolvePlacements,
   type MoveResult,
-  type Project,
-  type ProjectItem,
   turnBlocked,
-} from './project';
+} from './projectMove';
+import { placedBounds, placedOutline } from './projectPlace';
+import { type Project, type ProjectItem } from './projectDoc';
 import type { Box } from './types';
 
 /** A named set of pieces kept together (ADR-097); a piece belongs to at most one group. */

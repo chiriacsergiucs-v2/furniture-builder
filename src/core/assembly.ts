@@ -25,13 +25,9 @@ import { cutDimensions } from './geometry';
 import { t, tr } from '@furniture-builder/i18n';
 import { pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { hardwareRo, partRo } from './ro';
-import {
-  isWallHung,
-  type PlacedPiece,
-  type Project,
-  type ProjectModel,
-  type RunPart,
-} from './project';
+import { isWallHung, type Project, type RunPart } from './projectDoc';
+import { type PlacedPiece } from './projectPlace';
+import { type ProjectModel } from './projectModel';
 import { NEAR_WALL, wallEnds, wallInward, type Pt, type Room } from './room';
 import { insideCorner } from './roomfill';
 import { DRAWER_BOX_ROLES, FRAME_ROLES, FRONT_WITH_BLIND_ROLES } from './panelRoles';
