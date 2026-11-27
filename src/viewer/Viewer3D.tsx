@@ -27,6 +27,7 @@ import {
   ThreeMore,
   ZoneBoxes,
 } from './ViewerScene';
+import { CatalogDrop } from './catalogDrop';
 import { skipDragMoves } from './dragGlue';
 import {
   Fragment,
@@ -326,6 +327,10 @@ export default function Viewer3D({ countCard, moveTo, countDock = null }: Viewer
         )}
         {view.mode === 'project' && !exploded && !rendering && !preview && (
           <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
+        )}
+        {/* A catalog item dragged from the piece list lands on the floor here too (ADR-303). */}
+        {view.mode === 'project' && !exploded && !rendering && !preview && !arOn && (
+          <CatalogDrop snapOn={snapOn} />
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
         {view.mode === 'project' && zonesOn && !exploded && !rendering && <ZoneBoxes />}

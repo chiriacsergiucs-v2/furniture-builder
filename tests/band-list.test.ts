@@ -131,7 +131,7 @@ describe('matching bands and the pick (ADR-212)', () => {
 
 describe('the bands table (Dexie version 12)', () => {
   it('a new import replaces the list; unreadable rows are skipped and kept', async () => {
-    expect(db.verno).toBe(12);
+    expect(db.verno).toBe(13);
     await replaceBands(
       parseBandList(`${HEAD}\nE,ABS,A,,a,1,22,#ffffff\nE,ABS,B,,b,1,22,#ffffff`, 'one.csv').bands,
     );
@@ -226,14 +226,16 @@ describe('the bands table (Dexie version 12)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(12);
+    expect(nw.verno).toBe(13);
     // Every earlier table is still there, with every row as written.
     for (const [table, list] of Object.entries(rows)) {
       const after = await nw.table(table).toArray();
       expect(after, table).toHaveLength(list.length);
       expect(after, table).toEqual(expect.arrayContaining(list));
     }
-    expect(nw.tables.map((t) => t.name).sort()).toEqual([...Object.keys(V11), 'bands'].sort());
+    expect(nw.tables.map((t) => t.name).sort()).toEqual(
+      [...Object.keys(V11), 'bands', 'recentlyDeleted'].sort(),
+    );
     expect(await nw.bands.count()).toBe(0);
     nw.close();
   });

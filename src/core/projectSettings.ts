@@ -125,7 +125,7 @@ export function withSettings(d: Design, s: ProjectSettings | undefined): Design 
 
 export type Follows = 'follows' | 'own' | 'n/a';
 
-/** The settings a piece follows (ADR-303): its definition list's, then the project's for keys the list does not set. */
+/** The settings a piece follows (ADR-306): its definition list's, then the project's for keys the list does not set. */
 export function effectiveSettings(
   project: Project,
   item: ProjectItem,
@@ -135,7 +135,7 @@ export function effectiveSettings(
   return { ...project.settings, ...ls };
 }
 
-/** Where a piece's value of a setting comes from (ADR-303): its definition list or the project. */
+/** Where a piece's value of a setting comes from (ADR-306): its definition list or the project. */
 export function settingSource(
   project: Project,
   item: ProjectItem,
@@ -216,7 +216,7 @@ export function setProjectSetting(
     value === undefined
       ? project.items
       : project.items.map((it) => {
-          // A piece whose definition list sets this key follows the list, not the project (ADR-303).
+          // A piece whose definition list sets this key follows the list, not the project (ADR-306).
           if (settingSource(project, it, key) === 'list') return it;
           const own = settingOf(it.design, key);
           if (own === undefined || (old !== undefined && own !== old)) return it;
@@ -231,7 +231,7 @@ export function setProjectSetting(
   return { project: next, applied };
 }
 
-/** The piece takes the project's value again ("Follow project"), or its definition list's ("Follow list", ADR-303). */
+/** The piece takes the project's value again ("Follow project"), or its definition list's ("Follow list", ADR-306). */
 export function followProject(project: Project, itemId: string, key: SettingKey): Project {
   let changed = false;
   const items = project.items.map((it) => {
@@ -245,7 +245,7 @@ export function followProject(project: Project, itemId: string, key: SettingKey)
 }
 
 /**
- * Set (or clear, with undefined) a definition list's setting (ADR-303): every piece linked to the list that followed
+ * Set (or clear, with undefined) a definition list's setting (ADR-306): every piece linked to the list that followed
  * its old value (the list's, else the project's) takes the new one; pieces with their own value keep it. Clearing
  * changes no piece, as for a project setting.
  */

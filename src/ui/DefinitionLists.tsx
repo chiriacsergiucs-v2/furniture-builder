@@ -22,7 +22,7 @@ const handleValue = (h: Handle | null | undefined) =>
   h === undefined ? PROJECT : h === null ? 'none' : h.kind;
 
 /**
- * Definition lists in Configure (ADR-303): each list gives the project's variables and settings other values for the
+ * Definition lists in Configure (ADR-306): each list gives the project's variables and settings other values for the
  * pieces linked to it. An empty field keeps the project's value.
  */
 export function DefinitionListsPanel() {
@@ -212,7 +212,7 @@ function ListCard({ list }: { list: DefinitionList }) {
 }
 
 /**
- * The selected piece's definition list (ADR-303): which list it follows, and each variable's value with its source
+ * The selected piece's definition list (ADR-306): which list it follows, and each variable's value with its source
  * and the piece's own override.
  */
 export function PieceDefinitionList({ item }: { item: ProjectItem }) {

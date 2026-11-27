@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { createListeners } from './deviceValue';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * The canvas editor on phones (ADR-283): selection ladder, chip rail and lens card in place of the Compose sheet.
@@ -15,21 +16,13 @@ export function parseCanvasEditor(v: string | null): boolean {
 }
 
 function stored(): boolean {
-  try {
-    return parseCanvasEditor(localStorage.getItem(KEY));
-  } catch {
-    return true;
-  }
+  return readLocal(KEY, parseCanvasEditor, true);
 }
 let on = stored();
 
 function setCanvasEditor(v: boolean) {
   on = v;
-  try {
-    localStorage.setItem(KEY, v ? 'on' : 'off');
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, v ? 'on' : 'off');
   notify();
 }
 

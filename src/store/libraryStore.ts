@@ -23,6 +23,7 @@ import {
   countDesigns as stored_countDesigns,
   countProjects as stored_countProjects,
   deleteDesign as stored_deleteDesign,
+  deleteForever as stored_deleteForever,
   deleteImages as stored_deleteImages,
   deleteModelIfUnused as stored_deleteModelIfUnused,
   deleteProject as stored_deleteProject,
@@ -41,6 +42,10 @@ import {
   listProjectTemplates as stored_listProjectTemplates,
   listProjectVersions as stored_listProjectVersions,
   listProjects as stored_listProjects,
+  listRecentlyDeleted as stored_listRecentlyDeleted,
+  moveToRecentlyDeleted as stored_moveToRecentlyDeleted,
+  purgeRecentlyDeleted as stored_purgeRecentlyDeleted,
+  restoreRecentlyDeleted as stored_restoreRecentlyDeleted,
   loadDesign as stored_loadDesign,
   loadImage as stored_loadImage,
   loadModel as stored_loadModel,
@@ -67,6 +72,7 @@ export type {
   CopyResult,
   DesignListing,
   ProjectListing,
+  RecentlyDeleted,
   StoredDesign,
   StoredModel,
   StoredProject,
@@ -91,6 +97,14 @@ export const listProjects = () => stored_listProjects();
 export const loadProject = (id: string) => stored_loadProject(id);
 export const deleteProject = (id: string) => stored_deleteProject(id);
 export const copyProject = (id: string, name: string) => stored_copyProject(id, name);
+
+// ---- Recently deleted (ADR-305) -------------------------------------------------------------------------------------
+export const moveToRecentlyDeleted = (table: 'designs' | 'projects', id: string) =>
+  stored_moveToRecentlyDeleted(table, id);
+export const listRecentlyDeleted = () => stored_listRecentlyDeleted();
+export const restoreRecentlyDeleted = (key: string) => stored_restoreRecentlyDeleted(key);
+export const deleteForever = (key: string) => stored_deleteForever(key);
+export const purgeRecentlyDeleted = () => stored_purgeRecentlyDeleted();
 
 // ---- Kept project versions (ADR-123, ADR-211) ------------------------------------------------------------------------
 export const listProjectVersions = (projectId: string): Promise<ProjectVersion[]> =>

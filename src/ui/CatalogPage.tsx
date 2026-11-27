@@ -63,6 +63,7 @@ import {
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
 import { finderFamilies, finderRooms, finderTypes, NO_FILTER } from './catalogFinder';
+import { writeLocal } from '../persist/localPrefs';
 /**
  * Paging (N311). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
  * lists its first GROUP_PAGE families and each tap adds GROUP_STEP; a flat list (saved designs, a brand's decors and
@@ -231,11 +232,7 @@ export function CatalogPage({
   };
   const toggleSafety = (v: boolean) => {
     setSafetyConfirmed(v);
-    try {
-      localStorage.setItem(SAFETY_KEY, v ? 'yes' : 'no');
-    } catch {
-      /* private mode */
-    }
+    writeLocal(SAFETY_KEY, v ? 'yes' : 'no');
     setSafety(v);
   };
   const exportLocal = () => {

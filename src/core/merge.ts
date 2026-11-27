@@ -14,6 +14,7 @@ import {
   type ProjectItem,
   type QuarterTurn,
 } from './project';
+import { sizeOn, startOn } from './geometry';
 import type { Box, CabinetParams, Design, Material, Mm } from './types';
 
 interface MergeCandidate {
@@ -34,8 +35,6 @@ const widthAxis = (r: QuarterTurn): { axis: 'x' | 'z'; forward: boolean } =>
       : r === 180
         ? { axis: 'x', forward: false }
         : { axis: 'z', forward: true };
-const lo = (b: Box, a: 'x' | 'z') => (a === 'x' ? b.x : b.z);
-const len = (b: Box, a: 'x' | 'z') => (a === 'x' ? b.w : b.d);
 const other = (a: 'x' | 'z'): 'x' | 'z' => (a === 'x' ? 'z' : 'x');
 /** The plane of the back in the room: backs face −z at 0°, −x at 90°, +z at 180°, +x at 270°. */
 const backPlane = (b: Box, r: QuarterTurn): Mm =>
@@ -128,7 +127,7 @@ function issuesOf(l: ProjectItem, r: ProjectItem, lb: Box, rb: Box): string[] {
       }),
     );
   const a = widthAxis(l.rotationY).axis;
-  if (len(lb, a) !== pl.params.width || len(rb, a) !== pr.params.width)
+  if (sizeOn(lb, a) !== pl.params.width || sizeOn(rb, a) !== pr.params.width)
     out.push(tx('Something sticks out at the sides (the outside width is not the cabinet width).'));
   if (lb.y !== rb.y || backPlane(lb, l.rotationY) !== backPlane(rb, r.rotationY))
     out.push(tx('Their bottoms or backs do not line up.'));
@@ -159,11 +158,12 @@ export function mergeCandidates(project: Project, id: string): MergeCandidate[] 
     const o = other(axis);
     if (!(
       Math.min(mb.y + mb.h, b.y + b.h) > Math.max(mb.y, b.y) &&
-      Math.min(lo(mb, o) + len(mb, o), lo(b, o) + len(b, o)) > Math.max(lo(mb, o), lo(b, o))
+      Math.min(startOn(mb, o) + sizeOn(mb, o), startOn(b, o) + sizeOn(b, o)) >
+        Math.max(startOn(mb, o), startOn(b, o))
     ))
       continue;
-    const after = lo(b, axis) === lo(mb, axis) + len(mb, axis);
-    const before = lo(b, axis) + len(b, axis) === lo(mb, axis);
+    const after = startOn(b, axis) === startOn(mb, axis) + sizeOn(mb, axis);
+    const before = startOn(b, axis) + sizeOn(b, axis) === startOn(mb, axis);
     if (!after && !before) continue;
     const side: 'left' | 'right' = after === forward ? 'right' : 'left';
     const [l, r, lb, rb] = side === 'right' ? [me, it, mb, b] : [it, me, b, mb];

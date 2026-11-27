@@ -4,10 +4,11 @@ export const isMm = (n: unknown): n is Mm => typeof n === 'number' && Number.isS
 
 export const box = (x: Mm, y: Mm, z: Mm, w: Mm, h: Mm, d: Mm): Box => ({ x, y, z, w, h, d });
 
-const extent = (b: Box, a: Axis): [Mm, Mm] =>
-  a === 'x' ? [b.x, b.x + b.w] : a === 'y' ? [b.y, b.y + b.h] : [b.z, b.z + b.d];
-
+/** A box's size, start and end along one axis: the one axis accessor for core (G-570). */
 export const sizeOn = (b: Box, a: Axis): Mm => (a === 'x' ? b.w : a === 'y' ? b.h : b.d);
+export const startOn = (b: Box, a: Axis): Mm => b[a];
+export const endOn = (b: Box, a: Axis): Mm => b[a] + sizeOn(b, a);
+const extent = (b: Box, a: Axis): [Mm, Mm] => [startOn(b, a), endOn(b, a)];
 
 /**
  * The centre point of a box in mm, unrounded (w, h, d may be odd, so the centre can sit on a half mm). Callers round

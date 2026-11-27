@@ -1,7 +1,7 @@
 import type { DiagnosticCode } from './diagnosticCodes';
 import { t as tx } from '@furniture-builder/i18n';
 import type { PartialModel } from './cabinet';
-import { box, equalParts } from './geometry';
+import { box, equalParts, sizeOn } from './geometry';
 import type { Axis, Box, Face, FrameParams, Material, Mm, Panel, PanelRole } from './types';
 
 /**
@@ -59,7 +59,6 @@ export function seatingDefaults(width: Mm, seatHeight?: Mm, reclinePositions?: r
 }
 
 const axes: Axis[] = ['x', 'y', 'z'];
-const dim = (b: Box, a: Axis) => (a === 'x' ? b.w : a === 'y' ? b.h : b.d);
 
 export function buildFrame(
   p: FrameParams,
@@ -81,7 +80,7 @@ export function buildFrame(
   const counters = new Map<string, number>();
   /** A solid member: grain along its longest side, thickness its shortest. */
   const member = (role: PanelRole, label: string, b: Box) => {
-    const sorted = [...axes].sort((a, c) => dim(b, c) - dim(b, a));
+    const sorted = [...axes].sort((a, c) => sizeOn(b, c) - sizeOn(b, a));
     push(role, label, solidM.id, b, sorted[2], sorted[0], []);
   };
   const sheet = (

@@ -1,4 +1,4 @@
-// ADR-303: definition lists of variables and settings a piece links to.
+// ADR-306: definition lists of variables and settings a piece links to.
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { defaultMaterials, templates } from '../src/core/design';
@@ -55,7 +55,7 @@ function room(): { p: Project; ids: string[]; a: string; b: string; v: string } 
   return { p: applyBindings(p), ids, a: la.id, b: lb.id, v: r.id };
 }
 
-describe('definition lists (ADR-303)', () => {
+describe('definition lists (ADR-306)', () => {
   it('names new lists List A, List B', () => {
     const { p } = room();
     expect(p.definitionLists!.map((l) => l.name)).toEqual(['List A', 'List B']);

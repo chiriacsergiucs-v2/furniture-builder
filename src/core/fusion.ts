@@ -1,4 +1,4 @@
-import { boxCentre } from './geometry';
+import { boxCentre, sizeOn } from './geometry';
 import { hardwareSummary } from './cutlist';
 import { profileWorld, rotateAbout, type V3 } from './shape';
 import type { Design, FurnitureModel, Panel } from './types';
@@ -60,7 +60,7 @@ export function exportFusionPython(design: Design, model: FurnitureModel): strin
           .join(', ');
         const tn: V3 = [0, 0, 0];
         tn[['x', 'y', 'z'].indexOf(p.thicknessAxis)] = 1;
-        const th = p.thicknessAxis === 'x' ? b.w : p.thicknessAxis === 'y' ? b.h : b.d;
+        const th = sizeOn(b, p.thicknessAxis);
         const base = { x: 'yz', y: 'xy', z: 'xz' }[p.thicknessAxis];
         const off =
           p.thicknessAxis === 'x' ? cm(b.x) : p.thicknessAxis === 'y' ? cm(b.y) : cm(-b.z);

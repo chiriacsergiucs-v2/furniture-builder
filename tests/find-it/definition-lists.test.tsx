@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-// Find-it for ADR-303 (N430) in jsdom (ADR-108): definition lists — from the bare app, by role and visible text, at
+// Find-it for ADR-306 (N442) in jsdom (ADR-108): definition lists — from the bare app, by role and visible text, at
 // desktop and phone widths. Precedence, propagation, deletes, settings and templates are proven in
 // tests/definition-lists.test.ts; this path finds each feature by its visible text.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { projectWithTwoPieces, renderApp, WIDTHS } from './setup';
 
-describe.each(WIDTHS)('ADR-303 at %ipx (find-it)', (width) => {
+describe.each(WIDTHS)('ADR-306 at %ipx (find-it)', (width) => {
   it('Settings › Definition lists › Add list; a value; the piece’s Definition list select; the piece follows; own value; Use list value', async () => {
     const { user } = await renderApp(width);
     await projectWithTwoPieces(user);

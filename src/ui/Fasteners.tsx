@@ -1,5 +1,8 @@
 import { useId, useMemo, useState } from 'react';
 import {
+  fastenerEdgeOk,
+  fastenerPerOk,
+  fastenerSpacingOk,
   fastenerCounts,
   GUIDANCE,
   JOINT_BY_ID,
@@ -13,8 +16,7 @@ import {
 import { t, tr } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerList } from '../store/fastenerStore';
-import { GuidanceTip, Group, InfoTip } from './controls';
-import { Icon } from './icons';
+import { ErrorAlert, Group, GuidanceTip, InfoTip } from './controls';
 
 /** Counts for what the result tabs show: the piece being edited, or the whole open project (like useView). */
 export function useFastenerCounts(): FastenerCount[] {
@@ -51,12 +53,7 @@ export function FastenersPanel() {
         </InfoTip>
       }
     >
-      {error && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{error}</span>
-        </p>
-      )}
+      <ErrorAlert message={error} />
       {/* Rows mount once the saved list is read, so they start from it and keep focus while typing. */}
       <ul className="fasteners">
         {ready &&
@@ -111,12 +108,11 @@ function FastenerRow({
     if (storeError) reset();
   }
   const perN = Number(per);
-  const perOk = per.trim() !== '' && Number.isSafeInteger(perN) && perN >= 1;
+  const perOk = per.trim() !== '' && fastenerPerOk(perN);
   const edgeN = Number(edge);
-  const edgeOk = edge.trim() === '' || (Number.isSafeInteger(edgeN) && edgeN >= 0 && edgeN <= 5000);
+  const edgeOk = edge.trim() === '' || fastenerEdgeOk(edgeN);
   const spacingN = Number(spacing);
-  const spacingOk =
-    spacing.trim() === '' || (Number.isSafeInteger(spacingN) && spacingN >= 1 && spacingN <= 5000);
+  const spacingOk = spacing.trim() === '' || fastenerSpacingOk(spacingN);
   const back = joint.id === 'back-fixing';
   const drills = joint.id === 'carcass-joint' || back;
   const commit = (nextName = name, nextPer = per) => {
@@ -126,7 +122,7 @@ function FastenerRow({
       if (choice) clear(joint.id);
       return;
     }
-    if (!(nextPer.trim() !== '' && Number.isSafeInteger(p) && p >= 1)) return;
+    if (!(nextPer.trim() !== '' && fastenerPerOk(p))) return;
     if (!edgeOk || (back && !spacingOk)) return;
     const e = drills && edge.trim() !== '' ? edgeN : undefined;
     const sp = back && spacing.trim() !== '' ? spacingN : undefined;

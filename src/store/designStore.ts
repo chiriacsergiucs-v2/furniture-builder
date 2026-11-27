@@ -105,6 +105,7 @@ import { variableActions } from './designVariables';
 import { runActions } from './designRunActions';
 
 import { roomActions } from './designRoomActions';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 export * from './designState';
 
@@ -132,21 +133,9 @@ const restagger = (p: Project): Project => {
 
 /** "Change all copies" survives a reload on this device (ADR-245); on unless the user turned it off. */
 const LINK_ALL_KEY = 'fb:link-all-off';
-const readLinkAll = (): boolean => {
-  try {
-    return localStorage.getItem(LINK_ALL_KEY) !== '1';
-  } catch {
-    return true;
-  }
-};
-const writeLinkAll = (on: boolean) => {
-  try {
-    if (on) localStorage.removeItem(LINK_ALL_KEY);
-    else localStorage.setItem(LINK_ALL_KEY, '1');
-  } catch {
-    // A browser that keeps nothing: the choice lasts for this visit only.
-  }
-};
+const readLinkAll = (): boolean => readLocal(LINK_ALL_KEY, (v) => v !== '1', true);
+// A browser that keeps nothing: the choice lasts for this visit only.
+const writeLinkAll = (on: boolean) => void writeLocal(LINK_ALL_KEY, on ? null : '1');
 
 export const useDesign = create<State>((rawSet, get) => {
   // Setting the main selected piece alone selects just that piece (ADR-097).

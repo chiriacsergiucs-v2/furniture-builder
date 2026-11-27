@@ -809,7 +809,7 @@ export function validateProject(p: unknown): string[] {
   return errs;
 }
 
-/** Definition lists and the pieces' links to them (ADR-303). */
+/** Definition lists and the pieces' links to them (ADR-306). */
 function validateLists(p: Record<string, unknown>): string[] {
   const errs: string[] = [];
   const ids = new Set<string>();

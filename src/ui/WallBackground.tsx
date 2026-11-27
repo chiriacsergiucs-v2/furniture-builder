@@ -4,7 +4,7 @@ import { wallFinish, type Room, type WallFinish } from '../core/room';
 import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage } from '../persist/images';
 import { useImageUrls } from '../store/useImageUrls';
-import { Select } from './controls';
+import { ErrorAlert, Select } from './controls';
 import { Icon } from './icons';
 import { StraightenPhoto } from './StraightenPhoto';
 import { applyWallFinish } from './wallFinishTarget';
@@ -141,12 +141,7 @@ export function WallBackground({
           </span>
         </p>
       )}
-      {problem && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{problem}</span>
-        </p>
-      )}
+      <ErrorAlert message={problem} />
       {img && (
         <div className="wall-picture-fit">
           <p className="hint" role="status">

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { createListeners } from './deviceValue';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * The catalog finder (ADR-291): search first, one row of filters, a flat grid of families and a family sheet, in place
@@ -15,21 +16,13 @@ export function parseCatalogFinder(v: string | null): boolean {
 }
 
 function stored(): boolean {
-  try {
-    return parseCatalogFinder(localStorage.getItem(KEY));
-  } catch {
-    return true;
-  }
+  return readLocal(KEY, parseCatalogFinder, true);
 }
 let on = stored();
 
 function setCatalogFinder(v: boolean) {
   on = v;
-  try {
-    localStorage.setItem(KEY, v ? 'on' : 'off');
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, v ? 'on' : 'off');
   notify();
 }
 

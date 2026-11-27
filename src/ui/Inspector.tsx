@@ -9,6 +9,7 @@ import {
   fr,
   makeBays,
   MAX_BAYS,
+  MAX_SPLIT_PARTS,
   MAX_LOOSE,
   newId,
   setDrawerCount,
@@ -25,6 +26,7 @@ import {
   DEFAULT_MOUNT_HEIGHT,
 } from '../core/design';
 import { defaultHandlePosition } from '../core/cabinet';
+import { MAX_DRAWERS, MAX_SHELVES } from '../core/counts';
 import { t, tr } from '@furniture-builder/i18n';
 import {
   KIND_LABEL,
@@ -673,7 +675,7 @@ function SpaceEditor({
               label={t('Shelves')}
               value={space.count}
               min={0}
-              max={12}
+              max={MAX_SHELVES}
               onChange={(v) => set((s) => ({ ...s, count: v }) as Space)}
             />
           )}
@@ -689,7 +691,7 @@ function SpaceEditor({
               label={t('Drawers')}
               value={space.count}
               min={1}
-              max={10}
+              max={MAX_DRAWERS}
               onChange={(v) => set((s) => setDrawerCount(s, v))}
             />
           )}
@@ -1066,7 +1068,7 @@ function SplitEditor({
         label={t('Parts@@split')}
         value={n}
         min={2}
-        max={8}
+        max={MAX_SPLIT_PARTS}
         onChange={(k) => void setCount(k)}
       />
       <div className="field">
@@ -2314,7 +2316,7 @@ function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Spac
         label={t('Shelves in each bay')}
         value={cur.shelves}
         min={0}
-        max={12}
+        max={MAX_SHELVES}
         onChange={(v) => apply({ shelves: v })}
       />
       <Segmented<0 | 1 | 2>

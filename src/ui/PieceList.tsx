@@ -49,7 +49,7 @@ export function PieceList({
           <h2>{t('Add a piece')}</h2>
           <InfoTip label={t('About adding a piece')} align="start">
             {t(
-              'Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.',
+              'Drag an item onto the plan or the 3D view (on a phone, hold it first), or tap it and then tap the plan.',
             )}
           </InfoTip>
         </div>

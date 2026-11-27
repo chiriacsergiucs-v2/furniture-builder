@@ -53,6 +53,7 @@ import {
   overlaps,
   penetration,
   sizeOn,
+  startOn,
   swapXZ,
   union,
   yawPoint,
@@ -197,7 +198,7 @@ export interface ProjectItem {
    */
   backCuts?: string[];
   /**
-   * The definition list this piece is linked to (ADR-303): its bindings take the list's variable values and it follows
+   * The definition list this piece is linked to (ADR-306): its bindings take the list's variable values and it follows
    * the list's settings. `values` are the piece's own overrides of variable values, by variable id. Absent = none.
    * Saved from project schemaVersion 23.
    */
@@ -205,7 +206,7 @@ export interface ProjectItem {
 }
 
 /**
- * A definition list (ADR-303): other values for the project's variables (by variable id; absent or empty = the
+ * A definition list (ADR-306): other values for the project's variables (by variable id; absent or empty = the
  * project's) and for the project settings (absent key = the project's), for the pieces linked to it.
  */
 export interface DefinitionList {
@@ -383,7 +384,7 @@ export interface WorktopEdge {
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
  * construction locks (ADR-211), the project's own seller items (ADR-210), moulding profiles, request bindings and
  * repair fillers on run requests, cut-out positions and worktop edges (ADR-209); 22 = the outlet distances the user
- * sets on the room (ADR-299); 23 = definition lists and the pieces' links to them (ADR-303).
+ * sets on the room (ADR-299); 23 = definition lists and the pieces' links to them (ADR-306).
  */
 export const PROJECT_SCHEMA = 23 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -530,7 +531,7 @@ export interface Project {
   sellerItems?: SellerItem[];
   /** Worktop front edges (ADR-209, schemaVersion 21), one per worktop by run-part key. Absent = square. */
   worktopEdges?: WorktopEdge[];
-  /** Definition lists pieces link to (ADR-303, schemaVersion 23). Absent = none. */
+  /** Definition lists pieces link to (ADR-306, schemaVersion 23). Absent = none. */
   definitionLists?: DefinitionList[];
 }
 
@@ -1425,7 +1426,6 @@ function backCutsOf(
   const undo = ((360 - r) % 360) as QuarterTurn;
   const rects = new Map<string, { u: Mm; v: Mm; w: Mm; h: Mm }[]>();
   const by = new Map<string, string[]>();
-  const lo = (b: Box, a: Axis) => (a === 'x' ? b.x : a === 'y' ? b.y : b.z);
   for (const fid of item.backCuts) {
     const f = room.features.find((x) => x.id === fid && isService(x.kind));
     const zone = f ? featureBox(room, f) : null;
@@ -1436,10 +1436,10 @@ function backCutsOf(
       const [ua, va] = inPlaneAxes(p.thicknessAxis);
       const W = sizeOn(p.box, ua),
         H = sizeOn(p.box, va);
-      const u0 = Math.max(0, lo(local, ua) - lo(p.box, ua)),
-        u1 = Math.min(W, lo(local, ua) + sizeOn(local, ua) - lo(p.box, ua));
-      const v0 = Math.max(0, lo(local, va) - lo(p.box, va)),
-        v1 = Math.min(H, lo(local, va) + sizeOn(local, va) - lo(p.box, va));
+      const u0 = Math.max(0, startOn(local, ua) - startOn(p.box, ua)),
+        u1 = Math.min(W, startOn(local, ua) + sizeOn(local, ua) - startOn(p.box, ua));
+      const v0 = Math.max(0, startOn(local, va) - startOn(p.box, va)),
+        v1 = Math.min(H, startOn(local, va) + sizeOn(local, va) - startOn(p.box, va));
       if (u1 <= u0 || v1 <= v0) continue;
       rects.set(p.id, [...(rects.get(p.id) ?? []), { u: u0, v: v0, w: u1 - u0, h: v1 - v0 }]);
       by.set(p.id, [...(by.get(p.id) ?? []), fid]);

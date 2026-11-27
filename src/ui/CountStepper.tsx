@@ -6,15 +6,12 @@ import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
 import { selectionLabel } from './selectionLabel';
 import { askConfirm } from './Confirm';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 // Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.
 const FOLD_KEY = 'fb:counts3d';
 function storedFolded() {
-  try {
-    return localStorage.getItem(FOLD_KEY) === 'folded';
-  } catch {
-    return false;
-  }
+  return readLocal(FOLD_KEY, (v) => v === 'folded', false);
 }
 
 // Short visible labels for the compact card over the drawing (ADR-112); accessible names keep the full words.
@@ -39,11 +36,7 @@ export const CountStepper = forwardRef<
   const toggle = () => {
     const next = !folded;
     setFolded(next);
-    try {
-      localStorage.setItem(FOLD_KEY, next ? 'folded' : 'open');
-    } catch {
-      /* private mode: the choice lasts for this page only */
-    }
+    writeLocal(FOLD_KEY, next ? 'folded' : 'open');
   };
   const product = useDesign((s) => s.design.product);
   const selectedId = useDesign((s) => s.selectedId);
