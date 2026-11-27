@@ -33,7 +33,10 @@ do $$ begin
   if (select count(*) from public.records) <> 0 then raise exception 'B sees A''s records'; end if;
 end $$;
 select pg_temp.expect_error(format('select public.save_record(%L, ''design'', ''x'', ''{}'', 3, 2)', (select id from t_ids where k = 'r1')), '40001');
-update public.records set name = 'hacked'; -- RLS: touches nothing
+-- Direct table writes are refused for every signed-in user (G-544 L-2): writes go only through the functions.
+select pg_temp.expect_error($q$update public.records set name = 'hacked'$q$, '42501');
+select pg_temp.expect_error($q$delete from public.records$q$, '42501');
+select pg_temp.expect_error($q$insert into public.records (kind, body, body_schema) values ('design', '{}', 3)$q$, '42501');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 do $$ begin
   if (select name from public.records) <> 'Chest 2' then raise exception 'B changed A''s record'; end if;
@@ -57,6 +60,8 @@ do $$ declare n int; begin
 end $$;
 select pg_temp.expect_error('select * from public.records', '42501');
 select pg_temp.expect_error('select * from public.shares', '42501');
+select pg_temp.expect_error($q$select public.save_record(null, 'design', 'x', '{}', 3, null)$q$, '42501');
+select pg_temp.expect_error('select public.purge_trash()', '42501');
 reset role;
 set role authenticated;
 
@@ -85,7 +90,10 @@ do $$ begin
   if (select count(*) from public.open_share('DDDDDDDDDDDDDDDDDDDDDD')) <> 0 then raise exception 'trashed item opens'; end if;
   if public.purge_trash() <> 0 then raise exception 'purged fresh trash'; end if;
 end $$;
+-- Age the trash as the database owner: signed-in users cannot write the table directly (G-544 L-2).
+reset role;
 update public.records set deleted_at = now() - interval '8 days' where id = (select id from t_ids where k = 'r2');
+set role authenticated;
 do $$ begin
   if public.purge_trash() <> 1 then raise exception 'old trash not purged'; end if;
 end $$;
