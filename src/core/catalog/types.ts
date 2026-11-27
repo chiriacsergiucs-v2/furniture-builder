@@ -1,3 +1,4 @@
+import { tr } from '@furniture-builder/i18n';
 import type { Design, Mm, Product } from '../types';
 
 /** Function groups and rooms used to group the catalog (ADR-032). */
@@ -34,6 +35,14 @@ export const FUNCTION_LABEL: Record<FunctionGroup, string> = {
   seating: 'Seating',
   sleeping: 'Sleeping and lying',
 };
+/**
+ * The shown label of a stored category (G-547, display-only mapping, user 2026-11-27). Designs store the English
+ * `FUNCTION_LABEL` text as `catalog.category` (src/core/wizard/steps.ts), and that stored text never changes; every
+ * place that shows a category or a function group goes through this one lookup, so each has one Russian wording.
+ */
+export const categoryLabel = (stored: string): string => tr(stored);
+/** The shown label of a function group (G-547): its stored `FUNCTION_LABEL` text through `categoryLabel`. */
+export const functionLabel = (fn: FunctionGroup): string => categoryLabel(FUNCTION_LABEL[fn]);
 export const ROOM_LABEL: Record<Room, string> = {
   living: 'Living room',
   bedroom: 'Bedroom',

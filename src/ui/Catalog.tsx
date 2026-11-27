@@ -4,7 +4,7 @@ import { snapshotSvg } from '../core/snapshot';
 import {
   catalogFamilies,
   CAPABILITY_WAITS,
-  FUNCTION_LABEL,
+  functionLabel,
   FUNCTIONS,
   insertable,
   insertVariant,
@@ -87,7 +87,7 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
   if (by === 'type')
     return FUNCTIONS.map((fn) => ({
       key: fn,
-      label: tr(FUNCTION_LABEL[fn]),
+      label: functionLabel(fn),
       items: families.filter((f) => f.function === fn).map((family) => ({ family })),
     })).filter((g) => g.items.length);
   const groups: Group[] = ROOMS.map((r) => ({

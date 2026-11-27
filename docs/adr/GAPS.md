@@ -1732,18 +1732,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-547: H1 leftovers: Seating, Sleeping and lying, stored Wardrobe name (context-key pass)
-
-- Status: Open
-- Origin: reuse health 2026-11-18 H1, context-key pass
-- Missing: FUNCTION_LABEL (src/core/catalog/types.ts:23-24) is stored in designs as catalog.category (src/core/wizard/steps.ts:358-362); stored Wardrobe names (storage.ts:56, registry.ts:136). Plain keys Seating and Sleeping and lying keep two Russian wordings in data-catalog and data-wizard
-- Request: Separate stored labels from display labels, then tag
-- Questions: Change stored category labels, or keep them as they are?
-- Suggested pick: User decides (stored data)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-548: The types.ts and project.ts hubs are not split
 
 - Status: Open
