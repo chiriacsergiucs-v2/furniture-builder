@@ -437,11 +437,7 @@ export function CatalogPage({
         </p>
       ) : (
         highlightGroups.map((g) => (
-          <section
-            key={g.fn}
-            className="catalog-group highlights"
-            aria-label={functionLabel(g.fn)}
-          >
+          <section key={g.fn} className="catalog-group highlights" aria-label={functionLabel(g.fn)}>
             <h2 className="group-head">{functionLabel(g.fn)}</h2>
             {g.families.map((family) => (
               <FamilyBlock
