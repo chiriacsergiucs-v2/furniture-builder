@@ -1716,19 +1716,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-544: Security low items: migration grants, workflow pins, dev dependency advisories, localhost redirect (security L-2, L-4, L-5, L-6)
-
-- Status: Open
-- Origin: security health 2026-11-18 L-2, L-4, L-5, L-6
-- Missing: L-2 records write grant (supabase/migrations/20261028000000_accounts.sql:100); L-4 workflow actions pinned to tags and CLI latest (.github/workflows/deploy-assistant.yml:34); L-5 dev-only advisories (see dependency health); L-6 localhost redirect in supabase/config.toml:164
-- Request: Route writes through save_record; pin actions to SHAs; upgrade dev deps; remove localhost redirect outside dev
-- Questions: Approve migration and workflow changes?
-- Suggested pick: User decides per item
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
-
 ### G-545: Dependency upgrades deferred (health-deps): vitest 4, typescript 7, vite 8, three-mesh-bvh peer
 
 - Status: Open
@@ -1775,18 +1762,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: One ADR per package in the order above, each following the ADR-279 recipe (estimate: effort +10 % per package, value +5 % each)
 - Work: High
 - Impact: Medium
-
-### G-550: Audit advisories left after dependency health
-
-- Status: Open
-- Origin: catch-up 2026-11-19, pnpm audit
-- Missing: pnpm audit: 2 critical (tinypool via vitest 3, prototype pollution RCE), 3 moderate (vitest, @vitest/mocker x2). Fix needs vitest 4, blocked by G-545. Also missing from G-545: plugin-react 6.3.0 upgrade
-- Request: Upgrade vitest to a patched version, then re-run pnpm audit
-- Questions: Do the vitest 4 fix (seller-pictures BASE_URL expectation) now?
-- Suggested pick: Fix vitest 4 first
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
 
 ### G-551: N343 find-it marker cannot be met
 
