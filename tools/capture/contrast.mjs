@@ -12,7 +12,8 @@ const out = outDir('docs/research/ui-capture');
 mkdirSync(out, { recursive: true });
 
 const rows = [];
-const browser = await launchBrowser();
+// The app's real phone default, the canvas editor (ADR-290), not the sheet the harness sets for older scripts (G-509).
+const browser = await launchBrowser({ appDefault: true });
 for (const scheme of ['light', 'dark']) {
   for (const width of WIDTHS) {
     const phone = width < 500;
@@ -87,6 +88,18 @@ for (const scheme of ['light', 'dark']) {
       await wait();
     });
     await page.keyboard.press('Escape').catch(() => {});
+    // The phone's Settings card stays open on Escape: its Close button shuts it (G-509).
+    {
+      const x = page.locator('dialog[open]').getByRole('button', { name: 'Close', exact: true });
+      if (
+        await x
+          .first()
+          .isVisible()
+          .catch(() => false)
+      )
+        await x.first().click();
+      await wait(200);
+    }
     await step('material', async () => {
       await page.getByRole('button', { name: 'Material', exact: true }).click();
       await wait();

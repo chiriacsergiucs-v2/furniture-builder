@@ -3874,6 +3874,19 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
+
+- Status: Done (N444)
+- Origin: UI flow audit, 2026-11-15 (G-508)
+- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
+- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
+- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
+- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Note: 2026-11-27 (N444): the suggested pick is done. Second capture pass on the app's phone default (canvas editor): `tools/capture/flows.mjs` (empty project, Settings, Material, the 8 wizard steps; 390 and 1280 px, light and dark; 44 states, none skipped), `tools/capture/contrast.mjs` (32 states, 3,734 texts, 0 below AA) and `tools/capture/flows3.mjs` (seeded project with two pieces, room, 3D, results, pages, signed-out online screens; 96 states, via N443). Citation check of every [R] finding (F-06, F-07, F-11, F-12, F-13, F-14, F-15, F-17, F-18, F-19) with today's file:line, and a new finding F-31 (the 3D ⋯ menu clipped at 390 px): `docs/research/2026-11-15-ui-flow-audit.md` section 13. Remainder, for a new gap (no G id given here): signed-in Account, making and stopping share links, Assistant replies and any check on the published site need a real account or the live URL; error and repair states seen in the browser, placing and dragging, Move mode, Render and AR export need scripted gestures or a design with errors; F-31 is not fixed.
+
 ### G-510: Fix the 38 failing browser find-it scripts (ADR-272 to ADR-278)
 
 - Status: Done (N321)

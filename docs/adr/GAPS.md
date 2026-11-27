@@ -1391,18 +1391,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
-
-- Status: Open
-- Origin: UI flow audit, 2026-11-15 (G-508)
-- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
-- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
-- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
-- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-523: Two backlog rows share id N326
 
 - Status: Open

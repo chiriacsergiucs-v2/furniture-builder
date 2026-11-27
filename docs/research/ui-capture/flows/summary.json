@@ -3,308 +3,308 @@
     "width": 1280,
     "scheme": "light",
     "name": "project-editor",
-    "elements": 115,
+    "elements": 117,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "light",
     "name": "settings",
-    "elements": 163,
+    "elements": 167,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "light",
     "name": "material",
-    "elements": 123,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-01",
-    "elements": 131,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-02",
-    "elements": 143,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-03",
-    "elements": 138,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-04",
-    "elements": 139,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-05",
-    "elements": 144,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-06",
-    "elements": 138,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "light",
-    "name": "wizard-step-07",
     "elements": 132,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "light",
-    "name": "wizard-step-08",
-    "elements": 135,
-    "horizontalScroll": false
-  },
-  {
-    "width": 390,
-    "scheme": "light",
-    "name": "project-editor",
-    "elements": 116,
-    "horizontalScroll": false
-  },
-  {
-    "width": 390,
-    "scheme": "light",
-    "name": "settings",
-    "elements": 159,
-    "horizontalScroll": false
-  },
-  {
-    "width": 390,
-    "scheme": "light",
-    "name": "material",
-    "elements": 118,
-    "horizontalScroll": false
-  },
-  {
-    "width": 390,
-    "scheme": "light",
     "name": "wizard-step-01",
-    "elements": 121,
-    "horizontalScroll": false
-  },
-  {
-    "width": 390,
-    "scheme": "light",
-    "name": "wizard-step-02",
     "elements": 133,
     "horizontalScroll": false
   },
   {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-02",
+    "elements": 145,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-03",
+    "elements": 140,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-04",
+    "elements": 141,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-05",
+    "elements": 146,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-06",
+    "elements": 140,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-07",
+    "elements": 134,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "light",
+    "name": "wizard-step-08",
+    "elements": 137,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "name": "project-editor",
+    "elements": 144,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "name": "settings",
+    "elements": 192,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "name": "material",
+    "elements": 153,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "name": "wizard-step-01",
+    "elements": 149,
+    "horizontalScroll": false
+  },
+  {
+    "width": 390,
+    "scheme": "light",
+    "name": "wizard-step-02",
+    "elements": 161,
+    "horizontalScroll": false
+  },
+  {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-03",
-    "elements": 128,
+    "elements": 156,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-04",
-    "elements": 129,
+    "elements": 157,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-05",
-    "elements": 134,
+    "elements": 162,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-06",
-    "elements": 128,
+    "elements": 156,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-07",
-    "elements": 122,
+    "elements": 150,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "light",
     "name": "wizard-step-08",
-    "elements": 125,
+    "elements": 153,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "dark",
     "name": "project-editor",
-    "elements": 115,
+    "elements": 117,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "dark",
     "name": "settings",
-    "elements": 163,
+    "elements": 167,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "dark",
     "name": "material",
-    "elements": 123,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-01",
-    "elements": 131,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-02",
-    "elements": 143,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-03",
-    "elements": 138,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-04",
-    "elements": 139,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-05",
-    "elements": 144,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-06",
-    "elements": 138,
-    "horizontalScroll": false
-  },
-  {
-    "width": 1280,
-    "scheme": "dark",
-    "name": "wizard-step-07",
     "elements": 132,
     "horizontalScroll": false
   },
   {
     "width": 1280,
     "scheme": "dark",
+    "name": "wizard-step-01",
+    "elements": 133,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-02",
+    "elements": 145,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-03",
+    "elements": 140,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-04",
+    "elements": 141,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-05",
+    "elements": 146,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-06",
+    "elements": 140,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
+    "name": "wizard-step-07",
+    "elements": 134,
+    "horizontalScroll": false
+  },
+  {
+    "width": 1280,
+    "scheme": "dark",
     "name": "wizard-step-08",
-    "elements": 135,
+    "elements": 137,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "project-editor",
-    "elements": 116,
+    "elements": 144,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "settings",
-    "elements": 159,
+    "elements": 192,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "material",
-    "elements": 118,
+    "elements": 153,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-01",
-    "elements": 121,
+    "elements": 149,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-02",
-    "elements": 133,
+    "elements": 161,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-03",
-    "elements": 128,
+    "elements": 156,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-04",
-    "elements": 129,
+    "elements": 157,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-05",
-    "elements": 134,
+    "elements": 162,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-06",
-    "elements": 128,
+    "elements": 156,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-07",
-    "elements": 122,
+    "elements": 150,
     "horizontalScroll": false
   },
   {
     "width": 390,
     "scheme": "dark",
     "name": "wizard-step-08",
-    "elements": 125,
+    "elements": 153,
     "horizontalScroll": false
   }
 ]
