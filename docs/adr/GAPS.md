@@ -905,22 +905,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep while ff pushes straight to main; revisit if ff stops.
 - Conflicts: ADR-197 deploy waits on the main CI run
 
-### G-371: Cheaper find-it runs (stopped before it was built)
-
-- Status: Open
-- Origin: ADR-197 CI analysis 2026-11-05
-- Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
-- Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
-- Questions: Resume the cheaper find-it runs later?
-- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-- Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
-- Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
-- Conflicts: none
-- Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
-
 ### G-376: Include the room starts ticked in Save as project template
 
 - Status: Open
@@ -1257,17 +1241,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Leave the build cold: CI is the source of truth and a stale bundle is a regression risk (estimate: effort +5 %, value +2 %)
 - Work: Low
 - Impact: Low
-
-### G-487: The project cut list and hardware are not derived once in the store
-
-- Status: Open
-- Origin: ADR-221 Out of scope, 2026-11-07 (architecture review I-03)
-- Missing: The review's third step, deriving projectCutlist/projectHardware once in commitProject and storing them, and deriving the view once instead of per mounted useView(), is not built; ADR-221 memoises placeItem and reads projectModel only.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should the derived cut list and hardware move into the store after ADR-221 is measured?
-- Suggested pick: Measure after ADR-221; build only if a 60-item edit still takes over 10 ms (estimate: effort +15 %, value +10 %)
-- Work: Medium
-- Impact: Low-medium
 
 ### G-488: Research data is not a generated lazy JSON file
 
