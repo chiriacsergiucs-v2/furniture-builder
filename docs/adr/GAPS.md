@@ -75,21 +75,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-011: Handle projection and exact swing arcs in the check
-
-- Status: Open
-- Origin: ADR-057, 2026-10-24 15:54 UTC; agent scoped it out
-- Missing: No handle projection; door swings are not exact arcs in the check (drawn arcs were fixed, the check still uses a box).
-- Request: Opening clearance for doors, drawers, flaps (context, not a quote)
-- Questions: Use the handle depth from the handle schedule and the real arc on the hinge side?
-- Suggested pick: Check the real quarter-circle on the hinge side plus the handle depth from the handle schedule (ADR-024). This also unblocks the ADR-071 “reverse the hinge” repair. (estimate: effort +25%, value +20%)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Door clearance check uses a box, not the real swing arc, and ignores handle projection.
-- Fix: Check the hinge-side quarter-circle plus a user-entered handle depth from the handle schedule.
-- Conflicts: ADR-057: decided clearances are axis-aligned boxes; an arc check changes that decision.
-
 ### G-014: Undo across reloads and in the library
 
 - Status: Open
@@ -1134,21 +1119,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
 - Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
 - Note: Suggested pick accepted (keep the average colour, ADR-048); auto-accepted 2026-11-27.
-
-### G-436: Reverse-the-hinge repair
-
-- Status: Open
-- Origin: ADR-209, 2026-11-06; remainder of G-034 (the coordinator split it: the repair needs G-011)
-- Missing: A door blocked by a neighbour has no "Reverse the hinge" repair. The ADR-057 clearance is a box as deep as the door is wide on both sides, so reversing the hinge never clears it.
-- Request: “Explainable warnings with repairs”.
-- Questions: Build the hinge-side clearance (G-011, which changes ADR-057's box decision) and then this repair?
-- Suggested pick: Once G-011 is decided, offer the hinge repair for single doors. (estimate: effort +10%, value +10%)
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: Reversing the hinge is not offered as a repair.
-- Fix: After G-011, add the hinge repair to `repairsFor`.
-- Conflicts: ADR-057 (clearances are axis-aligned boxes on both hinge sides)
 
 ### G-437: Bundled CC0 appliance models
 
