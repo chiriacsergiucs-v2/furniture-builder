@@ -5,7 +5,6 @@
  */
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { t } from '@furniture-builder/i18n';
-import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,
   TALL_HEIGHT,
@@ -23,12 +22,15 @@ import {
 } from '../core/wallfill';
 import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
-import { Segmented, Steps } from './controls';
+import { Steps } from './controls';
 import { Dialog } from './Dialogs';
 import {
   FillFooter,
   Field,
-  MixWarnings,
+  MixCardFrame,
+  mixPicture,
+  RefineFields,
+  RowAndTallChoices,
   Problems,
   ResultProblems,
   SaveError,
@@ -113,24 +115,20 @@ function toInput(f: Form): WallInput {
   };
 }
 
-/** A whole-mm answer kept as typed (ADR-008); shared with Fill the room. */
-const picture = (m: Mix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
-
 function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
-  const src = useMemo(() => picture(m), [m]);
+  const src = useMemo(() => mixPicture(m), [m]);
   return (
-    <li className="wz-card wf-card">
-      <img
-        src={src}
-        alt={
-          m.wallWidths
-            ? t('Mix: wall {wall} mm, {widths} mm', { wall: m.wallWidths, widths: m.widths })
-            : t('Mix: {widths} mm', { widths: m.widths })
-        }
-        width={180}
-        height={110}
-      />
+    <MixCardFrame
+      src={src}
+      alt={
+        m.wallWidths
+          ? t('Mix: wall {wall} mm, {widths} mm', { wall: m.wallWidths, widths: m.widths })
+          : t('Mix: {widths} mm', { widths: m.widths })
+      }
+      warnings={m.warnings}
+      label={t('Use this mix')}
+      onUse={onUse}
+    >
       {m.wallWidths && (
         <span className="wz-card-label num wf-wall">{t('Wall: {w} mm', { w: m.wallWidths })}</span>
       )}
@@ -138,11 +136,7 @@ function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
         <strong>{m.widths}</strong> {t('mm')}
       </span>
       <span className="wz-card-label">{m.summary}</span>
-      <MixWarnings warnings={m.warnings} />
-      <button type="button" className="btn sm primary" onClick={onUse}>
-        {t('Use this mix')}
-      </button>
-    </li>
+    </MixCardFrame>
   );
 }
 
@@ -265,116 +259,33 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               'Leave a field empty for any. The width range is your choice; shelves wider than the shelf-span guidance get a centre divider.',
             )}
           </p>
-          <div className="wf-grid">
-            <Field
-              label={t('Min piece width')}
-              value={form.minWidth}
-              onChange={set('minWidth')}
-              problem={problem('minWidth')}
-            />
-            <Field
-              label={t('Max piece width')}
-              value={form.maxWidth}
-              onChange={set('maxWidth')}
-              problem={problem('maxWidth')}
-            />
-            <Field
-              label={t('Base height')}
-              value={form.baseHeight}
-              onChange={set('baseHeight')}
-              problem={problem('baseHeight')}
-            />
-            <Field
-              label={t('Number of pieces')}
-              value={form.pieces}
-              onChange={set('pieces')}
-              problem={problem('pieces')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('Tall cabinets')}
-              value={form.tallCount}
-              onChange={set('tallCount')}
-              problem={problem('tallCount')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, open shelf bases')}
-              value={form.shelves}
-              onChange={set('shelves')}
-              problem={problem('shelves')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, drawer bases')}
-              value={form.drawers}
-              onChange={set('drawers')}
-              problem={problem('drawers')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, door bases')}
-              value={form.door}
-              onChange={set('door')}
-              problem={problem('door')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('Equal fronts')}
-              value={form.equalFronts}
-              onChange={set('equalFronts')}
-              problem={problem('equalFronts')}
-              unit=""
-              placeholder={t('off')}
-              hint={t('Every door the same width; insides left empty to configure later.')}
-            />
-            <Field
-              label={t('Wall cabinet height')}
-              value={form.wallHeight}
-              onChange={set('wallHeight')}
-              problem={problem('wallHeight')}
-              hint={t('Wall cabinet tops sit at the wall height.')}
-            />
-            <Field
-              label={t('Tall cabinet height')}
-              value={form.tallHeight}
-              onChange={set('tallHeight')}
-              problem={problem('tallHeight')}
-            />
-            <Field
-              label={t('Wall cabinet depth')}
-              value={form.wallDepth}
-              onChange={set('wallDepth')}
-              problem={problem('wallDepth')}
-            />
-          </div>
-          <Segmented
-            label={t('Wall cabinets')}
-            value={form.wallRow}
-            onChange={(v) => setForm((f) => ({ ...f, wallRow: v }))}
-            options={[
-              { value: 'any', label: t('Any') },
-              { value: 'always', label: t('Always') },
-              { value: 'never', label: t('Never') },
-            ]}
+          <RefineFields
+            form={form}
+            set={set}
+            problem={problem}
+            afterBase={
+              <Field
+                label={t('Number of pieces')}
+                value={form.pieces}
+                onChange={set('pieces')}
+                problem={problem('pieces')}
+                unit=""
+                placeholder={t('any')}
+              />
+            }
+            beforeWall={
+              <Field
+                label={t('Equal fronts')}
+                value={form.equalFronts}
+                onChange={set('equalFronts')}
+                problem={problem('equalFronts')}
+                unit=""
+                placeholder={t('off')}
+                hint={t('Every door the same width; insides left empty to configure later.')}
+              />
+            }
           />
-          <Segmented
-            label={t('Tall cabinets stand')}
-            value={form.tallPosition}
-            onChange={(v) => setForm((f) => ({ ...f, tallPosition: v }))}
-            options={[
-              { value: 'auto', label: t('Auto') },
-              { value: 'left', label: t('Left') },
-              { value: 'right', label: t('Right') },
-              { value: 'ends', label: t('Both ends') },
-              { value: 'centre', label: t('Centre') },
-            ]}
-          />
+          <RowAndTallChoices form={form} onChange={(p) => setForm((f) => ({ ...f, ...p }))} />
           <Problems list={problems} idOf={problemId} />
         </section>
       )}

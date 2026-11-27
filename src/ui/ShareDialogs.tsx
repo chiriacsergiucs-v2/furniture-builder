@@ -8,7 +8,7 @@ import { cutlist, hardwareSummary } from '../core/cutlist';
 import { applyOwned } from '../core/owned';
 import { kerfOf, newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
-import { frontSvg } from '../core/snapshot';
+import { frontSvg, svgDataUrl } from '../core/snapshot';
 import type { Design } from '../core/types';
 import { saveDesign, saveTemplate } from '../store/libraryStore';
 import { online, useAccount } from '../store/accountStore';
@@ -299,7 +299,7 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
               <figure className="shared-front" aria-label={t('Front view')}>
                 <img
                   alt={t('Front view of {name}', { name: state.item!.name })}
-                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(frontSvg(view.model, view.materials))}`}
+                  src={svgDataUrl(frontSvg(view.model, view.materials))}
                 />
               </figure>
               {show3d ? (

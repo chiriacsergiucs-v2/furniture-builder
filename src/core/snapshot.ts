@@ -275,6 +275,10 @@ const DOOR_ROLES: ReadonlySet<string> = new Set(['door']);
 /** Fill opacity of a see-through front in a suggestion picture. */
 const CLEAR_FRONT = 0.28;
 
+/** An SVG string as an `<img src>` data URL. */
+export const svgDataUrl = (svg: string) =>
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+
 /**
  * SVG picture of a model, `size` px on its longer side. Empty models give an empty picture. `clearFronts`: doors and
  * drawer fronts are drawn see-through so the shelves, dividers and drawers behind them show (suggestion cards).

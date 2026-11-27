@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
-import { snapshotSvg } from '../core/snapshot';
+import { snapshotSvg, svgDataUrl } from '../core/snapshot';
 import {
   catalogFamilies,
   CAPABILITY_WAITS,
@@ -488,9 +488,7 @@ export function ItemPicture({
   const drawn = useMemo(() => {
     if (!local || !insertable(v)) return null;
     const d = insertVariant(f, v, '');
-    return d
-      ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(buildModel(d), d.materials, 240, false, true))}`
-      : null;
+    return d ? svgDataUrl(snapshotSvg(buildModel(d), d.materials, 240, false, true)) : null;
   }, [f, v, local]);
   if (!insertable(v) || (local && !drawn)) return null;
   return (

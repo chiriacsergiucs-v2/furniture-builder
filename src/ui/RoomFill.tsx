@@ -41,7 +41,6 @@ import {
   type RoomSizeField,
   type ShapeSizes,
 } from '../core/room';
-import { snapshotSvg } from '../core/snapshot';
 import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
@@ -50,7 +49,10 @@ import { RoomFeatures } from './RoomFeatures';
 import {
   FillFooter,
   Field,
-  MixWarnings,
+  MixCardFrame,
+  mixPicture,
+  RefineFields,
+  RowAndTallChoices,
   Problems,
   ResultProblems,
   SaveError,
@@ -223,9 +225,6 @@ function toInput(f: Form, room: Room, walls: number[], extras?: Extras): RoomInp
   };
 }
 
-const picture = (m: RoomMix) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220, true))}`;
-
 function MixCard({
   m,
   onUse,
@@ -237,15 +236,15 @@ function MixCard({
   label: string;
   currency: string;
 }) {
-  const src = useMemo(() => picture(m), [m]);
+  const src = useMemo(() => mixPicture(m), [m]);
   return (
-    <li className="wz-card wf-card">
-      <img
-        src={src}
-        alt={t('Room mix: {summary}', { summary: m.summary })}
-        width={180}
-        height={110}
-      />
+    <MixCardFrame
+      src={src}
+      alt={t('Room mix: {summary}', { summary: m.summary })}
+      warnings={m.warnings}
+      label={label}
+      onUse={onUse}
+    >
       {m.walls.map((w) => (
         <span key={w.wall} className="wz-card-label num">
           {t('Wall {n}: {w} mm', { n: w.wall + 1, w: w.widths })}
@@ -267,11 +266,7 @@ function MixCard({
         {m.estimate.missing.length > 0 &&
           ` · ${t('{n|# line|# lines} without a price', { n: m.estimate.missing.length })}`}
       </span>
-      <MixWarnings warnings={m.warnings} />
-      <button type="button" className="btn sm primary" onClick={onUse}>
-        {label}
-      </button>
-    </li>
+    </MixCardFrame>
   );
 }
 
@@ -544,77 +539,7 @@ function RoomFill({
               'Leave a field empty for any. Applied to every ticked wall; shelves wider than the shelf-span guidance get a centre divider.',
             )}
           </p>
-          <div className="wf-grid">
-            <Field
-              label={t('Min piece width')}
-              value={form.minWidth}
-              onChange={set('minWidth')}
-              problem={problem('minWidth')}
-            />
-            <Field
-              label={t('Max piece width')}
-              value={form.maxWidth}
-              onChange={set('maxWidth')}
-              problem={problem('maxWidth')}
-            />
-            <Field
-              label={t('Base height')}
-              value={form.baseHeight}
-              onChange={set('baseHeight')}
-              problem={problem('baseHeight')}
-            />
-            <Field
-              label={t('Tall cabinets')}
-              value={form.tallCount}
-              onChange={set('tallCount')}
-              problem={problem('tallCount')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, open shelf bases')}
-              value={form.shelves}
-              onChange={set('shelves')}
-              problem={problem('shelves')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, drawer bases')}
-              value={form.drawers}
-              onChange={set('drawers')}
-              problem={problem('drawers')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('At least, door bases')}
-              value={form.door}
-              onChange={set('door')}
-              problem={problem('door')}
-              unit=""
-              placeholder={t('any')}
-            />
-            <Field
-              label={t('Wall cabinet height')}
-              value={form.wallHeight}
-              onChange={set('wallHeight')}
-              problem={problem('wallHeight')}
-              hint={t('Wall cabinet tops sit at the wall height.')}
-            />
-            <Field
-              label={t('Tall cabinet height')}
-              value={form.tallHeight}
-              onChange={set('tallHeight')}
-              problem={problem('tallHeight')}
-            />
-            <Field
-              label={t('Wall cabinet depth')}
-              value={form.wallDepth}
-              onChange={set('wallDepth')}
-              problem={problem('wallDepth')}
-            />
-          </div>
+          <RefineFields form={form} set={set} problem={problem} />
           <Segmented
             label={t('Corner cabinet')}
             value={form.corner}
@@ -625,28 +550,7 @@ function RoomFill({
               { value: 'none', label: t('None') },
             ]}
           />
-          <Segmented
-            label={t('Wall cabinets')}
-            value={form.wallRow}
-            onChange={(v) => setForm((f) => ({ ...f, wallRow: v }))}
-            options={[
-              { value: 'any', label: t('Any') },
-              { value: 'always', label: t('Always') },
-              { value: 'never', label: t('Never') },
-            ]}
-          />
-          <Segmented
-            label={t('Tall cabinets stand')}
-            value={form.tallPosition}
-            onChange={(v) => setForm((f) => ({ ...f, tallPosition: v }))}
-            options={[
-              { value: 'auto', label: t('Auto') },
-              { value: 'left', label: t('Left') },
-              { value: 'right', label: t('Right') },
-              { value: 'ends', label: t('Both ends') },
-              { value: 'centre', label: t('Centre') },
-            ]}
-          />
+          <RowAndTallChoices form={form} onChange={(p) => setForm((f) => ({ ...f, ...p }))} />
           <div className="wf-grid">
             <Field
               label={t('Budget ceiling')}
