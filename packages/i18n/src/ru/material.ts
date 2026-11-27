@@ -108,8 +108,8 @@ export const ru_material = {
   '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
     '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
   'Role and part bands need schemaVersion 8': 'Кромки по ролям и деталям требуют schemaVersion 8',
-  'Band tolerances and edgebander settings need schemaVersion 13':
-    'Допуски кромки и настройки кромкооблицовочного станка требуют schemaVersion 13',
+  'Band tolerances and edgebander settings need schemaVersion 14':
+    'Допуски кромки и настройки кромкооблицовочного станка требуют schemaVersion 14',
   'Invalid role bands': 'Недопустимые кромки по ролям',
   'Invalid band for {k}': 'Недопустимая кромка для {k}',
   'Invalid part bands': 'Недопустимые кромки деталей',

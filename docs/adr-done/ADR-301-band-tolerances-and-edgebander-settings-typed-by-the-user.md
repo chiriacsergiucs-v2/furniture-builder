@@ -19,11 +19,11 @@ fields change `src/core/types.ts` and the document shape (ADR-011).
 
 ## Decision
 
-- `EdgeBand` gains four optional fields (design schemaVersion 13): `thicknessTolerance`, `widthTolerance` (± deviation)
+- `EdgeBand` gains four optional fields (design schemaVersion 14, after ADR-300 took 13): `thicknessTolerance`, `widthTolerance` (± deviation)
   and `overhang` (left to trim per side), each in tenths of a mm from 0.1 to 10 mm as the band thickness is; and
   `edgebander`, the user's own settings as text up to 200 characters. Absent = not given. Nothing fills them in.
-- Validation (`bandProblems`) checks each field when present; a design below schemaVersion 13 that carries one is
-  refused ("Band tolerances and edgebander settings need schemaVersion 13"). Versions 1 to 12 still load and upgrade
+- Validation (`bandProblems`) checks each field when present; a design below schemaVersion 14 that carries one is
+  refused ("Band tolerances and edgebander settings need schemaVersion 14"). Versions 1 to 13 still load and upgrade
   unchanged. The band's grouping key, cut sizes and metres to buy do not change.
 - The board's edge band editor (Settings → Boards, sheets and saw cut, `BoardBand`) shows the four fields under
   "Tolerances and edgebander (guidance)", with a hint that they come from the user's datasheet and the app neither
@@ -50,12 +50,12 @@ fields change `src/core/types.ts` and the document shape (ADR-011).
 
 - Positive: the shop's band datasheet values travel with the design and print on the cut sheet.
 - Negative / risks: values are not checked against anything; they are guidance only.
-- Harder to change later: the field names are in saved files (schemaVersion 13).
+- Harder to change later: the field names are in saved files (schemaVersion 14).
 
 ## Done when
 
 - [x] A new design's bands carry none of the fields (empty by default) (tests/edge-band-guide.test.ts)
-- [x] The fields validate (range, text length) and need schemaVersion 13; versions 1–12 still load (tests)
+- [x] The fields validate (range, text length) and need schemaVersion 14; versions 1–13 still load (tests)
 - [x] A band with the fields saves to the device and a file and reloads equal (tests)
 - [x] The printed caption names them only when filled, in Romanian, Russian and English (tests)
 - [x] Settings → Boards, sheets and saw cut → Edge band shows "Thickness tolerance ± (mm)", "Width tolerance ± (mm)",

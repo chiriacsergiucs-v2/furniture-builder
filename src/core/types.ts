@@ -105,13 +105,13 @@ export interface EdgeBand {
   /** The seller's product this band was taken from (ADR-161, schemaVersion 5). */
   product?: ProductRef;
   /**
-   * ADR-301 (schemaVersion 13): guidance the user types from the band's datasheet, never filled in (ADR-010). The ±
+   * ADR-301 (schemaVersion 14): guidance the user types from the band's datasheet, never filled in (ADR-010). The ±
    * thickness and ± width deviation and the overhang left to trim per side, in tenths of a mm (1–100). Absent = not given.
    */
   thicknessTolerance?: number;
   widthTolerance?: number;
   overhang?: number;
-  /** ADR-301 (schemaVersion 13): the user's edgebander settings for this band, as they write them. */
+  /** ADR-301 (schemaVersion 14): the user's edgebander settings for this band, as they write them. */
   edgebander?: string;
 }
 
@@ -797,10 +797,10 @@ export interface Design {
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
    * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
-   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
-   * Older files are upgraded in memory on load.
+   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210);
+   * 13 adds merged assembly steps (ADR-300). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
   id: string;
   name: string;
   createdAt: string;
@@ -890,6 +890,11 @@ export type StepId =
 export interface AssemblyEdit {
   order: StepId[];
   names?: Partial<Record<StepId, string>>;
+  /**
+   * Steps merged into the step shown before them in `order` (ADR-300, schemaVersion 13): each joins its predecessor,
+   * so a run of them makes one step. Absent = no merge; a step that comes first stays on its own.
+   */
+  merged?: StepId[];
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */

@@ -41,10 +41,10 @@ describe('band tolerances and edgebander settings (ADR-301)', () => {
     expect(boardBandGuideRo(rows.filter((r) => r.materialId === carcassOf(d)))).toBeNull();
   });
 
-  it('validate each field, and need schemaVersion 13; version 12 files still load', () => {
+  it('validate each field, and need schemaVersion 14; version 13 files still load', () => {
     const d = chest();
     const id = carcassOf(d);
-    expect(SCHEMA_VERSION).toBe(13);
+    expect(SCHEMA_VERSION).toBe(14);
     expect(validateDesign(patch(d, id, { band: GUIDED, frontBand: GUIDED }))).toEqual([]);
     for (const bad of [
       { thicknessTolerance: 0 },
@@ -57,15 +57,15 @@ describe('band tolerances and edgebander settings (ADR-301)', () => {
       expect(
         validateDesign(patch(d, id, { band: { ...ABS08, ...bad } as EdgeBand })).join(),
       ).toMatch(/Invalid edge band/);
-    const v12 = { ...patch(d, id, { band: ABS08 }), schemaVersion: 12 as const };
-    expect(validateDesign(v12)).toEqual([]);
-    expect(upgradeDesign(v12).schemaVersion).toBe(13);
+    const v13 = { ...patch(d, id, { band: ABS08 }), schemaVersion: 13 as const };
+    expect(validateDesign(v13)).toEqual([]);
+    expect(upgradeDesign(v13).schemaVersion).toBe(14);
     expect(
-      validateDesign({ ...v12, materials: patch(d, id, { band: GUIDED }).materials }),
-    ).toContain('Band tolerances and edgebander settings need schemaVersion 13');
+      validateDesign({ ...v13, materials: patch(d, id, { band: GUIDED }).materials }),
+    ).toContain('Band tolerances and edgebander settings need schemaVersion 14');
     expect(
-      validateDesign({ ...v12, partBands: { p1: { ...ABS08, overhang: 10 } } } as Design),
-    ).toContain('Band tolerances and edgebander settings need schemaVersion 13');
+      validateDesign({ ...v13, partBands: { p1: { ...ABS08, overhang: 10 } } } as Design),
+    ).toContain('Band tolerances and edgebander settings need schemaVersion 14');
   });
 
   it('save to the device and a file and reload equal', async () => {

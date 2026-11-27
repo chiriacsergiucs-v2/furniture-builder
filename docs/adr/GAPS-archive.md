@@ -3433,6 +3433,22 @@ highest id in either file.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
 
+### G-422: Merge assembly steps
+
+- Status: Done (N427)
+- Origin: ADR-207, 2026-11-06; remainder of G-344 (its pick names an editable order with a reset)
+- Missing: Steps can be reordered and renamed but not merged into one step.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user merge two neighbouring steps into one?
+- Suggested pick: Merge with the next step, saved in the design's step order, undone by Reset the steps. (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Two assembly steps cannot be merged.
+- Fix: Store merged step pairs with the step order and show them as one step.
+- Conflicts: none
+- Note: Built by ADR-300 (N427): `AssemblyEdit.merged` (design schemaVersion 13), Assembly › Merge with the next step, Reset the steps undoes it; `tests/assembly-merge.test.ts` and `tests/find-it/assembly-merge.test.tsx` pass.
+
 ### G-438: Sink and hob cut-outs in the room front view
 
 - Status: Done (N393)
