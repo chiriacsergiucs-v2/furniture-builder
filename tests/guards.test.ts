@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { box, endOn, sizeOn, startOn } from '../src/core/geometry';
 import { isHexColour, isInt } from '../src/core/guards';
 import { isTile, MAX_TILE } from '../src/core/surface';
 
@@ -21,5 +22,18 @@ describe('shared input guards (G-570 M4)', () => {
   it('isTile is whole mm from 1 to MAX_TILE', () => {
     expect([1, MAX_TILE].map(isTile)).toEqual([true, true]);
     expect([0, MAX_TILE + 1, 2.5].map(isTile)).toEqual([false, false, false]);
+  });
+});
+
+describe('box axis accessors (G-570 M3)', () => {
+  it('give start, size and end along each axis', () => {
+    const b = box(1, 2, 3, 10, 20, 30);
+    expect(
+      (['x', 'y', 'z'] as const).map((a) => [startOn(b, a), sizeOn(b, a), endOn(b, a)]),
+    ).toEqual([
+      [1, 10, 11],
+      [2, 20, 22],
+      [3, 30, 33],
+    ]);
   });
 });

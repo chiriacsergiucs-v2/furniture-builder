@@ -53,6 +53,7 @@ import {
   overlaps,
   penetration,
   sizeOn,
+  startOn,
   swapXZ,
   union,
   yawPoint,
@@ -1403,7 +1404,6 @@ function backCutsOf(
   const undo = ((360 - r) % 360) as QuarterTurn;
   const rects = new Map<string, { u: Mm; v: Mm; w: Mm; h: Mm }[]>();
   const by = new Map<string, string[]>();
-  const lo = (b: Box, a: Axis) => (a === 'x' ? b.x : a === 'y' ? b.y : b.z);
   for (const fid of item.backCuts) {
     const f = room.features.find((x) => x.id === fid && isService(x.kind));
     const zone = f ? featureBox(room, f) : null;
@@ -1414,10 +1414,10 @@ function backCutsOf(
       const [ua, va] = inPlaneAxes(p.thicknessAxis);
       const W = sizeOn(p.box, ua),
         H = sizeOn(p.box, va);
-      const u0 = Math.max(0, lo(local, ua) - lo(p.box, ua)),
-        u1 = Math.min(W, lo(local, ua) + sizeOn(local, ua) - lo(p.box, ua));
-      const v0 = Math.max(0, lo(local, va) - lo(p.box, va)),
-        v1 = Math.min(H, lo(local, va) + sizeOn(local, va) - lo(p.box, va));
+      const u0 = Math.max(0, startOn(local, ua) - startOn(p.box, ua)),
+        u1 = Math.min(W, startOn(local, ua) + sizeOn(local, ua) - startOn(p.box, ua));
+      const v0 = Math.max(0, startOn(local, va) - startOn(p.box, va)),
+        v1 = Math.min(H, startOn(local, va) + sizeOn(local, va) - startOn(p.box, va));
       if (u1 <= u0 || v1 <= v0) continue;
       rects.set(p.id, [...(rects.get(p.id) ?? []), { u: u0, v: v0, w: u1 - u0, h: v1 - v0 }]);
       by.set(p.id, [...(by.get(p.id) ?? []), fid]);
