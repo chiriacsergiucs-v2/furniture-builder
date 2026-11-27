@@ -1955,14 +1955,19 @@ function clearanceZones(
       severity: body,
     });
     for (const c of pc.clearances) {
-      const role = pc.panels.find((p) => p.id === c.panelId)?.role;
+      const panel = pc.panels.find((p) => p.id === c.panelId);
       const bad =
         blockedBoxes.has(c.box) ||
         (!!room && !boxInside(room.outline, c.box)) ||
         pieces.some((o) => o !== pc && o.clearances.some((y) => overlaps(c.box, y.box)));
       out.push({
         itemId: id,
-        kind: /flap/i.test(c.label) ? 'flap' : role === 'door' ? 'door' : 'drawer',
+        kind:
+          panel?.front === 'flap-up' || panel?.front === 'flap-down'
+            ? 'flap'
+            : panel?.role === 'door'
+              ? 'door'
+              : 'drawer',
         label: c.label,
         box: c.box,
         severity: bad ? 'warning' : 'none',

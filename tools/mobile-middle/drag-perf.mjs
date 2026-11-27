@@ -3,7 +3,8 @@
 // scripted orbit drag on the canvas, each with 4× CPU throttling and without, then 5 mouse-wheel zoom notches. Per run it
 // reports the page's requestAnimationFrame rate (fps); the long tasks (PerformanceObserver 'longtask', > 50 ms), the
 // longest one, and the longest that started while the button was held (maxLongTaskHeld; the rest come from the release,
-// when the still view is drawn at full quality again); the main-thread busy time from a CPU profile (ms per frame), so
+// when the still view is drawn at full quality again) and the longest in the first FIRST_MS after the press
+// (firstLongTask, the start of the drag, G-602); the main-thread busy time from a CPU profile (ms per frame), so
 // main-thread cost can be told apart from GPU cost; and the canvas's lowest drawing pixel ratio (minDpr: a drag lowers it
 // only when its frames are measured slow, src/viewer/orbiting.ts; the wheel must keep the full ratio).
 // Headless Chromium draws WebGL with SwiftShader (software, on the CPU, in the GPU process, which CDP throttling does
@@ -28,6 +29,8 @@ const view = positional[1] ?? '3D';
 const json = flag('--json');
 const DRAG_MS = 3000;
 const IDLE_MS = 2000;
+/** The start of a drag (ms after the press): its longest long task is reported as firstLongTask (G-602). */
+const FIRST_MS = 300;
 
 const browser = await launchBrowser({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
@@ -99,6 +102,7 @@ async function run({ throttle, drag, wheel = false }) {
     window.__run = true;
     window.__minDpr = Infinity;
     window.__up = Infinity;
+    window.__down = Infinity;
     const canvas = document.querySelector('canvas');
     const tick = () => {
       if (!window.__run) return;
@@ -116,6 +120,7 @@ async function run({ throttle, drag, wheel = false }) {
     const cx = box.x + box.width / 2,
       cy = box.y + box.height / 2;
     await page.mouse.move(cx - 60, cy);
+    await page.evaluate(() => (window.__down = performance.now()));
     await page.mouse.down();
     const t0 = Date.now();
     while (Date.now() - t0 < DRAG_MS) {
@@ -134,7 +139,7 @@ async function run({ throttle, drag, wheel = false }) {
     await page.waitForTimeout(IDLE_MS);
   }
   const { profile } = await cdp.send('Profiler.stop');
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate((FIRST_MS) => {
     window.__run = false;
     const dt = performance.now() - window.__t0;
     return {
@@ -145,9 +150,17 @@ async function run({ throttle, drag, wheel = false }) {
       maxLongTaskHeld: Math.round(
         Math.max(0, ...window.__lt.filter(([t]) => t < window.__up).map(([, d]) => d)),
       ),
+      firstLongTask: Math.round(
+        Math.max(
+          0,
+          ...window.__lt
+            .filter(([t]) => t >= window.__down && t < window.__down + FIRST_MS)
+            .map(([, d]) => d),
+        ),
+      ),
       minDpr: Number.isFinite(window.__minDpr) ? +window.__minDpr.toFixed(2) : null,
     };
-  });
+  }, FIRST_MS);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   // Let damping settle so the next run starts still.
   await page.waitForTimeout(1500);
@@ -158,6 +171,7 @@ async function run({ throttle, drag, wheel = false }) {
     longTasks: r.longTasks,
     maxLongTask: r.maxLongTask,
     maxLongTaskHeld: r.maxLongTaskHeld,
+    firstLongTask: r.firstLongTask,
     mainBusyPct: Math.round((100 * busy) / r.ms),
     mainMsPerFrame: r.frames ? +(busy / r.frames).toFixed(1) : null,
     minDpr: r.minDpr,

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for ADR-306 (N442) in jsdom (ADR-108): definition lists — from the bare app, by role and visible text, at
+// Find-it for ADR-306 (N445) in jsdom (ADR-108): definition lists — from the bare app, by role and visible text, at
 // desktop and phone widths. Precedence, propagation, deletes, settings and templates are proven in
 // tests/definition-lists.test.ts; this path finds each feature by its visible text.
 import { screen, waitFor, within } from '@testing-library/react';

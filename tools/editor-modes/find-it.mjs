@@ -31,6 +31,9 @@ for (const [width, scheme] of [
     viewport: { width, height: phone ? 844 : 900 },
     colorScheme: scheme,
   });
+  // The grouped catalog page this script searches and adds from (the finder is the default since G-582; N402 did the
+  // same for shapes, critique-bugs and ui-polish).
+  await ctx.addInitScript(() => localStorage.setItem('fb:catalogFinder', 'off'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

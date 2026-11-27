@@ -8,13 +8,13 @@
   "scrollWidth": 390,
   "scrollHeight": 1328,
   "horizontalScroll": false,
-  "totalElements": 209,
+  "totalElements": 231,
   "truncatedBelowY": null,
   "elements": [
     {
       "tag": "header",
       "role": "",
-      "name": "Furniture BuilderProjectsCatalog118EditorCut listSaved on th",
+      "name": "ProjectsCatalog160EditorCut ListSaved on this deviceNew… pie",
       "x": 0,
       "y": 0,
       "w": 390,
@@ -23,19 +23,6 @@
       "inViewport": true,
       "position": "sticky",
       "tabOrder": null
-    },
-    {
-      "tag": "a",
-      "role": "",
-      "name": "Furniture Builder, go to Projects",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": 1
     },
     {
       "tag": "nav",
@@ -61,12 +48,12 @@
       "visible": true,
       "inViewport": true,
       "position": "relative",
-      "tabOrder": 2
+      "tabOrder": 1
     },
     {
       "tag": "a",
       "role": "",
-      "name": "Catalog118",
+      "name": "Catalog160",
       "x": 103,
       "y": 757,
       "w": 91,
@@ -74,7 +61,7 @@
       "visible": true,
       "inViewport": true,
       "position": "relative",
-      "tabOrder": 3
+      "tabOrder": 2
     },
     {
       "tag": "a",
@@ -87,12 +74,12 @@
       "visible": true,
       "inViewport": true,
       "position": "relative",
-      "tabOrder": 4
+      "tabOrder": 3
     },
     {
       "tag": "a",
       "role": "",
-      "name": "Cut list",
+      "name": "Cut List",
       "x": 292,
       "y": 757,
       "w": 91,
@@ -100,7 +87,7 @@
       "visible": true,
       "inViewport": true,
       "position": "relative",
-      "tabOrder": 5
+      "tabOrder": 4
     },
     {
       "tag": "input",
@@ -113,7 +100,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 6
+      "tabOrder": 5
     },
     {
       "tag": "button",
@@ -126,7 +113,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 7
+      "tabOrder": 6
     },
     {
       "tag": "button",
@@ -139,7 +126,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 8
+      "tabOrder": 7
     },
     {
       "tag": "button",
@@ -152,7 +139,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 9
+      "tabOrder": 8
     },
     {
       "tag": "button",
@@ -165,7 +152,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 10
+      "tabOrder": 9
     },
     {
       "tag": "button",
@@ -178,7 +165,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 11
+      "tabOrder": 10
     },
     {
       "tag": "details",
@@ -217,7 +204,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 12
+      "tabOrder": 11
     },
     {
       "tag": "button",
@@ -230,6 +217,19 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
+      "tabOrder": 12
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Cut list optimizer type sizes, see how many sheets",
+      "x": 351,
+      "y": 282,
+      "w": 137,
+      "h": 116,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
       "tabOrder": 13
     },
     {
@@ -237,7 +237,7 @@
       "role": "",
       "name": "Project file to open on another device",
       "x": 351,
-      "y": 312,
+      "y": 429,
       "w": 137,
       "h": 75,
       "visible": false,
@@ -250,7 +250,7 @@
       "role": "",
       "name": "Hand to a professional… one .zip to check the plan",
       "x": 351,
-      "y": 388,
+      "y": 504,
       "w": 137,
       "h": 97,
       "visible": false,
@@ -263,7 +263,7 @@
       "role": "",
       "name": "Copy code a code or link to open on another device",
       "x": 351,
-      "y": 485,
+      "y": 601,
       "w": 137,
       "h": 94,
       "visible": false,
@@ -276,7 +276,7 @@
       "role": "",
       "name": "Import a file",
       "x": 351,
-      "y": 626,
+      "y": 742,
       "w": 1,
       "h": 1,
       "visible": false,
@@ -289,7 +289,7 @@
       "role": "",
       "name": "Clean up unused pictures no piece or project uses them",
       "x": 351,
-      "y": 674,
+      "y": 790,
       "w": 137,
       "h": 138,
       "visible": false,
@@ -302,7 +302,7 @@
       "role": "",
       "name": "Saved data and backup keep, back up and restore",
       "x": 351,
-      "y": 811,
+      "y": 927,
       "w": 137,
       "h": 97,
       "visible": false,
@@ -313,11 +313,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "English",
-      "x": 359,
-      "y": 948,
-      "w": 66,
-      "h": 44,
+      "name": "Canvas editor (preview) on: edit on the drawing",
+      "x": 351,
+      "y": 1034,
+      "w": 137,
+      "h": 97,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -326,11 +326,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Русский",
-      "x": 359,
-      "y": 996,
-      "w": 74,
-      "h": 44,
+      "name": "Catalog finder (preview) on: search and filters",
+      "x": 351,
+      "y": 1131,
+      "w": 137,
+      "h": 97,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -339,11 +339,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Română",
-      "x": 359,
-      "y": 1113,
-      "w": 72,
-      "h": 44,
+      "name": "Appearance font size, gaps, paddings",
+      "x": 351,
+      "y": 1237,
+      "w": 137,
+      "h": 75,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -352,10 +352,10 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Русский",
+      "name": "English",
       "x": 359,
-      "y": 1161,
-      "w": 74,
+      "y": 1343,
+      "w": 66,
       "h": 44,
       "visible": false,
       "inViewport": false,
@@ -365,10 +365,10 @@
     {
       "tag": "button",
       "role": "",
-      "name": "English",
+      "name": "Русский",
       "x": 359,
-      "y": 1209,
-      "w": 66,
+      "y": 1391,
+      "w": 74,
       "h": 44,
       "visible": false,
       "inViewport": false,
@@ -378,11 +378,11 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Information and guides every feature, by domain",
-      "x": 351,
-      "y": 1266,
-      "w": 137,
-      "h": 97,
+      "name": "Română",
+      "x": 359,
+      "y": 1508,
+      "w": 72,
+      "h": 44,
       "visible": false,
       "inViewport": false,
       "position": "static",
@@ -391,15 +391,41 @@
     {
       "tag": "button",
       "role": "",
-      "name": "Gaps what is not built yet",
-      "x": 351,
-      "y": 1363,
-      "w": 137,
-      "h": 75,
+      "name": "Русский",
+      "x": 359,
+      "y": 1556,
+      "w": 74,
+      "h": 44,
       "visible": false,
       "inViewport": false,
       "position": "static",
       "tabOrder": 26
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "English",
+      "x": 359,
+      "y": 1604,
+      "w": 66,
+      "h": 44,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 27
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Information and guides every feature, by domain",
+      "x": 351,
+      "y": 1661,
+      "w": 137,
+      "h": 97,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 28
     },
     {
       "tag": "button",
@@ -417,7 +443,7 @@
     {
       "tag": "button",
       "role": "radio",
-      "name": "Build & Preview",
+      "name": "Cut List",
       "x": 0,
       "y": 0,
       "w": 0,
@@ -425,12 +451,12 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 27
+      "tabOrder": 29
     },
     {
       "tag": "main",
       "role": "",
-      "name": "Audit pass 3: 2 piecesAddProjectPiecesSelectAdd a pieceBase ",
+      "name": "Jump to sectionJump to sectionOverviewStructure — select a p",
       "x": 0,
       "y": 52,
       "w": 390,
@@ -454,6 +480,45 @@
       "tabOrder": null
     },
     {
+      "tag": "button",
+      "role": "",
+      "name": "Taller card",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 30
+    },
+    {
+      "tag": "select",
+      "role": "",
+      "name": "Jump to section",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 31
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Close the card",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 32
+    },
+    {
       "tag": "div",
       "role": "slider",
       "name": "Resize the sheet",
@@ -464,7 +529,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 28
+      "tabOrder": 33
     },
     {
       "tag": "button",
@@ -477,7 +542,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 29
+      "tabOrder": 34
     },
     {
       "tag": "button",
@@ -490,7 +555,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 30
+      "tabOrder": 35
     },
     {
       "tag": "header",
@@ -529,7 +594,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 31
+      "tabOrder": 36
     },
     {
       "tag": "h3",
@@ -555,7 +620,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 32
+      "tabOrder": 37
     },
     {
       "tag": "button",
@@ -568,7 +633,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 33
+      "tabOrder": 38
     },
     {
       "tag": "button",
@@ -581,7 +646,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 34
+      "tabOrder": 39
     },
     {
       "tag": "button",
@@ -594,7 +659,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 35
+      "tabOrder": 40
     },
     {
       "tag": "button",
@@ -607,33 +672,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 36
-    },
-    {
-      "tag": "details",
-      "role": "",
-      "name": "RoomRectangle · 3000 × 3000 × 2500 mm4 walls · 0 itemsShapeR",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
-      "tag": "summary",
-      "role": "",
-      "name": "RoomRectangle · 3000 × 3000 × 2500 mm4 walls · 0 items",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
+      "tabOrder": 41
     },
     {
       "tag": "button",
@@ -646,7 +685,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 37
+      "tabOrder": 42
     },
     {
       "tag": "button",
@@ -698,7 +737,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 38
+      "tabOrder": 43
     },
     {
       "tag": "input",
@@ -711,7 +750,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 39
+      "tabOrder": 44
     },
     {
       "tag": "button",
@@ -724,7 +763,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 40
+      "tabOrder": 45
     },
     {
       "tag": "button",
@@ -737,7 +776,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 41
+      "tabOrder": 46
     },
     {
       "tag": "input",
@@ -750,7 +789,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 42
+      "tabOrder": 47
     },
     {
       "tag": "button",
@@ -763,7 +802,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 43
+      "tabOrder": 48
     },
     {
       "tag": "button",
@@ -776,7 +815,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 44
+      "tabOrder": 49
     },
     {
       "tag": "input",
@@ -789,7 +828,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 45
+      "tabOrder": 50
     },
     {
       "tag": "button",
@@ -802,7 +841,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 46
+      "tabOrder": 51
     },
     {
       "tag": "button",
@@ -815,7 +854,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 47
+      "tabOrder": 52
     },
     {
       "tag": "input",
@@ -828,7 +867,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 48
+      "tabOrder": 53
     },
     {
       "tag": "button",
@@ -841,7 +880,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 49
+      "tabOrder": 54
     },
     {
       "tag": "select",
@@ -854,7 +893,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 50
+      "tabOrder": 55
     },
     {
       "tag": "button",
@@ -867,7 +906,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 51
+      "tabOrder": 56
     },
     {
       "tag": "input",
@@ -880,7 +919,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 52
+      "tabOrder": 57
     },
     {
       "tag": "button",
@@ -893,7 +932,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 53
+      "tabOrder": 58
     },
     {
       "tag": "select",
@@ -906,7 +945,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 54
+      "tabOrder": 59
     },
     {
       "tag": "button",
@@ -919,7 +958,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 55
+      "tabOrder": 60
     },
     {
       "tag": "input",
@@ -932,7 +971,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 56
+      "tabOrder": 61
     },
     {
       "tag": "button",
@@ -945,7 +984,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 57
+      "tabOrder": 62
     },
     {
       "tag": "select",
@@ -958,7 +997,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 58
+      "tabOrder": 63
     },
     {
       "tag": "button",
@@ -971,7 +1010,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 59
+      "tabOrder": 64
     },
     {
       "tag": "input",
@@ -984,7 +1023,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 60
+      "tabOrder": 65
     },
     {
       "tag": "button",
@@ -997,7 +1036,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 61
+      "tabOrder": 66
     },
     {
       "tag": "select",
@@ -1010,7 +1049,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 62
+      "tabOrder": 67
     },
     {
       "tag": "select",
@@ -1023,7 +1062,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 63
+      "tabOrder": 68
     },
     {
       "tag": "button",
@@ -1036,7 +1075,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 64
+      "tabOrder": 69
     },
     {
       "tag": "button",
@@ -1049,7 +1088,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 65
+      "tabOrder": 70
     },
     {
       "tag": "button",
@@ -1062,7 +1101,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 66
+      "tabOrder": 71
     },
     {
       "tag": "button",
@@ -1075,7 +1114,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 67
+      "tabOrder": 72
     },
     {
       "tag": "button",
@@ -1088,7 +1127,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 68
+      "tabOrder": 73
     },
     {
       "tag": "button",
@@ -1101,7 +1140,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 69
+      "tabOrder": 74
     },
     {
       "tag": "button",
@@ -1114,7 +1153,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 70
+      "tabOrder": 75
     },
     {
       "tag": "input",
@@ -1127,33 +1166,7 @@
       "visible": false,
       "inViewport": false,
       "position": "absolute",
-      "tabOrder": 71
-    },
-    {
-      "tag": "details",
-      "role": "",
-      "name": "HistoryEdit historySave a versionNo versions kept yet.Edit h",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
-    },
-    {
-      "tag": "summary",
-      "role": "",
-      "name": "History",
-      "x": 0,
-      "y": 0,
-      "w": 0,
-      "h": 0,
-      "visible": false,
-      "inViewport": false,
-      "position": "static",
-      "tabOrder": null
+      "tabOrder": 76
     },
     {
       "tag": "button",
@@ -1166,7 +1179,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 72
+      "tabOrder": 77
     },
     {
       "tag": "button",
@@ -1179,7 +1192,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 73
+      "tabOrder": 78
     },
     {
       "tag": "dialog",
@@ -1231,7 +1244,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 74
+      "tabOrder": 79
     },
     {
       "tag": "button",
@@ -1244,7 +1257,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 75
+      "tabOrder": 80
     },
     {
       "tag": "button",
@@ -1257,7 +1270,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 76
+      "tabOrder": 81
     },
     {
       "tag": "button",
@@ -1270,7 +1283,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 77
+      "tabOrder": 82
     },
     {
       "tag": "button",
@@ -1283,7 +1296,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 78
+      "tabOrder": 83
     },
     {
       "tag": "button",
@@ -1296,7 +1309,72 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 79
+      "tabOrder": 84
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Parts",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 85
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Sheets",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 86
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Hardware",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 87
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Assembly",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 88
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Shopping",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 89
     },
     {
       "tag": "button",
@@ -1322,7 +1400,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 80
+      "tabOrder": 90
     },
     {
       "tag": "button",
@@ -1348,7 +1426,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 81
+      "tabOrder": 91
     },
     {
       "tag": "details",
@@ -1387,7 +1465,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 82
+      "tabOrder": 92
     },
     {
       "tag": "button",
@@ -1400,7 +1478,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 83
+      "tabOrder": 93
     },
     {
       "tag": "button",
@@ -1413,7 +1491,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 84
+      "tabOrder": 94
     },
     {
       "tag": "button",
@@ -1439,7 +1517,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 85
+      "tabOrder": 95
     },
     {
       "tag": "input",
@@ -1452,7 +1530,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 86
+      "tabOrder": 96
     },
     {
       "tag": "button",
@@ -1465,7 +1543,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 87
+      "tabOrder": 97
     },
     {
       "tag": "details",
@@ -1504,7 +1582,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 88
+      "tabOrder": 98
     },
     {
       "tag": "input",
@@ -1517,7 +1595,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 89
+      "tabOrder": 99
     },
     {
       "tag": "input",
@@ -1530,7 +1608,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 90
+      "tabOrder": 100
     },
     {
       "tag": "button",
@@ -1543,7 +1621,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 91
+      "tabOrder": 101
     },
     {
       "tag": "g",
@@ -1556,7 +1634,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 92
+      "tabOrder": 102
     },
     {
       "tag": "g",
@@ -1569,7 +1647,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 93
+      "tabOrder": 103
     },
     {
       "tag": "input",
@@ -1582,7 +1660,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 94
+      "tabOrder": 104
     },
     {
       "tag": "button",
@@ -1595,7 +1673,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 95
+      "tabOrder": 105
     },
     {
       "tag": "button",
@@ -1608,7 +1686,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 96
+      "tabOrder": 106
     },
     {
       "tag": "rect",
@@ -1621,7 +1699,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 97
+      "tabOrder": 107
     },
     {
       "tag": "rect",
@@ -1634,14 +1712,14 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 98
+      "tabOrder": 108
     },
     {
       "tag": "details",
       "role": "",
       "name": "⋯Export for AR (.usdz)Export scene (.glb)",
       "x": 8,
-      "y": 122,
+      "y": 126,
       "w": 44,
       "h": 44,
       "visible": true,
@@ -1654,7 +1732,7 @@
       "role": "",
       "name": "More 3D actions",
       "x": 8,
-      "y": 122,
+      "y": 126,
       "w": 44,
       "h": 44,
       "visible": true,
@@ -1667,91 +1745,91 @@
       "role": "",
       "name": "Export for AR (.usdz)",
       "x": 16,
-      "y": 178,
+      "y": 182,
       "w": 151,
       "h": 44,
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 99
+      "tabOrder": 109
     },
     {
       "tag": "button",
       "role": "",
       "name": "Export scene (.glb)",
       "x": 16,
-      "y": 226,
+      "y": 230,
       "w": 151,
       "h": 44,
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 100
+      "tabOrder": 110
     },
     {
       "tag": "button",
       "role": "",
       "name": "Move",
       "x": 60,
-      "y": 122,
+      "y": 126,
       "w": 58,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 101
+      "tabOrder": 111
     },
     {
       "tag": "button",
       "role": "",
       "name": "Select",
       "x": 126,
-      "y": 122,
+      "y": 126,
       "w": 65,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 102
+      "tabOrder": 112
     },
     {
       "tag": "button",
       "role": "",
       "name": "Section",
       "x": 199,
-      "y": 122,
+      "y": 126,
       "w": 73,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 103
+      "tabOrder": 113
     },
     {
       "tag": "button",
       "role": "",
       "name": "Solid walls",
       "x": 280,
-      "y": 122,
+      "y": 126,
       "w": 90,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 104
+      "tabOrder": 114
     },
     {
       "tag": "button",
       "role": "",
       "name": "Clearances",
-      "x": 8,
-      "y": 170,
+      "x": 378,
+      "y": 126,
       "w": 94,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 105
+      "tabOrder": 115
     },
     {
       "tag": "button",
@@ -1764,7 +1842,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 106
+      "tabOrder": 116
     },
     {
       "tag": "button",
@@ -1777,7 +1855,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 107
+      "tabOrder": 117
     },
     {
       "tag": "button",
@@ -1855,7 +1933,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 108
+      "tabOrder": 118
     },
     {
       "tag": "button",
@@ -1868,7 +1946,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 109
+      "tabOrder": 119
     },
     {
       "tag": "button",
@@ -1881,7 +1959,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 110
+      "tabOrder": 120
     },
     {
       "tag": "button",
@@ -1894,7 +1972,7 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 111
+      "tabOrder": 121
     },
     {
       "tag": "tr",
@@ -1907,20 +1985,20 @@
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 112
+      "tabOrder": 122
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 267,
+      "x": 256,
       "y": 789,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": true,
       "position": "static",
-      "tabOrder": 113
+      "tabOrder": 123
     },
     {
       "tag": "tr",
@@ -1933,20 +2011,20 @@
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 114
+      "tabOrder": 124
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 210,
+      "x": 200,
       "y": 861,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 115
+      "tabOrder": 125
     },
     {
       "tag": "tr",
@@ -1959,20 +2037,20 @@
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 116
+      "tabOrder": 126
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 210,
+      "x": 200,
       "y": 933,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 117
+      "tabOrder": 127
     },
     {
       "tag": "tr",
@@ -1985,20 +2063,20 @@
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 118
+      "tabOrder": 128
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 253,
+      "x": 200,
       "y": 1023,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 119
+      "tabOrder": 129
     },
     {
       "tag": "tr",
@@ -2011,20 +2089,20 @@
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 120
+      "tabOrder": 130
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 210,
+      "x": 200,
       "y": 1095,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 121
+      "tabOrder": 131
     },
     {
       "tag": "tr",
@@ -2037,20 +2115,228 @@
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 122
+      "tabOrder": 132
     },
     {
       "tag": "button",
       "role": "",
       "name": "I own this…",
-      "x": 210,
+      "x": 200,
       "y": 1167,
       "w": 95,
       "h": 44,
       "visible": true,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 123
+      "tabOrder": 133
+    },
+    {
+      "tag": "dialog",
+      "role": "",
+      "name": "Find an action",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "absolute",
+      "tabOrder": null
+    },
+    {
+      "tag": "input",
+      "role": "",
+      "name": "Search actions and features",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 134
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Close",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 135
+    },
+    {
+      "tag": "h3",
+      "role": "",
+      "name": "Open here",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Overview",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 136
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "History",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 137
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Results",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 138
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Parts",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 139
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Sheets",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 140
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Hardware",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 141
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Assembly",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 142
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Shopping",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 143
+    },
+    {
+      "tag": "dialog",
+      "role": "",
+      "name": "Getting started",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "absolute",
+      "tabOrder": null
+    },
+    {
+      "tag": "h3",
+      "role": "",
+      "name": "Tap to select",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": null
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Skip",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 144
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "name": "Next",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "visible": false,
+      "inViewport": false,
+      "position": "static",
+      "tabOrder": 145
     },
     {
       "tag": "dialog",
@@ -2102,7 +2388,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 124
+      "tabOrder": 146
     },
     {
       "tag": "button",
@@ -2115,7 +2401,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 125
+      "tabOrder": 147
     },
     {
       "tag": "button",
@@ -2128,7 +2414,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 126
+      "tabOrder": 148
     },
     {
       "tag": "button",
@@ -2141,7 +2427,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 127
+      "tabOrder": 149
     },
     {
       "tag": "button",
@@ -2154,7 +2440,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 128
+      "tabOrder": 150
     },
     {
       "tag": "button",
@@ -2167,7 +2453,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 129
+      "tabOrder": 151
     },
     {
       "tag": "button",
@@ -2180,7 +2466,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 130
+      "tabOrder": 152
     },
     {
       "tag": "dialog",
@@ -2232,7 +2518,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 131
+      "tabOrder": 153
     },
     {
       "tag": "dialog",
@@ -2284,7 +2570,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 132
+      "tabOrder": 154
     },
     {
       "tag": "dialog",
@@ -2336,7 +2622,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 133
+      "tabOrder": 155
     },
     {
       "tag": "dialog",
@@ -2388,7 +2674,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 134
+      "tabOrder": 156
     },
     {
       "tag": "button",
@@ -2401,7 +2687,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 135
+      "tabOrder": 157
     },
     {
       "tag": "button",
@@ -2414,7 +2700,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 136
+      "tabOrder": 158
     },
     {
       "tag": "dialog",
@@ -2466,7 +2752,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 137
+      "tabOrder": 159
     },
     {
       "tag": "button",
@@ -2479,7 +2765,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 138
+      "tabOrder": 160
     },
     {
       "tag": "dialog",
@@ -2531,7 +2817,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 139
+      "tabOrder": 161
     },
     {
       "tag": "button",
@@ -2544,7 +2830,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 140
+      "tabOrder": 162
     },
     {
       "tag": "dialog",
@@ -2596,7 +2882,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 141
+      "tabOrder": 163
     },
     {
       "tag": "input",
@@ -2609,7 +2895,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 142
+      "tabOrder": 164
     },
     {
       "tag": "dialog",
@@ -2661,7 +2947,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 143
+      "tabOrder": 165
     },
     {
       "tag": "button",
@@ -2674,7 +2960,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 144
+      "tabOrder": 166
     },
     {
       "tag": "button",
@@ -2700,7 +2986,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 145
+      "tabOrder": 167
     },
     {
       "tag": "dialog",
@@ -2726,7 +3012,7 @@
       "visible": false,
       "inViewport": false,
       "position": "static",
-      "tabOrder": 146
+      "tabOrder": 168
     }
   ]
 }

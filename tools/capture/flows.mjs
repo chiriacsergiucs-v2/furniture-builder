@@ -36,7 +36,8 @@ async function state(width, scheme, name, fn) {
   }
 }
 
-const browser = await launchBrowser();
+// The app's real phone default, the canvas editor (ADR-290), not the sheet the harness sets for older scripts (G-509).
+const browser = await launchBrowser({ appDefault: true });
 for (const scheme of SCHEMES) {
   for (const width of WIDTHS) {
     const phone = width < 500;
@@ -54,6 +55,19 @@ for (const scheme of SCHEMES) {
     await page.goto(url, { waitUntil: 'networkidle' });
     const places = page.getByRole('navigation', { name: 'Places' });
     const wait = (ms = 400) => page.waitForTimeout(ms);
+    // Escape, then the Close button of a phone sheet card (Settings, Material), which Escape leaves open (G-509).
+    const close = async () => {
+      await page.keyboard.press('Escape');
+      await wait(200);
+      const x = page
+        .locator('dialog[open]')
+        .getByRole('button', { name: 'Close', exact: true })
+        .first();
+      if (await x.isVisible().catch(() => false)) {
+        await x.click();
+        await wait(200);
+      }
+    };
 
     // A project: Projects → Create a new project → a name → the Editor.
     await state(width, scheme, 'project', async () => {
@@ -71,15 +85,13 @@ for (const scheme of SCHEMES) {
       await page.getByRole('button', { name: 'Settings', exact: true }).click();
       await wait();
       await shot(page, width, scheme, 'settings');
-      await page.keyboard.press('Escape');
-      await wait(200);
+      await close();
     });
     await state(width, scheme, 'material', async () => {
       await page.getByRole('button', { name: 'Material', exact: true }).click();
       await wait();
       await shot(page, width, scheme, 'material');
-      await page.keyboard.press('Escape');
-      await wait(200);
+      await close();
     });
 
     // The wizard, step by step, on its defaults, up to Review.

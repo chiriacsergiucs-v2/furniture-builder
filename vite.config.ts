@@ -73,8 +73,29 @@ export default defineConfig(({ mode }) => ({
     environment: 'node',
     // Vitest 4 forces Vite's `base` to '/' for its own server, so `import.meta.env.BASE_URL` would lose the deployed path.
     env: { BASE_URL: BASE },
-    include: ['tests/**/*.test.{ts,tsx}', 'packages/*/tests/**/*.test.{ts,tsx}'],
     setupFiles: ['tests/setup-print.ts'],
     testTimeout: 30000,
+    // Find-it files run as their own project without per-file isolation (G-371: about half the find-it CPU). Each test
+    // still starts from the bare app with fresh modules, storage and URL (`renderApp`, ADR-108), and the find-it setup
+    // restores spies and stubbed globals after each test, so nothing carries from one file to the next.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['tests/**/*.test.{ts,tsx}', 'packages/*/tests/**/*.test.{ts,tsx}'],
+          exclude: ['tests/find-it/**', '**/node_modules/**'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'find-it',
+          include: ['tests/find-it/**/*.test.tsx'],
+          environment: 'jsdom',
+          isolate: false,
+        },
+      },
+    ],
   },
 }));

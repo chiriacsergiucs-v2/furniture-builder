@@ -29,6 +29,12 @@ backend's `assistant` Edge Function (`supabase/functions/assistant`), which hold
 A reply is a question or a plan of catalog calls; `src/store/assistantRun.ts` checks the plan whole, previews it by
 running it and putting the store back, and applies it as one undo step.
 
+Design codes and links (ADR-124, `src/core/shareCode.ts`) carry the design document only: `encodeCode` compresses
+the open design or project as saved (`src/ui/ShareCode.tsx:39`). Board pictures (Dexie `images`, ADR-048) and
+display-only 3D models (`models`, ADR-076) stay on the device; a project file carries them (`withPictures`,
+`src/persist/images.ts:118-140`; `withModels`, `src/persist/models.ts:142-172`). Codes stay short enough to paste
+(user pick "Document-only", G-201); the Code dialog's info tip says so (`src/ui/ShareCode.tsx:54-58`).
+
 Agent sessions run behind a proxy that refuses the Pages URL and ikea.com: deploys are confirmed by their
 `Deploy GitHub Pages` run id only; live checks and the catalog feed (ADR-029, ADR-052) need the user or a
 session with that access (retro 2026-10-26).

@@ -5,7 +5,7 @@
 - Implemented: 2026-11-27
 - Depends on: ADR-124, ADR-166, ADR-170
 - Design: docs/ui-design.md (Configure, selected-piece card)
-- Backlog: N442
+- Backlog: N445
 
 ## Context
 

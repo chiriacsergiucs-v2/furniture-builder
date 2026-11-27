@@ -92,6 +92,8 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Egger boards with thickness and pictures are now pickable through the bundled Regency seller catalog (ADR-161, ADR-162; src/core/sellers/regency.json); the 276-row pack itself is not imported. May be obsolete; the user decides.
 - Note: User 2026-11-27: "PAL 18 only".
 
+- Note: 2026-11-27: blocked: the 276-row Egger pack is not in the repo or this sandbox (searched the repo, /mnt/user-data and the filesystem); attach the pack file to build the "PAL 18 only" pick.
+
 ### G-031: ADR-072 defaults unconfirmed
 
 - Status: Acknowledged (2026-11-23)
@@ -155,22 +157,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Allow github.io in the environment network policy; run one guided phone and screen-reader session with the user.
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid (github.io unreachable from this environment). Absorbs G-048: touch and 3D were checked only in Chromium emulation; one guided session on the user's phone covers both.
-
-### G-049: G ids on pre-ADR-082 notes
-
-- Status: Open
-- Origin: ADR-082, 2026-10-25; agent scoped it out
-- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
-- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
-- Questions: Add G ids to the old backlog Gap notes and Open questions too?
-- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low
-- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
-- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
-- Conflicts: none
-- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
 
 ### G-055: Count stepper only for cabinet spaces
 
@@ -552,21 +538,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Leave angled pieces out of runs; run parts are straight boards along a wall.
 - Conflicts: none
 
-### G-201: Pictures and 3D models in design codes
-
-- Status: Open
-- Origin: ADR-124 (scope)
-- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
-- Request: Accept default, /batch all ready
-- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
-- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
-- Fix: Keep codes document-only; the project file carries pictures and models.
-- Conflicts: none
-
 ### G-202: Replace and the outer size
 
 - Status: Open
@@ -905,22 +876,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep while ff pushes straight to main; revisit if ff stops.
 - Conflicts: ADR-197 deploy waits on the main CI run
 
-### G-371: Cheaper find-it runs (stopped before it was built)
-
-- Status: Open
-- Origin: ADR-197 CI analysis 2026-11-05
-- Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
-- Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
-- Questions: Resume the cheaper find-it runs later?
-- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-- Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
-- Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
-- Conflicts: none
-- Note: 2026-11-06: ADR-212 shipped without this item; the find-it speed levers were not measured or applied, so the gap is open again.
-
 ### G-376: Include the room starts ticked in Save as project template
 
 - Status: Open
@@ -1258,17 +1213,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 
-### G-487: The project cut list and hardware are not derived once in the store
-
-- Status: Open
-- Origin: ADR-221 Out of scope, 2026-11-07 (architecture review I-03)
-- Missing: The review's third step, deriving projectCutlist/projectHardware once in commitProject and storing them, and deriving the view once instead of per mounted useView(), is not built; ADR-221 memoises placeItem and reads projectModel only.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should the derived cut list and hardware move into the store after ADR-221 is measured?
-- Suggested pick: Measure after ADR-221; build only if a 60-item edit still takes over 10 ms (estimate: effort +15 %, value +10 %)
-- Work: Medium
-- Impact: Low-medium
-
 ### G-488: Research data is not a generated lazy JSON file
 
 - Status: Acknowledged (2026-11-27)
@@ -1305,17 +1249,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: High
 - Impact: Low-medium
 - Conflicts: ADR-153: messages are translated where they are written
-
-### G-492: Some checks still match English panel labels
-
-- Status: Open
-- Origin: ADR-225 Out of scope, 2026-11-07 (architecture review I-07)
-- Missing: Label regexes in clearance.ts, build.ts, shape.ts, replace.ts and assembly.ts that have no panel role or kind field to key on stay as regexes after ADR-225.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should Panel get a role field for every label a check matches (a model-shape change)?
-- Suggested pick: Add the role field only where a check needs it, in a follow-up ADR (estimate: effort +20 %, value +5 %)
-- Work: Medium
-- Impact: Low
 
 ### G-494: Nesting is not a workspace package
 
@@ -1391,18 +1324,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-509: UI audit does not cover 3D, the wizard steps, other dialogs, dark theme or saved-data states
-
-- Status: Open
-- Origin: UI flow audit, 2026-11-15 (G-508)
-- Missing: Pass 3 (N317) captured the 3D view, the Information and Gaps pages, signed-out Account, Share and Assistant (from a placeholder-backend build), and a seeded project (plan, piece list, Settings, results, room tools): 96 screens, 12,560 texts read for contrast; F-11 and F-18 checked line by line. Still not covered: signed-in Account, making and stopping share links and Assistant replies (need a real account and remote requests), error and repair states in the browser, drag and placement gestures, Move mode, Render and AR export. The Research page no longer exists (#227).
-- Request: Apl to explain the ui architecture, layout, placed, screen wiewport on mobile and desktop, components positions ... Full report with details and behaviour of those details in the UIUX perspective to be prepared for a professional architect and the leading auditor company to optimize existing flows.
-- Questions: Should a second pass seed saved projects and capture the wizard, Settings, Material, the 3D view and the dark theme?
-- Suggested pick: A second capture pass with a seeded project, the wizard steps, Settings, Material and dark theme, plus a citation check of the Reported findings (estimate: effort +40 %, value +30 %)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-523: Two backlog rows share id N326
 
 - Status: Open
@@ -1431,18 +1352,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
 - Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
-
-### G-534: Architecture checks the review could not cover
-
-- Status: Open
-- Origin: architect-review 2026-11-17
-- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
-- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
-- Questions: None
-- Suggested pick: Run each check and record its result in a dated report under docs/research
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
 
 ### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
 
@@ -1639,18 +1548,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-556: Browser scripts editor-modes and ui-polish fail on main
-
-- Status: Open
-- Origin: N352, found by pnpm regress 2026-11-20
-- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
-- Request: Repair both scripts or the app, whichever is stale
-- Questions: none
-- Suggested pick: Repair the scripts against the current UI
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-557: Variants for sink-base, desk and chest
 
 - Status: Acknowledged (2026-11-27)
@@ -1695,6 +1592,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Origin: Retro 2026-11-20 (P4, P10); agent scoped it out: the gates exempt rows below N361/F19/D04 and ADRs numbered below 281
 - Note: 2026-11-20 (N362): the backlog part is done. All 86 old Done rows had merge evidence on main (a merged PR or the ADR's ship commit), so they stay Done with that evidence appended, the old wording reads "at build time", every old burst marker names its blocker and cost, and the backlog exemption is gone. Left: the ADR part.
 - Note: 2026-11-20 (N363, user pick "Re-check each box"): 22 of the 35 boxes are met by runs today; the per-box record is `docs/research/2026-11-20-g573-adr-box-recheck.md`. The 13 left: ADR-080 popovers close on outside tap or Esc, plan and front view both visible at 390 px in a project, a Width change redraws, a Settings-for change shows after reopening, "not clamped"; ADR-081 the switch in a project, Front removes the canvas; ADR-129 the first-sign-in question; ADR-137 "Save to account"; ADR-142 switch account and back (each needs a new check, cost S); ADR-201 needs the first core-only pull request; ADR-208 needs a browser with a WebGPU adapter, and the user's phones for AR.
+- Note: 2026-11-27 (N440, user 2026-11-27 "Also do the medium work", suggested pick): the backlog rows of the 22 listed ADRs were checked against main (GitHub commits API, the local clone is shallow): N75 (PR #55, ae82326), N110 (PR #112, 6c9097a) and N113, N115, N118, N119 (PR #110, b219c93) already cited a merge commit on main; N76 (98eca7bc), N130 to N145 (e4caf62d) and the Partially done N206 and N213 (827a9688) now cite their ship commit on main. No row lost Done. The 41 commits the 2026-11-20 check (N362) cited are all ancestors of main. The legacy cut-off stays: dropping `LEGACY_ADR_BELOW` in scripts/ledger_gates.py would fail docs:check on 35 unchecked boxes in those 22 implemented ADRs (ADR-080 7, ADR-081 5, ADR-116 2, ADR-120 2, ADR-208 2, one each in ADR-111, 129 to 131, 133 to 144 and 201), and implemented ADRs are not edited. Still open: the 13 boxes N363 lists.
 - Missing: 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); implemented ADRs are not edited, so they stay exempt (ADRs numbered below 281)
 - Request: User picked 'P4/P10 docs:check gates' from the retro 2026-11-20
 - Questions: Statuses change only with evidence: re-verify each row (merged PR, CI run) or turn it Partially done? Which ADR boxes get a G id versus a re-check?
@@ -1802,17 +1700,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low
 
-### G-589: Phone capture of room, 3D, results, Gaps and Research states
-
-- Status: Open
-- Origin: N379 UI review 2026-11-23
-- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
-- Request: Scheduled UI review: capture every department at 390 and 1280 px
-- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
-- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
-- Work: Medium
-- Impact: Low-medium
-
 ### G-591: Room divider: Open both sides on corner units
 
 - Status: Acknowledged (2026-11-27)
@@ -1919,6 +1806,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: User 2026-11-26: drag >=50 fps with 4x CPU throttle and no long task >50 ms over a 3 s drag
 - Questions: None
 - Suggested pick: Draw drag frames into a reduced-size render target allocated once and copied to the canvas, so a drag never resizes the canvas
+- Note: Tried 2026-11-27 (N434), not landed: drag frames drawn in a share of the canvas's own drawing buffer, copied into a FramebufferTexture of the buffer's size (allocated on mount and resize) and stretched back with a full-screen quad, so the canvas kept its size and pixel ratio (mid-drag screenshot correct). `node tools/mobile-middle/drag-perf.mjs` (SwiftShader, 390 x 844, machine load average 6.6-8.6 on 2 cores shared with other agents), 6 runs each, runs 4-6 interleaved: drag 4x fps before 32.3/35.1/17.4/38.5/43.9/33.8 (mean 33.5), after 31.4/50.0/31.5/23.7/23.9/32.8 (mean 32.2); first long task (first 300 ms after the press, new `firstLongTask` field) before 79/0/67/106/0/64 ms, after 149/0/0/79/76/93 ms; main ms per frame before mean 30.9, after 31.4; drag 1x fps before 53.8-56.1, after 48.6-55.3. No gain, slightly worse (the full-size quad draw and the full-size canvas composite each frame cost what the avoided resize saved), so the change was reverted. A retry needs a quiet machine or a real phone GPU to tell the 11 ms resize apart from the noise.
 - Work: Medium
 - Impact: Low-medium
 - Necessity: Medium
@@ -1982,3 +1870,123 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
+
+### G-610: Project editor 1035 px wide at 844x390 on a phone
+
+- Status: Open
+- Origin: G-601 build (N415), 2026-11-27
+- Missing: In the project editor at 844x390 with mobile emulation the page is 1035 px wide; the top bar runs off the right edge and redo is cut off. tools/mobile-middle/find-it.mjs compares against innerWidth, which the emulation widens, so its no-sideways-scroll check passes
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Fix the phone landscape top bar so it fits 844 px?
+- Suggested pick: Wrap or collapse the top bar tools at short landscape widths, and make the script compare against the viewport meta width
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium
+
+### G-611: Drilling positions for hanging points, worktop fixings and feet
+
+- Status: Open
+- Origin: G-439 remainder (N424), 2026-11-27
+- Missing: User-value drilling positions exist for carcass joints and back fixings only
+- Request: Hardware and fastener completeness
+- Questions: Which values would you enter for each (edge distance, spacing)?
+- Suggested pick: One joint type at a time, from values you enter, nothing shipped (ADR-010)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-612: Door swing check: handle depth and the cases still using the box
+
+- Status: Open
+- Origin: G-011 remainder (N421), 2026-11-27
+- Missing: The swing arc ignores handle depth because the handle schedule has no depth field (a types.ts change, ADR); swing-against-swing, walls, angled pieces and the diagonal corner door still use the stricter box
+- Request: Opening clearance for doors, drawers, flaps
+- Questions: Add a handle depth field to the handle schedule (ADR), and move the remaining cases to the arc?
+- Suggested pick: Add an optional user-entered handle depth (ADR) and use the arc in the other cases one by one
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-613: Type-only import cycle types.ts, diagnosticCodes.ts, catalog/types.ts
+
+- Status: Open
+- Origin: G-485 remainder (N419), 2026-11-27
+- Missing: The cycle guard allow-lists a type-only cycle between src/core/types.ts, diagnosticCodes.ts and catalog/types.ts; breaking it changes types.ts
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Break it as part of the G-548 types.ts split?
+- Suggested pick: Break it in the G-548 split
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-614: Row-button body repeated in 9 UI files
+
+- Status: Open
+- Origin: G-570 remainder (N441), 2026-11-27
+- Missing: The row-button body (glyph, title, sub line, chevron) repeats 17 times in 9 UI files with variants (picture or icon, number sub lines, extra lines, drag props); it may be what the original reuse M6 meant
+- Request: Reuse health check round 1
+- Questions: Extract one RowButton with slots?
+- Suggested pick: Extract RowButton with slots for the glyph and sub lines, no visible change
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-615: Old backlog notes with no seed gap (N15, N17, N21, N28, N30, N33, N34)
+
+- Status: Open
+- Origin: G-049 remainder (N437), 2026-11-27
+- Missing: Old gap notes on N15, N17, N21, N28, N30 (printed tiles), N33 (PDF papers) and N34 (legs) match no seed gap G-001 to G-048
+- Request: G ids on pre-ADR-082 notes
+- Questions: Give each its own gap, or mark them obsolete?
+- Suggested pick: Re-check each against the code; give the still-open ones a gap, mark the rest obsolete in the row
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-616: Diagonal corner doors are not an exact split
+
+- Status: Open
+- Origin: G-534 architecture check D1 (N439), 2026-11-27
+- Missing: src/core/corner.ts:341 gives all leftover millimetres to the right end gap: width 901 with two doors gives leaves 238 + 238 on a 477 mm opening, right gap 2 mm, left 1 mm (ADR-003 exact splits)
+- Request: Integer millimetres, exact splits (ADR-003)
+- Questions: Spread the leftover like other splits?
+- Suggested pick: Use the shared exact-split helper so leftovers spread as elsewhere; fuzz
+- Work: Low
+- Impact: Low
+- Necessity: Medium
+
+### G-617: Project commit takes 13-24 ms on a 60-item project
+
+- Status: Open
+- Origin: G-487 remainder (N435), 2026-11-27
+- Missing: After one view per state (N435), commitProject with buildProjectModel alone takes 13-24 ms for a 60-item edit, over the 10 ms target
+- Request: Architecture review I-03
+- Questions: Profile buildProjectModel and cache per item?
+- Suggested pick: Profile first; cache unchanged items' built models across commits
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+
+### G-618: UI audit: signed-in, live-site and gesture states not captured
+
+- Status: Open
+- Origin: G-509 remainder (N444), 2026-11-27
+- Missing: Not captured: signed-in Account, making/copying/stopping share links, Assistant replies, any live-URL check (need an account or the published site); error and repair states, placing and dragging, Move mode, Render and AR export (need scripted gestures or a seeded design with errors)
+- Request: UI audit coverage
+- Questions: Provide a test account, and allow scripted gesture captures?
+- Suggested pick: Script the gesture and error states now; the account states once a test account exists (G-277)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
+### G-619: 3D more-actions menu clipped at 390 px
+
+- Status: Open
+- Origin: UI audit F-31 (G-589, N443), 2026-11-27
+- Missing: At 390 px the 3D view's more-actions menu (Export for AR, Export scene) opens but cannot be seen or tapped: the phone rule .three-tools { overflow-x: auto } in src/styles.css clips the panel; fine at 1280 px
+- Request: UI review
+- Questions: Render the menu outside the scrolling tool row?
+- Suggested pick: Portal the menu panel out of .three-tools on phones
+- Work: Low
+- Impact: Medium
+- Necessity: Medium

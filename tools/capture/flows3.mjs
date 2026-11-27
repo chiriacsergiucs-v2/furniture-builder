@@ -103,7 +103,8 @@ async function state(width, scheme, name, fn) {
   }
 }
 
-const browser = await launchBrowser();
+// The app's real phone default, the canvas editor (ADR-290), not the sheet the harness sets for older scripts (G-589).
+const browser = await launchBrowser({ appDefault: true });
 for (const scheme of SCHEMES) {
   for (const width of WIDTHS) {
     // --- Offline build: a project with pieces, the room, 3D, Information, Gaps, Copy code. ---
@@ -120,6 +121,12 @@ for (const scheme of SCHEMES) {
     const escape = async () => {
       await page.keyboard.press('Escape').catch(() => {});
       await wait(200);
+      // The phone's sheet dialogs (Settings, Material) are cards Escape leaves open: their Close button shuts them.
+      const close = dlg.getByRole('button', { name: 'Close', exact: true }).first();
+      if (await close.isVisible().catch(() => false)) {
+        await close.click();
+        await wait(200);
+      }
     };
     const more = async (item) => {
       await page.locator('summary[aria-label="More"]').first().click();
@@ -137,7 +144,8 @@ for (const scheme of SCHEMES) {
         .first()
         .click({ timeout: 5000 });
       await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
-      await dlg.locator('.start-group .row-btn').first().click();
+      // The catalog finder's tiles (the default since G-582), or the grouped rows when the finder is off.
+      await dlg.locator('.finder-tile, .start-group .row-btn').first().click();
       await dlg.waitFor({ state: 'detached' }).catch(() => {});
       const place = btn('Place to the right');
       await place.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
@@ -174,8 +182,19 @@ for (const scheme of SCHEMES) {
     });
     await state(width, scheme, 'piece-selected', async () => {
       needPieces();
-      await showPieces(page);
-      await page.getByRole('list', { name: 'Pieces' }).first().getByRole('button').first().click();
+      if (phone) {
+        // The phone canvas has no piece list: tap the first piece on the plan (G-589).
+        await escape();
+        await page.locator('g.plan-piece').first().click({ timeout: 3000 });
+      } else {
+        await showPieces(page);
+        await page
+          .getByRole('list', { name: 'Pieces' })
+          .first()
+          .getByRole('button')
+          .first()
+          .click();
+      }
       await wait(400);
       await shot(page, width, scheme, 'piece-selected');
     });
@@ -192,6 +211,13 @@ for (const scheme of SCHEMES) {
     // The room tools: the empty Room section, the room added (fold open), the drawing mode, Fill the room.
     const roomSection = page.getByRole('region', { name: 'Room', exact: true }).first();
     const showRoom = async () => {
+      // The phone canvas keeps the Room section in the project's card: clear the selection, then the chip rail's
+      // "Edit <project>" opens it (G-589).
+      if (phone && !(await roomSection.isVisible().catch(() => false))) {
+        await escape();
+        await page.locator('.chip.edit-open').first().click({ timeout: 3000 });
+        await wait(300);
+      }
       await showPieces(page);
       await roomSection.scrollIntoViewIfNeeded({ timeout: 3000 });
       await wait(200);
@@ -206,8 +232,10 @@ for (const scheme of SCHEMES) {
       await showRoom();
       await roomSection.getByRole('button', { name: 'Add the room' }).click({ timeout: 3000 });
       await wait(500);
-      const fold = roomSection.locator('details.room-fold > summary').first();
-      if (!(await fold.evaluate((el) => el.parentElement.open))) await fold.click();
+      // A closed fold on the sheet editor and the desktop; a flat card on the phone canvas (ADR-160, G-589).
+      const fold = roomSection.locator('.room-fold').first();
+      if (await fold.evaluate((el) => el.tagName === 'DETAILS' && !el.open))
+        await fold.locator('summary').first().click();
       await wait(300);
       await fold.scrollIntoViewIfNeeded();
       await shot(page, width, scheme, 'room-added');
@@ -300,7 +328,8 @@ for (const scheme of SCHEMES) {
       await shot(page, width, scheme, 'info-domain-open');
     });
     await state(width, scheme, 'gaps', async () => {
-      await more(/^Gaps/);
+      // The Gaps button sits on the Information page (on a phone the More menu would cover it, G-589).
+      await btn(/^Gaps/, false).first().click({ timeout: 3000 });
       await page.getByRole('heading', { name: 'Gaps', level: 1 }).waitFor();
       await shot(page, width, scheme, 'gaps');
     });
