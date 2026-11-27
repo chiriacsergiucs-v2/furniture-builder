@@ -1,4 +1,5 @@
 import { t } from '@furniture-builder/i18n';
+import { csvLines, csvSeparator } from './csv';
 import { isHexColour } from './guards';
 import type {
   EdgeBand,
@@ -243,12 +244,9 @@ export function parseDecorList(
   text: string,
   list: string,
 ): { decors: Decor[]; problems: string[] } {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((l) => l.trim());
+  const lines = csvLines(text);
   if (!lines.length) return { decors: [], problems: [t('The file is empty.')] };
-  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
+  const sep = csvSeparator(lines[0]);
   const head = splitLine(lines[0], sep).map((h) => HEADERS[norm(h)]);
   const missing = ['maker', 'kind', 'code', 'name', 'thickness', 'color'].filter(
     (k) => !head.includes(k as never),
@@ -414,12 +412,9 @@ const BAND_COLUMN_NAME: Record<BandColumn, string> = {
  * listed; never throws (ADR-008).
  */
 export function parseBandList(text: string, list: string): { bands: Band[]; problems: string[] } {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((l) => l.trim());
+  const lines = csvLines(text);
   if (!lines.length) return { bands: [], problems: [t('The file is empty.')] };
-  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
+  const sep = csvSeparator(lines[0]);
   const head = splitLine(lines[0], sep).map((h) => BAND_HEADERS[norm(h)]);
   const missing = BAND_REQUIRED.filter((k) => !head.includes(k));
   if (missing.length)
