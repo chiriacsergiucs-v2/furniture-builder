@@ -3480,6 +3480,22 @@ highest id in either file.
 - Conflicts: none
 - Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
 
+### G-422: Merge assembly steps
+
+- Status: Done (N427)
+- Origin: ADR-207, 2026-11-06; remainder of G-344 (its pick names an editable order with a reset)
+- Missing: Steps can be reordered and renamed but not merged into one step.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user merge two neighbouring steps into one?
+- Suggested pick: Merge with the next step, saved in the design's step order, undone by Reset the steps. (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Two assembly steps cannot be merged.
+- Fix: Store merged step pairs with the step order and show them as one step.
+- Conflicts: none
+- Note: Built by ADR-300 (N427): `AssemblyEdit.merged` (design schemaVersion 13), Assembly › Merge with the next step, Reset the steps undoes it; `tests/assembly-merge.test.ts` and `tests/find-it/assembly-merge.test.tsx` pass.
+
 ### G-436: Reverse-the-hinge repair
 
 - Status: Done (N422)
@@ -3552,6 +3568,21 @@ highest id in either file.
 - Necessity: Low
 - Issue: Kept versions of deleted projects need an open project to be reached.
 - Fix: The same list on the Projects page.
+
+### G-460: Band tolerances and edgebander settings
+
+- Status: Done (N428)
+- Origin: ADR-212, 2026-11-06; agent scoped it out (remainder of G-038)
+- Missing: No band tolerances (thickness or width deviation, overhang to trim) and no edgebander settings; ADR-212 takes over only the band-list CSV import and its decor match.
+- Request: “Check the European standards for ABS, apply them accordingly”.
+- Questions: Add fields for tolerances and edgebander settings, filled only from values you type or your band list holds?
+- Suggested pick: Add them only as fields you fill, labelled guidance, nothing shipped (ADR-010). (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Band tolerances and edgebander settings are not recorded anywhere.
+- Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
+- Conflicts: none
 
 ### G-461: Default L and U rooms give no Fill the room mix
 

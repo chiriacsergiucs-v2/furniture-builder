@@ -350,6 +350,7 @@ export const ru_project = {
   'Move step up': 'Переместить шаг выше',
   'Move step down': 'Переместить шаг ниже',
   'Rename step': 'Переименовать шаг',
+  'Merge with the next step': 'Объединить со следующим шагом',
   'Reset the steps': 'Сбросить шаги',
   'Edit this step': 'Изменить этот шаг',
   'Reset the steps of {name} to the generated order and titles?':

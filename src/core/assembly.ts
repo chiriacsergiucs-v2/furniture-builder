@@ -116,6 +116,11 @@ export interface AssemblyStep {
   /** Fasteners per joint type this step uses; over the steps they add up to `fastenerCounts()`. */
   fasteners: StepFastener[];
   hardware: StepHardware[];
+  /**
+   * The steps merged into this one (ADR-300), this step's own first: its lists are theirs together, its title and
+   * instruction theirs one after the other. Absent = a step of its own.
+   */
+  from?: AssemblyStep[];
 }
 
 export const STEP_ORDER: StepId[] = [
@@ -345,6 +350,12 @@ export function orderSteps(steps: AssemblyStep[], edit?: AssemblyEdit): Assembly
   });
 }
 
+/** The step ids a shown step stands for (ADR-300): its own, then the ones merged into it. */
+const idsOf = (s: AssemblyStep): StepId[] => s.from?.map((x) => x.id) ?? [s.id];
+
+/** Every step id of the steps as shown, merged ones in their place: the order an edit saves. */
+const fullOrder = (steps: AssemblyStep[]): StepId[] => steps.flatMap(idsOf);
+
 /** The edit that moves step `id` one place up (-1) or down (1) in `steps` as shown; null at either end. */
 export function moveStep(
   steps: AssemblyStep[],
@@ -352,12 +363,61 @@ export function moveStep(
   dir: -1 | 1,
   edit?: AssemblyEdit,
 ): AssemblyEdit | null {
-  const order = steps.map((s) => s.id);
-  const i = order.indexOf(id),
+  const groups = steps.map(idsOf);
+  const i = steps.findIndex((s) => s.id === id),
     j = i + dir;
-  if (i < 0 || j < 0 || j >= order.length) return null;
-  [order[i], order[j]] = [order[j], order[i]];
-  return { ...edit, order };
+  if (i < 0 || j < 0 || j >= groups.length) return null;
+  [groups[i], groups[j]] = [groups[j], groups[i]];
+  return { ...edit, order: groups.flat() };
+}
+
+/** The edit that merges step `id` with the next step as shown (ADR-300); null for the last step. */
+export function mergeStep(
+  steps: AssemblyStep[],
+  id: StepId,
+  edit?: AssemblyEdit,
+): AssemblyEdit | null {
+  const i = steps.findIndex((s) => s.id === id);
+  if (i < 0 || i + 1 >= steps.length) return null;
+  return {
+    ...edit,
+    order: fullOrder(steps),
+    merged: [...new Set([...(edit?.merged ?? []), ...idsOf(steps[i + 1])])],
+  };
+}
+
+/** Lists of two steps as one: parts, boxes, prepared items, joints, fasteners per type and hardware added up. */
+function joinSteps(a: AssemblyStep, b: AssemblyStep): AssemblyStep {
+  const f = new Map<JointType, number>();
+  for (const x of [...a.fasteners, ...b.fasteners]) f.set(x.joint, (f.get(x.joint) ?? 0) + x.count);
+  return {
+    ...a,
+    title: `${a.title} + ${b.title}`,
+    parts: [...a.parts, ...b.parts],
+    boxes: [...a.boxes, ...b.boxes],
+    again: [...a.again, ...b.again],
+    prep: [...a.prep, ...b.prep],
+    joints: a.joints + b.joints,
+    fasteners: JOINTS.flatMap((j) => (f.has(j.id) ? [{ joint: j.id, count: f.get(j.id)! }] : [])),
+    hardware: groupHardware([...a.hardware, ...b.hardware]),
+    from: [...(a.from ?? [{ ...a }]), b],
+  };
+}
+
+/**
+ * The steps as shown with the user's merges (ADR-300): each step `merged` names joins the step before it; one that
+ * comes first stays on its own. Unknown ids are ignored. Numbers follow the steps as shown.
+ */
+function mergeSteps(steps: AssemblyStep[], merged?: StepId[]): AssemblyStep[] {
+  if (!merged?.length) return steps;
+  const join = new Set(merged);
+  const out: AssemblyStep[] = [];
+  for (const s of steps) {
+    const last = out.at(-1);
+    if (last && join.has(s.id)) out[out.length - 1] = joinSteps(last, s);
+    else out.push(s);
+  }
+  return out.map((s, i) => ({ ...s, n: i + 1 }));
 }
 
 /** The edit that names step `id` (an empty name restores the generated title); the order as shown is kept. */
@@ -372,17 +432,18 @@ export function renameStep(
   if (text) names[id] = text;
   else delete names[id];
   return {
-    order: edit?.order ?? steps.map((s) => s.id),
+    order: edit?.order ?? fullOrder(steps),
     ...(Object.keys(names).length ? { names } : {}),
+    ...(edit?.merged ? { merged: edit.merged } : {}),
   };
 }
 
 /**
  * The steps for one piece's model; every panel is in exactly one step, every scheduled hardware item too. `edit`: the
- * user's order and names (ADR-207, `Design.assembly`).
+ * user's order and names (ADR-207, `Design.assembly`) and merged steps (ADR-300).
  */
 export function assemblySteps(model: FurnitureModel, edit?: AssemblyEdit): AssemblyStep[] {
-  return orderSteps(generatedSteps(model), edit);
+  return mergeSteps(orderSteps(generatedSteps(model), edit), edit?.merged);
 }
 
 function generatedSteps(model: FurnitureModel): AssemblyStep[] {
@@ -522,7 +583,12 @@ const hardwareName = (h: StepHardware, w: Words): string =>
 
 /** The step's title. */
 export const stepTitle = (s: AssemblyStep, w: Words): string =>
-  s.named ?? (w === 'print' ? pt(STEP_PT[s.id]) : s.title);
+  s.named ??
+  (s.from
+    ? s.from.map((x) => stepTitle(x, w)).join(' + ')
+    : w === 'print'
+      ? pt(STEP_PT[s.id])
+      : s.title);
 
 /** "Drawer box × 4". */
 export const boxTitle = (b: StepBox, w: Words): string =>
@@ -643,6 +709,8 @@ function partsPhrase(parts: StepPart[], w: Words): string {
  * never with what screw or where to drill.
  */
 export function stepInstruction(s: AssemblyStep, w: Words): string {
+  // A merged step (ADR-300): each step's own instruction, in order.
+  if (s.from) return s.from.map((x) => stepInstruction(x, w)).join(' ');
   const p = w === 'print';
   const parts = partsPhrase(s.parts, w);
   const j = s.joints

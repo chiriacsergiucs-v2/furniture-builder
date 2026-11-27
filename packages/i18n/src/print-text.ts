@@ -28,6 +28,13 @@ export const PRINT_RU = {
   'cant ': 'кромка ',
   fronturi: 'фасады',
   'unele piese: nespecificat': 'для некоторых деталей не указана',
+  // Band guidance the user typed (ADR-301)
+  'grosime ±{v}': 'толщина ±{v}',
+  'lățime ±{v}': 'ширина ±{v}',
+  'surplus de tăiat {v} pe parte': 'свес под обрезку {v} на сторону',
+  'mașina de cantuit: {s}': 'кромкооблицовочный станок: {s}',
+  'cant, după fișa dvs. (orientativ): {list}':
+    'кромка, по вашему техническому листу (ориентир): {list}',
   // Drilling
   '$1 rânduri × $2 găuri ø$3, la $4 mm de margini': 'ряды: $1 × $2 отв. ø$3, $4 мм от краёв',
   '(ambele fețe, decalat 16 mm)': '(обе пласти, со смещением 16 мм)',
@@ -622,6 +629,11 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'cant ': 'edge band ',
   fronturi: 'fronts',
   'unele piese: nespecificat': 'some parts: not named',
+  'grosime ±{v}': 'thickness ±{v}',
+  'lățime ±{v}': 'width ±{v}',
+  'surplus de tăiat {v} pe parte': 'overhang to trim {v} per side',
+  'mașina de cantuit: {s}': 'edgebander: {s}',
+  'cant, după fișa dvs. (orientativ): {list}': 'edge band, from your datasheet (guidance): {list}',
   '$1 rânduri × $2 găuri ø$3, la $4 mm de margini': '$1 rows × $2 holes ø$3, $4 mm from edges',
   '(ambele fețe, decalat 16 mm)': '(both faces, offset 16 mm)',
   ', o față': ', one face',

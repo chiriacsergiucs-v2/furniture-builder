@@ -85,6 +85,8 @@ const BAND_MAX_THICKNESS = 100;
 export const BAND_MAX_WIDTH = 100;
 export const BAND_MAX_ALLOWANCE = 100;
 export const BAND_MAX_CODE = 60;
+/** ADR-301: the tolerances and the overhang are tenths of a mm, 0.1 to 10 mm; the edgebander settings are text. */
+export const BAND_MAX_EDGEBANDER = 200;
 
 /** Tenths of a mm as text: 4 → "0.4", 10 → "1" (`sep` "," for Romanian output). */
 export const tenthsText = (t: number, sep = '.') =>
@@ -127,6 +129,20 @@ export function bandProblems(b: unknown): string[] {
   if (o.allowance !== undefined && !whole(o.allowance, 0, BAND_MAX_ALLOWANCE))
     errs.push(t('band allowance must be whole mm from 0 to 100'));
   if (o.product !== undefined) errs.push(...productRefProblems(o.product));
+  // ADR-301: guidance the user typed, each checked when present.
+  if (
+    ['thicknessTolerance', 'widthTolerance', 'overhang'].some(
+      (k) => o[k] !== undefined && !whole(o[k], 1, BAND_MAX_THICKNESS),
+    )
+  )
+    errs.push(t('band tolerances and overhang must be 0.1 to 10 mm, in tenths'));
+  if (
+    o.edgebander !== undefined &&
+    (typeof o.edgebander !== 'string' ||
+      !o.edgebander.trim() ||
+      o.edgebander.length > BAND_MAX_EDGEBANDER)
+  )
+    errs.push(t('edgebander settings must be text up to 200 characters'));
   return errs;
 }
 
