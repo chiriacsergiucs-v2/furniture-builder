@@ -14,6 +14,7 @@ import {
   type MaterialScope,
   type RunRole,
 } from '../core/finish';
+import { MATERIAL_ROLES } from '../core/roles';
 import { t, tr } from '@furniture-builder/i18n';
 import { BAND_KINDS, bandProblems, bandText, parseTenths, type Decor } from '../core/materials';
 import {
@@ -58,19 +59,6 @@ const KEEP = '';
 const OWN = 'own';
 /** The band picked in the product picker (G-584). */
 const PICKED = 'picked';
-const ROLE_ORDER: MaterialRole[] = [
-  'front',
-  'body',
-  'top',
-  'bottom',
-  'side',
-  'shelf',
-  'divider',
-  'back',
-  'drawer-box',
-  'drawer-bottom',
-  'worktop',
-];
 
 /** Parts of a piece for the Part select: "Shelf (2)" when a label repeats. */
 function partRows(d: Design) {
@@ -206,7 +194,7 @@ function MaterialFields() {
     const set = new Set<MaterialRole | RunRole>();
     for (const d of targets) for (const r of itemRoles(d)) set.add(r);
     for (const rp of reachedRuns) set.add(runRoleOf(rp));
-    return [...ROLE_ORDER, ...RUN_ROLES].filter((r) => set.has(r));
+    return [...MATERIAL_ROLES, ...RUN_ROLES].filter((r) => set.has(r));
   }, [targets, reachedRuns]);
   const parts = useMemo(() => {
     const own = target ? partRows(target) : [];
