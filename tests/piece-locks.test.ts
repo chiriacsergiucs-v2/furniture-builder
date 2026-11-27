@@ -202,7 +202,7 @@ describe('board and construction locks are saved under project schema 21 (ADR-21
   });
 
   it('schema 21 validates the flags; schema 20 refuses them; bad values are refused', () => {
-    expect(PROJECT_SCHEMA).toBe(21);
+    expect(PROJECT_SCHEMA).toBe(22);
     const p0 = row('base-door');
     const id = p0.items[0].id;
     const both = setConstructionLocked(setBoardsLocked(p0, id, true), id, true);
@@ -233,7 +233,7 @@ describe('board and construction locks are saved under project schema 21 (ADR-21
     const locked = setConstructionLocked(setBoardsLocked(p0, id, true), id, true);
     await saveProject(locked);
     const back = await loadProject(locked.id);
-    expect(back!.schemaVersion).toBe(21);
+    expect(back!.schemaVersion).toBe(22);
     expect(back!.items[0].boardsLocked).toBe(true);
     expect(back!.items[0].constructionLocked).toBe(true);
   });

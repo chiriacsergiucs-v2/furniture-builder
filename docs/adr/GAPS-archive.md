@@ -119,6 +119,21 @@ highest id in either file.
 - Fix: L-shaped corner runs with a user-picked mitred or butt worktop joint, drawn on the plan and cut list.
 - Conflicts: none
 
+### G-011: Handle projection and exact swing arcs in the check
+
+- Status: Done (N421)
+- Origin: ADR-057, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: No handle projection; door swings are not exact arcs in the check (drawn arcs were fixed, the check still uses a box).
+- Request: Opening clearance for doors, drawers, flaps (context, not a quote)
+- Questions: Use the handle depth from the handle schedule and the real arc on the hinge side?
+- Suggested pick: Check the real quarter-circle on the hinge side plus the handle depth from the handle schedule (ADR-024). This also unblocks the ADR-071 “reverse the hinge” repair. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Door clearance check uses a box, not the real swing arc, and ignores handle projection.
+- Fix: Check the hinge-side quarter-circle plus a user-entered handle depth from the handle schedule.
+- Conflicts: ADR-057: decided clearances are axis-aligned boxes; an arc check changes that decision.
+
 ### G-012: Angled walls and plan tracing
 
 - Status: Done (ADR-208)
@@ -1228,21 +1243,6 @@ highest id in either file.
 - Fix: Add a Wall cabinet depth field in Refine, catalog value prefilled.
 - Conflicts: none
 
-### G-124: Fill a wall: wall row reaching into the base row
-
-- Status: Done (N411)
-- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
-- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
-- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
-- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
-- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
-- Work: Low-medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Wall rows that would reach into the base row are dropped, so low walls get no wall row.
-- Fix: Shorten wall cabinets to the room above the base row, never below catalog minimum, labelled on the card.
-- Conflicts: ADR-104: decided overlapping wall rows are not offered and nothing is clamped; user chose height field
-
 ### G-125: Width and depth card over the project view for a selected piece
 
 - Status: Done (ADR-109)
@@ -1648,21 +1648,6 @@ highest id in either file.
 - Request: Accept default, /batch all ready
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
-
-### G-202: Replace and the outer size
-
-- Status: Done (N412)
-- Origin: ADR-124 (found while building)
-- Missing: Replace never carries the piece's own outer width, height or depth; this narrows the accepted G-160 pick 'every changed setting'
-- Request: Accept default, /batch all ready
-- Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
-- Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: Replace never carries the piece's own outer width, height or depth to the new item.
-- Fix: Carry the piece's own size on Replace too; resulting overlaps show as diagnostics.
-- Conflicts: ADR-124: Decision says outer sizes are the new item's and listed as not kept.
 
 ### G-203: Wizard and template pieces and the project settings
 
@@ -2355,21 +2340,6 @@ highest id in either file.
 - Issue: A single piece opened from a project shows no wall background behind it in its front view.
 - Fix: Fill the wall finish floor-to-room-height behind the piece when opened from a project with a room.
 - Conflicts: none
-
-### G-282: Restored copies lose version and template links
-
-- Status: Done (N413)
-- Origin: ADR-133, 2026-10-28; found while building (Claude)
-- Missing: Restore gives every restored piece, project and template a new id (G-244), so kept project versions and template links in the backup point at the old ids and stay apart from the restored copies.
-- Request: Answer G-244: “New copies (Recommended)”
-- Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
-- Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: Restored items get new ids, so backed-up versions and template links no longer point at them.
-- Fix: On restore, keep the item's old id when nothing on this device already uses it.
-- Conflicts: ADR-133: restore makes new copies with new ids, per user answer G-244.
 
 ### G-283: Where the four straighten corners are placed
 
@@ -3386,6 +3356,22 @@ highest id in either file.
 - Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
 - Conflicts: none
 
+### G-406: Electrical rules for outlets
+
+- Status: Done (N426)
+- Origin: ADR-205, 2026-11-06; remainder of G-030 (not in its suggested pick)
+- Missing: No electrical rules: distances of outlets from sinks, hobs or water are not checked.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Which rules, and from which regulation? The app must not invent them (ADR-010).
+- Suggested pick: Only the distances the user enters, checked as warnings and labelled as the user's rule. (estimate: effort +20%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Outlets are not checked against sinks, hobs or water.
+- Fix: Add distances that the user enters, checked as warnings, with no built-in values.
+- Note: Built by ADR-299 (N426): `Room.outletDistances` (project schemaVersion 22), warning `outlet-near` labelled "(your rule)", empty = no check; evidence `tests/outlet-distances.test.ts` and `tests/find-it/outlet-distances.test.tsx`.
+- Conflicts: none
+
 ### G-407: Typed position for sink and hob cut-outs
 
 - Status: Done (ADR-209)
@@ -3478,6 +3464,53 @@ highest id in either file.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
 - Conflicts: none
 
+### G-420: Run parts read connections
+
+- Status: Done (N423)
+- Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
+- Missing: Suggest run parts (ADR-061) groups runs with groupRuns (src/core/project.ts:2201): base pieces turned the same way, in line, with gaps up to 150 mm; it does not read stored connections.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Should run parts treat side- and corner-connected pieces as one run?
+- Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Run parts ignore stored connections.
+- Fix: Let groupRuns read side and corner connections.
+- Conflicts: none
+- Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
+
+### G-422: Merge assembly steps
+
+- Status: Done (N427)
+- Origin: ADR-207, 2026-11-06; remainder of G-344 (its pick names an editable order with a reset)
+- Missing: Steps can be reordered and renamed but not merged into one step.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user merge two neighbouring steps into one?
+- Suggested pick: Merge with the next step, saved in the design's step order, undone by Reset the steps. (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Two assembly steps cannot be merged.
+- Fix: Store merged step pairs with the step order and show them as one step.
+- Conflicts: none
+- Note: Built by ADR-300 (N427): `AssemblyEdit.merged` (design schemaVersion 13), Assembly › Merge with the next step, Reset the steps undoes it; `tests/assembly-merge.test.ts` and `tests/find-it/assembly-merge.test.tsx` pass.
+
+### G-436: Reverse-the-hinge repair
+
+- Status: Done (N422)
+- Origin: ADR-209, 2026-11-06; remainder of G-034 (the coordinator split it: the repair needs G-011)
+- Missing: A door blocked by a neighbour has no "Reverse the hinge" repair. The ADR-057 clearance is a box as deep as the door is wide on both sides, so reversing the hinge never clears it.
+- Request: “Explainable warnings with repairs”.
+- Questions: Build the hinge-side clearance (G-011, which changes ADR-057's box decision) and then this repair?
+- Suggested pick: Once G-011 is decided, offer the hinge repair for single doors. (estimate: effort +10%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Reversing the hinge is not offered as a repair.
+- Fix: After G-011, add the hinge repair to `repairsFor`.
+- Conflicts: ADR-057 (clearances are axis-aligned boxes on both hinge sides)
+
 ### G-438: Sink and hob cut-outs in the room front view
 
 - Status: Done (N393)
@@ -3492,6 +3525,20 @@ highest id in either file.
 - Issue: Cut-outs are not seen in the front view.
 - Fix: Draw each cut-out's width dashed on the worktop in the room front view.
 - Conflicts: none
+
+### G-439: Drilling positions for joints other than carcass joints
+
+- Status: Done (N424)
+- Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
+- Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
+- Request: “Hardware and fastener completeness”.
+- Questions: Which values would you enter for each of those joint types (for example distance from the edge for back fixings)?
+- Suggested pick: Back fixings next, around the back's perimeter, from an edge distance you enter. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Only carcass joints show drilling positions.
+- Fix: Add user-value drilling positions to the other joint types, one at a time.
 
 ### G-452: Desktop mode switch in the top bar
 
@@ -3521,6 +3568,21 @@ highest id in either file.
 - Necessity: Low
 - Issue: Kept versions of deleted projects need an open project to be reached.
 - Fix: The same list on the Projects page.
+
+### G-460: Band tolerances and edgebander settings
+
+- Status: Done (N428)
+- Origin: ADR-212, 2026-11-06; agent scoped it out (remainder of G-038)
+- Missing: No band tolerances (thickness or width deviation, overhang to trim) and no edgebander settings; ADR-212 takes over only the band-list CSV import and its decor match.
+- Request: “Check the European standards for ABS, apply them accordingly”.
+- Questions: Add fields for tolerances and edgebander settings, filled only from values you type or your band list holds?
+- Suggested pick: Add them only as fields you fill, labelled guidance, nothing shipped (ADR-010). (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Band tolerances and edgebander settings are not recorded anywhere.
+- Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
+- Conflicts: none
 
 ### G-461: Default L and U rooms give no Fill the room mix
 
@@ -3641,6 +3703,17 @@ highest id in either file.
 - Suggested pick: (a) a shorter facts line: closest to the request (readable cards at the same height, under 30 000 px) — estimate +10 % work on ADR-195, delivers the remaining ≈30 % of item 4's value; needs a new measurement to confirm it reaches under 30 %. (b) keeps every word but breaks the 30 000 px limit.
 - Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 - Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
+
+### G-485: Import cycles in core and ui are not broken or linted
+
+- Status: Done (N419)
+- Origin: ADR-219 Out of scope, 2026-11-07 (architecture review I-01, section 2)
+- Missing: ADR-219 enforces layer directions only. The 9-file core cycle around project.ts (arrange, common, compat, connections, groupMove, selection, sizeLock, variables), the shopping/fasteners/prices type cycle and the UI cycles (Dialogs, CountStepper/Inspector, Project/Settings) stay, and no import/no-cycle rule guards them.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the core cycle be broken (anti-candidate in review section 6: project.ts and its cycle are the model layer) and an import/no-cycle rule added?
+- Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
 
 ### G-489: Restoring a backup writes rows without a transaction
 
@@ -3886,6 +3959,18 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
+
+- Status: Done (N425)
+- Origin: G-516 fix, 2026-11-16 (N324)
+- Missing: G-516 prints part labels in the print language. A piece name ({name}), a board name ({board}) and a hardware name inside a warning still print as the app made them: a piece name needs its Design (printPieceName), board and hardware names have no print entries.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should board and hardware names get Romanian, Russian and English print entries (a judgement on names, ADR-010)?
+- Suggested pick: Pass the Design with the warning and add print entries for built-in board and hardware names.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
 ### G-522: F-04 Move and Adjust reasons not proved in a real browser
 
 - Status: Done (N329)
@@ -3933,6 +4018,19 @@ highest id in either file.
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
 - Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
+
+### G-530: Value cycle build, variables, project in core
+
+- Status: Done (N420)
+- Origin: architect-review 2026-11-17
+- Missing: src/core/build.ts imports ./variables (build.ts:11), variables.ts:22 imports ./project, project.ts:8 imports ./build: a value-import cycle through a model file. ADR-219 and tests/core-boundary.test.ts only block a direct ./project import from model files, so the cycle passes. 20 more value cycles exist (14 around project.ts, i18n/print and ro, 5 in ui, Viewer3D and ViewerScene).
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: Break the cycle in the code (move the shared pieces out of variables.ts) or widen the ADR-219 rule to cover transitive imports?
+- Suggested pick: Decide with a new ADR; the model files are build.ts, cabinet.ts and the others listed in eslint.config.js
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check).
 
 ### G-531: Stale numbers and line references in architecture.md
 
@@ -3982,19 +4080,6 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
-### G-537: Print path does not translate built-in material name 'Worktop 38' (bug-hunt M-1 follow-up)
-
-- Status: Done (N408)
-- Origin: bug-hunt 2026-11-17 M-1
-- Missing: Russian entry added for the UI (data-parts.ts). Print paths still show the English name: src/core/ro.ts:408, src/ui/PrintSheet.tsx:103,301,323, src/core/shopping.ts:162; print.ts:49-53 says print never looks up names
-- Request: Translate built-in material names on print
-- Questions: Translate built-in names in print and CSV, or keep them as stored?
-- Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: User 2026-11-27: "Translate on print".
-
 ### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
 
 - Status: Done (PR #329, N388)
@@ -4006,19 +4091,6 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
-
-### G-542: Picture and row validation on file import and restore (security M-1, M-4)
-
-- Status: Done (N407)
-- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
-- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
-- Request: Route file pictures through the decode/re-encode path; validate rows per table
-- Questions: Approach for stricter picture and row validation on import and restore?
-- Suggested pick: User approves approach (ADR-011 implication)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Note: User 2026-11-27: re-encode file pictures through the decode path and validate restored rows per table.
 
 ### G-544: Security low items: migration grants, workflow pins, dev dependency advisories, localhost redirect (security L-2, L-4, L-5, L-6)
 
@@ -4032,19 +4104,6 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 - Note: User 2026-11-27: fix L-6, L-5 and L-2 (L-4 done in G-566); applying the L-2 migration to a live project still needs G-277.
-
-### G-547: H1 leftovers: Seating, Sleeping and lying, stored Wardrobe name (context-key pass)
-
-- Status: Done (N409)
-- Origin: reuse health 2026-11-18 H1, context-key pass
-- Missing: FUNCTION_LABEL (src/core/catalog/types.ts:23-24) is stored in designs as catalog.category (src/core/wizard/steps.ts:358-362); stored Wardrobe names (storage.ts:56, registry.ts:136). Plain keys Seating and Sleeping and lying keep two Russian wordings in data-catalog and data-wizard
-- Request: Separate stored labels from display labels, then tag
-- Questions: Change stored category labels, or keep them as they are?
-- Suggested pick: User decides (stored data)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
 
 ### G-550: Audit advisories left after dependency health
 
@@ -4093,19 +4152,6 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
-
-### G-565: Re-encode or sniff pictures inside imported files
-
-- Status: Done (N407)
-- Origin: Security health check round 1, 2026-11-19 (L-2)
-- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
-- Request: /health-security, loop prompt; user approved Medium only
-- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
-- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: Covered with G-542 by the user's 2026-11-27 pick (re-encode, which also sniffs and caps).
 
 ### G-566: Pin GitHub Actions by commit SHA
 
@@ -4167,18 +4213,6 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
-### G-576: Staggered rows not refreshed on project-level resizes
-
-- Status: Done (N414)
-- Origin: ADR-282
-- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
-- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
-- Questions: Rewrite staggered rows on project-level resizes too?
-- Suggested pick: Yes, apply refreshStagger in the project commit
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-
 ### G-577: Canvas-native editor: slices 2-7 have no ADR yet
 
 - Status: Done (ADR-289)
@@ -4227,18 +4261,6 @@ highest id in either file.
 - Impact: Medium-high
 - Necessity: Medium
 
-### G-584: Start from dialog and the Materials seller-band select keep the old layout
-
-- Status: Done (N416)
-- Origin: ADR-291 scope
-- Missing: New › Start from (Catalog.tsx StartFrom) and project Add a piece keep their own grouped list; the Materials dialog still offers seller bands as a select (MaterialDialog.tsx:486), a second band picker.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Bring Start from and the Materials band select into the finder too?
-- Suggested pick: Yes: Start from reuses the finder grid; the Materials select opens the product picker
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-
 ### G-585: Finder filter row scrolls sideways on a phone
 
 - Status: Done (N386, 2026-11-26: Source tabs on their own row, Room, Type and Ready to open on one row below, src/styles.css; tools/catalog-finder/find-it.mjs 40 of 40 on the production preview)
@@ -4274,18 +4296,6 @@ highest id in either file.
 - Work: Low
 - Impact: Medium
 - Necessity: Medium
-
-### G-588: Appearance dialog: colours and control height not editable
-
-- Status: Done (N417)
-- Origin: N378, PR #317, 2026-11-22
-- Missing: Colour tokens and --control-h are not in the Appearance dialog: the dark set overrides colours, touch targets stay 44 px (ADR-114)
-- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
-- Questions: Should colours be editable per light and dark set? Allow --control-h below 44 px on touch screens?
-- Suggested pick: Add editable accent and primary colours for light and dark, keep --control-h fixed
-- Work: Medium
-- Impact: Medium
-- Necessity: Low
 
 ### G-590: Appearance: tests for − / + and ±5% controls
 
@@ -4332,18 +4342,6 @@ highest id in either file.
 - Impact: High
 - Necessity: High
 
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Done (N415)
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-604: Phone middle ground: layouts not measured (320 px edit bar, room drawings in short landscape)
 
 - Status: Done (N385: `tools/mobile-middle/find-it.mjs` 73/73, 320x640 edit bar and 844x390 room drawings passes; found G-601)
@@ -4355,19 +4353,6 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low-medium
-
-### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
-
-- Status: Done (N418)
-- Origin: ADR-295, code-reviewer re-review of c61d8d0
-- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
-- Request: User 2026-11-26: review reports no open issues
-- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
-- Suggested pick: Add jsdom tests for the glue; build twins in an effect
-- Note: Done 2026-11-27 (N418): the glue moved to `src/viewer/dragGlue.ts` (skipDragMoves, trackPresses, useShadowFreeze, useThinTwins) and is tested in `tests/drag-glue.test.tsx` (jsdom, StrictMode); the thin twins are now `ThinTwins` (`src/viewer/panelResources.ts`), built in an effect, so StrictMode's simulated unmount and remount builds them again. The 1 device px thin twin vs the 1 CSS px fat line is recorded, not fixed: WebGL draws no GL line wider than 1 device pixel on most devices (`LineBasicMaterial.linewidth` is ignored), so matching the CSS width would need another fat line, which is what the twin exists to avoid; the twin is drawn only in a slow drag, which may also lower the pixel ratio toward 1.
-- Work: Low-medium
-- Impact: Low
-- Necessity: Medium
 
 ### G-607: Stale browser scripts: ui-polish and control-rule
 

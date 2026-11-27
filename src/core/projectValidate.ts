@@ -40,6 +40,7 @@ import {
   MODELS_SINCE,
   PARAM_LOCKS_SINCE,
   PIECE_LOCKS_SINCE,
+  OUTLET_DISTANCES_SINCE,
   PROJECT_SCHEMAS,
   REFS_SINCE,
   REQUEST_TARGETS,
@@ -797,5 +798,11 @@ export function validateProject(p: unknown): string[] {
   }
   if (isObj(p.room) && p.room.floor !== undefined && (p.schemaVersion as number) < SURFACES_SINCE)
     errs.push(t('Floor backgrounds need project schemaVersion {v}', { v: SURFACES_SINCE }));
+  if (
+    isObj(p.room) &&
+    p.room.outletDistances !== undefined &&
+    (p.schemaVersion as number) < OUTLET_DISTANCES_SINCE
+  )
+    errs.push(t('Outlet distances need project schemaVersion {v}', { v: OUTLET_DISTANCES_SINCE }));
   return errs;
 }

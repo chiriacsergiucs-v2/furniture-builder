@@ -18,8 +18,8 @@ import {
   worktopFront,
 } from './projectProfiles';
 import { buildModel } from './build';
-import { compatChecks } from './compat';
-import { localClearances, type Clearance } from './clearance';
+import { compatChecks, touchSideBySide } from './compat';
+import { localClearances, reachesArc, type Clearance } from './clearance';
 import {
   BODY_CODES,
   envelopeChecks,
@@ -34,11 +34,13 @@ import {
   featureBox,
   isService,
   outlineIssues,
+  outletDistanceChecks,
   roomChecks,
   serviceChecks,
   type Room,
 } from './room';
 import { setRooms, type VariableSet } from './setRoom';
+import type { Placement } from './placement';
 import { variableDiagnostics, type Binding, type ProjectVariable } from './variables';
 import { bandFor, bandText } from './materials';
 import { DEFAULT_KERF, DEFAULT_MOUNT_HEIGHT, newId, sheetOf, upgradeDesign } from './design';
@@ -63,7 +65,12 @@ import {
   pruneCommon,
   type CommonBuild,
 } from './common';
-import { connectionDiagnostics, pruneConnections, type Connection } from './connections';
+import {
+  connectionDiagnostics,
+  meetInCorner,
+  pruneConnections,
+  type Connection,
+} from './connections';
 import { bounds2 } from './outline';
 import {
   pruneShared,
@@ -100,18 +107,7 @@ import { t, tr, type Key } from '@furniture-builder/i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
-/**
- * How a piece is placed (ADR-031). The stored `position` is kept in step with it by `resolvePlacements`:
- *  - floor: stands on the floor (height 0), moved freely along the walls;
- *  - wall: hung on the wall, its underside `height` mm above the floor;
- *  - above: sits on another piece (gap 0) or hangs `gap` mm above it, back faces aligned, `offsetX` mm from its
- *    left edge; it follows that piece when it moves.
- * Absent = free: `position` is used as stored (projects saved before placement existed).
- */
-export type Placement =
-  | { kind: 'floor' }
-  | { kind: 'wall'; height: Mm }
-  | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm };
+export type { Placement } from './placement';
 
 /** An outside size a lock can hold (ADR-171). */
 export type SizeAxis = 'width' | 'height' | 'depth';
@@ -369,9 +365,10 @@ export interface WorktopEdge {
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
  * construction locks (ADR-211), the project's own seller items (ADR-210), moulding profiles, request bindings and
- * repair fillers on run requests, cut-out positions and worktop edges (ADR-209).
+ * repair fillers on run requests, cut-out positions and worktop edges (ADR-209); 22 = the outlet distances the user
+ * sets on the room (ADR-299).
  */
-export const PROJECT_SCHEMA = 21 as const;
+export const PROJECT_SCHEMA = 22 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -393,6 +390,7 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   18,
   19,
   20,
+  21,
   PROJECT_SCHEMA,
 ];
 type ProjectSchemaVersion =
@@ -416,6 +414,7 @@ type ProjectSchemaVersion =
   | 18
   | 19
   | 20
+  | 21
   | typeof PROJECT_SCHEMA;
 export const RUN_REQUESTS_SINCE = 4;
 export const MODELS_SINCE = 5;
@@ -442,6 +441,7 @@ export const PIECE_LOCKS_SINCE = 21;
 export const SELLER_ITEMS_SINCE = 21;
 export const FOLLOW_UPS_SINCE = 21;
 export const OWNED_SINCE = 21;
+export const OUTLET_DISTANCES_SINCE = 22;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -1051,6 +1051,11 @@ export function rotateBox(b: Box, r: QuarterTurn): Box {
   }
 }
 
+/** A plan point (x, z) turned as `rotateBox` turns a box. */
+function rotatePoint([x, z]: [Mm, Mm], r: QuarterTurn): [Mm, Mm] {
+  return r === 90 ? [z, -x] : r === 180 ? [-x, -z] : r === 270 ? [-z, x] : [x, z];
+}
+
 const FACING: Record<QuarterTurn, PlacedPiece['facing']> = {
   0: { axis: 'z', sign: 1 },
   90: { axis: 'x', sign: 1 },
@@ -1269,12 +1274,16 @@ function placeItemOnce(item: ProjectItem, opts: PlaceOptions | undefined): Place
   }));
   const panels = all.slice(0, model.panels.length);
   const full = { x: rb.x + dx, y: rb.y + dy, z: rb.z + dz, w: rb.w, h: rb.h, d: rb.d };
-  const clearances = localClearances(model).map((c) => {
+  const clearances = localClearances(model).map((c): Clearance => {
     const rc = rotateBox(c.box, r);
+    const { arc, ...rest } = c;
+    // The swing's hinge turns and moves with the piece (G-011); a piece typed at an angle keeps the box.
+    const pivot = arc && !item.angle ? rotatePoint(arc.pivot, r) : null;
     return {
-      ...c,
+      ...rest,
       panelId: `${item.id}:${c.panelId}`,
       box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }),
+      ...(arc && pivot ? { arc: { pivot: [pivot[0] + dx, pivot[1] + dz], r2: arc.r2 } } : {}),
     };
   });
   const facing = FACING[r];
@@ -1706,6 +1715,9 @@ export function buildProjectModel(input: Project): ProjectModel {
   diagnostics.push(
     ...cutoutChecks(project, placedById, 'sink'),
     ...cutoutChecks(project, placedById, 'hob'),
+    ...(project.room?.outletDistances
+      ? outletDistanceChecks(project.room, cutoutOutlines(project, pieces))
+      : []),
     ...worktopJointChecks(project),
     ...trimProfileChecks(project),
     ...worktopEdgeChecks(project),
@@ -2016,7 +2028,8 @@ function openingChecks(
     for (const c of pc.clearances) {
       const hits = [
         ...allPanels
-          .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
+          // A door's swing (G-011): only what reaches into the quarter circle about its hinge.
+          .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box) && reachesArc(c, aabbOf(q)))
           .map((q) => ({
             box: aabbOf(q),
             exact: q.shape ? aabbOf(q) : q.box,
@@ -2028,7 +2041,7 @@ function openingChecks(
               : (pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.design.name ?? q.label),
           })),
         ...obstacles
-          .filter((o) => overlaps(o.box, c.box))
+          .filter((o) => overlaps(o.box, c.box) && reachesArc(c, o.box))
           .map((o) => ({ box: o.box, exact: o.box, itemId: undefined, name: o.label })),
       ];
       if (!hits.length) continue;
@@ -2265,7 +2278,7 @@ const RUN_TURNS = [0, 90, 270] as const;
  * left → right, then (ADR-205) those turned a quarter (`rotationY` 90 or 270) along a side wall, side by side along z.
  * Every piece of a run has the same turn.
  */
-export function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
+function touchingRuns(placed: PlacedPiece[]): PlacedPiece[][] {
   const runs: PlacedPiece[][] = [];
   for (const r of RUN_TURNS) {
     const alongX = r === 0;
@@ -2290,6 +2303,69 @@ export function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
     runs.push(...mine);
   }
   return runs;
+}
+
+/**
+ * Runs of base units as legs (G-420): the touching runs above, joined by the stored connections that still hold
+ * (ADR-168, ADR-207). Side-connected pieces put their runs in one leg (one turn, ordered along it); corner-connected
+ * pieces put their legs in one run, legs in the order of the touching runs (back wall first). Without connections each
+ * run is one leg, as before. Wall and stacked connections, and connections to pieces that are not base units, join
+ * nothing.
+ */
+export function groupRunLegs(
+  placed: PlacedPiece[],
+  connections: readonly Connection[] = [],
+): PlacedPiece[][][] {
+  const runs = touchingRuns(placed);
+  if (!connections.length) return runs.map((r) => [r]);
+  const at = new Map<string, number>();
+  runs.forEach((r, i) => r.forEach((pc) => at.set(pc.item.id, i)));
+  // Two union-finds over run indices; each root is the smallest index of its set.
+  const side = runs.map((_, i) => i),
+    all = runs.map((_, i) => i);
+  const find = (up: number[], i: number): number => (up[i] === i ? i : (up[i] = find(up, up[i])));
+  const join = (up: number[], i: number, j: number) => {
+    const a = find(up, i),
+      b = find(up, j);
+    if (a !== b) up[Math.max(a, b)] = Math.min(a, b);
+  };
+  for (const c of connections) {
+    const kind = c.kind ?? 'side';
+    if (kind !== 'side' && kind !== 'corner') continue;
+    const i = at.get(c.itemIds[0]),
+      j = at.get(c.itemIds[1]);
+    if (i === undefined || j === undefined || i === j) continue;
+    const a = runs[i].find((pc) => pc.item.id === c.itemIds[0])!,
+      b = runs[j].find((pc) => pc.item.id === c.itemIds[1])!;
+    // A connection that no longer holds has its warning (ADR-168) and joins nothing.
+    if (kind === 'side' ? !touchSideBySide(a, b) : !meetInCorner(a, b)) continue;
+    if (kind === 'side') join(side, i, j);
+    join(all, i, j);
+  }
+  const legs = new Map<number, PlacedPiece[]>();
+  runs.forEach((r, i) => {
+    const k = find(side, i);
+    legs.set(k, [...(legs.get(k) ?? []), ...r]);
+  });
+  const out = new Map<number, PlacedPiece[][]>();
+  for (const [k, leg] of legs) {
+    const lo = (pc: PlacedPiece) => (pc.item.rotationY === 0 ? pc.bounds.x : pc.bounds.z);
+    const r = find(all, k);
+    out.set(r, [...(out.get(r) ?? []), [...leg].sort((a, b) => lo(a) - lo(b))]);
+  }
+  return [...out.values()];
+}
+
+/**
+ * Runs of base units (ADR-036, ADR-205): pieces in line with gaps up to 150 mm, joined by the stored side and corner
+ * connections that hold (G-420). A run joined in a corner holds pieces of two turns, one leg after the other
+ * (`groupRunLegs` keeps them apart).
+ */
+export function groupRuns(
+  placed: PlacedPiece[],
+  connections: readonly Connection[] = [],
+): PlacedPiece[][] {
+  return groupRunLegs(placed, connections).map((r) => r.flat());
 }
 
 /**
@@ -2334,7 +2410,10 @@ export function runFrame(r: QuarterTurn): RunFrame {
 
 /** The ids of the run a piece belongs to (the same runs the run parts use), or null. */
 export function runOf(project: Project, id: string): string[] | null {
-  const ids = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)))
+  const ids = groupRuns(
+    resolvePlacements(project).items.map((i) => placeItem(i)),
+    project.connections,
+  )
     .map((r) => r.map((pc) => pc.item.id))
     .find((r) => r.includes(id));
   return ids ?? null;
@@ -2371,7 +2450,10 @@ function withHandle(d: Design, h: Handle): Design {
 
 /** The pieces a run handle reaches now (ADR-125): the run holding any of its pieces, less those keeping their own. */
 export function runHandleMembers(project: Project, rh: RunHandle): string[] {
-  const runs = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)));
+  const runs = groupRuns(
+    resolvePlacements(project).items.map((i) => placeItem(i)),
+    project.connections,
+  );
   const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
   return run ? run.map((pc) => pc.item.id) : [];
 }
@@ -2394,7 +2476,7 @@ export function runHandleFor(project: Project, itemId: string): RunHandle | unde
 export function applyRunHandles(project: Project): Project {
   if (!project.runHandles?.length) return project;
   const placed = resolvePlacements(project).items.map((i) => placeItem(i));
-  const runs = groupRuns(placed);
+  const runs = groupRuns(placed, project.connections);
   const handles = new Map<string, Handle>();
   for (const rh of project.runHandles) {
     const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));

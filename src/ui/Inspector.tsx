@@ -78,6 +78,9 @@ import {
 } from './controls';
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
+
+// In its own module so CountStepper reads it without importing this file (G-485).
+export { selectionLabel } from './selectionLabel';
 import { PieceSize } from './PieceSize';
 import {
   BindButton,
@@ -327,18 +330,6 @@ function ComposeStart() {
         </button>
       )}
     </div>
-  );
-}
-
-/** One line naming what is selected in the piece, for the phone sheet's peek row (ADR-079). */
-export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Selection) {
-  if (id === null) return WHOLE[prod.kind];
-  const found = id ? findInProduct(prod, id) : undefined;
-  if (!found) return null;
-  if (found.space.id === found.root.id) return tr(found.label);
-  return placed(
-    spacePlace(found.root, found.space.id),
-    found.space.kind === 'split' ? t('Divided space') : KIND_LABEL[found.space.kind],
   );
 }
 

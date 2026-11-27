@@ -288,3 +288,162 @@ describe('workspace packages (ADR-279)', () => {
       ).toBe(n);
   }, 60_000);
 });
+
+// G-485, G-530: import cycles. A cycle of static imports (value or type, re-exports included) is a group of files
+// that can only be read, tested and loaded together. Each group found must be one of the allowed groups below,
+// exactly, so a new cycle or a file joining an allowed one fails. Dynamic `import()` is lazy loading and is not an
+// edge. The model files (ADR-219) must not reach the project layer even through other files (G-530).
+const STATIC = [
+  /\b(?:import|export)\s[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g,
+  /^\s*import\s*['"]([^'"]+)['"]/gm,
+];
+const ALLOWED_CYCLES: { files: string[]; why: string }[] = [
+  {
+    why: 'the project model (project.ts and the files it is split into) is one unit (G-485 pick)',
+    files: [
+      'arrange',
+      'common',
+      'compat',
+      'connections',
+      'groupMove',
+      'project',
+      'projectProfiles',
+      'projectValidate',
+      'projectWorktops',
+      'selection',
+      'shared',
+      'sizeLock',
+      'variables',
+    ].map((m) => `src/core/${m}.ts`),
+  },
+  {
+    why: 'type-only: the document types and the codes and catalog types they name; moving them changes types.ts (ADR-011)',
+    files: ['src/core/catalog/types.ts', 'src/core/diagnosticCodes.ts', 'src/core/types.ts'],
+  },
+];
+// Allowances for the transitive model rule: desk.ts reads ./design (G-491), and types.ts names the catalog's types.
+const MODEL_REACH_ALLOWED = ['src/core/design.ts', 'src/core/catalog/types.ts'];
+
+/** Static import edges between the given files, resolved like Vite does (`.ts`, `.tsx`, `/index`). */
+function importGraph(sources: { file: string; text: string }[]): Map<string, string[]> {
+  const known = new Set(sources.map((s) => s.file));
+  const resolve = (file: string, spec: string): string | null => {
+    if (!spec.startsWith('.')) return null;
+    const base = posix.normalize(
+      posix.join(posix.dirname(file), spec.replace(/\.(js|ts|tsx)$/, '')),
+    );
+    return (
+      [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find((c) =>
+        known.has(c),
+      ) ?? null
+    );
+  };
+  const graph = new Map<string, string[]>();
+  for (const { file, text } of sources) {
+    const out = new Set<string>();
+    for (const re of STATIC)
+      for (const m of text.matchAll(re)) {
+        const r = resolve(file, m[1]);
+        if (r) out.add(r);
+      }
+    graph.set(file, [...out]);
+  }
+  return graph;
+}
+
+/** The groups of two or more files that import each other, each sorted (Tarjan's strongly connected components). */
+function cycles(graph: Map<string, string[]>): string[][] {
+  let next = 0;
+  const index = new Map<string, number>(),
+    low = new Map<string, number>(),
+    stack: string[] = [],
+    on = new Set<string>(),
+    out: string[][] = [];
+  const visit = (v: string) => {
+    index.set(v, next);
+    low.set(v, next++);
+    stack.push(v);
+    on.add(v);
+    for (const w of graph.get(v) ?? []) {
+      if (!index.has(w)) {
+        visit(w);
+        low.set(v, Math.min(low.get(v)!, low.get(w)!));
+      } else if (on.has(w)) low.set(v, Math.min(low.get(v)!, index.get(w)!));
+    }
+    if (low.get(v) !== index.get(v)) return;
+    const group: string[] = [];
+    let w: string;
+    do {
+      w = stack.pop()!;
+      on.delete(w);
+      group.push(w);
+    } while (w !== v);
+    if (group.length > 1) out.push(group.sort());
+  };
+  for (const v of [...graph.keys()].sort()) if (!index.has(v)) visit(v);
+  return out;
+}
+
+/** Every file `from` reaches through static imports, each with the path that reaches it. */
+function reach(graph: Map<string, string[]>, from: string): Map<string, string[]> {
+  const path = new Map<string, string[]>([[from, [from]]]);
+  const queue = [from];
+  while (queue.length) {
+    const v = queue.shift()!;
+    for (const w of graph.get(v) ?? [])
+      if (!path.has(w)) {
+        path.set(w, [...path.get(v)!, w]);
+        queue.push(w);
+      }
+  }
+  return path;
+}
+
+const GRAPH = importGraph(SOURCES);
+
+describe('import cycles (G-485, G-530)', () => {
+  it('every import cycle in src/ is one of the allowed groups, exactly', () => {
+    const allowed = new Set(ALLOWED_CYCLES.map((c) => [...c.files].sort().join(' ')));
+    const found = cycles(GRAPH).map((c) => c.join(' '));
+    expect(found.filter((c) => !allowed.has(c))).toEqual([]);
+  });
+
+  it('no model file reaches the project layer, not even through other files', () => {
+    const hits = MODEL.flatMap((m) =>
+      [...reach(GRAPH, m)].flatMap(([file, path]) =>
+        MODEL_UP.test(file.replace(/\.tsx?$/, '')) && !MODEL_REACH_ALLOWED.includes(file)
+          ? [path.join(' → ')]
+          : [],
+      ),
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('the scan finds a cycle, a type-only one, and a model file reaching project.ts through another file', () => {
+    const g = importGraph([
+      { file: 'src/a.ts', text: "import { b } from './b';" },
+      { file: 'src/b.tsx', text: "export { c } from './c';\nimport('./a');" },
+      { file: 'src/c.ts', text: "import type { A } from './a';" },
+      { file: 'src/d.ts', text: "import './b';" },
+      { file: 'src/e/index.ts', text: "import { d } from '../d';" },
+      { file: 'src/f.ts', text: "import { e } from './e';" },
+    ]);
+    expect(cycles(g)).toEqual([['src/a.ts', 'src/b.tsx', 'src/c.ts']]);
+    expect(reach(g, 'src/f.ts').get('src/a.ts')).toEqual([
+      'src/f.ts',
+      'src/e/index.ts',
+      'src/d.ts',
+      'src/b.tsx',
+      'src/c.ts',
+      'src/a.ts',
+    ]);
+    expect(cycles(importGraph([{ file: 'src/x.ts', text: "await import('./y');" }]))).toEqual([]);
+    const model = importGraph([
+      { file: 'src/core/build.ts', text: "import { v } from './variables';" },
+      { file: 'src/core/variables.ts', text: "import type { Project } from './project';" },
+      { file: 'src/core/project.ts', text: '' },
+    ]);
+    expect(reach(model, 'src/core/build.ts').has('src/core/project.ts')).toBe(true);
+    expect(MODEL_UP.test('src/core/project')).toBe(true);
+  });
+});

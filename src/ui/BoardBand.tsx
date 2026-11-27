@@ -3,6 +3,7 @@ import {
   BAND_KINDS,
   BAND_MAX_ALLOWANCE,
   BAND_MAX_CODE,
+  BAND_MAX_EDGEBANDER,
   BAND_MAX_WIDTH,
   bandFromList,
   bandsForBoard,
@@ -80,11 +81,29 @@ interface Draft {
   width: string;
   code: string;
   allowance: string;
+  /** ADR-301: guidance the user types from the band's datasheet, never filled in (ADR-010). */
+  thicknessTolerance: string;
+  widthTolerance: string;
+  overhang: string;
+  edgebander: string;
 }
+
+/** The ADR-301 fields, in tenths of a mm. */
+const TENTHS_GUIDE = ['thicknessTolerance', 'widthTolerance', 'overhang'] as const;
 
 /** Compares bands by value, whatever order their fields were saved in. */
 const canon = (b: EdgeBand | undefined) =>
-  b ? JSON.stringify([b.kind, b.thickness, b.width, b.code ?? '', b.allowance ?? 0]) : 'null';
+  b
+    ? JSON.stringify([
+        b.kind,
+        b.thickness,
+        b.width,
+        b.code ?? '',
+        b.allowance ?? 0,
+        ...TENTHS_GUIDE.map((k) => b[k] ?? 0),
+        b.edgebander ?? '',
+      ])
+    : 'null';
 
 const draftOf = (b: EdgeBand | undefined): Draft => ({
   kind: b?.kind ?? '',
@@ -92,7 +111,21 @@ const draftOf = (b: EdgeBand | undefined): Draft => ({
   width: b ? String(b.width) : '',
   code: b?.code ?? '',
   allowance: b?.allowance ? String(b.allowance) : '',
+  thicknessTolerance: b?.thicknessTolerance ? tenthsText(b.thicknessTolerance) : '',
+  widthTolerance: b?.widthTolerance ? tenthsText(b.widthTolerance) : '',
+  overhang: b?.overhang ? tenthsText(b.overhang) : '',
+  edgebander: b?.edgebander ?? '',
 });
+
+/** What the user typed on a band and keeps when another band is picked from the list (ADR-212, ADR-301). */
+const keptOf = (b: EdgeBand | undefined): Partial<EdgeBand> =>
+  b
+    ? {
+        ...(b.allowance ? { allowance: b.allowance } : {}),
+        ...Object.fromEntries(TENTHS_GUIDE.filter((k) => b[k]).map((k) => [k, b[k]])),
+        ...(b.edgebander ? { edgebander: b.edgebander } : {}),
+      }
+    : {};
 
 const wholeIn = (s: string, lo: number, hi: number) => {
   const w = s.trim();
@@ -117,10 +150,19 @@ function parse(d: Draft): { band?: EdgeBand; missing: string[]; bad: Set<keyof D
   if (d.thickness.trim() && thickness === null) bad.add('thickness');
   if (d.width.trim() && width === null) bad.add('width');
   if (allowance === null) bad.add('allowance');
+  const guide: Partial<EdgeBand> = {};
+  for (const k of TENTHS_GUIDE) {
+    if (!d[k].trim()) continue;
+    const v = parseTenths(d[k]);
+    if (v === null) bad.add(k);
+    else guide[k] = v;
+  }
+  const edgebander = d.edgebander.trim().slice(0, BAND_MAX_EDGEBANDER);
+  if (edgebander) guide.edgebander = edgebander;
   if (!d.kind) missing.push('type');
   if (!d.thickness.trim()) missing.push('thickness');
   if (!d.width.trim()) missing.push('width');
-  if (!d.kind || thickness === null || width === null || allowance === null)
+  if (!d.kind || thickness === null || width === null || allowance === null || bad.size)
     return { missing, bad };
   const code = d.code.trim().slice(0, BAND_MAX_CODE);
   return {
@@ -130,6 +172,7 @@ function parse(d: Draft): { band?: EdgeBand; missing: string[]; bad: Set<keyof D
       width,
       ...(code ? { code } : {}),
       ...(allowance ? { allowance } : {}),
+      ...guide,
     },
     missing,
     bad,
@@ -181,7 +224,7 @@ function BandFields({
   };
   const chosen = parseTenths(draft.thickness);
   const field = (
-    k: 'thickness' | 'width' | 'code' | 'allowance',
+    k: Exclude<keyof Draft, 'kind'>,
     label: string,
     error: string,
     extra: { inputMode?: 'decimal' | 'numeric'; maxLength?: number; placeholder?: string } = {},
@@ -225,11 +268,9 @@ function BandFields({
           board={board}
           bands={bands}
           onPick={(b) =>
-            // A pick fills kind, thickness, width and code (ADR-212); the trim allowance stays the user's.
-            onChange({
-              ...bandFromList(b),
-              ...(value?.allowance ? { allowance: value.allowance } : {}),
-            })
+            // A pick fills kind, thickness, width and code (ADR-212); the trim allowance, tolerances and edgebander
+            // settings stay the user's (ADR-301).
+            onChange({ ...bandFromList(b), ...keptOf(value) })
           }
         />
       )}
@@ -264,6 +305,43 @@ function BandFields({
               t('Whole mm from 0 to {max}.', { max: BAND_MAX_ALLOWANCE }),
               { inputMode: 'numeric', placeholder: '0' },
             )}
+          </div>
+          <div
+            className="band-guide"
+            role="group"
+            aria-label={t('Tolerances and edgebander (guidance)')}
+          >
+            <p className="band-title">
+              <strong>{t('Tolerances and edgebander (guidance)')}</strong>{' '}
+              <span className="hint">
+                {t(
+                  "Optional, from your band's datasheet. The app fills nothing in and checks nothing against them; they print on the cut sheet.",
+                )}
+              </span>
+            </p>
+            <div className="sheet-fields">
+              {field(
+                'thicknessTolerance',
+                t('Thickness tolerance ± (mm)'),
+                t('From 0.1 to 10 mm, one decimal.'),
+                { inputMode: 'decimal' },
+              )}
+              {field(
+                'widthTolerance',
+                t('Width tolerance ± (mm)'),
+                t('From 0.1 to 10 mm, one decimal.'),
+                { inputMode: 'decimal' },
+              )}
+              {field(
+                'overhang',
+                t('Overhang to trim per side (mm)'),
+                t('From 0.1 to 10 mm, one decimal.'),
+                { inputMode: 'decimal' },
+              )}
+              {field('edgebander', t('Edgebander settings'), '', {
+                maxLength: BAND_MAX_EDGEBANDER,
+              })}
+            </div>
           </div>
           {!p.band && p.missing.length > 0 && (
             <p className="hint">

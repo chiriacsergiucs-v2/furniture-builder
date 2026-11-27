@@ -323,6 +323,8 @@ export const ru_core2 = {
   // ADR-204: match-the-neighbour repairs.
   'Make {name} {mm} mm deep like {other}': 'Сделать «{name}» глубиной {mm} мм, как «{other}»',
   'Make {name} {mm} mm high like {other}': 'Сделать «{name}» высотой {mm} мм, как «{other}»',
+  // G-436: the reverse-the-hinge repair.
+  'Reverse the hinge of {name}': 'Перевесить дверь «{name}» на другую сторону',
   'The size follows a project variable; change the variable instead.':
     'Размер следует переменной проекта; измените переменную.',
 
@@ -404,6 +406,10 @@ export const ru_core2 = {
   'band code must be text up to 60 characters': 'код кромки должен быть текстом до 60 символов',
   'band allowance must be whole mm from 0 to 100':
     'припуск кромки должен быть целым числом мм от 0 до 100',
+  'band tolerances and overhang must be 0.1 to 10 mm, in tenths':
+    'допуски и свес кромки должны быть от 0,1 до 10 мм, в десятых долях',
+  'edgebander settings must be text up to 200 characters':
+    'настройки кромкооблицовочного станка должны быть текстом до 200 символов',
   'The file is empty.': 'Файл пуст.',
   'The first row must name the columns {cols}; missing: {missing}.':
     'В первой строке должны быть названия столбцов {cols}; не хватает: {missing}.',
@@ -688,6 +694,9 @@ export const ru_core2 = {
   // ADR-207: document validation.
   'Assembly steps need schemaVersion 9': 'Шаги сборки требуют schemaVersion 9',
   'Invalid assembly steps': 'Недопустимые шаги сборки',
+  'Merged assembly steps need schemaVersion 13':
+    'Объединённые шаги сборки требуют schemaVersion 13',
+  'Invalid merged assembly steps': 'Недопустимые объединённые шаги сборки',
   'Backrest and side panel ends need schemaVersion 9':
     'Сторона спинки и боковой панели требует schemaVersion 9',
   'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',

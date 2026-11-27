@@ -53,17 +53,18 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 12 adds a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
+ * The document shape this app writes: 14 adds a band's tolerances and edgebander settings (ADR-301); 13 added merged
+ * assembly steps (ADR-300); 12 added a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
  * both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
- * mount (ADR-177); 6 added role boards (ADR-163); 1 to 10 still load.
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 13 still load.
  */
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 14;
 
 /**
- * Older versions → 11 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 10 add only optional fields
+ * Older versions → 14 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 13 add only optional fields
  * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
- * frame ends, a split's remainder order, staggered rows, Open both sides), so nothing else changes.
+ * frame ends, a split's remainder order, staggered rows, Open both sides, a kit lock), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -816,6 +817,26 @@ function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
 }
 
+/** Every band of a design document: the boards' and fronts' bands, and the role and part bands (ADR-077, ADR-188). */
+function bandsOf(d: Record<string, unknown>): unknown[] {
+  const out: unknown[] = [];
+  if (Array.isArray(d.materials))
+    for (const m of d.materials) if (isObj(m)) out.push(m.band, m.frontBand);
+  for (const k of ['roleBands', 'partBands'])
+    if (isObj(d[k])) out.push(...Object.values(d[k] as Record<string, unknown>));
+  return out;
+}
+/** A band carries any of the ADR-301 fields (schemaVersion 14). */
+const hasBandGuide = (d: Record<string, unknown>) =>
+  bandsOf(d).some(
+    (b) =>
+      isObj(b) &&
+      (b.thicknessTolerance !== undefined ||
+        b.widthTolerance !== undefined ||
+        b.overhang !== undefined ||
+        b.edgebander !== undefined),
+  );
+
 /** Edge bands per role and per part (schemaVersion 8, ADR-188); checked when present, never throws. */
 function validateBands(d: Record<string, unknown>, errs: string[]) {
   const rb = d.roleBands,
@@ -1139,8 +1160,11 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
+  // A band's tolerances and edgebander settings (ADR-301) came with schemaVersion 14.
+  if ((d.schemaVersion as number) < 14 && hasBandGuide(d))
+    errs.push(t('Band tolerances and edgebander settings need schemaVersion 14'));
   // Staggered rows (ADR-282) came with schemaVersion 10.
   if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))
     errs.push(t('Staggered rows need schemaVersion 10'));
@@ -1478,6 +1502,17 @@ function validateAssembly(d: Record<string, unknown>, errs: string[]) {
       ))
   )
     errs.push(t('Invalid assembly steps'));
+  // Merged steps (ADR-300, schemaVersion 13): step ids once each, as the order's.
+  if (!isObj(a) || a.merged === undefined) return;
+  if ((d.schemaVersion as number) < 13) errs.push(t('Merged assembly steps need schemaVersion 13'));
+  const m = a.merged;
+  if (
+    !Array.isArray(m) ||
+    m.length > 40 ||
+    !m.every((x) => typeof x === 'string' && x.length <= 40) ||
+    new Set(m).size !== m.length
+  )
+    errs.push(t('Invalid merged assembly steps'));
 }
 
 /** The lounger backrest's and the daybed side panel's end (ADR-207, schemaVersion 9): 'right' or absent. */

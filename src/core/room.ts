@@ -60,7 +60,18 @@ export interface Room {
    * the plain floor.
    */
   floor?: FloorFinish;
+  /**
+   * The distances the user wants between an outlet and a sink, a hob or a pipe (ADR-299, project schemaVersion 22):
+   * their own rule, never a built-in value or a regulation (ADR-010). An absent distance is not checked.
+   */
+  outletDistances?: OutletDistances;
 }
+
+/** What an outlet is kept away from by the user's rule (ADR-299): a sink or hob cut-out, or a pipe on a wall. */
+const OUTLET_TARGETS = ['sink', 'hob', 'pipe'] as const;
+type OutletTarget = (typeof OUTLET_TARGETS)[number];
+/** The user's outlet distances (ADR-299), whole mm, at least 1; absent = no check for that kind. */
+export type OutletDistances = Partial<Record<OutletTarget, Mm>>;
 
 /** A floor background (ADR-208): the wall finish's shape without a wall number. */
 export interface FloorFinish {
@@ -775,6 +786,80 @@ function serviceIssue(
   };
 }
 
+/** The shortest straight-line gap between two boxes, squared (0 when they touch or overlap), mm². */
+function gapSquared(a: Box, b: Box): number {
+  const g = (a0: Mm, as: Mm, b0: Mm, bs: Mm) => Math.max(0, b0 - (a0 + as), a0 - (b0 + bs));
+  const x = g(a.x, a.w, b.x, b.w),
+    y = g(a.y, a.h, b.y, b.h),
+    z = g(a.z, a.d, b.z, b.d);
+  return x * x + y * y + z * z;
+}
+
+/**
+ * Outlets nearer a sink, a hob or a pipe than the distance the user set (ADR-299): warnings, labelled as the user's
+ * rule; a distance the user left empty is not checked, and nothing here is a built-in value or a regulation (ADR-010).
+ * Measured as the shortest straight-line gap from the outlet's zone on the wall face to the cut-out in the worktop
+ * (`cutoutOutlines`) or to the pipe's zone on the wall face, whole mm rounded down.
+ */
+export function outletDistanceChecks(
+  room: Room,
+  cutouts: readonly { id: string; kind: 'sink' | 'hob'; box: Box }[],
+): Diagnostic[] {
+  const rule = room.outletDistances;
+  if (!rule || outlineIssues(room.outline).length) return [];
+  const face = (f: RoomFeature) =>
+    f.wall !== null && f.wall >= 0 && f.wall < room.outline.length
+      ? wallBox(room, f.wall, f.from, f.width, 0, f.sill, f.height)
+      : null;
+  const out: Diagnostic[] = [];
+  for (const o of room.features) {
+    const ob = o.kind === 'outlet' ? face(o) : null;
+    if (!ob) continue;
+    const near = (
+      kind: OutletTarget,
+      box: Box,
+      nodeId: string | undefined,
+      pipe: string | undefined,
+    ) => {
+      const limit = rule[kind];
+      const sq = gapSquared(ob, box);
+      if (limit === undefined || sq >= limit * limit) return;
+      const v = { outlet: tr(o.label), mm: Math.floor(Math.sqrt(sq)), limit };
+      // One literal text per kind, so the printed warnings find each (ADR-265).
+      const message =
+        kind === 'sink'
+          ? t(
+              '{outlet} is {mm} mm from a sink cut-out, closer than the {limit} mm you set (your rule).',
+              v,
+            )
+          : kind === 'hob'
+            ? t(
+                '{outlet} is {mm} mm from a hob cut-out, closer than the {limit} mm you set (your rule).',
+                v,
+              )
+            : t(
+                '{outlet} is {mm} mm from {pipe}, closer than the {limit} mm you set (your rule).',
+                {
+                  ...v,
+                  pipe: pipe ?? '',
+                },
+              );
+      out.push({
+        severity: 'warning',
+        code: 'outlet-near',
+        message,
+        ...(nodeId ? { nodeId } : {}),
+      });
+    };
+    for (const c of cutouts) near(c.kind, c.box, c.id, undefined);
+    for (const p of room.features) {
+      const pb = p.kind === 'pipe' ? face(p) : null;
+      if (pb) near('pipe', pb, undefined, tr(p.label));
+    }
+  }
+  return out;
+}
+
 /**
  * Change one wall's length by stretching the room: every corner at or beyond the wall's far end (along the wall's
  * direction) moves by the difference, so the walls stay square and closed.
@@ -929,6 +1014,16 @@ export function validateRoom(r: unknown): string[] {
     const f = r.floor;
     if (!isObj(f) || typeof f.colour !== 'string' || !HEX.test(f.colour) || !validImage(f.image))
       errs.push(t('Invalid floor background'));
+  }
+  if (r.outletDistances !== undefined) {
+    const o = r.outletDistances;
+    if (
+      !isObj(o) ||
+      !Object.entries(o).every(
+        ([k, v]) => (OUTLET_TARGETS as readonly string[]).includes(k) && isInt(v, 1),
+      )
+    )
+      errs.push(t('Invalid outlet distances'));
   }
   return errs;
 }

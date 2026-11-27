@@ -565,7 +565,7 @@ export async function listPrices(database = db): Promise<PriceEntry[]> {
  * `fastener:<joint type>`, so no new Dexie version is needed. Unreadable rows are skipped and kept (ADR-012).
  */
 const FASTENER_PREFIX = 'fastener:';
-type FastenerRow = PriceEntry & { per?: unknown; edge?: unknown };
+type FastenerRow = PriceEntry & { per?: unknown; edge?: unknown; spacing?: unknown };
 export async function listFasteners(database = db): Promise<FastenerChoice[]> {
   const rows = (await database.prices
     .where('id')
@@ -578,6 +578,8 @@ export async function listFasteners(database = db): Promise<FastenerChoice[]> {
       per: r.per as number,
       // The edge distance (ADR-209): an extra field on the same row, no new Dexie version or index.
       ...(r.edge !== undefined ? { edge: r.edge as number } : {}),
+      // The back-fixing spacing (G-439): one more field on the same row, no new Dexie version or index.
+      ...(r.spacing !== undefined ? { spacing: r.spacing as number } : {}),
     }))
     .filter(validFastenerChoice);
 }
@@ -590,6 +592,7 @@ export const saveFastener = (c: FastenerChoice, database = db) =>
       text: c.name,
       per: c.per,
       ...(c.edge !== undefined ? { edge: c.edge } : {}),
+      ...(c.spacing !== undefined ? { spacing: c.spacing } : {}),
     } as FastenerRow)
     .then(saved('prices', [FASTENER_PREFIX + c.joint]));
 export const deleteFastener = (joint: JointType, database = db) =>

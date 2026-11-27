@@ -235,6 +235,14 @@ function Parts() {
           )}
         </p>
       )}
+      {!!view.fixings?.backsNotDrawn && (
+        <p className="hint warn">
+          {t(
+            '{n|# back is|# backs are} too small for your distance from the edges, or not a rectangle: no drilling positions there.',
+            { n: view.fixings.backsNotDrawn },
+          )}
+        </p>
+      )}
       {byMat.map(([mid, list]) => {
         const name = tr(list[0].materialName);
         // Said once in the summary when no board names its band yet (G-059), else per board.

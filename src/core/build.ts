@@ -8,7 +8,7 @@ import { buildFrame } from './frame';
 import { buildPanel } from './panel';
 import { bandFor, bandText } from './materials';
 import { runRules } from './rules';
-import { designVariableDiagnostics } from './variables';
+import { designVariableDiagnostics } from './variableCore';
 import { staggerDiagnostics } from './stagger';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';

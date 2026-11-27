@@ -6,7 +6,14 @@ import { nest } from '../core/nesting';
 import { t } from '@furniture-builder/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, printBoardName, pt } from '@furniture-builder/i18n/print';
 import { warningText } from '../core/ro';
-import { boardBandRo, drillingRo, hardwareRo, partRo, printedPartLabel } from '../core/ro';
+import {
+  boardBandGuideRo,
+  boardBandRo,
+  drillingRo,
+  hardwareRo,
+  partRo,
+  printedPartLabel,
+} from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
@@ -25,6 +32,9 @@ export function PrintSheet() {
     () => (project ? printPieceNames(project.items.map((i) => i.design)) : undefined),
     [project],
   );
+  // A piece name inside a warning prints as the pieces table names it (G-521).
+  const design = useDesign((s) => s.design);
+  const warnNames = useMemo(() => pieceNames ?? printPieceNames([design]), [pieceNames, design]);
   const rows = view.cutRows;
   const bands = useMemo(() => bandMetersFromRows(rows), [rows]);
   const hw = view.hardware;
@@ -105,6 +115,7 @@ export function PrintSheet() {
                 {bands.get(mid) ? `, ${pt('cant {m} m', { m: bands.get(mid)!.toFixed(1) })}` : ''}
                 {list[0].grain ? `, ${pt('fibră pe lungime')}` : ''}
                 {boardBandRo(list) ? `; ${boardBandRo(list)}` : ''}
+                {boardBandGuideRo(list) ? `; ${boardBandGuideRo(list)}` : ''}
               </caption>
               <thead>
                 <tr>
@@ -180,7 +191,7 @@ export function PrintSheet() {
           <h2>{pt('De verificat')}</h2>
           <ul className="pr-warn">
             {warnings.map((w, i) => (
-              <li key={i}>{warningText(w.message)}</li>
+              <li key={i}>{warningText(w.message, warnNames)}</li>
             ))}
           </ul>
         </section>
