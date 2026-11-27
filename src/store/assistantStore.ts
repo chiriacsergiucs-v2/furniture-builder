@@ -10,6 +10,7 @@ import { backendConfigured, online, useAccount } from './accountStore';
 import { actionSpecs } from './assistantActions';
 import { applyPlan, previewPlan, type Preview } from './assistantRun';
 import { useDesign } from './designStore';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /** The assistant function's limits (supabase/functions/assistant/index.ts): the newest turns it reads, and the longest text. */
 const ASSISTANT_HISTORY_TURNS = 20;
@@ -17,21 +18,9 @@ export const ASSISTANT_MAX_TEXT = 8000;
 
 const ON_KEY = 'fb:assistant';
 const CONSENT_KEY = 'fb:assistant-consent';
-const readFlag = (k: string) => {
-  try {
-    return localStorage.getItem(k) === '1';
-  } catch {
-    return false;
-  }
-};
-const writeFlag = (k: string, on: boolean) => {
-  try {
-    if (on) localStorage.setItem(k, '1');
-    else localStorage.removeItem(k);
-  } catch {
-    // A browser that keeps nothing: the switch lasts for this visit only.
-  }
-};
+const readFlag = (k: string) => readLocal(k, (v) => v === '1', false);
+// A browser that keeps nothing: the switch lasts for this visit only.
+const writeFlag = (k: string, on: boolean) => void writeLocal(k, on ? '1' : null);
 
 interface ChatLine {
   role: 'user' | 'assistant' | 'error';

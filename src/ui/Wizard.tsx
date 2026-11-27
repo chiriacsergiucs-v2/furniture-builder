@@ -15,7 +15,8 @@ import { boardChoices } from '../core/boards';
 import { roleBoard } from '../core/finish';
 import type { Decor } from '../core/materials';
 import { cutlist } from '../core/cutlist';
-import { snapshotSvg } from '../core/snapshot';
+import { MAX_DRAWERS } from '../core/counts';
+import { snapshotSvg, svgDataUrl } from '../core/snapshot';
 import type { Design, FurnitureModel, Material } from '../core/types';
 import {
   REVIEW,
@@ -49,13 +50,13 @@ import { t, tr } from '@furniture-builder/i18n';
 import { listDecors, saveDesign } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
+import { Counter, ErrorAlert, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useUi, type WizardDraft } from '../store/uiStore';
 
 const picture = (model: FurnitureModel, materials: Material[], size: number) =>
-  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(model, materials, size, true))}`;
+  svgDataUrl(snapshotSvg(model, materials, size, true));
 
 /**
  * Whole-number input that hands every entry to the wizard, so out-of-range values show as problems instead of
@@ -376,7 +377,7 @@ function FieldInput({
                   name={t('Drawers in compartment {n}', { n: i + 1 })}
                   value={c.drawers}
                   min={1}
-                  max={10}
+                  max={MAX_DRAWERS}
                   onChange={(n) => put(i, { ...c, drawers: n })}
                 />
               )}
@@ -983,12 +984,7 @@ function Wizard({
                 </div>
                 <ProblemList problems={c.problems} />
               </section>
-              {saveError && (
-                <p className="alert error" role="alert">
-                  <Icon name="alert-circle" className="sm" />
-                  <span>{saveError}</span>
-                </p>
-              )}
+              <ErrorAlert message={saveError} />
             </>
           )}
         </div>

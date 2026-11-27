@@ -5,7 +5,7 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { newId, SCHEMA_VERSION } from './design';
-import { overlaps } from './geometry';
+import { overlaps, sizeOn, startOn } from './geometry';
 import {
   carriedBy,
   boundsOf,
@@ -416,8 +416,8 @@ export function mirrorSet(
     moveBlocked(project, [...set, ...stacked]) ?? turnBlocked(project, [...set, ...stacked]);
   if (refused) return { project, reasons: [], refused };
   // Reflected about the centre of the space they take along `axis` (ADR-251: z for a run on a side wall).
-  const lo = (b: Box) => (axis === 'x' ? b.x : b.z);
-  const len = (b: Box) => (axis === 'x' ? b.w : b.d);
+  const lo = (b: Box) => startOn(b, axis);
+  const len = (b: Box) => sizeOn(b, axis);
   const x0 = Math.min(...set.map((r) => lo(bounds.get(r)!))),
     x1 = Math.max(...set.map((r) => lo(bounds.get(r)!) + len(bounds.get(r)!)));
   const reasons: string[] = [];

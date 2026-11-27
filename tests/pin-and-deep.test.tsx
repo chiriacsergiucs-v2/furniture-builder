@@ -10,6 +10,7 @@ import type { Design, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 import { useUi } from '../src/store/uiStore';
 import { Inspector } from '../src/ui/Inspector';
+import { stubMatchMedia } from './helpers/matchMedia';
 
 /** A sideboard with the middle bay divided in two (top and bottom). */
 function piece() {
@@ -37,13 +38,7 @@ const centre = (d: Design, id: string) => {
 const st = () => useDesign.getState();
 
 beforeEach(() => {
-  window.matchMedia = ((q: string) =>
-    ({
-      matches: false,
-      media: q,
-      addEventListener() {},
-      removeEventListener() {},
-    }) as never) as never;
+  stubMatchMedia();
   useUi.setState({ pinnedId: null, pinnedDesignId: null, hoverId: undefined, groupOpen: {} });
 });
 afterEach(cleanup);

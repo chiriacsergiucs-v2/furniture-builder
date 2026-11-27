@@ -5,6 +5,7 @@
  */
 import { boxCentre, inPlaneAxes } from './geometry';
 import { aabbOf, area2, profileWorld, rotateAbout, type V3 } from './shape';
+import { isHexColour } from './guards';
 import type { Box, FurnitureModel, Material, Panel, PanelShape } from './types';
 
 /** View from the front right, above: azimuth 30°, elevation 25°. */
@@ -257,7 +258,7 @@ function paintOrder(boxes: Box[]): number[] {
   return order;
 }
 
-const hex = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#c8c4bb');
+const hex = (c: string) => (isHexColour(c) ? c : '#c8c4bb');
 function tint(c: string, f: number): string {
   const n = parseInt(hex(c).slice(1), 16);
   const ch = (v: number) =>
@@ -273,6 +274,10 @@ const FRONT_ROLES: ReadonlySet<string> = new Set(['door', 'drawer-front']);
 const DOOR_ROLES: ReadonlySet<string> = new Set(['door']);
 /** Fill opacity of a see-through front in a suggestion picture. */
 const CLEAR_FRONT = 0.28;
+
+/** An SVG string as an `<img src>` data URL. */
+export const svgDataUrl = (svg: string) =>
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
 /**
  * SVG picture of a model, `size` px on its longer side. Empty models give an empty picture. `clearFronts`: doors and

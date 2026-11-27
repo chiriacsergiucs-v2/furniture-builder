@@ -15,6 +15,7 @@ import { Icon } from './icons';
 import { useCatalogFinder } from '../store/useCatalogFinder';
 import { offerKinds, offersOfKind } from './catalogFinder';
 import type { ProductKind } from '../core/sellers/types';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 // Seller pictures come from the seller's site: shown by default, the user's exception to ADR-126 (ADR-161); off when
 // switched off on this device.
@@ -72,11 +73,7 @@ function AppPicture({ src }: { src: string }) {
 }
 
 function readPictures(): boolean {
-  try {
-    return localStorage.getItem(PICTURES_KEY) !== 'off';
-  } catch {
-    return true;
-  }
+  return readLocal(PICTURES_KEY, (v) => v !== 'off', true);
 }
 
 /** The bundled seller catalogs, loaded on first use (a lazy chunk, ADR-161). */
@@ -145,11 +142,8 @@ export function ProductPicker({
   const list = finder ? matching.slice(0, shownN) : matching;
   const setPics = (v: boolean) => {
     setPictures(v);
-    try {
-      localStorage.setItem(PICTURES_KEY, v ? 'on' : 'off');
-    } catch {
-      // Not remembered on this device; the choice still holds while the page is open.
-    }
+    // Not remembered when storage is blocked; the choice still holds while the page is open.
+    writeLocal(PICTURES_KEY, v ? 'on' : 'off');
   };
   const pictureToggle = (
     <>

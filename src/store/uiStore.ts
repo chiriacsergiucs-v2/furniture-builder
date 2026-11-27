@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { t } from '@furniture-builder/i18n';
 import { nextFocusLook, type FocusLook } from '../core/selectPath';
 import type { Answers } from '../core/wizard/types';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /** A closed new-piece wizard's answers, kept in memory for the session only, never stored (ADR-211, G-356). */
 export interface WizardDraft {
@@ -27,11 +28,7 @@ export function parseMode(v: string | null | undefined): Mode {
   return MODES.find((m) => m === v) ?? 'compose';
 }
 function readMode(): Mode {
-  try {
-    return parseMode(localStorage.getItem(KEY));
-  } catch {
-    return 'compose';
-  }
+  return readLocal(KEY, parseMode, 'compose');
 }
 
 interface Ui {
@@ -114,11 +111,7 @@ interface Ui {
 export const useUi = create<Ui>((set) => ({
   mode: readMode(),
   setMode: (mode) => {
-    try {
-      localStorage.setItem(KEY, mode);
-    } catch {
-      // Storage blocked: the mode still changes for this visit.
-    }
+    writeLocal(KEY, mode); // Storage blocked: the mode still changes for this visit.
     set({ mode });
   },
   printing: false,

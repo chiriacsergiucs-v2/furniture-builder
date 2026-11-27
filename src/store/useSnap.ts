@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { createListeners } from './deviceValue';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * The plan's **Snap** toggle (ADR-070): on by default (open question in the ADR). Kept on this device only
@@ -15,11 +16,7 @@ function parseSnap(v: string | null): boolean {
 }
 
 function stored(): boolean {
-  try {
-    return parseSnap(localStorage.getItem(KEY));
-  } catch {
-    return true;
-  }
+  return readLocal(KEY, parseSnap, true);
 }
 let on = stored();
 
@@ -28,11 +25,7 @@ export const snapIsOn = () => on;
 
 function setSnap(v: boolean) {
   on = v;
-  try {
-    localStorage.setItem(KEY, v ? 'on' : 'off');
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, v ? 'on' : 'off');
   notify();
 }
 

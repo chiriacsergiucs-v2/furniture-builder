@@ -4,7 +4,7 @@
  * print sheet only draws what this returns.
  */
 import { baseLabel } from './cutlist';
-import { inPlaneAxes } from './geometry';
+import { inPlaneAxes, sizeOn } from './geometry';
 import type { Mm, Panel } from './types';
 
 /** Printable area of an A4 portrait page inside 12 mm margins, less room for the tile's heading. */
@@ -43,9 +43,8 @@ export function profileTemplates(panels: Panel[]): ProfileTemplate[] {
   for (const p of panels) {
     if (p.shape?.kind !== 'profile') continue;
     const [ua, va] = inPlaneAxes(p.thicknessAxis);
-    const size = (a: string) => (a === 'x' ? p.box.w : a === 'y' ? p.box.h : p.box.d);
-    const w = size(ua),
-      h = size(va);
+    const w = sizeOn(p.box, ua),
+      h = sizeOn(p.box, va);
     // Paper runs down the page: depth (z) from the back reads downwards as seen from above; height (y) is flipped.
     const paper = (pts: [Mm, Mm][]) => pts.map(([u, v]) => [u, va === 'y' ? h - v : v] as [Mm, Mm]);
     const points = paper(p.shape.points);

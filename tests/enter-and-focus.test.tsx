@@ -12,6 +12,7 @@ import { useDesign } from '../src/store/designStore';
 import { useUi } from '../src/store/uiStore';
 import { Elevation } from '../src/ui/Elevation';
 import { Inspector } from '../src/ui/Inspector';
+import { stubMatchMedia } from './helpers/matchMedia';
 
 /** A sideboard whose middle bay is divided in two (top, bottom) and the bottom again side by side. */
 function piece() {
@@ -42,13 +43,7 @@ const centre = (d: Design, id: string) => {
 const st = () => useDesign.getState();
 
 beforeEach(() => {
-  window.matchMedia = ((q: string) =>
-    ({
-      matches: false,
-      media: q,
-      addEventListener() {},
-      removeEventListener() {},
-    }) as never) as never;
+  stubMatchMedia();
   useUi.setState({
     enteredId: null,
     enteredDesignId: null,

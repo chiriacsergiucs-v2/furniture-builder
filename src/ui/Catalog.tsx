@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
-import { snapshotSvg } from '../core/snapshot';
+import { snapshotSvg, svgDataUrl } from '../core/snapshot';
 import {
   catalogFamilies,
   CAPABILITY_WAITS,
@@ -34,30 +34,16 @@ import {
 import { rovingKeys, rovingTab } from './controls';
 import { t, tr } from '@furniture-builder/i18n';
 import { Icon } from './icons';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 type Grouping = 'room' | 'type';
 const GROUP_KEY = 'furniture-builder:catalog-group';
 export const SAFETY_KEY = 'furniture-builder:safety-confirmed';
-const readGrouping = (): Grouping => {
-  try {
-    return localStorage.getItem(GROUP_KEY) === 'type' ? 'type' : 'room';
-  } catch {
-    return 'room';
-  }
-};
-const writeGrouping = (g: Grouping) => {
-  try {
-    localStorage.setItem(GROUP_KEY, g);
-  } catch {
-    /* private mode */
-  }
-};
+const readGrouping = (): Grouping =>
+  readLocal(GROUP_KEY, (v) => (v === 'type' ? 'type' : 'room'), 'room');
+const writeGrouping = (g: Grouping) => void writeLocal(GROUP_KEY, g);
 // The safety confirmation is remembered on this device (ADR-035); read once when the app loads.
-try {
-  setSafetyConfirmed(localStorage.getItem(SAFETY_KEY) === 'yes');
-} catch {
-  /* private mode */
-}
+setSafetyConfirmed(readLocal(SAFETY_KEY, (v) => v === 'yes', false));
 
 /** Grouping chosen on this device: Room by default (ADR-032), persisted in browser storage when it works. */
 export function useGrouping(): [Grouping, (g: Grouping) => void] {
@@ -488,9 +474,7 @@ export function ItemPicture({
   const drawn = useMemo(() => {
     if (!local || !insertable(v)) return null;
     const d = insertVariant(f, v, '');
-    return d
-      ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(buildModel(d), d.materials, 240, false, true))}`
-      : null;
+    return d ? svgDataUrl(snapshotSvg(buildModel(d), d.materials, 240, false, true)) : null;
   }, [f, v, local]);
   if (!insertable(v) || (local && !drawn)) return null;
   return (

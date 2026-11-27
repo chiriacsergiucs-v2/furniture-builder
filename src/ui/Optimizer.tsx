@@ -15,16 +15,13 @@ import { createNestWorker, type NestResponse } from '@furniture-builder/nesting/
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { MaterialSheets } from './Sheets';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /** The last typed list and board stay on this device only (no Dexie table, no design document). */
 const STORE_KEY = 'fb.optimizer.v1';
 
 function loadInput(): OptimizerInput {
-  try {
-    return parseOptimizerInput(localStorage.getItem(STORE_KEY)) ?? defaultOptimizerInput();
-  } catch {
-    return defaultOptimizerInput();
-  }
+  return readLocal(STORE_KEY, (v) => parseOptimizerInput(v), null) ?? defaultOptimizerInput();
 }
 
 const PROBLEM: Record<OptimizerProblem, () => string> = {
@@ -133,11 +130,8 @@ export function OptimizerPage({
 }) {
   const [input, setInput] = useState<OptimizerInput>(loadInput);
   useEffect(() => {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(input));
-    } catch {
-      // Storage unavailable (private window): the page still works, the list is just not kept.
-    }
+    // Storage unavailable (private window): the page still works, the list is just not kept.
+    writeLocal(STORE_KEY, JSON.stringify(input));
   }, [input]);
   const check = optimizerJob(input);
   const run = useOptimize(check.job);

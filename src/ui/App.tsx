@@ -1,98 +1,31 @@
-import {
-  Component,
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-import type { Tab } from '../store/designState';
-import {
-  lastDesignId,
-  lastProjectId,
-  loadDesign,
-  loadProject,
-  rememberLast,
-  rememberLastProject,
-  saveDesign,
-  saveProject,
-} from '../store/libraryStore';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useDesign } from '../store/designStore';
-import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
-import { t, t as tt, tr } from '@furniture-builder/i18n';
-import { formatMoney } from '../core/prices';
-import { useEstimate } from './useEstimate';
+import { t } from '@furniture-builder/i18n';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { MaterialDialog } from './MaterialDialog';
 import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
 import { RoomFillDialog } from './RoomFill';
-import { PrintAssembly } from './Assembly';
-import { askConfirm, ConfirmHost } from './Confirm';
-import { catalogFamilies } from '../core/catalog';
-import { cancelTemplateEdit, saveTemplateEdit } from '../store/templatesStore';
-import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
-import { PieceList } from './PieceList';
-import { usePieceList } from '../store/pieceListStore';
-import { useView } from '../store/useView';
-import { Elevation } from './Elevation';
-import { Inspector, selectionChain, selectionLabel } from './Inspector';
-import { Output } from './Output';
-import { useProblem } from '../store/problemStore';
-import { PrintSheet } from './PrintSheet';
-import { PrintClient } from './PrintClient';
+import { ConfirmHost } from './Confirm';
 import { Icon } from './icons';
-import { upOneLevel } from './upLevel';
-import { CanvasHints, FindAction } from './FindAction';
-import {
-  EditBar,
-  LadderPill,
-  LensHead,
-  scrollToBlock,
-  useLens,
-  useKeyboardInset,
-  useLensAnchor,
-  useLensRequests,
-  setOutLens,
-  useLensHeight,
-  type Crumb,
-} from './CanvasEditor';
-import { useCanvasEditor } from '../store/useCanvasEditor';
-import { SheetHandle, type SheetStop } from './SheetHandle';
-import { rovingKeys, rovingTab, Section } from './controls';
-import { setTheme, useTheme } from '../store/useTheme';
-import { setLook, useLook } from '../store/useLook';
 import { RenderDialog } from './RenderDialog';
-import { MoreMenu } from './shell/MoreMenu';
-import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
-import { useMediaQuery } from '../store/useMediaQuery';
-import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from '../store/uiStore';
-import { ViewOptions } from './ViewOptions';
+import { useUi } from '../store/uiStore';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
-import { AccountButton, AccountDialog } from './Account';
+import { purgeRecentlyDeleted } from '../store/libraryStore';
+import { AccountDialog } from './Account';
 import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
 import { initAccount } from '../store/accountActions';
-import { useViewStore } from '../store/viewStore';
-import { CountStepper } from './CountStepper';
-import { MoveToButtons } from './MoveTo';
-import {
-  bringDrawingForward,
-  inOptions,
-  defaultView,
-  shows3d,
-  showsDrawing,
-  viewOptions,
-  type StageView,
-} from './viewChoice';
+import { AppBar } from './shell/AppBar';
+import { EditorWork } from './shell/EditorWork';
+import { PrintHost } from './shell/PrintHost';
+import { useEditorShortcuts } from './shell/useEditorShortcuts';
+import { usePage } from './shell/usePage';
 
-const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 // Pages opened on demand load on first use (ADR-222).
 const CatalogPage = lazy(() => import('./CatalogPage').then((m) => ({ default: m.CatalogPage })));
 const GapsPage = lazy(() => import('./Gaps').then((m) => ({ default: m.GapsPage })));
@@ -103,146 +36,41 @@ const PageLoading = () => (
     {t('Loading…')}
   </p>
 );
-// What the 3D view draws from the ui (ADR-230: the viewer imports nothing from src/ui).
-const countCard = (className: string) => <CountStepper className={className} foldable />;
-const moveTo = (id: string | readonly string[], className: string) => (
-  <MoveToButtons id={id} className={className} />
-);
 
-function webglAvailable() {
-  try {
-    const c = document.createElement('canvas');
-    return !!(c.getContext('webgl2') || c.getContext('webgl'));
-  } catch {
-    return false;
-  }
-}
-
-class ViewerBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? <NoViewer /> : this.props.children;
-  }
-}
-const NoViewer = () => (
-  <div className="no-3d">
-    <p className="empty center">
-      <Icon name="cube" />
-      {t('3D preview is not available in this browser. The front view and parts list still work.')}
-    </p>
-  </div>
-);
-
-/**
- * The running cost estimate (ADR-172): what the Shopping list shows, in the header (a phone: the mode row, amount
- * only). Tapping it opens Build & Preview › Shopping list.
- */
-function EstimateChip({ compact = false }: { compact?: boolean }) {
-  const { est, currency, priceState } = useEstimate();
-  const setMode = useUi((s) => s.setMode);
-  const setTab = useDesign((s) => s.setTab);
-  const none =
-    priceState !== 'ready' ||
-    (!est.priced && !est.missing.length) ||
-    (!est.priced && est.total === 0);
-  const amount = t('{amount} {currency}', { amount: formatMoney(est.total), currency });
-  // A price list the device could not read is said as such, not as "No prices yet" (ADR-260).
-  const full =
-    priceState === 'failed'
-      ? t('Prices could not be read')
-      : none
-        ? t('No prices yet')
-        : est.missing.length
-          ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
-          : t('Estimate: {amount}', { amount });
+/** The app-wide notice under the bar, with its Dismiss button. */
+function Notice() {
+  const notice = useUi((s) => s.notice);
+  const setNotice = useUi((s) => s.setNotice);
+  if (!notice) return null;
   return (
-    <button
-      type="button"
-      className={`estimate-chip ${none ? 'none' : est.missing.length ? 'partial' : ''}`}
-      aria-label={`${full} — ${t('Open the Shopping list')}`}
-      title={t('Open the Shopping list')}
-      onClick={() => {
-        setMode('build');
-        setTab('shopping');
-      }}
+    <p
+      className={`alert notice ${notice.ok ? 'info' : 'error'}`}
+      role={notice.ok ? 'status' : 'alert'}
     >
-      {compact && !none ? amount : full}
-    </button>
+      <Icon name={notice.ok ? 'info' : 'alert-circle'} className="sm" />
+      <span>{notice.text}</span>
+      <button
+        type="button"
+        className="btn icon ghost sm"
+        aria-label={t('Dismiss')}
+        onClick={() => setNotice(null)}
+      >
+        <Icon name="x" className="sm" />
+      </button>
+    </p>
   );
 }
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
-const SAVE_TEXT: Record<SaveState, string> = {
-  idle: '',
-  saving: t('Saving…'),
-  saved: t('Saved on this device'),
-  failed: t('Not saved — browser storage unavailable'),
-};
-
-type Page = 'projects' | 'editor' | 'catalog' | 'gaps' | 'info' | 'optimizer';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'gaps', 'info', 'optimizer'];
-const pageFromHash = (): Page =>
-  typeof location === 'undefined'
-    ? 'projects'
-    : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
-/** The history entry the open phone card added (ADR-295) is the current one. */
-const onCardEntry = () => !!(history.state as { fbCard?: number } | null)?.fbCard;
 /**
- * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
- * the Catalog (ADR-032); #gaps the gaps ledger (ADR-101), reached from the ⋯ menu, #info Information and guides (ADR-158)
- * and #optimizer the standalone cut list optimizer.
+ * The shell (G-500): the bar, the page shown, the editor (kept mounted, hidden on the other pages), the dialogs and the
+ * print sheet. Each part reads the store itself, so a change re-renders only the parts that show it; the shell itself
+ * holds the page, the open dialog and the start-up work.
  */
-function usePage(): [Page, (p: Page) => void] {
-  const [page, setPage] = useState<Page>(pageFromHash);
-  useEffect(() => {
-    const on = () => setPage(pageFromHash());
-    window.addEventListener('hashchange', on);
-    return () => window.removeEventListener('hashchange', on);
-  }, []);
-  return [
-    page,
-    (p: Page) => {
-      if (p === 'projects') history.replaceState(null, '', location.pathname + location.search);
-      else location.hash = p;
-      setPage(p);
-      window.scrollTo({ top: 0 });
-    },
-  ];
-}
-const CATALOG_ITEMS = catalogFamilies.reduce((n, f) => n + f.variants.length, 0);
-const PLACES: { page: Page; label: string; icon: 'folder' | 'catalog' | 'front' }[] = [
-  { page: 'projects', label: t('Projects'), icon: 'folder' },
-  { page: 'catalog', label: t('Catalog'), icon: 'catalog' },
-  { page: 'editor', label: t('Editor'), icon: 'front' },
-];
-
 export function App() {
   const [page, setPage] = usePage();
-  const design = useDesign((s) => s.design);
-  const dirtyAt = useDesign((s) => s.dirtyAt);
-  const rename = useDesign((s) => s.rename);
-  const showFronts = useDesign((s) => s.showFronts);
-  const setShowFronts = useDesign((s) => s.setShowFronts);
-  const exploded = useDesign((s) => s.exploded);
-  const setExploded = useDesign((s) => s.setExploded);
-  const undoPiece = useDesign((s) => s.undo),
-    redoPiece = useDesign((s) => s.redo);
-  const undoProject = useDesign((s) => s.undoProject),
-    redoProject = useDesign((s) => s.redoProject);
-  const canUndoPiece = useDesign((s) => s.past.length > 0),
-    canRedoPiece = useDesign((s) => s.future.length > 0);
-  const canUndoProject = useDesign((s) => s.projectPast.length > 0),
-    canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  // The step each would undo or redo, named (ADR-123).
-  const undoName = useDesign((s) => s.projectPastNames[s.projectPastNames.length - 1]),
-    redoName = useDesign((s) => s.projectFutureNames[0]);
   const [dialog, setDialog] = useState<
     null | 'new' | 'wizard' | 'render' | 'wallfill' | 'roomfill'
   >(null);
-  const look = useLook();
   const openCatalog = () => {
     setDialog(null);
     setPage('catalog');
@@ -256,342 +84,12 @@ export function App() {
     setWizardToProject(toProject);
     setDialog('wizard');
   };
-  const templateEdit = useDesign((s) => s.templateEdit);
-  const project = useDesign((s) => s.project);
-  const editingItemId = useDesign((s) => s.editingItemId);
-  const projectDirtyAt = useDesign((s) => s.projectDirtyAt);
-  const selectedId = useDesign((s) => s.selectedId);
-  const drillItemId = useDesign((s) => s.drillItemId);
-  const selectedItemId = useDesign((s) => s.selectedItemId);
-  const vd = useView();
-  const inProject = !!project && !editingItemId;
   // The start-up placeholder, untouched, is not an open design: the Catalog's "Back to the editor" waits (ADR-120).
   const [placeholderId] = useState(() => useDesign.getState().design.id);
-  const pristine = useDesign((s) => s.pristine);
-  const designOpen = !!project || design.id !== placeholderId || !pristine;
-  // The project view undoes project changes (ADR-051); the piece editor undoes piece edits.
-  const undo = inProject ? undoProject : undoPiece,
-    redo = inProject ? redoProject : redoPiece;
-  const canUndo = inProject ? canUndoProject : canUndoPiece,
-    canRedo = inProject ? canRedoProject : canRedoPiece;
-  const editingName = project?.items.find((i) => i.id === editingItemId)?.design.name;
-  const [save, setSave] = useState<SaveState>('idle');
-
-  // Editor modes (ADR-079, ADR-080). Build & Preview shows 3D; Compose shows the drawing; Settings is a dialog.
-  const mode = useUi((s) => s.mode);
-  const setMode = useUi((s) => s.setMode);
-  const printing = useUi((s) => s.printing);
-  const printMode = useUi((s) => s.printMode);
-  const setPrinting = useUi((s) => s.setPrinting);
-  const notice = useUi((s) => s.notice);
-  const setNotice = useUi((s) => s.setNotice);
-  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
-  const setMaterialOpen = useUi((s) => s.setMaterialOpen);
-  const phone = useMediaQuery('(max-width: 760px)');
-  // A short screen wider than a phone (844 × 390 landscape, a short desktop window, ADR-295): the view tools go behind
-  // Options as on a phone, so the tool row stays one row and the 3D view keeps its height, with no sideways scroll.
-  const short = useMediaQuery('(min-width: 761px) and (max-height: 500px)');
-  // The phone's slot for the 3D view's quick-count card (G-070), handed to the viewer (ADR-230).
-  const [countDock, setCountDock] = useState<HTMLDivElement | null>(null);
-  // Seams and lit parts the 3D view draws (ADR-230), shown as data attributes for the find-it scripts.
-  const seams = useViewStore((s) => s.seams);
-  const lit = useViewStore((s) => s.lit);
-  const requestFit = useViewStore((s) => s.requestFit);
-  const wide = useMediaQuery('(min-width: 1500px)');
-  const [has3d] = useState(webglAvailable);
-  // The View switch (ADR-081, ADR-144): 2D · 3D · Both, the same in both modes. The choice stays when the mode
-  // changes (G-266); only crossing 1500 px starts again from the default (G-268).
-  const [view, setView] = useState<StageView>(() => defaultView(wide, has3d));
-  const [lastWide, setLastWide] = useState(wide);
-  // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
-  const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
-  const sheetOpen = sheetStop !== 'peek';
-  // The canvas editor (ADR-283, ADR-295): on a phone, behind a device flag, the sheet becomes a card that shows the
-  // whole editor of the selection, opened from the edit bar; a selection ladder replaces the peek row.
-  const [canvasFlag] = useCanvasEditor();
-  const canvas = canvasFlag && phone;
-  const workRef = useRef<HTMLElement>(null);
-  const sideRef = useRef<HTMLElement>(null);
-  const sideBodyRef = useRef<HTMLDivElement>(null);
-  const lensKeyList = useLens(sideBodyRef, canvas);
-  // Scrolls the panel to a block once it shows (ADR-295); `then` runs after, e.g. to focus a field in it.
-  const scrollWhenShown = (key: string, then?: (body: HTMLElement) => boolean) => {
-    let tries = 0;
-    const go = () => {
-      const body = sideBodyRef.current;
-      const ready = !!body && body.offsetParent !== null;
-      if (ready && scrollToBlock(body, key) && (!then || then(body))) return;
-      if (tries++ < 20) requestAnimationFrame(go);
-    };
-    requestAnimationFrame(go);
-  };
-  const stageRef = useRef<HTMLElement>(null);
-  useLensHeight(sideRef, workRef, canvas && sheetOpen);
-  useLensAnchor(sideRef, stageRef, canvas && sheetOpen);
-  useKeyboardInset(workRef, canvas);
-  // Output lenses (ADR-288): the results shown as a card over the drawing, opened from the panel's Results block.
-  const [outOpen, setOutOpen] = useState(false);
-  // A size tag on the drawing (ADR-284): open the card, scroll to its block and focus the field, once the editor shows it.
-  useLensRequests((req) => {
-    if (!canvas) return;
-    setOutOpen(false);
-    if (sheetStop === 'peek' || (req.showDrawing && sheetStop === 'full')) setSheetStop('half');
-    scrollWhenShown(req.tab, (body) => {
-      if (!req.focus) return true;
-      const el = req.focus(body);
-      if (!el || el.offsetParent === null) return false;
-      el.focus();
-      return true;
-    });
-  });
-  // Find an action (ADR-289).
-  const [findOpen, setFindOpen] = useState(false);
-  const openOutput = (tab: Tab) => {
-    useDesign.getState().setTab(tab);
-    setSheetStop('peek');
-    setOutOpen(true);
-  };
-  const outLensOn = canvas && outOpen && mode === 'compose';
-  // The canvas editor's stage in Compose: ladder, view tools, the view, the docked counts and the edit bar (ADR-295).
-  const canvasStage = canvas && mode === 'compose';
-  const resultsRef = useRef<HTMLElement | null>(null);
-  useLayoutEffect(() => {
-    resultsRef.current = workRef.current?.querySelector<HTMLElement>('.output') ?? null;
-  });
-  useLensHeight(resultsRef, workRef, outLensOn);
-  useEffect(() => setOutLens(outLensOn), [outLensOn]);
-  const outputs: [Tab, string][] = [
-    ['parts', t('Parts')],
-    ['sheets', t('Sheets')],
-    ['hardware', t('Hardware')],
-    ['assembly', t('Assembly')],
-    ['shopping', t('Shopping')],
-  ];
-  // Esc closes the open card before it goes up a level (ADR-283); captured first, so the level stays.
-  useEffect(() => {
-    if (!canvas || (!sheetOpen && !outOpen)) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]'))
-        return;
-      e.preventDefault();
-      setSheetStop('peek');
-      setOutOpen(false);
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [canvas, sheetOpen, outOpen]);
-  // Back closes the open card (ADR-295): opening it adds one history entry; closing it any other way takes that entry
-  // back, once. Never more than one entry, and a back that is ours is never read as a close twice.
-  // `cardEntry` says we stand on our entry, whatever its state now holds: code that replaces the state while the card
-  // is open (the projects page, share and open links, sign-in) must not leave the entry behind. `pendingBack` holds
-  // the address to keep while our own history.back() is on its way, so its popstate is never read as a Back, a reopen
-  // in the meantime pushes after it lands, and an address replaced on our entry stays the address after the back.
-  const cardUp = canvas && mode === 'compose' && (sheetOpen || outOpen);
-  const cardEntry = useRef(false);
-  const pendingBack = useRef<string | null>(null);
-  const cardUpNow = useRef(cardUp);
-  useEffect(() => {
-    // A reload with the card open lands on our old entry: it is a plain entry now.
-    if (onCardEntry()) history.replaceState(null, '');
-  }, []);
-  useEffect(() => {
-    cardUpNow.current = cardUp;
-    if (cardUp && !cardEntry.current) {
-      if (pendingBack.current !== null) return; // pushed once our back lands (popstate below)
-      cardEntry.current = true;
-      history.pushState({ fbCard: 1 }, '');
-    } else if (!cardUp && cardEntry.current) {
-      cardEntry.current = false;
-      const keep = location.href;
-      pendingBack.current = keep;
-      history.back();
-      // A back whose popstate never arrives must not block later entries (re-review of ADR-295, N3).
-      window.setTimeout(() => {
-        if (pendingBack.current === keep) pendingBack.current = null;
-      }, 600);
-    }
-  }, [cardUp]);
-  useEffect(() => {
-    const onPop = () => {
-      if (pendingBack.current !== null) {
-        const keep = pendingBack.current;
-        pendingBack.current = null;
-        if (location.href !== keep) history.replaceState(history.state, '', keep);
-        if (cardUpNow.current) {
-          cardEntry.current = true;
-          history.pushState({ fbCard: 1 }, '');
-        }
-        return;
-      }
-      if (!cardEntry.current) {
-        // Forward onto an entry of a card that is closed: make it a plain entry.
-        if (onCardEntry()) history.replaceState(null, '');
-        return;
-      }
-      if (onCardEntry()) return;
-      cardEntry.current = false;
-      setSheetStop('peek');
-      setOutOpen(false);
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
-  const checkErrors = vd.diagnostics.filter((d) => d.severity === 'error').length;
-  const pickLens = (k: string) => {
-    setOutOpen(false);
-    if (sheetStop === 'peek') setSheetStop('half');
-    scrollWhenShown(k);
-  };
-  // Edit this piece asks for the full sheet in the project (ADR-241).
-  const sheetAsk = useUi((s) => s.sheetAsk);
-  const [lastAsk, setLastAsk] = useState(sheetAsk);
-  if (sheetAsk !== lastAsk) {
-    setLastAsk(sheetAsk);
-    if (sheetAsk) setSheetStop(sheetAsk.stop);
-  }
-  const setSheetOpen = (open: boolean) => setSheetStop(open ? 'half' : 'peek');
-  if (wide !== lastWide) {
-    setLastWide(wide);
-    setView(defaultView(wide, has3d));
-  }
-  // 3D mounts only while 3D or Both is shown, in either mode, phone included (ADR-014, G-267).
-  const shown = view;
-  // A project's drawing has its own tool row (Snap, Select, Clearances): Doors and fronts joins it there (ADR-109).
-  const frontsInPlan = inProject && mode === 'compose' && showsDrawing(shown);
-  // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
-  const mount3d = has3d && shows3d(shown) && page === 'editor';
-
-  // The piece list beside the plan (ADR-094): opened by Add a piece in Compose, only while the project is shown.
-  const piecesOpen = usePieceList((s) => s.open);
-  const setPiecesOpen = usePieceList((s) => s.setOpen);
-  const piecesShown = piecesOpen && inProject && mode === 'compose' && page === 'editor';
-  useEffect(() => {
-    if (piecesOpen && !(inProject && mode === 'compose')) setPiecesOpen(false);
-  }, [piecesOpen, inProject, mode, setPiecesOpen]);
-  const openPieces = () => {
-    setPiecesOpen(true);
-    // Items are dropped on the plan: it comes forward, and on a phone the Compose sheet steps aside.
-    setView(bringDrawingForward);
-    setSheetOpen(false);
-  };
-
-  // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
-  const tapMode = useDesign((s) =>
-    s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
+  const designOpen = useDesign((s) => !!s.project || s.design.id !== placeholderId || !s.pristine);
+  const renderName = useDesign((s) =>
+    s.project && !s.editingItemId ? s.project.name : s.design.name,
   );
-  // Choosing a piece or a space opens the phone sheet to half so its editor shows (user 2026-11-14, replaces the
-  // 2026-11-09 peek-only rule).
-  const selKey = inProject ? selectedItemId : selectedId;
-  const [lastTap, setLastTap] = useState(tapMode);
-  const [lastSel, setLastSel] = useState(selKey);
-  if (tapMode !== lastTap) {
-    setLastTap(tapMode);
-    // Placing a piece or drawing the room needs the plan: on a phone the sheet steps aside.
-    if (tapMode) {
-      setView(bringDrawingForward);
-      setSheetOpen(false);
-    }
-  }
-  if (selKey !== lastSel) {
-    setLastSel(selKey);
-    // Choosing something opens the edit sheet to half; a peek-row action (duplicate) asks to keep it closed once.
-    const keepClosed = takeKeepSheetClosed();
-    // The canvas editor opens its card from a chip, never on a tap of the drawing (ADR-283).
-    if (
-      !canvas &&
-      selKey !== null &&
-      selKey !== undefined &&
-      !keepClosed &&
-      !tapMode &&
-      sheetStop === 'peek'
-    )
-      setSheetStop('half');
-  }
-  // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
-  const problemTap = useProblem((s) => s.tapped);
-  const [lastProblemTap, setLastProblemTap] = useState(problemTap);
-  if (problemTap !== lastProblemTap) {
-    setLastProblemTap(problemTap);
-    if (inProject) {
-      setView(bringDrawingForward);
-      setSheetOpen(false);
-    }
-  }
-  useEffect(() => {
-    if (tapMode) useUi.getState().setMode('compose');
-  }, [tapMode]);
-
-  const theme = useTheme();
-  // The drawing on phones is sized to the space left between the bars; both bars report their heights.
-  const barRef = useRef<HTMLElement>(null);
-  const navRef = useRef<HTMLElement>(null);
-  const modesRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (typeof ResizeObserver === 'undefined') return;
-    const root = document.documentElement.style;
-    const ro = new ResizeObserver(() => {
-      const bar = barRef.current,
-        nav = navRef.current,
-        modes = modesRef.current;
-      if (bar) root.setProperty('--bar-h', `${bar.offsetHeight}px`);
-      root.setProperty('--modes-h', `${modes?.offsetHeight ?? 0}px`);
-      root.setProperty(
-        '--actions-h',
-        nav && getComputedStyle(nav).position === 'fixed' ? `${nav.offsetHeight}px` : '0px',
-      );
-    });
-    for (const el of [barRef.current, navRef.current, modesRef.current]) if (el) ro.observe(el);
-    return () => ro.disconnect();
-  }, [page]);
-  // Render the print sheet, open the print dialog, then remove it again (ADR-020).
-  useEffect(() => {
-    if (!printing) return;
-    const done = () => setPrinting(false);
-    window.addEventListener('afterprint', done, { once: true });
-    // Wait for fonts: the Romanian glyphs (ș, ț, ă) load on first use, i.e. only when the print sheet appears.
-    const glyphs = ['400', '500', '600'].map((w) =>
-      document.fonts.load(`${w} 1em Barlow`, 'șțăîâȘȚĂÎÂ'),
-    );
-    const t = setTimeout(() => {
-      void Promise.all(glyphs)
-        .then(() => document.fonts.ready)
-        .then(() => window.print());
-    }, 50);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('afterprint', done);
-    };
-  }, [printing, setPrinting]);
-
-  // Reopen the last piece on this device. Until that has settled nothing is autosaved, so the placeholder piece shown
-  // during start-up never lands in the library or replaces the remembered piece.
-  const [started, setStarted] = useState(false);
-  useEffect(() => {
-    const done = () => setStarted(true);
-    const pid = lastProjectId();
-    if (pid) {
-      loadProject(pid)
-        .then((p) => {
-          if (p) useDesign.getState().openProject(p);
-        })
-        .catch(() => {})
-        .finally(done);
-      return;
-    }
-    const id = lastDesignId();
-    if (id)
-      loadDesign(id)
-        .then((d) => {
-          if (d) useDesign.getState().load(d, { fromStorage: true });
-        })
-        .catch(() => {})
-        .finally(done);
-    // Nothing to reopen: the start-up placeholder is saved only once it is edited, so a fresh device lists nothing.
-    else {
-      useDesign.setState({ pristine: true });
-      done();
-    }
-  }, []);
 
   // After any save: ask the browser to keep data once, back up to the chosen folder, and keep the save times for the
   // backup reminder (ADR-133, ADR-141).
@@ -599,484 +97,39 @@ export function App() {
     const offs = [startAutoBackup(), startChangeClock()];
     return () => offs.forEach((off) => off());
   }, []);
+  // The 30-day purge of Recently deleted runs once at start, and says how many it removed (ADR-305).
+  useEffect(() => {
+    purgeRecentlyDeleted()
+      .then((n) => {
+        if (n)
+          useUi.getState().setNotice({
+            ok: true,
+            text: t(
+              '{n|# item deleted more than 30 days ago was|# items deleted more than 30 days ago were} removed from Recently deleted.',
+              { n },
+            ),
+          });
+      })
+      .catch(() => {});
+  }, []);
   // A remembered account shows at once; the session is checked when the online part loads (ADR-134).
   useEffect(() => {
     void initAccount();
   }, []);
   // A share link opens its preview (ADR-138, ADR-143).
   useShareLink();
-
-  // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
-  useEffect(() => {
-    if (!started) return;
-    // Pieces inside a project are saved with the project, never into the library; template edits go to the template.
-    if (useDesign.getState().project || useDesign.getState().templateEdit) return;
-    rememberLast(design.id);
-    // Opened from storage and untouched: nothing to write (an old file is upgraded only when edited).
-    if (useDesign.getState().pristine) return;
-    const t = setTimeout(
-      () => {
-        setSave('saving');
-        saveDesign(design)
-          .then(() => setSave('saved'))
-          .catch(() => setSave('failed'));
-      },
-      dirtyAt ? 400 : 0,
-    );
-    return () => clearTimeout(t);
-  }, [design, dirtyAt, started]);
-
-  // Projects autosave too, and are reopened next time.
-  useEffect(() => {
-    if (!started) return;
-    rememberLastProject(project?.id ?? null);
-    if (!project || !projectDirtyAt) return;
-    const t = setTimeout(() => {
-      setSave('saving');
-      // The project as it was opened is kept as a version at its first change (ADR-123, G-155).
-      void keepSessionVersion().catch(() => {});
-      saveProject(project)
-        .then(() => setSave('saved'))
-        .catch(() => setSave('failed'));
-    }, 400);
-    return () => clearTimeout(t);
-  }, [project, projectDirtyAt, started]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!editorShortcutAllowed(e, page)) return;
-      const t = e.target as HTMLElement;
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) redo();
-        else undo();
-      }
-      // Delete or Backspace asks to remove the one piece selected in a project (ADR-160); not inside a piece or a dialog.
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const st = useDesign.getState();
-        const item = st.project?.items.find((i) => i.id === st.selectedItemId);
-        if (
-          page === 'editor' &&
-          item &&
-          st.selectedItemIds.length === 1 &&
-          !st.editingItemId &&
-          // A space inside the piece is picked (ADR-106): Delete is not for the whole piece then.
-          typeof st.selectedId !== 'string' &&
-          !t.closest('dialog, [contenteditable="true"]') &&
-          !document.querySelector('dialog[open]')
-        ) {
-          e.preventDefault();
-          void askRemove(item, st.removeItem);
-        } else if (
-          // Several pieces: the same question as the selection card's Delete (ADR-246).
-          page === 'editor' &&
-          st.project &&
-          st.selectedItemIds.length > 1 &&
-          !st.editingItemId &&
-          !t.closest('dialog, [contenteditable="true"]') &&
-          !document.querySelector('dialog[open]')
-        ) {
-          e.preventDefault();
-          const n = st.selectedItemIds.length;
-          void askConfirm(tt('Delete these {n} pieces from this project?', { n }), {
-            confirmLabel: tt('Delete'),
-            danger: true,
-            cancelFirst: true,
-          }).then((ok) => ok && useDesign.getState().deleteSelection());
-        }
-      }
-      // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-        const st = useDesign.getState();
-        const busy = st.placingItemId || st.drawingRoom;
-        if (
-          !e.repeat &&
-          page === 'editor' &&
-          st.project &&
-          !st.editingItemId &&
-          st.selectedItemId &&
-          !busy
-        ) {
-          e.preventDefault();
-          // Several pieces are copied as a block, as the selection card does (ADR-246).
-          if (st.selectedItemIds.length > 1) st.duplicateSelection();
-          else st.duplicateItem(st.selectedItemId);
-        }
-      }
-      // Ctrl/Cmd+A selects every piece of the open project (ADR-097).
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
-        const st = useDesign.getState();
-        if (page === 'editor' && st.project && !st.editingItemId && !st.placingItemId) {
-          e.preventDefault();
-          st.selectAll();
-        }
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        redo();
-      }
-      // Esc in an open dialog closes the dialog only, not the selection too (ADR-160); Esc that cancels a drag or a
-      // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
-      // Esc goes up one level (ADR-203, ADR-249, ADR-270); the canvas editor's ↑ does the same (ADR-283).
-      if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]'))
-        upOneLevel();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, page]);
-
-  const errors = vd.diagnostics.filter((d) => d.severity === 'error').length;
-  const warnings = vd.diagnostics.length - errors;
-  const buildMeta = errors
-    ? t('{n|problem|problems}', { n: errors })
-    : warnings
-      ? t('to check')
-      : '';
-  const selectedItem = project?.items.find((i) => i.id === selectedItemId);
-  const selectedCount = useDesign((s) => s.selectedItemIds.length);
-  const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
-  // Inside a project piece (ADR-088) the peek row names the level reached too: "Wardrobe › Hanging".
-  const drillLevel =
-    inProject && selectedItem && drillItemId === selectedItem.id && typeof selectedId === 'string'
-      ? selectionLabel(design.product, selectedId)
-      : null;
-  const peek = inProject
-    ? selectedCount > 1
-      ? t('{n} pieces selected', { n: selectedCount })
-      : selectedItem || selectedModel
-        ? t('Selected: {name}', {
-            // Built-in names in the user's language (ADR-265).
-            name: drillLevel
-              ? `${tr(selectedItem!.design.name)} › ${drillLevel}`
-              : tr(String(selectedItem?.design.name ?? selectedModel?.name)),
-          })
-        : t('{name}: {n|# piece|# pieces}', { name: tr(project!.name), n: project!.items.length })
-    : (() => {
-        const l = selectionLabel(design.product, selectedId);
-        return l ? t('Selected: {name}', { name: l }) : t('Tap a space to edit it');
-      })();
-
-  // The selection ladder (ADR-283): every level from the project or piece down to the selection, as the breadcrumb.
-  const dsel = useDesign.getState;
-  const inside: Crumb[] = selectionChain(design.product, selectedId).map((c) => ({
-    label: c.label,
-    go: () => dsel().select(c.id),
-  }));
-  const crumbs: Crumb[] = inProject
-    ? [
-        { label: tr(project!.name), go: () => dsel().selectItem(null) },
-        ...(selectedCount > 1
-          ? [{ label: t('{n} pieces selected', { n: selectedCount }), go: () => {} }]
-          : selectedItem || selectedModel
-            ? [
-                {
-                  label: tr(String(selectedItem?.design.name ?? selectedModel?.name)),
-                  go: () => dsel().select(null),
-                },
-                ...(drillLevel ? inside : []),
-              ]
-            : []),
-      ]
-    : [{ label: tr(design.name), go: () => dsel().select(null) }, ...inside];
-
-  const nameField = (
-    <input
-      className="name"
-      aria-label={inProject ? t('Name of this project') : t('Name of this piece')}
-      // Shown in the user's language; the stored built-in name is kept unless the user types another (ADR-265).
-      defaultValue={tr(inProject ? project!.name : design.name)}
-      key={inProject ? `p-${project!.id}-${project!.name}` : `${design.id}-${design.name}`}
-      onBlur={(e) => {
-        const v = e.target.value.trim();
-        if (!v) return;
-        if (inProject) {
-          if (v !== project!.name && v !== tr(project!.name))
-            useDesign.getState().updateProject((p) => ({ ...p, name: v }));
-        } else if (v !== design.name && v !== tr(design.name)) rename(v);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-      }}
-    />
-  );
-
-  // The Compose · Build & Preview switch: its own row under the bar on a phone (hidden there, ADR-241); inside the top
-  // bar on desktop (ADR-297).
-  const modeSwitch = (
-    <div
-      className={phone ? 'segmented' : 'segmented mode-switch'}
-      role="radiogroup"
-      aria-label={t('Editor mode')}
-      onKeyDown={rovingKeys}
-    >
-      {MODES.map((m, i) => (
-        <button
-          key={m}
-          type="button"
-          role="radio"
-          aria-checked={mode === m}
-          tabIndex={rovingTab(mode === m, i, MODES.includes(mode))}
-          className={mode === m ? 'on' : ''}
-          onClick={() => setMode(m)}
-        >
-          {MODE_LABEL[m]}
-          {m === 'build' && buildMeta && (
-            <span className={`badge ${errors ? 'error' : 'warning'}`}>
-              {errors || warnings}
-              <span className="badge-words"> {buildMeta}</span>
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
+  useEditorShortcuts(page);
 
   return (
     <>
       <div className={`app page-${page}`}>
-        <header className="bar" ref={barRef}>
-          <nav className="pages places" aria-label={t('Places')} ref={navRef}>
-            {PLACES.map((p) => (
-              <a
-                key={p.page}
-                href={p.page === 'projects' ? '#' : `#${p.page}`}
-                aria-current={
-                  page === p.page && !(phone && p.page === 'editor' && mode === 'build')
-                    ? 'page'
-                    : undefined
-                }
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage(p.page);
-                  // A phone's Editor place is the drawing; the results are their own place (ADR-241).
-                  if (phone && p.page === 'editor') setMode('compose');
-                }}
-              >
-                <Icon name={p.icon} className="sm" />
-                <span>{p.label}</span>
-                {p.page === 'catalog' && <span className="count">{CATALOG_ITEMS}</span>}
-              </a>
-            ))}
-            {/* Phones (ADR-241): the parts list, sheets, hardware, assembly, shopping and checks are one place, in
-                place of the Compose · Build & Preview row. It needs an open piece or project. */}
-            {phone && designOpen && (
-              <a
-                href="#editor"
-                aria-current={page === 'editor' && mode === 'build' ? 'page' : undefined}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage('editor');
-                  setMode('build');
-                  const st = useDesign.getState();
-                  if (!st.resultsOpen) st.setTab(errors ? 'checks' : 'parts');
-                }}
-              >
-                <Icon name="layers" className="sm" />
-                <span>{t('Cut List')}</span>
-                {(errors || warnings) > 0 && (
-                  <span className={`badge ${errors ? 'error' : 'warning'}`} aria-label={buildMeta}>
-                    {errors || warnings}
-                  </span>
-                )}
-              </a>
-            )}
-          </nav>
-          {page === 'editor' && (
-            <div
-              className={
-                templateEdit ? 'path template' : editingItemId && project ? 'path piece' : 'path'
-              }
-            >
-              {templateEdit ? (
-                <>
-                  <span className="crumb family" title={t('Template')}>
-                    {tr(templateEdit.template.family.name)}
-                  </span>
-                  <span className="sep family" aria-hidden="true">
-                    ›
-                  </span>
-                  <span className="crumb here">
-                    {tr(
-                      templateEdit.template.family.variants.find(
-                        (v) => v.id === templateEdit.variantId,
-                      )?.name ?? '',
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn sm primary"
-                    aria-label={t('Save to template')}
-                    title={t('Saved to the template on this device')}
-                    onClick={async () => {
-                      // One save, one revision; a draft that cannot be stored waits on the Catalog page (ADR-195).
-                      // A failed save says so (ADR-244); the draft still waits on the Catalog page.
-                      if (!(await saveTemplateEdit()))
-                        useUi.getState().setNotice({
-                          ok: false,
-                          text: t(
-                            'Not saved to the template; your draft waits on the Catalog page.',
-                          ),
-                        });
-                      setPage('catalog');
-                    }}
-                  >
-                    {t('Save')}
-                    <span className="lbl-long">{t(' to template')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn sm"
-                    onClick={() => {
-                      cancelTemplateEdit();
-                      setPage('catalog');
-                    }}
-                  >
-                    {t('Cancel')}
-                  </button>
-                </>
-              ) : editingItemId && project ? (
-                <>
-                  <button
-                    type="button"
-                    className="crumb back"
-                    aria-label={t('Back to project {name}', { name: project.name })}
-                    title={
-                      editingName
-                        ? t('Changes to {name} stay in this project', { name: editingName })
-                        : t('Changes to this piece stay in this project')
-                    }
-                    onClick={() => useDesign.getState().backToProject()}
-                  >
-                    <Icon name="chevron-left" className="sm" />
-                    {project.name}
-                  </button>
-                  <span className="sep" aria-hidden="true">
-                    ›
-                  </span>
-                  {nameField}
-                </>
-              ) : (
-                nameField
-              )}
-            </div>
-          )}
-          {page === 'editor' && (
-            <span className={`status ${save}`} role="status" title={SAVE_TEXT[save] || undefined}>
-              {save !== 'idle' && (
-                <>
-                  <span className="dot" aria-hidden="true" />
-                  <span className="txt">{SAVE_TEXT[save]}</span>
-                </>
-              )}
-            </span>
-          )}
-          {page === 'editor' && !phone && modeSwitch}
-          {page === 'editor' && !phone && <EstimateChip />}
-          <div className="bar-tools">
-            {page === 'editor' && (
-              <>
-                <button
-                  type="button"
-                  className="btn icon"
-                  onClick={undo}
-                  disabled={!canUndo}
-                  aria-label={t('Undo')}
-                  title={
-                    inProject && undoName
-                      ? t('Undo {step} (Ctrl+Z)', { step: tr(undoName) })
-                      : t('Undo (Ctrl+Z)')
-                  }
-                >
-                  <Icon name="undo" />
-                </button>
-                <button
-                  type="button"
-                  className="btn icon"
-                  onClick={redo}
-                  disabled={!canRedo}
-                  aria-label={t('Redo')}
-                  title={
-                    inProject && redoName
-                      ? t('Redo {step} (Ctrl+Shift+Z)', { step: tr(redoName) })
-                      : t('Redo (Ctrl+Shift+Z)')
-                  }
-                >
-                  <Icon name="redo" />
-                </button>
-                <button
-                  type="button"
-                  className="btn icon"
-                  onClick={() => setSettingsOpen(true)}
-                  aria-label={t('Settings')}
-                  title={
-                    inProject ? t('Project settings') : t('Size, construction, boards and drawers')
-                  }
-                >
-                  <Icon name="sliders" />
-                </button>
-                <button
-                  type="button"
-                  className="btn icon"
-                  onClick={() => setMaterialOpen(true)}
-                  aria-label={t('Material')}
-                  title={t(
-                    'Material: put a board on parts of this item, a group or the whole project',
-                  )}
-                >
-                  <Icon name="swatch" />
-                </button>
-              </>
-            )}
-            <AccountButton />
-            <button
-              type="button"
-              className="btn icon theme"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={
-                theme === 'dark' ? t('Switch to the light theme') : t('Switch to the dark theme')
-              }
-              title={theme === 'dark' ? t('Light theme') : t('Dark theme')}
-            >
-              <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
-            </button>
-            <MoreMenu
-              onNew={() => setDialog('new')}
-              onOpened={() => setPage('editor')}
-              onInfo={() => setPage('info')}
-              onOptimizer={() => setPage('optimizer')}
-              // Gaps is reached from Information, so it marks Information as the current place (G-535).
-              current={
-                page === 'optimizer'
-                  ? 'optimizer'
-                  : page === 'info' || page === 'gaps'
-                    ? 'info'
-                    : undefined
-              }
-            />
-          </div>
-        </header>
-        {page === 'editor' && phone && (
-          <div className="modes" ref={modesRef}>
-            {modeSwitch}
-          </div>
-        )}
-        {notice && (
-          <p
-            className={`alert notice ${notice.ok ? 'info' : 'error'}`}
-            role={notice.ok ? 'status' : 'alert'}
-          >
-            <Icon name={notice.ok ? 'info' : 'alert-circle'} className="sm" />
-            <span>{notice.text}</span>
-            <button
-              type="button"
-              className="btn icon ghost sm"
-              aria-label={t('Dismiss')}
-              onClick={() => setNotice(null)}
-            >
-              <Icon name="x" className="sm" />
-            </button>
-          </p>
-        )}
+        <AppBar
+          page={page}
+          setPage={setPage}
+          designOpen={designOpen}
+          onNew={() => setDialog('new')}
+        />
+        <Notice />
 
         {page === 'projects' && (
           <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
@@ -1101,286 +154,12 @@ export function App() {
             />
           )}
         </Suspense>
-        <main
-          ref={workRef}
-          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}${canvas ? ' canvas' : ''}${outLensOn ? ' out-lens' : ''}`}
-          hidden={page !== 'editor'}
-        >
-          <aside className="side" aria-label={t('Compose')} ref={sideRef}>
-            {canvas && (
-              <LensHead
-                keys={lensKeyList}
-                inProject={inProject}
-                tall={sheetStop === 'full'}
-                onJump={(k) => {
-                  const body = sideBodyRef.current;
-                  if (body) scrollToBlock(body, k);
-                }}
-                onTall={(tall) => setSheetStop(tall ? 'full' : 'half')}
-                onClose={() => setSheetStop('peek')}
-              />
-            )}
-            <div className="sheet-peek-row" hidden={canvas}>
-              {phone && <SheetHandle stop={sheetStop} onStop={setSheetStop} />}
-              <button
-                type="button"
-                className="sheet-peek"
-                aria-expanded={sheetOpen}
-                onClick={() => setSheetOpen(!sheetOpen)}
-              >
-                {/* One line; a long piece name ends in an ellipsis and shows in full on hover (ADR-114). */}
-                <span title={peek}>{peek}</span>
-                <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
-              </button>
-              {phone && inProject && <PeekActions onAdd={openPieces} />}
-            </div>
-            {/* Phones: Settings and Material open here, the sheet at full height (ADR-247). */}
-            <div id="sheet-slot" className="sheet-slot" />
-            <div className="side-body" ref={sideBodyRef}>
-              {inProject ? (
-                <ProjectPanel mode="compose" onAdd={openPieces} />
-              ) : (
-                <Inspector mode="compose" />
-              )}
-              {/* The panel ends with the results (ADR-295), each opening its output card (ADR-288). */}
-              {canvas && (
-                <Section title={t('Results')}>
-                  <div className="results-block">
-                    {outputs.map(([k, label]) => (
-                      <button key={k} type="button" className="btn" onClick={() => openOutput(k)}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </Section>
-              )}
-            </div>
-          </aside>
-          <section
-            ref={stageRef}
-            // A tap on empty drawing closes the canvas editor's card (ADR-283); a tap on a part selects it.
-            onClick={
-              canvas && sheetOpen
-                ? (e) => {
-                    const el = e.target as Element;
-                    if (el === e.currentTarget || el.tagName.toLowerCase() === 'svg')
-                      setSheetStop('peek');
-                  }
-                : undefined
-            }
-            className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
-            aria-label={t('Drawing')}
-          >
-            {canvas && mode === 'compose' && <LadderPill crumbs={crumbs} />}
-            {piecesShown && (
-              <PieceList
-                onBrowse={() => {
-                  setPiecesOpen(false);
-                  openCatalog();
-                }}
-                onWizard={() => openWizard(null, true)}
-              />
-            )}
-            <div className="stage-tools">
-              <div
-                className="segmented small"
-                role="radiogroup"
-                aria-label={t('View')}
-                onKeyDown={rovingKeys}
-              >
-                {viewOptions(has3d).map((o, i, all) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={shown === o.id}
-                    tabIndex={rovingTab(
-                      shown === o.id,
-                      i,
-                      all.some((x) => x.id === shown),
-                    )}
-                    className={shown === o.id ? 'on' : ''}
-                    disabled={o.disabled}
-                    title={o.reason}
-                    aria-describedby={o.reason ? 'no-3d-why' : undefined}
-                    onClick={() => setView(o.id)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-              {/* Why 3D is off, as visible text beside the switch (ADR-081, ADR-259). */}
-              {!has3d && (
-                <p id="no-3d-why" className="hint">
-                  {t(
-                    '3D preview is not available in this browser. The front view and parts list still work.',
-                  )}
-                </p>
-              )}
-              {/* Fronts stays in the row on a phone too (G-269); the other tools go behind Options there. */}
-              {!frontsInPlan && (
-                <label className="toggle small">
-                  <input
-                    type="checkbox"
-                    aria-label={t('Doors and fronts')}
-                    checked={showFronts}
-                    onChange={(e) => setShowFronts(e.target.checked)}
-                  />
-                  <span className="fronts-long">{t('Doors and fronts')}</span>
-                  <span className="fronts-short">{t('Fronts')}</span>
-                </label>
-              )}
-              <ViewOptions menu={inOptions('exploded', phone || short)}>
-                {shows3d(shown) && (
-                  <label className="toggle small">
-                    <input
-                      type="checkbox"
-                      checked={exploded}
-                      onChange={(e) => setExploded(e.target.checked)}
-                    />
-                    <span>{t('Exploded 3D')}</span>
-                  </label>
-                )}
-                {shows3d(shown) && (
-                  <button type="button" className="btn sm" onClick={requestFit}>
-                    <Icon name="refresh" className="sm" />
-                    {t('Reset view')}
-                  </button>
-                )}
-                {mount3d && (
-                  <div
-                    className="segmented small"
-                    role="radiogroup"
-                    aria-label={t('Look')}
-                    onKeyDown={rovingKeys}
-                  >
-                    {(['simple', 'realistic'] as const).map((l, i) => (
-                      <button
-                        key={l}
-                        type="button"
-                        role="radio"
-                        aria-checked={look === l}
-                        tabIndex={rovingTab(look === l, i, true)}
-                        className={look === l ? 'on' : ''}
-                        onClick={() => setLook(l)}
-                      >
-                        {l === 'simple' ? t('Simple') : t('Realistic')}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {mount3d && (
-                  <button
-                    type="button"
-                    className="btn sm"
-                    title={t(
-                      'Render a photo-quality picture. Best on a laptop; a phone may be slow.',
-                    )}
-                    onClick={() => setDialog('render')}
-                  >
-                    <Icon name="camera" className="sm" />
-                    {t('Render')}
-                  </button>
-                )}
-              </ViewOptions>
-            </div>
-            <div className={`views ${shown === 'both' ? 'both' : ''}`}>
-              <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
-                {inProject ? (
-                  <PlanView fronts={frontsInPlan} card={!(phone && shows3d(shown))} />
-                ) : (
-                  <Elevation />
-                )}
-              </div>
-              <div
-                className={`view three ${shows3d(shown) ? 'active' : ''}`}
-                role="region"
-                aria-label={t('3D view')}
-                data-seams={seams ?? undefined}
-                data-lit={lit ?? undefined}
-              >
-                {mount3d ? (
-                  <ViewerBoundary>
-                    <Suspense
-                      fallback={
-                        <div className="no-3d">
-                          <p className="loading">{t('Loading 3D…')}</p>
-                        </div>
-                      }
-                    >
-                      <Viewer3D countCard={countCard} moveTo={moveTo} countDock={countDock} />
-                    </Suspense>
-                  </ViewerBoundary>
-                ) : has3d ? null : (
-                  <NoViewer />
-                )}
-              </div>
-            </div>
-            {/* The canvas editor: the quick-count card docks under the 3D view, inside the stage (ADR-295). */}
-            {canvasStage && <div id="count-dock" ref={setCountDock} className="count-dock-slot" />}
-            {/* The edit bar (ADR-295): Find, Edit, the Checks chip and the project's actions, in a fixed order. */}
-            {canvasStage && (
-              <EditBar
-                selection={crumbs[crumbs.length - 1]?.label ?? ''}
-                open={sheetOpen}
-                onEdit={() => {
-                  setOutOpen(false);
-                  setSheetStop(sheetOpen ? 'peek' : 'half');
-                }}
-                onFind={() => setFindOpen(true)}
-              >
-                {/* Checks chip (ADR-287): the error count, one tap to the Checks list. */}
-                {checkErrors > 0 && (
-                  <button
-                    type="button"
-                    className="btn chip problem"
-                    onClick={() => {
-                      setMode('build');
-                      useDesign.getState().setTab('checks');
-                    }}
-                  >
-                    {t('Checks: {n|# problem|# problems}', { n: checkErrors })}
-                  </button>
-                )}
-                {inProject && <PeekActions onAdd={openPieces} />}
-              </EditBar>
-            )}
-          </section>
-          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
-          {phone && !canvasStage && (
-            <div id="count-dock" ref={setCountDock} className="count-dock-slot" />
-          )}
-          {/* Phones: the running estimate heads the Cut list place (ADR-241; was in the mode row). */}
-          {phone && (
-            <div className="cut-estimate">
-              <EstimateChip compact />
-            </div>
-          )}
-          <Output />
-          {canvas && (
-            <>
-              <FindAction
-                open={findOpen}
-                blocks={lensKeyList}
-                outputs={outputs}
-                onBlock={pickLens}
-                onOutput={(tab) => openOutput(tab as Tab)}
-                onClose={() => setFindOpen(false)}
-              />
-              <CanvasHints on={page === 'editor' && mode === 'compose'} />
-            </>
-          )}
-          {outLensOn && (
-            <button
-              type="button"
-              className="btn icon lens-out-close"
-              aria-label={t('Close the card')}
-              onClick={() => setOutOpen(false)}
-            >
-              <Icon name="x" />
-            </button>
-          )}
-        </main>
+        <EditorWork
+          active={page === 'editor'}
+          onRender={() => setDialog('render')}
+          onCatalog={openCatalog}
+          onWizardToProject={() => openWizard(null, true)}
+        />
 
         {/* Closing one dialog to open another fires its close event after the switch: it may only clear itself. */}
         <NewDialog
@@ -1412,7 +191,7 @@ export function App() {
             setPage('editor');
           }}
         />
-        <SettingsDialog onWizard={() => openWizard(design)} />
+        <SettingsDialog onWizard={() => openWizard(useDesign.getState().design)} />
         <MaterialDialog />
         <SavedDataDialog />
         <AccountDialog />
@@ -1423,18 +202,11 @@ export function App() {
         <RenderDialog
           open={dialog === 'render'}
           onClose={() => setDialog((d) => (d === 'render' ? null : d))}
-          name={inProject ? project!.name : design.name}
+          name={renderName}
         />
       </div>
       <ConfirmHost />
-      {printing &&
-        (printMode === 'assembly' ? (
-          <PrintAssembly />
-        ) : printMode === 'client' ? (
-          <PrintClient />
-        ) : (
-          <PrintSheet />
-        ))}
+      <PrintHost />
     </>
   );
 }

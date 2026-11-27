@@ -75,24 +75,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-014: Undo across reloads and in the library
-
-- Status: Open
-- Origin: ADR-051, 2026-10-24 15:54 UTC; agent scoped it out
-- Missing: Restorable project versions exist (ADR-123), but the undo stack is still lost on reload and deleting saved projects/designs on the Projects page has no undo or Recently deleted list.
-- Request: Undo and redo for project changes (context, not a quote)
-- Questions: Keep undo per project on the device? A 30-day Recently deleted list for the library?
-- Suggested pick: Keep the undo stack per project in IndexedDB (new Dexie version). Make library deletes go to a 30-day “Recently deleted” list instead of being final. (estimate: effort +20%, value +15%)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Undo history is lost on reload, and deleting saved projects or designs is final.
-- Fix: Store undo per project in a new Dexie version; send library deletes to a 30-day Recently deleted list.
-- Conflicts: ADR-051: decided project history is not saved and starts empty on open.
-- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack).
-
 ### G-015: Egger catalogue import
 
 - Status: Open
@@ -238,21 +220,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: UI critique findings on desktop panel layout and split whole-piece editing were skipped by the user.
 - Fix: Keep the Romanian names; write an editor-layout ADR for findings 8 and 9 when the user wants it.
 - Conflicts: none
-
-### G-079: Drop a catalog item into the 3D view
-
-- Status: Open
-- Origin: ADR-094 (2026-10-26, Claude: not asked for)
-- Missing: Dropping a catalog item into the 3D view.
-- Request: "New adr 6" (2026-10-26)
-- Questions: Drop into 3D too, once ADR-093 exists?
-- Suggested pick: Drop onto the 3D floor plane with ADR-093's projection (about +30 % of ADR-094's work, +15 % value; estimates).
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low
-- Issue: Catalog items can be dropped onto the plan but not into the 3D view.
-- Fix: Drop onto the 3D floor plane using the 3D Move mode's pointer projection and snapping.
-- Conflicts: ADR-093: overrides 3D select-only for moving and turning pieces only, not adding them
 
 ### G-092: User-written compatibility rules
 
@@ -1387,17 +1354,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Conflicts: ADR-161: the seller catalog is an offline snapshot
 
-### G-500: App.tsx is one 815-line component with no memoised children
-
-- Status: Open
-- Origin: ADR-236 Out of scope, 2026-11-07 (architecture review section 3 and Skipped)
-- Missing: Splitting App.tsx (27 store subscriptions, 11 effects) and memo of RoomPlan/Panels are not built.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Split App.tsx and memoise the heavy children?
-- Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
-- Work: Medium
-- Impact: Low-medium
-
 ### G-503: The Gaps page still imports the gaps ledger with ?raw
 
 - Status: Acknowledged (2026-11-23)
@@ -1731,18 +1687,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Add noSideScroll, btn, shotter, finish and trackErrors to harness.mjs and convert a few scripts at a time (Work High, Value Medium)
 - Work: High
 - Impact: Medium
-- Necessity: Low
-
-### G-570: Reuse findings M1 to M10
-
-- Status: Open
-- Origin: Reuse health check round 1, 2026-11-20 (medium)
-- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
-- Request: /health-reuse, loop prompt; user approved high items only
-- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
-- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
-- Work: Medium
-- Impact: Low-medium
 - Necessity: Low
 
 ### G-573: Legacy rows and ADRs that fail the 2026-11-20 evidence gates

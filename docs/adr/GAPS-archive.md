@@ -160,6 +160,25 @@ highest id in either file.
 - Suggested pick: “Save selection as template”. It needs multi-select, which ADR-069 also left out, so build both together. (estimate: effort +15%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-032 (it needs multi-select).
 
+### G-014: Undo across reloads and in the library
+
+- Status: Done (N431)
+- Origin: ADR-051, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: Restorable project versions exist (ADR-123), but the undo stack is still lost on reload and deleting saved projects/designs on the Projects page has no undo or Recently deleted list.
+- Request: Undo and redo for project changes (context, not a quote)
+- Questions: Keep undo per project on the device? A 30-day Recently deleted list for the library?
+- Suggested pick: Keep the undo stack per project in IndexedDB (new Dexie version). Make library deletes go to a 30-day “Recently deleted” list instead of being final. (estimate: effort +20%, value +15%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Undo history is lost on reload, and deleting saved projects or designs is final.
+- Fix: Store undo per project in a new Dexie version; send library deletes to a 30-day Recently deleted list.
+- Conflicts: ADR-051: decided project history is not saved and starts empty on open.
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack). Built by ADR-305 (N431): Dexie v13 `recentlyDeleted`; Projects › Delete moves a project or piece there for 30 days, with Restore and Delete forever; readable rows older than 30 days are purged at app start with the count shown. Evidence: `tests/recently-deleted.test.ts`, `tests/find-it/projects-recently-deleted.test.tsx` (390 and 1280 px).
+- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack).
+
 ### G-016: Export blocking never tried in a browser
 
 - Status: Done (ADR-201)
@@ -857,6 +876,21 @@ highest id in either file.
 - Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
 - Questions: Add a vertical handle later?
 - Suggested pick: Keep height from placement (the user's answer); a handle only if asked.
+
+### G-079: Drop a catalog item into the 3D view
+
+- Status: Done (N432)
+- Origin: ADR-094 (2026-10-26, Claude: not asked for)
+- Missing: Dropping a catalog item into the 3D view.
+- Request: "New adr 6" (2026-10-26)
+- Questions: Drop into 3D too, once ADR-093 exists?
+- Suggested pick: Drop onto the 3D floor plane with ADR-093's projection (about +30 % of ADR-094's work, +15 % value; estimates).
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Catalog items can be dropped onto the plan but not into the 3D view.
+- Fix: Drop onto the 3D floor plane using the 3D Move mode's pointer projection and snapping.
+- Conflicts: ADR-093: overrides 3D select-only for moving and turning pieces only, not adding them
 
 ### G-080: Piece list open by default on desktop
 
@@ -3771,6 +3805,18 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 
+### G-500: App.tsx is one 815-line component with no memoised children
+
+- Status: Done (N430)
+- Note: 2026-11-27, N430: App.tsx (1440 lines) split into the shell (196 lines) and `src/ui/shell/` parts: `AppBar`, `EditorWork`, `SaveStatus` (reopen and autosave), `PrintHost`, `EstimateChip`, `ViewerSlot`, `useCardHistory`, `useEditorShortcuts`, `usePage`, `checkCounts`; the editor's Inspector, project panel, plan, front drawing and results are memoised. Measured by `tests/app-render-count.test.tsx`: before, a notice and a rename each rendered the Compose panel, the front drawing and the results again from App (1 each); after, 0. App no longer calls `useView()` (its cut list was built only for the error counts). Find-it jsdom set: 113 files, 474 tests passed before and after.
+- Origin: ADR-236 Out of scope, 2026-11-07 (architecture review section 3 and Skipped)
+- Missing: Splitting App.tsx (27 store subscriptions, 11 effects) and memo of RoomPlan/Panels are not built.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Split App.tsx and memoise the heavy children?
+- Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
+
 ### G-501: The catalog PDF extractor tests run nowhere
 
 - Status: Done (PR #329, N388)
@@ -4187,6 +4233,19 @@ highest id in either file.
 - Suggested pick: Bump after the release passes the age policy, no exclusion (Work Low, Value Low)
 - Work: Low
 - Impact: Low
+- Necessity: Low
+
+### G-570: Reuse findings M1 to M10
+
+- Status: Done (N441)
+- Note: 2026-11-27 (N441): the round 1 report (.tmp/current/reuse-hunting-report.md) is not in the repo, so M1-M10 are numbered in the order of the Missing line. Built, one commit each: M7 MaterialDialog uses MATERIAL_ROLES; M1 fastenerPerOk, fastenerEdgeOk, fastenerSpacingOk (src/core/fasteners.ts) used by validFastenerChoice and the Fasteners form; M2 MAX_SHELVES, MAX_DRAWERS (src/core/counts.ts) and MAX_SPLIT_PARTS (src/core/design.ts) used by Inspector and Wizard counters; M4 isTile exported from surface.ts, isHexColour and isInt in guards.ts; M3 sizeOn, startOn, endOn in geometry.ts replace the copies in align, arrange, frame, fusion, merge, project, repairs, surface, template; M5 mixPicture, MixCardFrame, RefineFields, RowAndTallChoices (src/ui/fillParts.tsx) and svgDataUrl (src/core/snapshot.ts); M6 ErrorAlert (src/ui/controls.tsx) for the copied error line in nine UI files; M8 readLocal and writeLocal (src/persist/localPrefs.ts) in 20 files, keys unchanged; M9 stubMatchMedia (tests/helpers/matchMedia.ts) and the setup.tsx helpers in place of copies; M10 csvLines and csvSeparator (src/core/csv.ts). Kept apart because they differ: themeColours accepts lowercase hex only; the assistant's isInt accepts unsafe integers; Sheets accepts 3-digit hex; langInit's boot read sets two values in one try; splitRow (prices) and splitLine (materials) differ in quoting and the neutralising quote; the addPiece copies in group-size and selected-piece skip Place to the right and the All pieces step; audit-rest's toProjects matches Russian names. Not done: the row-button body (glyph, title, sub line, chevron) repeated 17 times in 9 UI files, which M6 may have meant; its variants (picture or icon glyph, num sub lines, extra lines, drag props) need several slots (Work Medium).
+- Origin: Reuse health check round 1, 2026-11-20 (medium)
+- Missing: Fastener limits and whole-count rule copied core/UI; counter bounds hard-coded in Inspector; box axis accessors in 7 core files; isTile, hex colour regex and isInt copies; Fill-a-wall and Fill-the-room shared JSX and 4 SVG data-URL helpers; repeated JSX in 5 UI files; ROLE_ORDER copies MATERIAL_ROLES; localStorage try/catch in about 16 files; find-it test setup copies; CSV import preamble copies
+- Request: /health-reuse, loop prompt; user approved high items only
+- Questions: M3 touches geometry (fuzz required); M8 must not rename storage keys
+- Suggested pick: Follow the agent's order: M7, M1, M2, M4, M3 with fuzz, then M5, M6, M8, M9, M10 (Work Medium, Value Low-medium)
+- Work: Medium
+- Impact: Low-medium
 - Necessity: Low
 
 ### G-571: Reuse findings L1 to L8

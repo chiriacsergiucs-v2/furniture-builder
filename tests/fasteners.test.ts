@@ -5,6 +5,9 @@ import { hardwareSummary } from '../src/core/cutlist';
 import { frameDefaults, templates, wrap } from '../src/core/design';
 import {
   fastenerCounts,
+  fastenerEdgeOk,
+  fastenerPerOk,
+  fastenerSpacingOk,
   fastenerShopLines,
   projectFastenerCounts,
   type FastenerCount,
@@ -208,5 +211,18 @@ describe('the fastener list on the device (ADR-074)', () => {
     const r = parsePricesCsv('key;unit;price\nfastener:foot;piece;1\n');
     expect(r.prices).toEqual([]);
     expect(r.problems[0]).toMatch(/not a price/);
+  });
+});
+
+describe('fastener field rules (G-570 M1)', () => {
+  it('per joint is a whole number of 1 or more', () => {
+    expect([1, 7].map(fastenerPerOk)).toEqual([true, true]);
+    expect([0, -1, 1.5, NaN, '2', undefined].map(fastenerPerOk)).toEqual(Array(6).fill(false));
+  });
+  it('edge is whole mm from 0 to 5000, spacing from 1 to 5000', () => {
+    expect([0, 5000].map(fastenerEdgeOk)).toEqual([true, true]);
+    expect([-1, 5001, 2.5].map(fastenerEdgeOk)).toEqual([false, false, false]);
+    expect([1, 5000].map(fastenerSpacingOk)).toEqual([true, true]);
+    expect([0, 5001, 2.5].map(fastenerSpacingOk)).toEqual([false, false, false]);
   });
 });
