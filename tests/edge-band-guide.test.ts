@@ -44,7 +44,7 @@ describe('band tolerances and edgebander settings (ADR-301)', () => {
   it('validate each field, and need schemaVersion 14; version 13 files still load', () => {
     const d = chest();
     const id = carcassOf(d);
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     expect(validateDesign(patch(d, id, { band: GUIDED, frontBand: GUIDED }))).toEqual([]);
     for (const bad of [
       { thicknessTolerance: 0 },
@@ -59,7 +59,7 @@ describe('band tolerances and edgebander settings (ADR-301)', () => {
       ).toMatch(/Invalid edge band/);
     const v13 = { ...patch(d, id, { band: ABS08 }), schemaVersion: 13 as const };
     expect(validateDesign(v13)).toEqual([]);
-    expect(upgradeDesign(v13).schemaVersion).toBe(14);
+    expect(upgradeDesign(v13).schemaVersion).toBe(15);
     expect(
       validateDesign({ ...v13, materials: patch(d, id, { band: GUIDED }).materials }),
     ).toContain('Band tolerances and edgebander settings need schemaVersion 14');

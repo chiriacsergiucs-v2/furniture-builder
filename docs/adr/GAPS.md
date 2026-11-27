@@ -2026,3 +2026,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-609: Leftover sheets on a project's Sheets tab
+
+- Status: Open
+- Origin: ADR-302 (N429)
+- Missing: A project's Sheets tab lays out full sheets only; leftovers are edited and used per piece in design mode
+- Request: User 2026-11-27: reuse a leftover on the Sheets tab
+- Questions: Should project leftovers belong to the project (shared by all pieces) or to each piece's board?
+- Suggested pick: Leftovers on the project, by merged board
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium

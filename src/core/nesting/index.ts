@@ -6,6 +6,8 @@ export * from '@furniture-builder/nesting';
 
 export interface SheetSettings {
   sheet: NestJob['sheet'];
+  /** Leftover pieces filled first (ADR-302); absent = none. */
+  leftovers?: NestJob['leftovers'];
   trim: number;
   kerf: number;
 }
@@ -29,6 +31,7 @@ export function jobsFromCutlist(rows: CutRow[], settings: Map<string, SheetSetti
         thickness: r.thickness,
         grain: r.grain,
         sheet: { ...s.sheet },
+        ...(s.leftovers?.length && { leftovers: s.leftovers.map((o) => ({ ...o })) }),
         trim: s.trim,
         kerf: s.kerf,
         parts: [],

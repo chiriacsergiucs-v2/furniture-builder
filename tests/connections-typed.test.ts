@@ -465,7 +465,7 @@ describe('documents (ADR-207, ADR-011)', () => {
   });
 
   it('design 9 validates the steps and the ends; design 8 files load unchanged and refuse them', () => {
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     const base = t('base-door');
     const v8 = { ...base, schemaVersion: 8 } as Design;
     expect(validateDesign(v8)).toEqual([]);
@@ -621,7 +621,7 @@ describe('editable steps (ADR-207, G-344)', () => {
     expect(st().projectPastNames).toHaveLength(n + 1);
     expect(st().projectPastNames.at(-1)).toBe('Move step up');
     expect(item(st().project!, a).design.assembly).toEqual(edit);
-    expect(item(st().project!, a).design.schemaVersion).toBe(14);
+    expect(item(st().project!, a).design.schemaVersion).toBe(15);
     expect(item(st().project!, copy).design.assembly).toEqual(edit);
     expect(validateProject(st().project!)).toEqual([]);
     st().setAssembly(a, undefined, 'Reset the steps');

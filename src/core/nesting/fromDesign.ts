@@ -18,6 +18,7 @@ export function nestingJobs(
     const s = sheetOf(m);
     settings.set(m.id, {
       sheet: { length: s.length, width: s.width, count: s.count },
+      leftovers: m.leftovers,
       trim: s.trim,
       kerf,
     });

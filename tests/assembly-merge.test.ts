@@ -84,7 +84,7 @@ describe('merge assembly steps (ADR-300)', () => {
   });
 
   it('design 13 validates merged steps; design 12 files load unchanged and refuse them', () => {
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     const base = t('base-door');
     const v12 = {
       ...base,
@@ -122,7 +122,7 @@ describe('merge assembly steps (ADR-300)', () => {
     expect(st().projectPastNames).toHaveLength(n + 1);
     const d = st().project!.items[0].design;
     expect(d.assembly).toEqual(edit);
-    expect(d.schemaVersion).toBe(14);
+    expect(d.schemaVersion).toBe(15);
     expect(validateProject(st().project!)).toEqual([]);
     expect(assemblySteps(m, d.assembly)).toHaveLength(steps.length - 1);
     st().setAssembly(a, undefined, 'Reset the steps');

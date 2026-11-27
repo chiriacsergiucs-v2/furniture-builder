@@ -59,7 +59,7 @@ interface Config {
 }
 
 interface Attempt {
-  sheets: { root: Slot; placements: Placement[] }[];
+  sheets: { root: Slot; placements: Placement[]; leftover?: number; usable: Rect }[];
   unplaced: Unplaced[];
   cuts: number;
   unusable: number;
@@ -86,6 +86,9 @@ function jobProblem(job: NestJob): boolean {
   if (!isInt(s.length) || !isInt(s.width) || s.length - 2 * t <= 0 || s.width - 2 * t <= 0)
     return true;
   if (s.count !== null && (!isInt(s.count) || s.count < 0)) return true;
+  for (const o of job.leftovers ?? [])
+    if (!isInt(o.length) || !isInt(o.width) || o.length - 2 * t <= 0 || o.width - 2 * t <= 0)
+      return true;
   const keys = new Set<string>();
   for (const p of job.parts) {
     if (keys.has(p.key)) return true;
@@ -196,6 +199,14 @@ function split(
   return { frees, slots, cuts };
 }
 
+/** The usable rectangle of a sheet `length` × `width` after the job's trim. */
+const usableOf = (job: NestJob, length: number, width: number): Rect => ({
+  x: job.trim,
+  y: job.trim,
+  length: length - 2 * job.trim,
+  width: width - 2 * job.trim,
+});
+
 function runAttempt(
   job: NestJob,
   insts: Inst[],
@@ -209,6 +220,14 @@ function runAttempt(
   let frees: Free[] = [];
   let fid = 0,
     cuts = 0;
+  // Leftovers (ADR-302) are open from the start, so parts fill them before any full sheet; empty ones are dropped.
+  (job.leftovers ?? []).forEach((o, leftover) => {
+    const u = usableOf(job, o.length, o.width);
+    const root: Slot = { node: { kind: 'waste', length: u.length, width: u.width } };
+    sheets.push({ root, placements: [], leftover, usable: u });
+    frees.push({ slot: root, rect: { ...u }, sheet: sheets.length - 1, id: fid++ });
+  });
+  const fullSheets = () => sheets.filter((x) => x.leftover === undefined).length;
   const key = (i: Inst) => {
     switch (cfg.order) {
       case 'maxSide':
@@ -247,16 +266,17 @@ function runAttempt(
     }
     if (!best) {
       const fitsEmpty = ors.some(([l, w]) => fits(usable, l, w, kerf));
+      // A part only a leftover could hold, with every leftover taken, is too large for a new sheet.
       if (!fitsEmpty) {
         unplaced.push({ key: inst.key, instance: inst.instance, reason: 'too-large' });
         continue;
       }
-      if (maxSheets !== null && sheets.length >= maxSheets) {
+      if (maxSheets !== null && fullSheets() >= maxSheets) {
         unplaced.push({ key: inst.key, instance: inst.instance, reason: 'no-sheet-left' });
         continue;
       }
       const root: Slot = { node: { kind: 'waste', length: usable.length, width: usable.width } };
-      sheets.push({ root, placements: [] });
+      sheets.push({ root, placements: [], usable: { ...usable } });
       const f: Free = { slot: root, rect: { ...usable }, sheet: sheets.length - 1, id: fid++ };
       frees.push(f);
       let pick: [number, number, boolean] = ors[0];
@@ -290,7 +310,13 @@ function runAttempt(
     });
   }
 
-  return { sheets, unplaced, cuts, unusable: 0, largest: 0 };
+  return {
+    sheets: sheets.filter((x) => x.placements.length > 0),
+    unplaced,
+    cuts,
+    unusable: 0,
+    largest: 0,
+  };
 }
 
 function size(n: INode): [number, number] {
@@ -340,9 +366,15 @@ function scoreWaste(a: Attempt, job: NestJob, insts: Inst[]) {
   a.unusable = u;
 }
 
-/** Lexicographic: fewest unplaced → fewest sheets → least unusable waste → largest leftover → fewest cuts. */
+const fullCount = (a: Attempt) => a.sheets.filter((s) => s.leftover === undefined).length;
+
+/**
+ * Lexicographic: fewest unplaced → fewest full sheets → fewest sheets → least unusable waste → largest leftover →
+ * fewest cuts.
+ */
 function better(a: Attempt, b: Attempt): boolean {
   if (a.unplaced.length !== b.unplaced.length) return a.unplaced.length < b.unplaced.length;
+  if (fullCount(a) !== fullCount(b)) return fullCount(a) < fullCount(b);
   if (a.sheets.length !== b.sheets.length) return a.sheets.length < b.sheets.length;
   if (a.unusable !== b.unusable) return a.unusable < b.unusable;
   if (a.largest !== b.largest) return a.largest > b.largest;
@@ -401,6 +433,7 @@ function statsOf(sheets: SheetLayout[]): NestStats {
   }
   return {
     sheetsUsed: sheets.length,
+    leftoversUsed: sheets.filter((s) => s.leftover !== undefined).length,
     partArea,
     sheetArea,
     trimArea,
@@ -472,13 +505,7 @@ export function nest(job: NestJob, options: NestOptions = {}): NestResult {
       0,
     );
   }
-  const t = job.trim;
-  const usable: Rect = {
-    x: t,
-    y: t,
-    length: job.sheet.length - 2 * t,
-    width: job.sheet.width - 2 * t,
-  };
+  const usable = usableOf(job, job.sheet.length, job.sheet.width);
   const rnd = rng(seed);
   let best: Attempt | null = null;
   let attempts = 0;
@@ -510,9 +537,10 @@ export function nest(job: NestJob, options: NestOptions = {}): NestResult {
   const chosen = best as Attempt;
   const sheets: SheetLayout[] = chosen.sheets.map((s, index) => ({
     index,
-    length: job.sheet.length,
-    width: job.sheet.width,
-    usable: { ...usable },
+    ...(s.leftover !== undefined && { leftover: s.leftover }),
+    length: s.leftover !== undefined ? job.leftovers![s.leftover].length : job.sheet.length,
+    width: s.leftover !== undefined ? job.leftovers![s.leftover].width : job.sheet.width,
+    usable: { ...s.usable },
     tree: toTree(s.root.node),
     placements: [...s.placements].sort((p, q) => p.x - q.x || p.y - q.y),
   }));

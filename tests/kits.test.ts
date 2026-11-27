@@ -76,7 +76,7 @@ describe('Kits (ADR-298)', () => {
   });
 
   it('needs schemaVersion 12; version 11 designs still load', () => {
-    expect(SCHEMA_VERSION).toBe(14);
+    expect(SCHEMA_VERSION).toBe(15);
     const d = divider();
     expect(validateDesign(d)).toEqual([]);
     expect(validateDesign({ ...d, schemaVersion: 11 })).toContain('A kit needs schemaVersion 12');
@@ -88,6 +88,6 @@ describe('Kits (ADR-298)', () => {
     ).toContain('Invalid kit');
     const v11 = { ...unlockKit(d), schemaVersion: 11 as const };
     expect(validateDesign(v11)).toEqual([]);
-    expect(upgradeDesign(v11).schemaVersion).toBe(14);
+    expect(upgradeDesign(v11).schemaVersion).toBe(15);
   });
 });

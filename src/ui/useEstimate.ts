@@ -58,7 +58,11 @@ export function useEstimate(): EstimateView {
   const sheets = useMemo(
     () =>
       n.status === 'done'
-        ? new Map(n.results.filter((r) => r.valid).map((r) => [r.materialId, r.stats.sheetsUsed]))
+        ? new Map(
+            n.results
+              .filter((r) => r.valid)
+              .map((r) => [r.materialId, r.stats.sheetsUsed - r.stats.leftoversUsed]),
+          )
         : null,
     [n],
   );

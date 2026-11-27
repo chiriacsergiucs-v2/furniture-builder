@@ -22,8 +22,13 @@ export interface NestJob {
   thickness: number;
   /** Grained boards never rotate parts: part length stays along sheet length. */
   grain: boolean;
-  /** `count: null` = unlimited sheets. */
+  /** `count: null` = unlimited sheets. The count limits full sheets only, never leftovers. */
   sheet: { length: number; width: number; count: number | null };
+  /**
+   * Leftover pieces the user owns (ADR-302), each used at most once and filled before any full sheet. Length runs
+   * along `sheet.length`; the trim applies to them as to a full sheet. Absent = none.
+   */
+  leftovers?: { length: number; width: number }[];
   /** Unusable margin on each of the four edges. */
   trim: number;
   /** Width of the material stripe destroyed by every cut. */
@@ -87,6 +92,8 @@ export interface Placement {
 
 export interface SheetLayout {
   index: number;
+  /** The `job.leftovers` index this sheet is cut from (ADR-302); absent = a full stock sheet. */
+  leftover?: number;
   length: number;
   width: number;
   usable: Rect;
@@ -104,7 +111,10 @@ export interface Unplaced {
 }
 
 export interface NestStats {
+  /** Every sheet laid out, leftovers included. */
   sheetsUsed: number;
+  /** Sheets cut from leftovers (ADR-302); full sheets to buy = `sheetsUsed - leftoversUsed`. */
+  leftoversUsed: number;
   partArea: number;
   sheetArea: number;
   trimArea: number;
