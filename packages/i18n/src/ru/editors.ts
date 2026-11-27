@@ -209,8 +209,8 @@ export const ru_editors = {
   'Size of the whole piece': 'Размер всего изделия',
   'Add a piece': 'Добавить изделие',
   'About adding a piece': 'О добавлении изделия',
-  'Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.':
-    'Перетащите элемент на план (на телефоне сначала удерживайте его) или нажмите на него, а затем на план.',
+  'Drag an item onto the plan or the 3D view (on a phone, hold it first), or tap it and then tap the plan.':
+    'Перетащите элемент на план или в 3D-вид (на телефоне сначала удерживайте его) или нажмите на него, а затем на план.',
   'Move to': 'Переместить',
   '{p|# piece|# pieces} and {m|# 3D model|# 3D models} selected':
     'Выбрано: {p|# изделие|# изделия|# изделий} и {m|# 3D-модель|# 3D-модели|# 3D-моделей}',
