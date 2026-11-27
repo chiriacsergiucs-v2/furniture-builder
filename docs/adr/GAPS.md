@@ -1166,20 +1166,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: User 2026-11-27: "No, imports only" (same answer as G-430).
 
-### G-439: Drilling positions for joints other than carcass joints
-
-- Status: Open
-- Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
-- Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
-- Request: “Hardware and fastener completeness”.
-- Questions: Which values would you enter for each of those joint types (for example distance from the edge for back fixings)?
-- Suggested pick: Back fixings next, around the back's perimeter, from an edge distance you enter. (estimate: effort +10%, value +5%)
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low
-- Issue: Only carcass joints show drilling positions.
-- Fix: Add user-value drilling positions to the other joint types, one at a time.
-
 ### G-444: No layout optimisation of room mixes
 
 - Status: Open

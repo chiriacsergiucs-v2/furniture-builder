@@ -102,6 +102,12 @@ export interface FastenerChoice {
    * ADR-010). Only with it are drilling positions drawn. Saved on this device with the choice.
    */
   edge?: Mm;
+  /**
+   * Back fixings (G-439): the largest gap in mm between two fixings along each side of a back, typed by the user (no
+   * default, ADR-010). With `edge` (mm in from the back's edges) it draws the back's drilling positions. Saved on this
+   * device with the choice.
+   */
+  spacing?: Mm;
 }
 
 /** Boards that are screwed or doweled to each other in a carcass. Fronts, backs, plinths, drawer boxes and worktops are not. */
@@ -310,7 +316,15 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
     Number.isSafeInteger(r.per) &&
     r.per >= 1 &&
     (r.edge === undefined ||
-      (typeof r.edge === 'number' && Number.isSafeInteger(r.edge) && r.edge >= 0 && r.edge <= 5000))
+      (typeof r.edge === 'number' &&
+        Number.isSafeInteger(r.edge) &&
+        r.edge >= 0 &&
+        r.edge <= 5000)) &&
+    (r.spacing === undefined ||
+      (typeof r.spacing === 'number' &&
+        Number.isSafeInteger(r.spacing) &&
+        r.spacing >= 1 &&
+        r.spacing <= 5000))
   );
 }
 
@@ -391,6 +405,66 @@ export function fixingPositions(
     parts.set(key, cur);
   }
   return { parts, tooShort };
+}
+
+/** `from` plus whole-mm stops splitting `length` into the fewest equal gaps no longer than `spacing` (exact, ADR-003). */
+function stops(from: Mm, length: Mm, spacing: Mm): Mm[] {
+  const gaps = Math.max(1, Math.ceil(length / spacing));
+  const q = Math.floor(length / gaps),
+    r = length - q * gaps;
+  const out = [from];
+  for (let i = 0; i < gaps; i++) out.push(out[i] + q + (i < r ? 1 : 0));
+  return out;
+}
+
+/**
+ * Drilling positions of the back fixings (G-439), only once the user typed both `edge` and `spacing` on their
+ * back-fixing fastener: round each back's perimeter, `edge` in from its edges, a fixing at each corner of that line and
+ * between them no more than `spacing` apart, split exactly (ADR-003). Drawn on the back's face, projected from the model
+ * (ADR-004), never saved. No diameter, depth or screw (ADR-010). A back with no room inside `edge` from its edges, or one
+ * that is not a rectangle, gets none and is counted in `notDrawn`.
+ */
+export function backFixingPositions(
+  model: Pick<FurnitureModel, 'panels'>,
+  choice: FastenerChoice | undefined,
+  prefix = '',
+): { parts: Map<string, FixingPart>; notDrawn: number } {
+  const parts = new Map<string, FixingPart>();
+  let notDrawn = 0;
+  if (
+    !choice ||
+    choice.joint !== 'back-fixing' ||
+    choice.edge === undefined ||
+    choice.spacing === undefined ||
+    choice.spacing < 1
+  )
+    return { parts, notDrawn };
+  const e = choice.edge;
+  for (const p of model.panels) {
+    if (p.role !== 'back') continue;
+    const [ua, va] = inPlaneAxes(p.thicknessAxis);
+    const size = (x: Axis) => {
+      const [s0, s1] = span(p.box, AXES.indexOf(x) as 0 | 1 | 2);
+      return s1 - s0;
+    };
+    const u = size(ua),
+      v = size(va);
+    const lu = u - 2 * e,
+      lv = v - 2 * e;
+    if (p.shape || lu <= 0 || lv <= 0) {
+      notDrawn++;
+      continue;
+    }
+    const us = stops(e, lu, choice.spacing),
+      vs = stops(e, lv, choice.spacing);
+    const at: [Mm, Mm][] = [];
+    // Bottom and top lines with their corners, then the two side lines between them.
+    for (const x of us) at.push([x, e]);
+    for (const x of us) at.push([x, v - e]);
+    for (const y of vs.slice(1, -1)) at.push([e, y], [u - e, y]);
+    parts.set(prefix + p.id, { u, v, at });
+  }
+  return { parts, notDrawn };
 }
 
 /** The drilling note of a part (ADR-209), in English for the model; printed through `pt()` (`drillingRo`). */
