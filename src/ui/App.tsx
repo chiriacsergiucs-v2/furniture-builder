@@ -15,7 +15,7 @@ import { ProjectsPage } from './shell/ProjectsPage';
 import { useUi } from '../store/uiStore';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
-import { purgeRecentlyDeleted } from '../persist/db';
+import { purgeRecentlyDeleted } from '../store/libraryStore';
 import { AccountDialog } from './Account';
 import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
