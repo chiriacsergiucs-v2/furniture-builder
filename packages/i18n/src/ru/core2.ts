@@ -125,8 +125,10 @@ export const ru_core2 = {
     'Над пеналами {gap} мм — слишком мало для антресоли, это место оставлено открытым.',
   'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.':
     'При одинаковых фасадах наполнение настраивается потом, поэтому нижние «Не меньше» не применяются.',
-  'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row; lower the wall cabinet height to show a wall row.':
-    'Навесные шкафы высотой {wh} мм при высоте {h} мм зайдут на {over} мм в нижний ряд; уменьшите высоту навесных шкафов, чтобы показать верхний ряд.',
+  'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row, and the room above it is only {room} mm, under the catalog minimum of {min} mm; raise the height or lower the base height to show a wall row.':
+    'Навесные шкафы высотой {wh} мм при высоте {h} мм зайдут на {over} мм в нижний ряд, а места над ним всего {room} мм — меньше минимума каталога {min} мм; увеличьте высоту или уменьшите высоту нижних шкафов, чтобы показать верхний ряд.',
+  'Wall cabinets shortened from {from} to {h} mm to fit the room above the base row (catalog minimum {min} mm).':
+    'Навесные шкафы укорочены с {from} до {h} мм, чтобы поместиться над нижним рядом (минимум каталога {min} мм).',
   'No wall row fits these mixes with pieces {min}–{max} mm wide.':
     'Ни один верхний ряд не подходит к этим вариантам с изделиями шириной {min}–{max} мм.',
   'The wall ({w} mm) is narrower than the min piece width, {min} mm.':

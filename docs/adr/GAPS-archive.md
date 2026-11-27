@@ -1228,6 +1228,21 @@ highest id in either file.
 - Fix: Add a Wall cabinet depth field in Refine, catalog value prefilled.
 - Conflicts: none
 
+### G-124: Fill a wall: wall row reaching into the base row
+
+- Status: Done (N411)
+- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
+- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
+- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
+- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
+- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Wall rows that would reach into the base row are dropped, so low walls get no wall row.
+- Fix: Shorten wall cabinets to the room above the base row, never below catalog minimum, labelled on the card.
+- Conflicts: ADR-104: decided overlapping wall rows are not offered and nothing is clamped; user chose height field
+
 ### G-125: Width and depth card over the project view for a selected piece
 
 - Status: Done (ADR-109)
