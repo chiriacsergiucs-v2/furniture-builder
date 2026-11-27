@@ -610,6 +610,23 @@ highest id in either file.
 - Suggested pick: Same as the row above: one session on your phone, guided by a checklist. (estimate: effort +3%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-047 (the same real-phone session).
 
+### G-049: G ids on pre-ADR-082 notes
+
+- Status: Done (N437)
+- Note: 2026-11-27 (N437): one pass over docs/backlog.md rows F01 to N76 and the Dropped rows: 54 old gap notes on 44 rows now carry their G id (G-005, G-032, G-034, G-035, G-037, G-039, G-040, G-044, G-047), and 25 rows whose ADR is the origin of a seed gap end with "Gaps from the ADR-082 seed: G-…". No seed gap matches the old notes on N15 (_Differs from original_), N17 (real manual, OCR), N21 (mattress, RHS bench, per-panel materials), N28 (drawers in a frame, arm rests), N30 (printed tiles on paper), N33 (PDF papers) or N34 (legs under a carcass), so they stay without a G id; G-015 (Egger import) has no backlog row; G-045 is an obsolete umbrella. Statuses unchanged. Pending ADR open questions were not edited (backlog only).
+- Origin: ADR-082, 2026-10-25; agent scoped it out
+- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
+- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
+- Questions: Add G ids to the old backlog Gap notes and Open questions too?
+- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
+- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
+- Conflicts: none
+- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
+
 ### G-050: No gaps page in the app
 
 - Status: Done (ADR-101)

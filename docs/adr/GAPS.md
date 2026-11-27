@@ -156,22 +156,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid (github.io unreachable from this environment). Absorbs G-048: touch and 3D were checked only in Chromium emulation; one guided session on the user's phone covers both.
 
-### G-049: G ids on pre-ADR-082 notes
-
-- Status: Open
-- Origin: ADR-082, 2026-10-25; agent scoped it out
-- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
-- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
-- Questions: Add G ids to the old backlog Gap notes and Open questions too?
-- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low
-- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
-- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
-- Conflicts: none
-- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
-
 ### G-055: Count stepper only for cabinet spaces
 
 - Status: Acknowledged (2026-10-25)
