@@ -88,6 +88,8 @@ import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
+import { DefinitionListsPanel, PieceDefinitionList } from './DefinitionLists';
+import { effectiveSettings } from '../core/projectSettings';
 import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
 import { ProjectHistory } from './History';
 import { FloorBackground, PlanPictureSection } from './RoomSurfaces';
@@ -190,6 +192,7 @@ export function ProjectPanel({
         <RunParts />
         <ProjectSettingsPanel />
         <VariablesPanel />
+        <DefinitionListsPanel />
         {/* The project's fastener counts and the user's fasteners (ADR-209, ADR-074). */}
         <FastenersPanel />
         <MmField
@@ -456,7 +459,12 @@ export function ProjectPanel({
               </p>
             )}
           </Group>
-          {project.settings && (
+          {(project.definitionLists?.length ?? 0) > 0 && (
+            <Group title={t('Definition list')} defaultOpen={!!item.list}>
+              <PieceDefinitionList item={item} />
+            </Group>
+          )}
+          {effectiveSettings(project, item) && (
             <Group title={t('Project settings')} defaultOpen={false}>
               <PieceProjectSettings item={item} />
             </Group>

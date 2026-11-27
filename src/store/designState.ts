@@ -323,6 +323,21 @@ export interface State {
     patch: Partial<Pick<VariableSet, 'name' | 'values' | 'origin'>>,
   ) => void;
   removeVariableSet: (id: string) => void;
+  /** Definition lists (ADR-303); each is one undo step. Removing a list unlinks its pieces; they keep their values. */
+  addDefinitionList: () => string;
+  renameDefinitionList: (id: string, name: string) => void;
+  setDefinitionListValue: (listId: string, variableId: string, expr: string | null) => void;
+  /** Set or clear a list's setting; returns the names of the linked pieces that took it. */
+  setDefinitionListSetting: (
+    listId: string,
+    key: SettingKey,
+    value: ProjectSettings[SettingKey] | undefined,
+  ) => string[];
+  removeDefinitionList: (id: string) => void;
+  /** Link a piece to a list (null unlinks it, keeping its values). */
+  linkToList: (itemId: string, listId: string | null) => void;
+  /** Set (or with null remove) a linked piece's own value of a variable. */
+  setListOverride: (itemId: string, variableId: string, expr: string | null) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
   /** Turn a display-only 3D model a quarter about its centre (ADR-203, G-105); one undo step. */

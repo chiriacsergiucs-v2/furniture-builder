@@ -145,4 +145,50 @@ export const ru_variables = {
   'used by {n|# size|# sizes}': 'используют {n|# размер|# размера|# размеров}',
   'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.':
     'Именованные числа или формулы этого изделия. Привяжите к ним ширину, высоту, глубину или высоту низа кнопкой ƒ рядом с полем; они переходят вместе с изделием в проекты и шаблоны.',
+  // definition lists (ADR-303)
+  'List {tag}': 'Список {tag}',
+  'A definition list needs a name.': 'Списку определений нужно имя.',
+  'A definition list name is at most {n} characters.':
+    'Имя списка определений — не более {n} символов.',
+  'A definition list named “{name}” already exists.': 'Список определений «{name}» уже существует.',
+  '{list}, variable “{name}”: {problem}': '{list}, переменная «{name}»: {problem}',
+  '{piece}, own value of “{name}”: {problem}': '{piece}, собственное значение «{name}»: {problem}',
+  'Invalid definition lists': 'Недопустимые списки определений',
+  'Definition lists need project schemaVersion {v}':
+    'Спискам определений нужна версия схемы проекта {v}',
+  'Invalid definition list': 'Недопустимый список определений',
+  'Item {id}: invalid definition list link':
+    'Элемент {id}: недопустимая ссылка на список определений',
+  'Item {id}: unknown definition list': 'Элемент {id}: неизвестный список определений',
+  'Item {id}: a value-set duplicate is not linked to a list':
+    'Элемент {id}: дубликат набора значений не связывается со списком',
+  'Add definition list': 'Добавить список определений',
+  'Rename definition list': 'Переименовать список определений',
+  'Change definition list value': 'Изменить значение списка определений',
+  'Delete definition list': 'Удалить список определений',
+  'Link to definition list': 'Связать со списком определений',
+  'Unlink from definition list': 'Отвязать от списка определений',
+  'Override list value': 'Своё значение вместо значения списка',
+  'Use list value': 'Взять значение списка',
+  'Definition lists': 'Списки определений',
+  'About definition lists': 'О списках определений',
+  'A list gives the variables and the project settings other values. Link a piece to a list in its card; a change to the list reaches every linked piece. An empty field keeps the project’s value.':
+    'Список задаёт переменным и настройкам проекта другие значения. Свяжите изделие со списком в его карточке; изменение списка доходит до каждого связанного изделия. Пустое поле сохраняет значение проекта.',
+  'Add list': 'Добавить список',
+  '{setting}: the project’s. Pieces keep what they have.':
+    '{setting}: как в проекте. Изделия сохраняют своё.',
+  'Delete “{name}”? {list} use it; their bound sizes go back to the project’s values.':
+    'Удалить «{name}»? Его используют: {list}; их привязанные размеры вернутся к значениям проекта.',
+  'Project’s': 'Как в проекте',
+  '{name} in {list}': '{name} в {list}',
+  'Own plinth height in this list': 'Своя высота цоколя в этом списке',
+  'A value-set duplicate keeps its set’s values.':
+    'Дубликат набора значений берёт значения своего набора.',
+  'Definition list': 'Список определений',
+  'Own value of {name}': 'Своё значение {name}',
+  '(own)': '(своё)',
+  '(from {list})': '(из {list})',
+  '(from project)': '(из проекта)',
+  'Follows list': 'Следует списку',
+  'Follow list': 'Следовать списку',
 } satisfies Record<string, string>;

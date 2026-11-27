@@ -32,7 +32,7 @@ import {
 } from '../src/core/project';
 import {
   projectFromTemplate,
-  TEMPLATE_SCHEMA,
+  TEMPLATE_RUN_EXTRAS,
   templateFromProject,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
@@ -464,7 +464,7 @@ describe('templates keep 3D models (ADR-208 item 6)', () => {
   };
   it('saved with offsets and placement over refs, at the template version that stores them', () => {
     const { proj, t } = tmplOf();
-    expect(t.schemaVersion).toBe(TEMPLATE_SCHEMA);
+    expect(t.schemaVersion).toBe(TEMPLATE_RUN_EXTRAS);
     expect(t.models).toHaveLength(2);
     const ox = Math.min(...proj.items.map((i) => i.position.x));
     expect(t.models![0]).toMatchObject({

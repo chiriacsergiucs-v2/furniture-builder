@@ -1,4 +1,12 @@
-import { followProject, SETTING_LABEL } from '../core/projectSettings';
+import { followProject, setListSetting, SETTING_LABEL } from '../core/projectSettings';
+import {
+  addList,
+  linkItem,
+  removeList,
+  renameList,
+  setItemOverride,
+  setListValue,
+} from '../core/defLists';
 import { requestKey } from '../core/project';
 import { t } from '@furniture-builder/i18n';
 import { addSet, removeSet, updateSet } from '../core/sets';
@@ -30,6 +38,13 @@ type VariableActions = Pick<
   | 'updateVariableSet'
   | 'removeVariableSet'
   | 'followProject'
+  | 'addDefinitionList'
+  | 'renameDefinitionList'
+  | 'setDefinitionListValue'
+  | 'setDefinitionListSetting'
+  | 'removeDefinitionList'
+  | 'linkToList'
+  | 'setListOverride'
 >;
 
 /** The project and piece variable actions (ADR-166, ADR-167, ADR-210), split out of designStore.ts. */
@@ -95,6 +110,46 @@ export function variableActions(h: StoreHelpers): VariableActions {
     updateVariableSet: (id, patch) =>
       projectAction((p) => updateSet(p, id, patch), t('Change value set')),
     removeVariableSet: (id) => projectAction((p) => removeSet(p, id), t('Remove value set')),
+    addDefinitionList: () => {
+      const p = get().project;
+      if (!p) return '';
+      const res = addList(p);
+      if (res.id) commitProject(res.project, t('Add definition list'));
+      return res.id;
+    },
+    renameDefinitionList: (id, name) =>
+      projectAction((p) => renameList(p, id, name), t('Rename definition list')),
+    setDefinitionListValue: (listId, variableId, expr) =>
+      projectAction(
+        (p) => setListValue(p, listId, variableId, expr),
+        t('Change definition list value'),
+      ),
+    setDefinitionListSetting: (listId, key, value) => {
+      const p = get().project;
+      if (!p) return [];
+      const res = setListSetting(p, listId, key, value);
+      // Refused when it would resize a size-locked piece (ADR-122), as a project setting.
+      if (
+        commitProject(
+          res.project,
+          t('Set {setting}', { setting: SETTING_LABEL[key].toLowerCase() }),
+        )
+      )
+        return [];
+      return res.applied;
+    },
+    removeDefinitionList: (id) =>
+      projectAction((p) => removeList(p, id), t('Delete definition list')),
+    linkToList: (itemId, listId) =>
+      projectAction(
+        (p) => linkItem(p, itemId, listId),
+        listId ? t('Link to definition list') : t('Unlink from definition list'),
+      ),
+    setListOverride: (itemId, variableId, expr) =>
+      projectAction(
+        (p) => setItemOverride(p, itemId, variableId, expr),
+        expr ? t('Override list value') : t('Use list value'),
+      ),
     followProject: (id, key) =>
       projectAction(
         (p) => followProject(p, id, key),

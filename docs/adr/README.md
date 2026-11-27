@@ -364,3 +364,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-300](../adr-done/ADR-300-merge-an-assembly-step-with-the-next-one.md) | Merge an assembly step with the next one | ADR-207 | ✅ Implemented |
 | [ADR-301](../adr-done/ADR-301-band-tolerances-and-edgebander-settings-typed-by-the-user.md) | Band tolerances and edgebander settings typed by the user | ADR-077, ADR-212 | ✅ Implemented |
 | [ADR-302](../adr-done/ADR-302-leftover-sheets-on-the-sheets-tab.md) | Leftover sheets on the Sheets tab | ADR-011, ADR-018, ADR-019 | ✅ Implemented |
+| [ADR-303](../adr-done/ADR-303-definition-lists-of-variables-and-materials-a-piece-links-to.md) | Definition lists of variables and materials a piece links to | ADR-124, ADR-166, ADR-170 | ✅ Implemented |

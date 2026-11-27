@@ -36,7 +36,7 @@ import {
 import {
   projectFromTemplate,
   templateFromProject,
-  TEMPLATE_SCHEMA,
+  TEMPLATE_RUN_EXTRAS,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
 import { repairsFor } from '../src/core/repairs';
@@ -569,8 +569,8 @@ describe('clearance zones in 3D and templates (ADR-205, G-036)', () => {
       ],
     };
     const tpl = templateFromProject(p, 'Zoned');
-    expect(tpl.schemaVersion).toBe(TEMPLATE_SCHEMA);
-    expect(TEMPLATE_SCHEMA).toBe(3);
+    expect(tpl.schemaVersion).toBe(TEMPLATE_RUN_EXTRAS);
+    expect(TEMPLATE_RUN_EXTRAS).toBe(3);
     expect(tpl.items[0].zones).toEqual({ chairDepth: 700 });
     expect(tpl.items[1].zones).toBeUndefined();
     const back = JSON.parse(JSON.stringify(tpl));
@@ -986,7 +986,7 @@ describe('documents (ADR-011, ADR-205)', () => {
   });
 
   it('project schemaVersion 21 stores worktopJoints, hobs and backCuts; version 20 loads and refuses them', () => {
-    expect(PROJECT_SCHEMA).toBe(22);
+    expect(PROJECT_SCHEMA).toBe(23);
     expect(PROJECT_SCHEMAS).toContain(20);
     const p0 = joint(withParts('left'), 'butt', 'a');
     const p: Project = {

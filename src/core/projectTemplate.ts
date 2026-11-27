@@ -15,6 +15,7 @@ import {
   PROJECT_SCHEMA,
   validateProject,
   type Placement,
+  type DefinitionList,
   type Project,
   type QuarterTurn,
   type RunHandle,
@@ -53,19 +54,25 @@ interface TemplateItem {
   bindings?: Binding[];
   /** Its chair, service and installation settings (ADR-073, ADR-205; schemaVersion 3). */
   zones?: ItemZones;
+  /** Its definition list, by the template's list id, and its own values (ADR-303; schemaVersion 4). */
+  list?: { id: string; values?: Record<string, string> };
 }
 
 /**
  * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
  * kinds and wall connections (ADR-207), 3D models (ADR-208), item clearance zones (ADR-205) and the project's
- * seller items (ADR-210). An older app refuses a version it does not know.
+ * seller items (ADR-210); 4 = definition lists and the pieces' links to them (ADR-303). An older app refuses a version
+ * it does not know.
  */
-export const TEMPLATE_SCHEMA = 3 as const;
-type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
+export const TEMPLATE_SCHEMA = 4 as const;
+type TemplateSchemaVersion = 1 | 2 | 3 | typeof TEMPLATE_SCHEMA;
 /** The version that first stores variables, bindings and connections (ADR-170). */
 const VARS_SINCE = 2;
 /** The version that first stores run handles and sinks (ADR-204), connection kinds and wall connections (ADR-207). */
-const RUN_EXTRAS_SINCE = 3;
+export const TEMPLATE_RUN_EXTRAS = 3;
+const RUN_EXTRAS_SINCE = TEMPLATE_RUN_EXTRAS;
+/** The version that first stores definition lists and the pieces' links to them (ADR-303). */
+const LISTS_SINCE_T = 4;
 
 /** A display-only 3D model kept in a template (ADR-208): a project's model item with an offset; `ref` is its id. */
 interface TemplateModel {
@@ -110,6 +117,8 @@ export interface ProjectTemplate {
   room?: Room;
   /** The project's variables (ADR-166), every one (schemaVersion 2). */
   variables?: ProjectVariable[];
+  /** The project's definition lists (ADR-303, schemaVersion 4). */
+  definitionLists?: DefinitionList[];
   /** Connections between pieces (ADR-168), over template refs (schemaVersion 2; kinds and walls 3, ADR-207). */
   connections?: TemplateConnection[];
   /** Run handles (ADR-125), over template refs (schemaVersion 3, ADR-204). */
@@ -208,6 +217,8 @@ export function templateFromProject(
       ...(c.wall !== undefined ? { wall: c.wall } : {}),
     }));
   const bound = p.items.some((i) => i.bindings?.length);
+  // Definition lists and links (ADR-303) need version 4.
+  const lists = p.definitionLists?.length ? structuredClone(p.definitionLists) : undefined;
   const zoned = p.items.some((i) => i.zones);
   // Run handles and sinks over template refs (ADR-204): pieces no longer there are dropped.
   const extras = remapRunExtras(p.runHandles, p.sinks, refs);
@@ -235,15 +246,16 @@ export function templateFromProject(
     kind: 'project-template',
     // Run handles, sinks, connection kinds, 3D models or item zones need version 3 (ADR-204, ADR-207, ADR-208,
     // ADR-205); variables, bindings or connections version 2 (ADR-170); without them an older app can still read it.
-    schemaVersion:
-      runHandles.length ||
-      sinks.length ||
-      runRequests.length ||
-      connections?.some((c) => c.kind) ||
-      models.length ||
-      zoned ||
-      p.sellerItems?.length
-        ? TEMPLATE_SCHEMA
+    schemaVersion: lists
+      ? TEMPLATE_SCHEMA
+      : runHandles.length ||
+          sinks.length ||
+          runRequests.length ||
+          connections?.some((c) => c.kind) ||
+          models.length ||
+          zoned ||
+          p.sellerItems?.length
+        ? RUN_EXTRAS_SINCE
         : variables || connections?.length || bound
           ? VARS_SINCE
           : 1,
@@ -263,8 +275,10 @@ export function templateFromProject(
       ...(i.angle ? { angle: i.angle } : {}),
       ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
       ...(i.zones ? { zones: structuredClone(i.zones) } : {}),
+      ...(lists && i.list && !i.set ? { list: structuredClone(i.list) } : {}),
     })),
     ...(variables ? { variables } : {}),
+    ...(lists ? { definitionLists: lists } : {}),
     ...(connections?.length ? { connections } : {}),
     ...(runHandles.length ? { runHandles } : {}),
     ...(sinks.length ? { sinks } : {}),
@@ -287,6 +301,12 @@ export function templateFromProject(
 export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project {
   const now = new Date().toISOString();
   const ids = new Map(t.items.map((i) => [i.ref, newId()]));
+  // Lists get new ids too; links follow (ADR-303).
+  const listIds = new Map((t.definitionLists ?? []).map((l) => [l.id, newId()]));
+  const definitionLists = (t.definitionLists ?? []).map((l) => ({
+    ...structuredClone(l),
+    id: listIds.get(l.id)!,
+  }));
   const items = t.items.map((i) => {
     const pl =
       i.placement?.kind === 'above'
@@ -303,6 +323,9 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       ...(i.angle ? { angle: i.angle } : {}),
       ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
       ...(i.zones ? { zones: structuredClone(i.zones) } : {}),
+      ...(i.list && listIds.has(i.list.id)
+        ? { list: { ...structuredClone(i.list), id: listIds.get(i.list.id)! } }
+        : {}),
     };
   });
   const connections = templateConnections(t.connections, ids, t.room).connections;
@@ -311,6 +334,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
   const models = templateModels(t.models, ids);
   const extended =
     items.some((i) => i.linkId || i.angle || i.bindings || i.zones) ||
+    definitionLists.length ||
     t.variables?.length ||
     connections.length ||
     extras.runHandles.length ||
@@ -330,6 +354,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     cutting: { kerf: 4 },
     ...(t.room ? { room: structuredClone(t.room) } : {}),
     ...(t.variables?.length ? { variables: structuredClone(t.variables) } : {}),
+    ...(definitionLists.length ? { definitionLists } : {}),
     ...(connections.length ? { connections } : {}),
     ...(extras.runHandles.length ? { runHandles: extras.runHandles } : {}),
     ...(extras.sinks.length ? { sinks: extras.sinks } : {}),
@@ -411,11 +436,19 @@ export function validateProjectTemplate(t: unknown): string[] {
   const errs: string[] = [];
   if (
     t.kind !== 'project-template' ||
-    (t.schemaVersion !== 1 && t.schemaVersion !== VARS_SINCE && t.schemaVersion !== TEMPLATE_SCHEMA)
+    ![1, VARS_SINCE, RUN_EXTRAS_SINCE, TEMPLATE_SCHEMA].includes(t.schemaVersion as number)
   )
     errs.push('Not a project template');
   const v2 = typeof t.schemaVersion === 'number' && t.schemaVersion >= VARS_SINCE;
   const v3 = typeof t.schemaVersion === 'number' && t.schemaVersion >= RUN_EXTRAS_SINCE;
+  const v4 = typeof t.schemaVersion === 'number' && t.schemaVersion >= LISTS_SINCE_T;
+  const listIds = new Set(
+    Array.isArray(t.definitionLists)
+      ? t.definitionLists
+          .filter((l) => isObj(l) && typeof l.id === 'string')
+          .map((l) => l.id as string)
+      : [],
+  );
   if (typeof t.id !== 'string' || !t.id || typeof t.name !== 'string' || !t.name)
     errs.push('Missing template id or name');
   if (typeof t.description !== 'string') errs.push('Missing description');
@@ -472,7 +505,12 @@ export function validateProjectTemplate(t: unknown): string[] {
     // Zones need version 3 (ADR-205); their values are checked on the project the template makes.
     if (it.zones !== undefined && (!v3 || !isObj(it.zones)))
       errs.push(`${name}: clearance zones need template schemaVersion ${RUN_EXTRAS_SINCE}`);
+    // A definition list link (ADR-303): version 4, to a list of the template; values are checked on the project.
+    if (it.list !== undefined && (!v4 || !isObj(it.list) || !listIds.has(it.list.id as string)))
+      errs.push(`${name}: definition list links need template schemaVersion ${LISTS_SINCE_T}`);
   }
+  if (t.definitionLists !== undefined && (!v4 || !Array.isArray(t.definitionLists)))
+    errs.push(`Definition lists need template schemaVersion ${LISTS_SINCE_T}`);
   if (t.variables !== undefined && (!v2 || !Array.isArray(t.variables)))
     errs.push(`Variables need template schemaVersion ${VARS_SINCE}`);
   if (t.connections !== undefined) {
@@ -484,7 +522,7 @@ export function validateProjectTemplate(t: unknown): string[] {
         const kind = isObj(c) ? c.kind : undefined;
         // Kinds and wall connections need version 3 (ADR-207).
         if ((kind !== undefined || (isObj(c) && c.wall !== undefined)) && !v3) {
-          errs.push(`Connection kinds need template schemaVersion ${TEMPLATE_SCHEMA}`);
+          errs.push(`Connection kinds need template schemaVersion ${RUN_EXTRAS_SINCE}`);
           continue;
         }
         const wall = kind === 'wall';
@@ -547,7 +585,7 @@ export function validateProjectTemplate(t: unknown): string[] {
   }
   if (t.models !== undefined) {
     if (!v3 || !Array.isArray(t.models))
-      errs.push(`3D models need template schemaVersion ${TEMPLATE_SCHEMA}`);
+      errs.push(`3D models need template schemaVersion ${RUN_EXTRAS_SINCE}`);
     else {
       const seen = new Set<string>();
       for (const m of t.models) {
@@ -585,7 +623,7 @@ export function validateProjectTemplate(t: unknown): string[] {
   }
   // The project's own seller items (ADR-210): version 3; each item is checked on the project the template makes.
   if (t.sellerItems !== undefined && (!v3 || !Array.isArray(t.sellerItems)))
-    errs.push(`Seller items need template schemaVersion ${TEMPLATE_SCHEMA}`);
+    errs.push(`Seller items need template schemaVersion ${RUN_EXTRAS_SINCE}`);
   const rr = t.runRecipe;
   if (rr !== undefined) {
     const s = isObj(rr) ? rr.settings : null;

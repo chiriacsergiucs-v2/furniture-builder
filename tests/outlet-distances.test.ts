@@ -106,7 +106,7 @@ describe('outlet distances the user sets (ADR-299)', () => {
   });
 
   it('schemaVersion 22 stores the distances; 21 refuses them and older files still load; bad values refused', () => {
-    expect(PROJECT_SCHEMA).toBe(22);
+    expect(PROJECT_SCHEMA).toBe(23);
     expect(PROJECT_SCHEMAS).toContain(21);
     const p = kitchen(room([feature({})], { sink: 600, pipe: 300 }));
     expect(validateProject(p)).toEqual([]);

@@ -7,6 +7,7 @@ import { insertTemplate, keptVariables } from '../src/core/insertTemplate';
 import { makeItem, newProject, validateProject, type Project } from '../src/core/project';
 import {
   projectFromTemplate,
+  TEMPLATE_RUN_EXTRAS,
   TEMPLATE_SCHEMA,
   templateFromProject,
   validateProjectTemplate,
@@ -35,10 +36,10 @@ const st = () => useDesign.getState();
 describe('templateFromProject (ADR-170)', () => {
   it('keeps variables, bindings and connections at schemaVersion 2; without them a template stays version 1', () => {
     const tpl = templateFromProject(bound(), 'Kitchen');
-    // Variables, bindings and connections alone make version 2; version 3 (TEMPLATE_SCHEMA) is for run handles,
+    // Variables, bindings and connections alone make version 2; version 3 (TEMPLATE_RUN_EXTRAS) is for run handles,
     // sinks and the later fields (ADR-204).
     expect(tpl.schemaVersion).toBe(2);
-    expect(TEMPLATE_SCHEMA).toBe(3);
+    expect(TEMPLATE_RUN_EXTRAS).toBe(3);
     expect(tpl.variables?.map((v) => [v.name, v.expr])).toEqual([['h', '600']]);
     expect(tpl.items[0].bindings).toEqual([{ target: 'height', expr: 'h' }]);
     expect(tpl.items[1].bindings).toBeUndefined();
@@ -67,7 +68,7 @@ describe('templateFromProject (ADR-170)', () => {
     expect(
       validateProjectTemplate({ ...tpl, connections: [{ itemIds: [a, b] }, { itemIds: [b, a] }] }),
     ).toContain('Invalid template connection');
-    expect(validateProjectTemplate({ ...tpl, schemaVersion: 4 })).toContain(
+    expect(validateProjectTemplate({ ...tpl, schemaVersion: TEMPLATE_SCHEMA + 1 })).toContain(
       'Not a project template',
     );
   });

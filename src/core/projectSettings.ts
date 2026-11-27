@@ -124,9 +124,35 @@ export function withSettings(d: Design, s: ProjectSettings | undefined): Design 
 
 export type Follows = 'follows' | 'own' | 'n/a';
 
-/** Whether the piece follows the project's setting: n/a when the project has none or the piece has no such part. */
+/** The definition list a piece is linked to (ADR-303), if it still exists. */
+export const listOf = (project: Project, item: Pick<ProjectItem, 'list'>) =>
+  item.list ? project.definitionLists?.find((l) => l.id === item.list!.id) : undefined;
+
+/** The settings a piece follows (ADR-303): its definition list's, then the project's for keys the list does not set. */
+export function effectiveSettings(
+  project: Project,
+  item: ProjectItem,
+): ProjectSettings | undefined {
+  const ls = listOf(project, item)?.settings;
+  if (!ls || !Object.keys(ls).length) return project.settings;
+  return { ...project.settings, ...ls };
+}
+
+/** Where a piece's value of a setting comes from (ADR-303): its definition list or the project. */
+export function settingSource(
+  project: Project,
+  item: ProjectItem,
+  key: SettingKey,
+): 'list' | 'project' {
+  return listOf(project, item)?.settings?.[key] !== undefined ? 'list' : 'project';
+}
+
+/**
+ * Whether the piece follows its setting (the list's when its definition list sets it, else the project's): n/a when
+ * neither sets it or the piece has no such part.
+ */
 export function follows(project: Project, item: ProjectItem, key: SettingKey): Follows {
-  const pv = projectValue(project.settings, key);
+  const pv = projectValue(effectiveSettings(project, item), key);
   const own = settingOf(item.design, key);
   if (pv === undefined || own === undefined) return 'n/a';
   return own === pv ? 'follows' : 'own';
@@ -193,6 +219,8 @@ export function setProjectSetting(
     value === undefined
       ? project.items
       : project.items.map((it) => {
+          // A piece whose definition list sets this key follows the list, not the project (ADR-303).
+          if (settingSource(project, it, key) === 'list') return it;
           const own = settingOf(it.design, key);
           if (own === undefined || (old !== undefined && own !== old)) return it;
           const design = withSetting(it.design, key, settings);
@@ -206,14 +234,53 @@ export function setProjectSetting(
   return { project: next, applied };
 }
 
-/** The piece takes the project's value again ("Follow project"). */
+/** The piece takes the project's value again ("Follow project"), or its definition list's ("Follow list", ADR-303). */
 export function followProject(project: Project, itemId: string, key: SettingKey): Project {
-  if (!project.settings) return project;
-  const s = project.settings;
-  return {
-    ...project,
-    items: project.items.map((it) =>
-      it.id === itemId ? { ...it, design: withSetting(it.design, key, s) } : it,
-    ),
-  };
+  let changed = false;
+  const items = project.items.map((it) => {
+    if (it.id !== itemId) return it;
+    const s = effectiveSettings(project, it);
+    if (!s) return it;
+    changed = true;
+    return { ...it, design: withSetting(it.design, key, s) };
+  });
+  return changed ? { ...project, items } : project;
+}
+
+/**
+ * Set (or clear, with undefined) a definition list's setting (ADR-303): every piece linked to the list that followed
+ * its old value (the list's, else the project's) takes the new one; pieces with their own value keep it. Clearing
+ * changes no piece, as for a project setting.
+ */
+export function setListSetting(
+  project: Project,
+  listId: string,
+  key: SettingKey,
+  value: ProjectSettings[SettingKey] | undefined,
+): SettingResult {
+  const list = project.definitionLists?.find((l) => l.id === listId);
+  if (!list) return { project, applied: [] };
+  const settings: ProjectSettings = { ...list.settings };
+  if (value === undefined) delete settings[key];
+  else (settings as Record<string, unknown>)[key] = value;
+  const { settings: _s, ...bare } = list;
+  void _s;
+  const nextList = Object.keys(settings).length ? { ...bare, settings } : bare;
+  const definitionLists = project.definitionLists!.map((l) => (l.id === listId ? nextList : l));
+  const applied: string[] = [];
+  const effective = { ...project.settings, ...settings };
+  const items =
+    value === undefined
+      ? project.items
+      : project.items.map((it) => {
+          if (it.list?.id !== listId) return it;
+          const old = projectValue(effectiveSettings(project, it), key);
+          const own = settingOf(it.design, key);
+          if (own === undefined || (old !== undefined && own !== old)) return it;
+          const design = withSetting(it.design, key, effective);
+          if (design === it.design) return it;
+          applied.push(it.design.name);
+          return { ...it, design };
+        });
+  return { project: { ...project, definitionLists, items }, applied };
 }

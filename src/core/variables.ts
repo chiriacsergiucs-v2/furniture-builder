@@ -38,6 +38,8 @@ import {
   type ProjectVariable,
 } from './variableCore';
 
+import { dropListValues, listDiagnostics, listValues } from './defLists';
+
 export * from './variableCore';
 
 // ---------------------------------------------------------------------------
@@ -45,10 +47,24 @@ export * from './variableCore';
 // ---------------------------------------------------------------------------
 
 /** The variable values an item's bindings are evaluated with: its value set's (ADR-167), or set 1's. */
-export function scopeFor(project: Project, item: Pick<ProjectItem, 'set'>): Map<string, number> {
+export function scopeFor(
+  project: Project,
+  item: Pick<ProjectItem, 'set' | 'list'>,
+): Map<string, number> {
   const vars = project.variables ?? [];
   const vs = item.set ? project.variableSets?.find((s) => s.id === item.set!.id) : undefined;
-  return variableScope(vars, vs?.values);
+  // A value-set duplicate keeps its set's values; otherwise a linked piece takes its definition list's (ADR-303).
+  return variableScope(vars, vs ? vs.values : listValues(project, item));
+}
+
+/**
+ * The cache key of an item's scope: one per value set, one per definition list without piece overrides; null when the
+ * piece has its own overrides (its scope is its own).
+ */
+export function scopeKey(item: Pick<ProjectItem, 'set' | 'list'>): string | null {
+  if (item.set) return `set:${item.set.id}`;
+  if (!item.list) return '';
+  return item.list.values && Object.keys(item.list.values).length ? null : `list:${item.list.id}`;
 }
 
 /**
@@ -61,7 +77,8 @@ export function applyBindings(input: Project): Project {
   if (!project.items.some((i) => i.bindings?.length)) return project;
   const scopes = new Map<string, Map<string, number>>();
   const scopeOf = (item: ProjectItem) => {
-    const k = item.set?.id ?? '';
+    const k = scopeKey(item);
+    if (k === null) return scopeFor(project, item);
     let s = scopes.get(k);
     if (!s) scopes.set(k, (s = scopeFor(project, item)));
     return s;
@@ -232,12 +249,16 @@ export function variableDiagnostics(project: Project): Diagnostic[] {
   }
   for (const s of project.variableSets ?? [])
     if (project.items.some((i) => i.set?.id === s.id)) report(s.name, s.values);
+  out.push(...listDiagnostics(project));
   const scopes = new Map<string, Map<string, number>>();
   for (const item of project.items) {
     if (!item.bindings?.length) continue;
-    const k = item.set?.id ?? '';
-    let scope = scopes.get(k);
-    if (!scope) scopes.set(k, (scope = scopeFor(project, item)));
+    const k = scopeKey(item);
+    let scope = k === null ? undefined : scopes.get(k);
+    if (!scope) {
+      scope = scopeFor(project, item);
+      if (k !== null) scopes.set(k, scope);
+    }
     for (const b of item.bindings) {
       const e = evaluateBinding(b.expr, scope);
       if (e.problem)
@@ -437,9 +458,10 @@ export function deleteVariable(project: Project, id: string): Project {
     void _gone;
     return { ...s, values };
   });
+  // Its values leave every definition list and every piece's override (ADR-303).
+  const lists = dropListValues({ ...project, items }, id);
   return {
-    ...project,
-    items,
+    ...lists,
     ...(runRequests ? { runRequests } : {}),
     ...(variables.length ? { variables } : { variables: undefined }),
     ...(variableSets ? { variableSets } : {}),

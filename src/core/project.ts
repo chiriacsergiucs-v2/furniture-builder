@@ -196,6 +196,23 @@ export interface ProjectItem {
    * profiled part with a notch or a hole the size of the zone. Absent = none. Saved from project schemaVersion 21.
    */
   backCuts?: string[];
+  /**
+   * The definition list this piece is linked to (ADR-303): its bindings take the list's variable values and it follows
+   * the list's settings. `values` are the piece's own overrides of variable values, by variable id. Absent = none.
+   * Saved from project schemaVersion 23.
+   */
+  list?: { id: string; values?: Record<string, string> };
+}
+
+/**
+ * A definition list (ADR-303): other values for the project's variables (by variable id; absent or empty = the
+ * project's) and for the project settings (absent key = the project's), for the pieces linked to it.
+ */
+export interface DefinitionList {
+  id: string;
+  name: string;
+  values: Record<string, string>;
+  settings?: ProjectSettings;
 }
 
 /**
@@ -366,9 +383,9 @@ export interface WorktopEdge {
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
  * construction locks (ADR-211), the project's own seller items (ADR-210), moulding profiles, request bindings and
  * repair fillers on run requests, cut-out positions and worktop edges (ADR-209); 22 = the outlet distances the user
- * sets on the room (ADR-299).
+ * sets on the room (ADR-299); 23 = definition lists and the pieces' links to them (ADR-303).
  */
-export const PROJECT_SCHEMA = 22 as const;
+export const PROJECT_SCHEMA = 23 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -391,6 +408,7 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   19,
   20,
   21,
+  22,
   PROJECT_SCHEMA,
 ];
 type ProjectSchemaVersion =
@@ -415,6 +433,7 @@ type ProjectSchemaVersion =
   | 19
   | 20
   | 21
+  | 22
   | typeof PROJECT_SCHEMA;
 export const RUN_REQUESTS_SINCE = 4;
 export const MODELS_SINCE = 5;
@@ -442,6 +461,7 @@ export const SELLER_ITEMS_SINCE = 21;
 export const FOLLOW_UPS_SINCE = 21;
 export const OWNED_SINCE = 21;
 export const OUTLET_DISTANCES_SINCE = 22;
+export const LISTS_SINCE = 23;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -510,6 +530,8 @@ export interface Project {
   sellerItems?: SellerItem[];
   /** Worktop front edges (ADR-209, schemaVersion 21), one per worktop by run-part key. Absent = square. */
   worktopEdges?: WorktopEdge[];
+  /** Definition lists pieces link to (ADR-303, schemaVersion 23). Absent = none. */
+  definitionLists?: DefinitionList[];
 }
 
 /**
