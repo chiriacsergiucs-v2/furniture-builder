@@ -53,12 +53,12 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 12 adds a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
+ * The document shape this app writes: 13 adds a board's leftover pieces (ADR-299); 12 added a kit lock and the room Custom (ADR-298); 11 added a cabinet's Open
  * both sides (ADR-292); 10 added a split's staggered rows (ADR-282); 9 added the user's assembly steps and the lounger and daybed ends (ADR-207)
  * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
  * mount (ADR-177); 6 added role boards (ADR-163); 1 to 10 still load.
  */
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 
 /**
  * Older versions → 11 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 10 add only optional fields
@@ -875,6 +875,26 @@ function validateSellerChoices(d: Record<string, unknown>, errs: string[]) {
   }
 }
 
+/** Most leftover pieces one board keeps (ADR-299). */
+export const MAX_LEFTOVERS = 50;
+
+/** A board's leftover pieces (ADR-299, schemaVersion 13): whole mm from 1 to 20 000, at most 50; null = fine. */
+function leftoverProblem(v: unknown, version: unknown): string | null {
+  if ((version as number) < 13) return t('leftovers need schemaVersion 13');
+  if (!Array.isArray(v) || v.length > MAX_LEFTOVERS)
+    return t('at most {n} pieces', { n: MAX_LEFTOVERS });
+  for (const o of v)
+    if (
+      !isObj(o) ||
+      !isInt(o.length, 1) ||
+      !isInt(o.width, 1) ||
+      (o.length as number) > 20_000 ||
+      (o.width as number) > 20_000
+    )
+      return t('sizes must be whole mm from 1 to 20 000');
+  return null;
+}
+
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
 function validateCatalog(c: unknown, version: unknown, errs: string[]) {
   if (c === undefined) return;
@@ -1139,7 +1159,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   // Staggered rows (ADR-282) came with schemaVersion 10.
   if ((d.schemaVersion as number) < 10 && JSON.stringify(d.product ?? null).includes('"stagger"'))
@@ -1182,6 +1202,13 @@ export function validateDesign(d: unknown): string[] {
       )
     )
       errs.push(t('Invalid sheet for {name}', { name: String(m.name) }));
+    else if (m.leftovers !== undefined && leftoverProblem(m.leftovers, d.schemaVersion))
+      errs.push(
+        t('Invalid leftovers for {name}: {problem}', {
+          name: String(m.name),
+          problem: leftoverProblem(m.leftovers, d.schemaVersion)!,
+        }),
+      );
     else if (m.stock !== undefined && m.stock !== 'sheet' && m.stock !== 'solid')
       errs.push(t('Invalid stock for {name}', { name: String(m.name) }));
     else if (

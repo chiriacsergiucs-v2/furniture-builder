@@ -541,4 +541,16 @@ export const ru_editors = {
   'Base pieces': 'Нижние изделия',
   'Wall pieces': 'Навесные изделия',
   'Sink cut-out {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
+  Leftovers: 'Остатки',
+  'Pieces of this board you already have. Parts go on them first; only full sheets are bought.':
+    'Куски этой плиты, которые у вас уже есть. Детали сначала раскладываются на них; покупаются только целые листы.',
+  'Leftover {n} length, along the grain': 'Длина остатка {n}, вдоль текстуры',
+  'Leftover {n} length': 'Длина остатка {n}',
+  'Leftover {n} width': 'Ширина остатка {n}',
+  'Remove leftover {n}': 'Удалить остаток {n}',
+  'Add leftover': 'Добавить остаток',
+  '{part}, {size} mm': '{part}, {size} мм',
+  'Sheet {n} · leftover {l} × {w} mm': 'Лист {n} · остаток {l} × {w} мм',
+  'Tap a part to see what it is.': 'Нажмите на деталь, чтобы увидеть, что это.',
+  '{size} mm': '{size} мм',
 } satisfies Record<string, string>;

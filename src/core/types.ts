@@ -47,6 +47,11 @@ export interface Material {
   color: string;
   /** Stock sheet bought for this board (ADR-019). Absent in version-1 files; defaults fill it in. */
   sheet?: StockSheet;
+  /**
+   * Leftover pieces of this board the user owns (ADR-299, schemaVersion 13), filled before any full sheet. Length runs
+   * along the grain like `sheet.length`; the board's trim applies. Absent = none.
+   */
+  leftovers?: Leftover[];
   /** 'solid': timber bought in lengths, listed by length instead of nested on sheets (ADR-038). Absent = sheet. */
   stock?: 'sheet' | 'solid';
   /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
@@ -122,6 +127,12 @@ export interface MaterialImage {
   tileLength: Mm;
   tileWidth: Mm;
   turn?: boolean;
+}
+
+/** One leftover piece of a board (ADR-299). */
+export interface Leftover {
+  length: Mm;
+  width: Mm;
 }
 
 /** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-009). */
@@ -791,7 +802,7 @@ export interface Design {
    * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
    * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
   id: string;
   name: string;
   createdAt: string;

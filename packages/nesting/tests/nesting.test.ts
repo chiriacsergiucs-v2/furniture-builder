@@ -233,3 +233,59 @@ it('fuzz: every layout passes the independent validator; mutations are caught', 
   expect(placed).toBeGreaterThan(N);
   expect(mutated).toBeGreaterThan(N);
 }, 600_000);
+
+describe('leftovers (ADR-299)', () => {
+  const LEFT = { length: 1220, width: 820 };
+  it('fills a leftover before any full sheet and counts it apart', () => {
+    const r = nest(job([part('a', 600, 400, 2)], { leftovers: [LEFT] }));
+    expect(r.valid).toBe(true);
+    expect(r.unplaced).toEqual([]);
+    expect(r.sheets).toHaveLength(1);
+    expect(r.sheets[0].leftover).toBe(0);
+    expect([r.sheets[0].length, r.sheets[0].width]).toEqual([LEFT.length, LEFT.width]);
+    expect(r.sheets[0].usable).toEqual({ x: TRIM, y: TRIM, length: 1200, width: 800 });
+    expect(r.stats.sheetsUsed - r.stats.leftoversUsed).toBe(0);
+  });
+
+  it('opens a full sheet for what the leftover cannot hold, and drops unused leftovers', () => {
+    const r = nest(
+      job([part('big', 2000, 1000), part('s', 500, 300)], {
+        leftovers: [LEFT, { length: 300, width: 300 }],
+      }),
+    );
+    expect(r.valid).toBe(true);
+    expect(r.stats.leftoversUsed).toBe(1);
+    expect(r.stats.sheetsUsed).toBe(2);
+    const full = r.sheets.find((s) => s.leftover === undefined)!;
+    expect(full.placements.map((p) => p.key)).toEqual(['big']);
+  });
+
+  it('limits full sheets by count, never leftovers', () => {
+    const r = nest(
+      job([part('a', 1000, 700, 2)], { sheet: { ...PAL, count: 0 }, leftovers: [LEFT, LEFT] }),
+    );
+    expect(r.valid).toBe(true);
+    expect(r.unplaced).toEqual([]);
+    expect(r.stats.leftoversUsed).toBe(2);
+  });
+
+  it('marks a leftover with no usable area after trim as an invalid job', () => {
+    const r = nest(job([part('a', 100, 100)], { leftovers: [{ length: 20, width: 500 }] }));
+    expect(r.unplaced[0].reason).toBe('invalid-job');
+    expect(r.valid).toBe(false);
+  });
+
+  it('the validator rejects a leftover sheet of the wrong size or used twice', () => {
+    const j = job([part('a', 600, 400, 2)], { leftovers: [LEFT] });
+    const r = nest(j);
+    const wrong = clone(r);
+    wrong.sheets[0].length = PAL.length;
+    expect(validateNest(j, wrong).join()).toMatch(/≠ stock/);
+    const twice = nest(job([part('a', 1100, 700, 2)], { leftovers: [LEFT, LEFT] }));
+    const dup = clone(twice);
+    dup.sheets[1].leftover = 0;
+    expect(
+      validateNest(job([part('a', 1100, 700, 2)], { leftovers: [LEFT, LEFT] }), dup).join(),
+    ).toMatch(/used twice/);
+  });
+});

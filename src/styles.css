@@ -2513,6 +2513,55 @@ td.note {
   font-weight: 500;
   fill: var(--on-material-2);
 }
+.sh-part {
+  cursor: pointer;
+}
+.sh-part.on rect,
+.sh-part:focus-visible rect {
+  stroke: var(--on-accent);
+  stroke-width: 3;
+}
+.sh-part:focus-visible {
+  outline: none;
+}
+.sh-info {
+  margin: 0 0 var(--s-1);
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.sh-draw {
+  position: relative;
+}
+.sh-pop {
+  position: absolute;
+  z-index: 2;
+  max-width: min(70%, 260px);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface, #fff);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  font-size: var(--fs-xs);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+.leftovers {
+  margin: 0 0 var(--s-2);
+}
+.leftovers summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+}
+.leftovers .count {
+  margin-left: var(--s-1);
+  color: var(--ink-2);
+}
+.leftovers .hint {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
 table.buy {
   margin-bottom: var(--s-4);
 }
@@ -3843,6 +3892,10 @@ ul.items {
   }
   .pr-sheet .sh-part text {
     font-family: sans-serif;
+  }
+  .pr-sheet .sh-info,
+  .pr-sheet .sh-pop {
+    display: none;
   }
 }
 .tiles {

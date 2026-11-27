@@ -298,7 +298,9 @@ export function PrintSheet() {
               const m = view.materials.find((x) => x.id === r.materialId)!;
               return (
                 <tr key={r.materialId}>
-                  <td className="n">{r.valid ? r.stats.sheetsUsed : '—'}</td>
+                  <td className="n">
+                    {r.valid ? r.stats.sheetsUsed - r.stats.leftoversUsed : '—'}
+                  </td>
                   <td>{printBoardName(layouts.jobs[i].materialName)}</td>
                   <td className="n">
                     {layouts.jobs[i].sheet.length} × {layouts.jobs[i].sheet.width}

@@ -728,4 +728,8 @@ export const ru_core2 = {
   'picture bytes do not match its type': 'данные картинки не соответствуют её типу',
   'The file holds {n} pictures; {over} over the limit of {max} were skipped.':
     'В файле {n} картинок; {over} сверх предела {max} пропущено.',
+  'leftovers need schemaVersion 13': 'остаткам нужна schemaVersion 13',
+  'at most {n} pieces': 'не более {n} кусков',
+  'sizes must be whole mm from 1 to 20 000': 'размеры — целые мм от 1 до 20 000',
+  'Invalid leftovers for {name}: {problem}': 'Неверные остатки для {name}: {problem}',
 } satisfies Record<string, string>;
