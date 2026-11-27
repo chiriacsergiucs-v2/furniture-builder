@@ -48,7 +48,7 @@ export interface Material {
   /** Stock sheet bought for this board (ADR-019). Absent in version-1 files; defaults fill it in. */
   sheet?: StockSheet;
   /**
-   * Leftover pieces of this board the user owns (ADR-299, schemaVersion 13), filled before any full sheet. Length runs
+   * Leftover pieces of this board the user owns (ADR-302, schemaVersion 15), filled before any full sheet. Length runs
    * along the grain like `sheet.length`; the board's trim applies. Absent = none.
    */
   leftovers?: Leftover[];
@@ -109,6 +109,15 @@ export interface EdgeBand {
   allowance?: Mm;
   /** The seller's product this band was taken from (ADR-161, schemaVersion 5). */
   product?: ProductRef;
+  /**
+   * ADR-301 (schemaVersion 14): guidance the user types from the band's datasheet, never filled in (ADR-010). The ±
+   * thickness and ± width deviation and the overhang left to trim per side, in tenths of a mm (1–100). Absent = not given.
+   */
+  thicknessTolerance?: number;
+  widthTolerance?: number;
+  overhang?: number;
+  /** ADR-301 (schemaVersion 14): the user's edgebander settings for this band, as they write them. */
+  edgebander?: string;
 }
 
 export type BoardFinish = 'matte' | 'satin' | 'gloss';
@@ -129,7 +138,7 @@ export interface MaterialImage {
   turn?: boolean;
 }
 
-/** One leftover piece of a board (ADR-299). */
+/** One leftover piece of a board (ADR-302). */
 export interface Leftover {
   length: Mm;
   width: Mm;
@@ -799,10 +808,10 @@ export interface Design {
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
    * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
-   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
-   * Older files are upgraded in memory on load.
+   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210);
+   * 13 adds merged assembly steps (ADR-300); 15 adds a board's leftover pieces (ADR-302). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   id: string;
   name: string;
   createdAt: string;
@@ -892,6 +901,11 @@ export type StepId =
 export interface AssemblyEdit {
   order: StepId[];
   names?: Partial<Record<StepId, string>>;
+  /**
+   * Steps merged into the step shown before them in `order` (ADR-300, schemaVersion 13): each joins its predecessor,
+   * so a run of them makes one step. Absent = no merge; a step that comes first stays on its own.
+   */
+  merged?: StepId[];
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */

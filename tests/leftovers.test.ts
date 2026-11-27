@@ -1,4 +1,4 @@
-// ADR-299: a board's leftover pieces, saved with the design (schemaVersion 13) and filled before full sheets.
+// ADR-302: a board's leftover pieces, saved with the design (schemaVersion 15) and filled before full sheets.
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { SCHEMA_VERSION, templates, upgradeDesign, validateDesign } from '../src/core/design';
@@ -14,22 +14,22 @@ const withLeftover = (d: Design, leftovers: unknown): Design =>
     materials: d.materials.map((m, i) => (i === 0 ? { ...m, leftovers } : m)),
   }) as Design;
 
-describe('leftover sheets (ADR-299)', () => {
-  it('validate in schemaVersion 13 and are refused in an older file', () => {
-    expect(SCHEMA_VERSION).toBe(13);
+describe('leftover sheets (ADR-302)', () => {
+  it('validate in schemaVersion 15 and are refused in an older file', () => {
+    expect(SCHEMA_VERSION).toBe(15);
     const d = upgradeDesign(t('bookcase'));
     expect(validateDesign(withLeftover(d, [{ length: 1200, width: 600 }]))).toEqual([]);
     expect(
       validateDesign(
-        withLeftover({ ...d, schemaVersion: 12 }, [{ length: 1200, width: 600 }]),
+        withLeftover({ ...d, schemaVersion: 14 }, [{ length: 1200, width: 600 }]),
       ).join(),
-    ).toMatch(/leftovers need schemaVersion 13/);
+    ).toMatch(/leftovers need schemaVersion 15/);
     expect(validateDesign(withLeftover(d, [{ length: 0, width: 600 }])).join()).toMatch(
       /Invalid leftovers/,
     );
     expect(validateDesign(withLeftover(d, 'x')).join()).toMatch(/Invalid leftovers/);
-    // A version-12 file without leftovers still loads.
-    expect(validateDesign({ ...d, schemaVersion: 12 })).toEqual([]);
+    // A version-14 file without leftovers still loads.
+    expect(validateDesign({ ...d, schemaVersion: 14 })).toEqual([]);
   });
 
   it('reach the layout, which fills them first; only full sheets are to buy', () => {

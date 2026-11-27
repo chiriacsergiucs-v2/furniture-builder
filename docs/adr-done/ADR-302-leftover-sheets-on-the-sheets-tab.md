@@ -1,11 +1,11 @@
-# ADR-299: Leftover sheets on the Sheets tab
+# ADR-302: Leftover sheets on the Sheets tab
 
 - Status: Implemented
 - Date: 2026-11-27
 - Implemented: 2026-11-27
 - Depends on: ADR-011, ADR-018, ADR-019
 - Design: docs/ui-design.md
-- Backlog: N419
+- Backlog: N429
 
 ## Context
 
@@ -18,9 +18,9 @@ Today a board has one stock sheet (ADR-019, `Material.sheet`) and the placer (AD
 
 ## Decision
 
-- **Model:** `Material.leftovers?: { length: Mm; width: Mm }[]` (schemaVersion 13). Each entry is one physical piece
+- **Model:** `Material.leftovers?: { length: Mm; width: Mm }[]` (schemaVersion 15). Each entry is one physical piece
   the user owns; length runs along the grain like `sheet.length` (ADR-009). The board's trim applies to a leftover
-  as to a full sheet. Validation: at most 50 entries, whole mm from 1 to 20 000; a leftover in a file older than 13 is
+  as to a full sheet. Validation: at most 50 entries, whole mm from 1 to 20 000; a leftover in a file older than 15 is
   an error. Older files load unchanged (the field is optional).
 - **Placer:** `NestJob.leftovers?` lists the pieces. Every attempt opens them before any full sheet, so parts go on
   leftovers first; leftovers that end empty are dropped. `SheetLayout.leftover` names the piece used and its size is
@@ -49,7 +49,7 @@ Today a board has one stock sheet (ADR-019, `Material.sheet`) and the placer (AD
 
 ## Done when
 
-- [x] A design with leftovers validates and reaches the layout; a leftover in a schemaVersion 12 file is an error
+- [x] A design with leftovers validates and reaches the layout; a leftover in a schemaVersion 14 file is an error
       (`tests/leftovers.test.ts`).
 - [x] Parts fill a leftover before a full sheet; the validator accepts it and rejects a leftover sheet of the wrong
       size or used twice (`packages/nesting/tests/nesting.test.ts`).

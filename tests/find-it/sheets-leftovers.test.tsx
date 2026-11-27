@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for ADR-299 (N419) in jsdom (ADR-108), from the bare app at 1280 and 390 px: on the Sheets tab every part
+// Find-it for ADR-302 (N429) in jsdom (ADR-108), from the bare app at 1280 and 390 px: on the Sheets tab every part
 // shows its size, a tap names the part (popup and the line under the sheet title), and a board's Leftovers → Add
 // leftover lays a sheet out as "leftover", which "Sheets to buy" does not count.
 import { screen, waitFor, within } from '@testing-library/react';
@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)(
-  'Sheets tab: part sizes, part names and leftovers at %ipx (find-it, ADR-299)',
+  'Sheets tab: part sizes, part names and leftovers at %ipx (find-it, ADR-302)',
   (width) => {
     it('names a tapped part and lays parts on an added leftover first', async () => {
       const { user } = await renderApp(width);

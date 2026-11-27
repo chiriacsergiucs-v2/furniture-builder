@@ -6,7 +6,7 @@ export * from '@furniture-builder/nesting';
 
 export interface SheetSettings {
   sheet: NestJob['sheet'];
-  /** Leftover pieces filled first (ADR-299); absent = none. */
+  /** Leftover pieces filled first (ADR-302); absent = none. */
   leftovers?: NestJob['leftovers'];
   trim: number;
   kerf: number;

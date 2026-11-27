@@ -1034,7 +1034,7 @@ describe('documents (ADR-209)', () => {
   beforeEach(() => setPrintLang('ro'));
 
   it('a project at the shared version 21 with every new field validates; older versions refuse the new fields', () => {
-    expect(PROJECT_SCHEMA).toBe(21);
+    expect(PROJECT_SCHEMA).toBe(22);
     const { p, wt } = kitchen();
     const [a, b] = p.items.map((i) => i.id);
     const full: Project = {

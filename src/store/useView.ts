@@ -17,7 +17,13 @@ import type {
 } from '../core/types';
 import { useDesign } from './designStore';
 import { buildModel } from '../core/build';
-import { fixingNote, fixingPositions, type FixingPart } from '../core/fasteners';
+import {
+  backFixingPositions,
+  fixingNote,
+  fixingPositions,
+  type FastenerChoice,
+  type FixingPart,
+} from '../core/fasteners';
 import { useFastenerChoices } from './fastenerStore';
 
 /** What the result panels, 3D and printout show: the piece being edited, or the whole open project. */
@@ -46,8 +52,27 @@ export interface ViewData {
   /**
    * Drilling positions of the carcass joints by panel id (ADR-209), only once the user typed the edge distance of their
    * carcass-joint fastener; guidance, never saved. `tooShort`: joints shorter than twice that distance (none drawn).
+   * With the back-fixing edge and spacing typed, the backs' positions too (G-439); `backsNotDrawn`: backs too small
+   * for that edge distance or not rectangular (none drawn).
    */
-  fixings?: { parts: Map<string, FixingPart>; tooShort: number };
+  fixings?: { parts: Map<string, FixingPart>; tooShort: number; backsNotDrawn?: number };
+}
+
+/** Carcass-joint and back-fixing positions of one model (ADR-209, G-439), keyed by `prefix` + panel id. */
+function allFixings(
+  model: Pick<FurnitureModel, 'panels' | 'hardware'>,
+  carcass: FastenerChoice | undefined,
+  back: FastenerChoice | undefined,
+  prefix = '',
+): { parts: Map<string, FixingPart>; tooShort: number; backsNotDrawn: number } {
+  const joints = fixingPositions(model, carcass, prefix);
+  const backs = backFixingPositions(model, back, prefix);
+  const parts = new Map(joints.parts);
+  for (const [k, v] of backs.parts) {
+    const cur = parts.get(k);
+    parts.set(k, cur ? { ...cur, at: [...cur.at, ...v.at] } : v);
+  }
+  return { parts, tooShort: joints.tooShort, backsNotDrawn: backs.notDrawn };
 }
 
 /** The rows with each part's drilling positions in its notes (ADR-209); the same rows when there are none. */
@@ -77,14 +102,17 @@ export function useView(): ViewData {
   // The user's carcass-joint fastener (ADR-209): drilling positions only once its edge distance is typed.
   const choices = useFastenerChoices();
   const carcass = choices.find((c) => c.joint === 'carcass-joint');
+  // The user's back fixing (G-439): positions only once its edge distance and spacing are typed.
+  const back = choices.find((c) => c.joint === 'back-fixing');
   const own = useMemo((): ViewData => {
     if (project && projectModel && !editing) {
-      const fixings = { parts: new Map<string, FixingPart>(), tooShort: 0 };
-      if (carcass?.edge !== undefined)
+      const fixings = { parts: new Map<string, FixingPart>(), tooShort: 0, backsNotDrawn: 0 };
+      if (carcass?.edge !== undefined || (back?.edge !== undefined && back.spacing !== undefined))
         for (const item of project.items) {
-          const f = fixingPositions(buildModel(item.design), carcass, `${item.id}:`);
+          const f = allFixings(buildModel(item.design), carcass, back, `${item.id}:`);
           for (const [k, v] of f.parts) fixings.parts.set(k, v);
           fixings.tooShort += f.tooShort;
+          fixings.backsNotDrawn += f.backsNotDrawn;
         }
       // Owned parts are taken off before the drilling notes are added: a note must not change a part's key.
       const base = projectCutlist(project, projectModel);
@@ -108,7 +136,7 @@ export function useView(): ViewData {
         fixings,
       };
     }
-    const fixings = fixingPositions(model, carcass);
+    const fixings = allFixings(model, carcass, back);
     const base = cutlist(model, design.materials);
     const split = applyOwned(base, design.ownedParts, design.materials);
     return {
@@ -128,6 +156,6 @@ export function useView(): ViewData {
       hardwareProducts: design.hardwareProducts,
       sellerItems: design.sellerItems,
     };
-  }, [design, model, project, projectModel, editing, carcass]);
+  }, [design, model, project, projectModel, editing, carcass, back]);
   return override ?? own;
 }

@@ -234,7 +234,7 @@ it('fuzz: every layout passes the independent validator; mutations are caught', 
   expect(mutated).toBeGreaterThan(N);
 }, 600_000);
 
-describe('leftovers (ADR-299)', () => {
+describe('leftovers (ADR-302)', () => {
   const LEFT = { length: 1220, width: 820 };
   it('fills a leftover before any full sheet and counts it apart', () => {
     const r = nest(job([part('a', 600, 400, 2)], { leftovers: [LEFT] }));

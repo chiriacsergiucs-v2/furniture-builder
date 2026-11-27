@@ -121,7 +121,7 @@ export function MaterialSheets({
   job: NestJob;
   color: string;
   trim: number;
-  /** Shown under the board's heading, e.g. its leftover pieces (ADR-299). */
+  /** Shown under the board's heading, e.g. its leftover pieces (ADR-302). */
   children?: ReactNode;
   labelOf: (key: string) => { labels: string[]; panelIds: string[] } | undefined;
   onHover: (ids: string[]) => void;
@@ -207,7 +207,7 @@ export function textOnColor(hex: string): 'light' | 'dark' {
 }
 
 /**
- * A board's leftover pieces (ADR-299): saved on the board, filled before any full sheet. Each change is one undo step.
+ * A board's leftover pieces (ADR-302): saved on the board, filled before any full sheet. Each change is one undo step.
  */
 function Leftovers({ material: m }: { material: Material }) {
   const update = useDesign((s) => s.updateMaterial);

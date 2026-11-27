@@ -3,11 +3,13 @@
  * (ADR-157): Romanian by default, Russian or English when chosen. Romanian text is the key of `pt()`. Pure
  * functions, no UI imports.
  */
-import { baseLabel, boardBandText, type CutRow } from './cutlist';
+import { baseLabel, boardBands, boardBandText, type CutRow } from './cutlist';
 import { dataSource, recordedMessage } from '@furniture-builder/i18n';
 import {
   getPrintLang,
   printBoardName,
+  printBuiltInName,
+  printHardwareName,
   pt,
   WARNING_RO,
   type PrintKey,
@@ -373,6 +375,36 @@ export const boardBandRo = (rows: CutRow[]) =>
     someUnnamed: pt('unele piese: nespecificat'),
   });
 
+/** "ABS 0,8 × 22 mm: grosime ±0,1 mm, …" — the guidance the user typed on a band (ADR-301); null when none. */
+const bandGuideRo = (b: EdgeBand): string | null => {
+  const mm = (v: number) => `${tenthsText(v, getPrintLang() === 'en' ? '.' : ',')} ${pt('mm')}`;
+  const parts = [
+    b.thicknessTolerance ? pt('grosime ±{v}', { v: mm(b.thicknessTolerance) }) : '',
+    b.widthTolerance ? pt('lățime ±{v}', { v: mm(b.widthTolerance) }) : '',
+    b.overhang ? pt('surplus de tăiat {v} pe parte', { v: mm(b.overhang) }) : '',
+    b.edgebander ? pt('mașina de cantuit: {s}', { s: b.edgebander }) : '',
+  ].filter(Boolean);
+  return parts.length ? `${bandRo(b)}: ${parts.join(', ')}` : null;
+};
+
+/**
+ * The tolerances and edgebander settings the user typed on a board's bands (ADR-301), for the printed sheet, labelled
+ * guidance; null when none is filled.
+ */
+export const boardBandGuideRo = (rows: CutRow[]): string | null => {
+  const b = boardBands(rows);
+  const list = [
+    ...b.bands.map(bandGuideRo),
+    ...b.fronts.map((f) => {
+      const g = bandGuideRo(f);
+      return g && `${pt('fronturi')} ${g}`;
+    }),
+  ].filter(Boolean);
+  return list.length
+    ? pt('cant, după fișa dvs. (orientativ): {list}', { list: list.join(' · ') })
+    : null;
+};
+
 /** The CSV header in Romanian (ADR-020); `csvHeaders()` gives it in the print language. */
 export const CSV_HEADERS_RO = [
   'Denumire',
@@ -445,20 +477,34 @@ const isMessageParam = (key: string, name: string): boolean =>
  * English text and printed in the print language (G-516). A message with no entry is printed as it is, in the
  * app language; `tests/warning-print.test.ts` keeps that from happening for the warnings the core makes.
  */
-export function warningText(message: string): string {
+export function warningText(message: string, pieceNames?: ReadonlyMap<string, string>): string {
   const rec = recordedMessage(message);
   if (!rec || !Object.hasOwn(WARNING_RO, rec.key)) return message;
   const params = rec.params
     ? Object.fromEntries(
         Object.entries(rec.params).map(([k, v]) => [
           k,
-          typeof v !== 'string'
-            ? v
-            : isMessageParam(rec.key, k)
-              ? warningText(v)
-              : partRo(dataSource(v)),
+          typeof v !== 'string' ? v : printedParam(v, isMessageParam(rec.key, k), pieceNames),
         ]),
       )
     : undefined;
   return pt(WARNING_RO[rec.key as keyof typeof WARNING_RO], params);
+}
+
+/**
+ * One param of a warning in the print language (G-521). A message inside it (a reason, a numbered piece name) is printed
+ * the same way. A message param that is a built-in hardware name (`{what}` of hardware-to-choose) gets its print entry.
+ * A data param is taken back to its English text and printed as a piece (`pieceNames`: stored name → printed name,
+ * `printPieceNames`), a built-in board, a built-in hardware name or a part label; a name the user typed prints as typed.
+ */
+function printedParam(
+  v: string,
+  message: boolean,
+  pieceNames: ReadonlyMap<string, string> | undefined,
+): string {
+  const rec = recordedMessage(v);
+  if (rec && Object.hasOwn(WARNING_RO, rec.key)) return warningText(v, pieceNames);
+  const s = dataSource(v);
+  if (message) return printHardwareName(s);
+  return pieceNames?.get(s) ?? printBuiltInName(s) ?? partRo(s);
 }

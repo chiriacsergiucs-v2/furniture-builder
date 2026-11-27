@@ -72,7 +72,7 @@ export function validateNest(job: NestJob, result: NestResult): string[] {
   result.sheets.forEach((sh, si) => {
     const tag = `sheet ${si + 1}`;
     if (sh.index !== si) errs.push(`${tag}: index ${sh.index}`);
-    // A leftover sheet (ADR-299) is that piece's size, each piece used once; any other sheet is the stock size.
+    // A leftover sheet (ADR-302) is that piece's size, each piece used once; any other sheet is the stock size.
     let stock = job.sheet as { length: number; width: number };
     if (sh.leftover !== undefined) {
       const o = job.leftovers?.[sh.leftover];

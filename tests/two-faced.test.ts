@@ -55,7 +55,7 @@ describe('Open both sides (ADR-292)', () => {
   });
 
   it('needs schemaVersion 11 and no back; version 10 designs still load', () => {
-    expect(SCHEMA_VERSION).toBe(13);
+    expect(SCHEMA_VERSION).toBe(15);
     expect(validateDesign(bookcase('none', true))).toEqual([]);
     expect(validateDesign(bookcase('applied', true))).toContain(
       'Open both sides needs a piece with no back',
@@ -65,7 +65,7 @@ describe('Open both sides (ADR-292)', () => {
     );
     const v10 = bookcase('none', undefined, 10);
     expect(validateDesign(v10)).toEqual([]);
-    expect(upgradeDesign(v10).schemaVersion).toBe(13);
+    expect(upgradeDesign(v10).schemaVersion).toBe(15);
     const bad = bookcase('none');
     if (bad.product.kind !== 'cabinet') throw Error();
     const wrong = {

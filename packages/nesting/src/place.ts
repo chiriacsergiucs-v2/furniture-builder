@@ -220,7 +220,7 @@ function runAttempt(
   let frees: Free[] = [];
   let fid = 0,
     cuts = 0;
-  // Leftovers (ADR-299) are open from the start, so parts fill them before any full sheet; empty ones are dropped.
+  // Leftovers (ADR-302) are open from the start, so parts fill them before any full sheet; empty ones are dropped.
   (job.leftovers ?? []).forEach((o, leftover) => {
     const u = usableOf(job, o.length, o.width);
     const root: Slot = { node: { kind: 'waste', length: u.length, width: u.width } };
