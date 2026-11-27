@@ -1966,3 +1966,15 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+
+### G-624: tools/mobile-middle/find-it.mjs: 16 checks fail at 390x844 and 320x640
+
+- Status: Open
+- Origin: G-610 build (N447), 2026-11-27
+- Missing: 16 checks fail before and after G-610: at 390x844 the editor flow, the Edit panel, Settings, Results, Jump-to-section order, five section-reachable checks and the quick-count card (23 px below the viewport); at 320x640 'edit bar exists'. Most are 10 s timeouts finding controls (stale selectors after the canvas editor became the phone default)
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Repair the script's phone steps for the canvas editor, and check the quick-count card position?
+- Suggested pick: Repair the phone steps against the canvas chip rail (as G-589 did for flows3); keep any check that shows a real bug failing and record it
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
