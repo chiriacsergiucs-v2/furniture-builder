@@ -4167,6 +4167,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-576: Staggered rows not refreshed on project-level resizes
+
+- Status: Done (N414)
+- Origin: ADR-282
+- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
+- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
+- Questions: Rewrite staggered rows on project-level resizes too?
+- Suggested pick: Yes, apply refreshStagger in the project commit
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+
 ### G-577: Canvas-native editor: slices 2-7 have no ADR yet
 
 - Status: Done (ADR-289)
@@ -4295,6 +4307,18 @@ highest id in either file.
 - Work: Low
 - Impact: High
 - Necessity: High
+
+### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
+
+- Status: Done (N415)
+- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
+- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
+- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
+- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
+- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
 
 ### G-604: Phone middle ground: layouts not measured (320 px edit bar, room drawings in short landscape)
 

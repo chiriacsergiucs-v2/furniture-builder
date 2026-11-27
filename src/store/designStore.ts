@@ -114,6 +114,22 @@ const keepSelection = (d: Design, sel: Selection): Selection =>
 
 const HISTORY = 100;
 
+/**
+ * Staggered rows (ADR-282) written for the size each piece has after a project change (group size, project
+ * variable, linked copy; G-576). Same project back when no row changes.
+ */
+const restagger = (p: Project): Project => {
+  let changed = false;
+  const items = p.items.map((i) => {
+    if (!hasStagger(i.design.product)) return i;
+    const design = refreshStagger(i.design, buildModel(i.design));
+    if (design === i.design) return i;
+    changed = true;
+    return { ...i, design };
+  });
+  return changed ? { ...p, items } : p;
+};
+
 /** "Change all copies" survives a reload on this device (ADR-245); on unless the user turned it off. */
 const LINK_ALL_KEY = 'fb:link-all-off';
 const readLinkAll = (): boolean => {
@@ -340,13 +356,15 @@ export const useDesign = create<State>((rawSet, get) => {
     const synced = applyPieceBindings(syncSets(linked));
     const bound = remakeAskedParts(synced, applyBindings(synced));
     const held = heldByBinding(base, linked, bound);
+    // Staggered rows follow the size the change gave each piece (ADR-282, G-576).
+    const restaggered = restagger(bound);
     // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
       ...pruneWorktopEdges(
         pruneWorktopJoints(
           refreshRunParts(
             resolvePlacements(
-              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(restaggered))))),
             ),
           ),
         ),

@@ -1829,18 +1829,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-576: Staggered rows not refreshed on project-level resizes
-
-- Status: Open
-- Origin: ADR-282
-- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
-- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
-- Questions: Rewrite staggered rows on project-level resizes too?
-- Suggested pick: Yes, apply refreshStagger in the project commit
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-
 ### G-579: Canvas-native editor study: device and user checks not run
 
 - Status: Open
@@ -1998,18 +1986,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: catch up burst debt
 - Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
 - Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
-
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Open
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
 
 ### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
 
