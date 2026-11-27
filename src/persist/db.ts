@@ -45,6 +45,19 @@ interface StoredTemplate {
   updatedAt: string;
   template: LocalTemplate;
 }
+/**
+ * A project or single piece deleted on the Projects page (ADR-302): its stored row exactly as it was, readable or not,
+ * kept until it is restored, deleted forever, or purged at start-up 30 days later.
+ */
+export interface RecentlyDeleted {
+  /** `<table>:<id>`. */
+  key: string;
+  table: 'designs' | 'projects';
+  id: string;
+  name: string;
+  deletedAt: string;
+  row: StoredDesign | StoredProject;
+}
 /** A picture added to a material (ADR-048), already scaled down. Bytes, not a Blob: every browser stores those. */
 export interface StoredImage {
   id: string;
@@ -91,6 +104,7 @@ class FurnitureDb extends Dexie {
   settings!: Table<SettingRow, string>;
   accountLinks!: Table<AccountLink, [string, string, string]>;
   bands!: Table<Band, string>;
+  recentlyDeleted!: Table<RecentlyDeleted, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -223,6 +237,26 @@ class FurnitureDb extends Dexie {
       accountLinks: '[accountId+table+localId], accountId, remoteId',
       bands: 'id',
     });
+    // v13 (ADR-302, G-014): projects and pieces deleted on the Projects page, kept 30 days. Earlier tables untouched
+    // (additive, no upgrade function).
+    this.version(13).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
+      gapMarks: 'gapId, updatedAt',
+      projectVersions: 'id, projectId, savedAt',
+      settings: 'key',
+      accountLinks: '[accountId+table+localId], accountId, remoteId',
+      bands: 'id',
+      recentlyDeleted: 'key, deletedAt',
+    });
   }
 }
 
@@ -324,6 +358,104 @@ export async function loadProject(id: string, database = db): Promise<Project | 
 }
 export const deleteProject = (id: string, database = db) =>
   database.projects.delete(id).then(saved('projects', [id], true));
+
+// ---- Recently deleted (ADR-302, G-014) -------------------------------------------------------------------------------
+
+/** How long a deleted project or piece stays in Recently deleted before the start-up purge may remove it. */
+const RECENTLY_DELETED_DAYS = 30;
+
+/**
+ * Delete on the Projects page (ADR-302): the stored row, as it is, moves to Recently deleted in one transaction, and
+ * the design or project is reported deleted as `deleteDesign`/`deleteProject` report it (ADR-235). A missing row moves
+ * nothing.
+ */
+export async function moveToRecentlyDeleted(
+  table: 'designs' | 'projects',
+  id: string,
+  now = new Date(),
+  database = db,
+): Promise<void> {
+  const src = database.table<StoredDesign | StoredProject, string>(table);
+  const moved = await database.transaction('rw', src, database.recentlyDeleted, async () => {
+    const row = await src.get(id);
+    if (!row) return false;
+    await database.recentlyDeleted.put({
+      key: `${table}:${id}`,
+      table,
+      id,
+      name: typeof row.name === 'string' ? row.name : '',
+      deletedAt: now.toISOString(),
+      row,
+    });
+    await src.delete(id);
+    return true;
+  });
+  if (moved) savedRows(table, [id], true);
+}
+
+/** Every Recently deleted row, newest first; rows the app cannot fully read are listed too (ADR-012). */
+export async function listRecentlyDeleted(database = db): Promise<RecentlyDeleted[]> {
+  const rows = await database.recentlyDeleted.toArray();
+  const at = (r: RecentlyDeleted) => (typeof r.deletedAt === 'string' ? r.deletedAt : '');
+  return rows.sort((a, b) => at(b).localeCompare(at(a)));
+}
+
+/**
+ * Restore (ADR-302): the stored row goes back under its own id, unchanged, and is reported saved. Refused, with
+ * nothing written, when the row is gone or its id is taken again.
+ */
+export async function restoreRecentlyDeleted(
+  key: string,
+  database = db,
+): Promise<{ ok: true } | { ok: false; reason: 'missing' | 'taken' }> {
+  const r = await database.transaction(
+    'rw',
+    database.designs,
+    database.projects,
+    database.recentlyDeleted,
+    async () => {
+      const del = await database.recentlyDeleted.get(key);
+      if (!del || (del.table !== 'designs' && del.table !== 'projects'))
+        return { ok: false as const, reason: 'missing' as const };
+      const dest = database.table<StoredDesign | StoredProject, string>(del.table);
+      if (await dest.get(del.id)) return { ok: false as const, reason: 'taken' as const };
+      await dest.put(del.row);
+      await database.recentlyDeleted.delete(key);
+      return { ok: true as const, table: del.table, id: del.id };
+    },
+  );
+  if (!r.ok) return r;
+  savedRows(r.table, [r.id]);
+  return { ok: true };
+}
+
+/** Delete forever (ADR-302): only on the user's confirm. Not backed up, so no change is reported. */
+export const deleteForever = (key: string, database = db) => database.recentlyDeleted.delete(key);
+
+/**
+ * The 30-day purge (ADR-302), run once at app start: removes the rows deleted more than 30 × 24 h before `now` whose
+ * date and document the app can read, and returns how many. A row the app cannot read is kept (ADR-012).
+ */
+export async function purgeRecentlyDeleted(now = new Date(), database = db): Promise<number> {
+  const limit = now.getTime() - RECENTLY_DELETED_DAYS * 24 * 60 * 60 * 1000;
+  const readable = (r: RecentlyDeleted): boolean => {
+    try {
+      if (r.table === 'designs') return !validateDesign((r.row as StoredDesign).design).length;
+      if (r.table === 'projects') return !validateProject((r.row as StoredProject).project).length;
+      return false;
+    } catch {
+      return false;
+    }
+  };
+  return database.transaction('rw', database.recentlyDeleted, async () => {
+    const old = (await database.recentlyDeleted.toArray()).filter((r) => {
+      const at = typeof r.deletedAt === 'string' ? Date.parse(r.deletedAt) : NaN;
+      return Number.isFinite(at) && at < limit && readable(r);
+    });
+    await database.recentlyDeleted.bulkDelete(old.map((r) => r.key));
+    return old.length;
+  });
+}
 
 /** The result of copying a saved row (ADR-227): the new id, or why the row could not be copied. */
 export type CopyResult = { ok: true; id: string } | { ok: false; reason: string };
@@ -628,6 +760,8 @@ export async function unusedImageIds(
     ...(await database.projectTemplates.toArray()),
     // A kept project version holds a whole project: its pictures are in use too (ADR-263).
     ...(await database.projectVersions.toArray()),
+    // So does a project or piece in Recently deleted (ADR-302): it can still be restored.
+    ...(await database.recentlyDeleted.toArray()),
   ]
     .map((r) => JSON.stringify(r))
     .join('\n');

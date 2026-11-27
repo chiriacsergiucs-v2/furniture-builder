@@ -15,6 +15,7 @@ import { ProjectsPage } from './shell/ProjectsPage';
 import { useUi } from '../store/uiStore';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
+import { purgeRecentlyDeleted } from '../persist/db';
 import { AccountDialog } from './Account';
 import { AssistantDialog } from './Assistant';
 import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
@@ -95,6 +96,21 @@ export function App() {
   useEffect(() => {
     const offs = [startAutoBackup(), startChangeClock()];
     return () => offs.forEach((off) => off());
+  }, []);
+  // The 30-day purge of Recently deleted runs once at start, and says how many it removed (ADR-302).
+  useEffect(() => {
+    purgeRecentlyDeleted()
+      .then((n) => {
+        if (n)
+          useUi.getState().setNotice({
+            ok: true,
+            text: t(
+              '{n|# item deleted more than 30 days ago was|# items deleted more than 30 days ago were} removed from Recently deleted.',
+              { n },
+            ),
+          });
+      })
+      .catch(() => {});
   }, []);
   // A remembered account shows at once; the session is checked when the online part loads (ADR-134).
   useEffect(() => {

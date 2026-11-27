@@ -125,7 +125,7 @@ describe('gap marks file (ADR-212, G-100)', () => {
   });
 
   it('saveGapMarks writes the merged marks to the same gapMarks table; older device rows are replaced', async () => {
-    expect(db.verno).toBe(12);
+    expect(db.verno).toBe(13);
     await saveGapMark(mark('G-001', T1, 'acknowledge', 'old'));
     await saveGapMark(mark('G-002', T3, 'acknowledge', 'device newest'));
     const current = Object.fromEntries((await listGapMarks()).map((m) => [m.gapId, m]));

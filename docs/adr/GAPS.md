@@ -75,24 +75,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-014: Undo across reloads and in the library
-
-- Status: Open
-- Origin: ADR-051, 2026-10-24 15:54 UTC; agent scoped it out
-- Missing: Restorable project versions exist (ADR-123), but the undo stack is still lost on reload and deleting saved projects/designs on the Projects page has no undo or Recently deleted list.
-- Request: Undo and redo for project changes (context, not a quote)
-- Questions: Keep undo per project on the device? A 30-day Recently deleted list for the library?
-- Suggested pick: Keep the undo stack per project in IndexedDB (new Dexie version). Make library deletes go to a 30-day “Recently deleted” list instead of being final. (estimate: effort +20%, value +15%)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Undo history is lost on reload, and deleting saved projects or designs is final.
-- Fix: Store undo per project in a new Dexie version; send library deletes to a 30-day Recently deleted list.
-- Conflicts: ADR-051: decided project history is not saved and starts empty on open.
-- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack).
-
 ### G-015: Egger catalogue import
 
 - Status: Open

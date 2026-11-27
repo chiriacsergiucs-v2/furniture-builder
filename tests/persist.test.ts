@@ -343,6 +343,8 @@ describe('every write reports its change (ADR-235)', () => {
       () => dbm.deleteAccountLink({ accountId: 'a', table: 'designs', localId: 'l1' }),
       () => [],
     ],
+    // Recently deleted is not backed up (ADR-302): the move reported the delete already; this reports nothing.
+    ['deleteForever', () => dbm.deleteForever('designs:x'), () => []],
     // Device settings are not saved work: no change reported.
     ['setSetting', () => dbm.setSetting('k', 1), () => []],
     ['deleteSetting', () => dbm.deleteSetting('k'), () => []],
@@ -489,6 +491,7 @@ describe('library writes report their changes like the direct calls (ADR-223)', 
           { id: 'pr2', unit: 'piece', amount: 3 },
         ] as never),
     ],
+    ['deleteForever', async () => {}, (m) => m.deleteForever('designs:x' as never)],
     ['setSetting', async () => {}, (m) => m.setSetting('k' as never, 1 as never)],
   ];
   const writers = /^(save|delete|replace|clear|copy|set)[A-Z]/;
@@ -530,7 +533,7 @@ describe('library writes report their changes like the direct calls (ADR-223)', 
         const direct = await once(name, seed, () => run(dbm as unknown as Writes));
         const viaLibrary = await once(name, seed, () => run(lib));
         expect([name, viaLibrary]).toEqual([name, direct]);
-        if (!['replaceBands', 'clearBands', 'setSetting'].includes(name))
+        if (!['replaceBands', 'clearBands', 'setSetting', 'deleteForever'].includes(name))
           expect(direct.length, name).toBeGreaterThan(0);
       }
     } finally {

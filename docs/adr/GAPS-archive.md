@@ -160,6 +160,25 @@ highest id in either file.
 - Suggested pick: “Save selection as template”. It needs multi-select, which ADR-069 also left out, so build both together. (estimate: effort +15%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-032 (it needs multi-select).
 
+### G-014: Undo across reloads and in the library
+
+- Status: Done (N431)
+- Origin: ADR-051, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: Restorable project versions exist (ADR-123), but the undo stack is still lost on reload and deleting saved projects/designs on the Projects page has no undo or Recently deleted list.
+- Request: Undo and redo for project changes (context, not a quote)
+- Questions: Keep undo per project on the device? A 30-day Recently deleted list for the library?
+- Suggested pick: Keep the undo stack per project in IndexedDB (new Dexie version). Make library deletes go to a 30-day “Recently deleted” list instead of being final. (estimate: effort +20%, value +15%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Undo history is lost on reload, and deleting saved projects or designs is final.
+- Fix: Store undo per project in a new Dexie version; send library deletes to a 30-day Recently deleted list.
+- Conflicts: ADR-051: decided project history is not saved and starts empty on open.
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack). Built by ADR-302 (N431): Dexie v13 `recentlyDeleted`; Projects › Delete moves a project or piece there for 30 days, with Restore and Delete forever; readable rows older than 30 days are purged at app start with the count shown. Evidence: `tests/recently-deleted.test.ts`, `tests/find-it/projects-recently-deleted.test.tsx` (390 and 1280 px).
+- Note: User 2026-11-27: "Recently deleted only" (no persistent undo stack).
+
 ### G-016: Export blocking never tried in a browser
 
 - Status: Done (ADR-201)
