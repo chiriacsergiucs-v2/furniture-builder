@@ -1639,18 +1639,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-556: Browser scripts editor-modes and ui-polish fail on main
-
-- Status: Open
-- Origin: N352, found by pnpm regress 2026-11-20
-- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
-- Request: Repair both scripts or the app, whichever is stale
-- Questions: none
-- Suggested pick: Repair the scripts against the current UI
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-557: Variants for sink-base, desk and chest
 
 - Status: Acknowledged (2026-11-27)

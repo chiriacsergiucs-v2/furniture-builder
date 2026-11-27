@@ -4175,6 +4175,19 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-556: Browser scripts editor-modes and ui-polish fail on main
+
+- Status: Done (N442)
+- Origin: N352, found by pnpm regress 2026-11-20
+- Missing: tools/editor-modes/find-it.mjs fails at 390 px 'places Editor · Cut list visible'; tools/ui-polish/find-it.mjs fails at 390 px 'phone bar shows Furniture Builder', 'brand visible on the Catalog page', 'Projects rows: buttons on the row line'. Both fail the same on the commit before PR 299, so not caused by it
+- Request: Repair both scripts or the app, whichever is stale
+- Questions: none
+- Suggested pick: Repair the scripts against the current UI
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Note: 2026-11-27 (N442): both scripts pass against `pnpm build` + `vite preview` (editor-modes 164/164, ui-polish 52/52). The 'places Editor · Cut list' and brand checks were already brought to the current UI (234f34d rename, N404); editor-modes still timed out on the catalog's `Add …` button since the finder became the default (G-582), fixed by opening the grouped catalog (`fb:catalogFinder` off) as N402 did. No app bug found.
+
 ### G-558: Mirrored cabinet: outer front width differs by 1 mm with odd board thickness
 
 - Status: Done (ADR-281)
