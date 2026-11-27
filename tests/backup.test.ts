@@ -63,7 +63,7 @@ describe('folder backup plan (ADR-133)', () => {
 });
 
 describe('restore plan (ADR-133, G-244)', () => {
-  it('never overwrites or deletes: identical items skipped, others become new copies', () => {
+  it('never overwrites or deletes: identical items skipped, others restored (new id when theirs is taken)', () => {
     const a = design(0);
     const b = design(1);
     const files = planBackup({
@@ -76,10 +76,10 @@ describe('restore plan (ADR-133, G-244)', () => {
     const p = planRestore(files, { designs: [changedA], projects: [], templates: [], keys: {} });
     expect(p.identical).toBe(0);
     expect(p.actions).toHaveLength(2);
-    for (const act of p.actions) {
-      if (act.table !== 'designs') throw new Error('designs only');
-      expect([a.id, b.id]).not.toContain(act.design.id); // new ids (ADR-011)
-    }
+    const ids = p.actions.map((act) => (act.table === 'designs' ? act.design.id : ''));
+    // a's id is taken on this device: a new copy with a new id; b's is free: it keeps it (G-282).
+    expect(ids).not.toContain(a.id);
+    expect(ids).toContain(b.id);
     const again = planRestore(files, { designs: [a], projects: [], templates: [], keys: {} });
     expect(again.identical).toBe(1);
     expect(again.actions).toHaveLength(1);
@@ -98,6 +98,34 @@ describe('restore plan (ADR-133, G-244)', () => {
     });
     expect(second.actions).toHaveLength(0);
     expect(second.identical).toBe(1);
+  });
+
+  it('a restored item keeps its id when nothing on the device uses it, else gets a new one (G-282)', () => {
+    const a = design(0);
+    const b = design(1);
+    const c = design(2);
+    const twin = { ...a, name: 'Same id, other content' };
+    const files = [
+      ...planBackup({ designs: [{ id: a.id, design: a }] }),
+      { path: 'designs/twin.json', text: encodeRow(twin) },
+      ...planBackup({ designs: [{ id: b.id, design: b }], templates: [] }),
+      ...planBackup({ designs: [{ id: c.id, design: c }] }),
+    ];
+    // b is taken by a saved row the app cannot read: never overwritten (ADR-012), so b gets a new id too.
+    const p = planRestore(files, {
+      designs: [],
+      projects: [],
+      templates: [],
+      keys: {},
+      ids: { designs: new Set([b.id]) },
+    });
+    const got = p.actions.map((act) => (act.table === 'designs' ? act.design : null)!);
+    expect(got.map((d) => d.name)).toEqual([a.name, twin.name, b.name, c.name]);
+    expect(got[0].id).toBe(a.id); // free: kept, so versions and template links find it again
+    expect(got[1].id).not.toBe(a.id); // taken earlier in the same restore
+    expect(got[2].id).not.toBe(b.id); // taken by an unreadable row
+    expect(got[3].id).toBe(c.id);
+    expect(new Set(got.map((d) => d.id)).size).toBe(4);
   });
 
   it('invalid files are listed by name and nothing throws', () => {
@@ -157,6 +185,25 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     const rows = await db.designs.toArray();
     expect(rows).toHaveLength(2);
     expect(rows.find((r) => r.id === a.id)?.name).toBe('Edited'); // never overwritten
+  });
+
+  it('a restore keeps a free id and never overwrites an unreadable row under a taken one (G-282)', async () => {
+    const a = design(0);
+    const b = design(1);
+    await db.designs.put({ id: b.id, name: 'x', updatedAt: '2026', design: {} as never });
+    await restoreFiles(
+      planBackup({
+        designs: [
+          { id: a.id, design: a },
+          { id: b.id, design: b },
+        ],
+      }),
+    );
+    expect((await db.designs.get(a.id))?.design.name).toBe(a.name);
+    expect((await db.designs.get(b.id))?.design).toEqual({}); // the unreadable row stays as it was
+    const rows = await db.designs.toArray();
+    expect(rows).toHaveLength(3);
+    expect(rows.some((r) => r.id !== b.id && r.design.name === b.name)).toBe(true);
   });
 
   it('restore writes nothing for an invalid file and reports it', async () => {

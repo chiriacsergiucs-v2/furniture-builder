@@ -1634,6 +1634,21 @@ highest id in either file.
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
 
+### G-202: Replace and the outer size
+
+- Status: Done (N412)
+- Origin: ADR-124 (found while building)
+- Missing: Replace never carries the piece's own outer width, height or depth; this narrows the accepted G-160 pick 'every changed setting'
+- Request: Accept default, /batch all ready
+- Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
+- Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Replace never carries the piece's own outer width, height or depth to the new item.
+- Fix: Carry the piece's own size on Replace too; resulting overlaps show as diagnostics.
+- Conflicts: ADR-124: Decision says outer sizes are the new item's and listed as not kept.
+
 ### G-203: Wizard and template pieces and the project settings
 
 - Status: Done (ADR-170)
@@ -2325,6 +2340,21 @@ highest id in either file.
 - Issue: A single piece opened from a project shows no wall background behind it in its front view.
 - Fix: Fill the wall finish floor-to-room-height behind the piece when opened from a project with a room.
 - Conflicts: none
+
+### G-282: Restored copies lose version and template links
+
+- Status: Done (N413)
+- Origin: ADR-133, 2026-10-28; found while building (Claude)
+- Missing: Restore gives every restored piece, project and template a new id (G-244), so kept project versions and template links in the backup point at the old ids and stay apart from the restored copies.
+- Request: Answer G-244: “New copies (Recommended)”
+- Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
+- Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Restored items get new ids, so backed-up versions and template links no longer point at them.
+- Fix: On restore, keep the item's old id when nothing on this device already uses it.
+- Conflicts: ADR-133: restore makes new copies with new ids, per user answer G-244.
 
 ### G-283: Where the four straighten corners are placed
 
