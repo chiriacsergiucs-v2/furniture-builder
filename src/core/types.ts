@@ -788,10 +788,10 @@ export interface Design {
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
    * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
-   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
-   * Older files are upgraded in memory on load.
+   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210);
+   * 13 adds merged assembly steps (ADR-300). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
   id: string;
   name: string;
   createdAt: string;
@@ -881,6 +881,11 @@ export type StepId =
 export interface AssemblyEdit {
   order: StepId[];
   names?: Partial<Record<StepId, string>>;
+  /**
+   * Steps merged into the step shown before them in `order` (ADR-300, schemaVersion 13): each joins its predecessor,
+   * so a run of them makes one step. Absent = no merge; a step that comes first stays on its own.
+   */
+  merged?: StepId[];
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */

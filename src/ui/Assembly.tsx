@@ -11,6 +11,7 @@ import {
   boxTitle,
   fastenerLines,
   hardwareLine,
+  mergeStep,
   moveStep,
   partName,
   prepLines,
@@ -387,6 +388,18 @@ export function Assembly() {
                       }}
                     >
                       {t('Rename step')}
+                    </button>
+                    {/* ADR-300: merged into one step, saved with the order; Reset the steps undoes it. */}
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      disabled={i === p.steps.length - 1}
+                      onClick={() => {
+                        const edit = mergeStep(p.steps, s.id, p.edit);
+                        if (edit) setAssembly(p.itemId, edit, t('Merge with the next step'));
+                      }}
+                    >
+                      {t('Merge with the next step')}
                     </button>
                   </div>
                   <p className="step-do">{stepInstruction(s, 'app')}</p>

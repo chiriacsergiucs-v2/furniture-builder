@@ -686,6 +686,9 @@ export const ru_core2 = {
   // ADR-207: document validation.
   'Assembly steps need schemaVersion 9': 'Шаги сборки требуют schemaVersion 9',
   'Invalid assembly steps': 'Недопустимые шаги сборки',
+  'Merged assembly steps need schemaVersion 13':
+    'Объединённые шаги сборки требуют schemaVersion 13',
+  'Invalid merged assembly steps': 'Недопустимые объединённые шаги сборки',
   'Backrest and side panel ends need schemaVersion 9':
     'Сторона спинки и боковой панели требует schemaVersion 9',
   'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',
