@@ -431,7 +431,7 @@ describe('connection-broken names each kind’s reason (ADR-207, ADR-008)', () =
 
 describe('documents (ADR-207, ADR-011)', () => {
   it('project 21 validates kinds and wall connections; project 20 files load unchanged, a kind in 20 is invalid', () => {
-    expect(PROJECT_SCHEMA).toBe(22);
+    expect(PROJECT_SCHEMA).toBe(23);
     const p: Project = { ...cornerPair(), room: ROOM };
     const [a, b] = ids(p);
     const ok = connectWall(connect(p, a, b, 'corner'), a, 0);

@@ -126,8 +126,11 @@ function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
     linkId: _k,
     turnLocked: _t,
     sizeLocks: _a,
+    // A duplicate shows its set's values, never a definition list's (ADR-307).
+    list: _li,
     ...rest
   } = structuredClone(src);
+  void _li;
   void _l;
   void _s;
   void _k;

@@ -41,6 +41,7 @@ import {
   PARAM_LOCKS_SINCE,
   PIECE_LOCKS_SINCE,
   OUTLET_DISTANCES_SINCE,
+  LISTS_SINCE,
   PROJECT_SCHEMAS,
   REFS_SINCE,
   REQUEST_TARGETS,
@@ -804,5 +805,54 @@ export function validateProject(p: unknown): string[] {
     (p.schemaVersion as number) < OUTLET_DISTANCES_SINCE
   )
     errs.push(t('Outlet distances need project schemaVersion {v}', { v: OUTLET_DISTANCES_SINCE }));
+  errs.push(...validateLists(p));
+  return errs;
+}
+
+/** Definition lists and the pieces' links to them (ADR-307). */
+function validateLists(p: Record<string, unknown>): string[] {
+  const errs: string[] = [];
+  const ids = new Set<string>();
+  const names = new Set<string>();
+  const exprs = (v: unknown) =>
+    isObj(v) && Object.values(v).every((x) => typeof x === 'string' && x.length <= MAX_EXPR);
+  if (p.definitionLists !== undefined) {
+    if (!Array.isArray(p.definitionLists) || p.definitionLists.length > MAX_VARIABLES)
+      return [t('Invalid definition lists')];
+    if ((p.schemaVersion as number) < LISTS_SINCE)
+      errs.push(t('Definition lists need project schemaVersion {v}', { v: LISTS_SINCE }));
+    for (const l of p.definitionLists) {
+      const name = isObj(l) && typeof l.name === 'string' ? l.name.trim().toLowerCase() : '';
+      if (
+        !isObj(l) ||
+        typeof l.id !== 'string' ||
+        !l.id ||
+        ids.has(l.id) ||
+        !name ||
+        (l.name as string).length > MAX_VARIABLE_NAME ||
+        names.has(name) ||
+        !exprs(l.values)
+      ) {
+        errs.push(t('Invalid definition list'));
+        continue;
+      }
+      if (l.settings !== undefined) errs.push(...validateSettings(l.settings));
+      ids.add(l.id);
+      names.add(name);
+    }
+  }
+  if (Array.isArray(p.items))
+    for (const it of p.items) {
+      if (!isObj(it) || it.list === undefined) continue;
+      const l = it.list;
+      if (!isObj(l) || typeof l.id !== 'string' || (l.values !== undefined && !exprs(l.values)))
+        errs.push(t('Item {id}: invalid definition list link', { id: String(it.id) }));
+      else if (!ids.has(l.id))
+        errs.push(t('Item {id}: unknown definition list', { id: String(it.id) }));
+      else if (it.set !== undefined)
+        errs.push(
+          t('Item {id}: a value-set duplicate is not linked to a list', { id: String(it.id) }),
+        );
+    }
   return errs;
 }

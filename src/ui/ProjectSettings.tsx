@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ProjectItem } from '../core/project';
 import {
   follows,
+  settingSource,
   SETTING_KEYS,
   SETTING_LABEL,
   settingText,
@@ -128,7 +129,10 @@ export function PieceProjectSettings({ item }: { item: ProjectItem }) {
             <strong>{SETTING_LABEL[key]}:</strong>{' '}
             {state === 'follows' ? (
               <>
-                <Icon name="check" className="sm" /> {t('Follows project')}
+                <Icon name="check" className="sm" />{' '}
+                {settingSource(project, item, key) === 'list'
+                  ? t('Follows list')
+                  : t('Follows project')}
               </>
             ) : (
               t('Own: {value}', { value: settingText(item.design, key) })
@@ -136,7 +140,9 @@ export function PieceProjectSettings({ item }: { item: ProjectItem }) {
           </span>
           {state === 'own' && (
             <button type="button" className="btn sm outline" onClick={() => follow(item.id, key)}>
-              {t('Follow project')}
+              {settingSource(project, item, key) === 'list'
+                ? t('Follow list')
+                : t('Follow project')}
             </button>
           )}
         </li>

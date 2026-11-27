@@ -285,7 +285,7 @@ describe('run part lines take a seller product (ADR-206, G-314)', () => {
 
 describe('project schemaVersion 21 (ADR-206, ADR-011)', () => {
   it('21 validates runProducts; 20 with runProducts is refused; every older version still loads', () => {
-    expect(PROJECT_SCHEMA).toBe(22);
+    expect(PROJECT_SCHEMA).toBe(23);
     expect(PROJECT_SCHEMAS).toContain(20);
     const p0 = run();
     const key = runPartKey(worktopOf(p0));

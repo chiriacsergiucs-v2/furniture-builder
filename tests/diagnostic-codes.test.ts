@@ -104,6 +104,10 @@ const SAME_PROBLEM: Record<string, [number, string]> = {
   'safety-not-checked': [2, 'a safety standard is not checked, for a bunk bed and for a cot'],
   'split-fit': [2, 'the parts of a split do not fit'],
   'variable-problem': [2, 'a variable is not valid, in a set or on the piece'],
+  'list-value': [
+    2,
+    'a definition list value is not valid, in the list or as the piece’s own value',
+  ],
   'wall-input': [3, 'a wall field is not a valid number (one form field)'],
   'worktop-corner-joint': [
     2,

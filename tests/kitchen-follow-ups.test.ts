@@ -41,7 +41,7 @@ import {
 import {
   projectFromTemplate,
   remapRunRequests,
-  TEMPLATE_SCHEMA,
+  TEMPLATE_RUN_EXTRAS,
   templateFromProject,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
@@ -290,7 +290,7 @@ describe('templates keep run requests (ADR-209 item 2)', () => {
   it('templateFromProject keeps them over template refs at the current template version', () => {
     const p = source();
     const tp = templateFromProject(p, 'Wall run');
-    expect(tp.schemaVersion).toBe(TEMPLATE_SCHEMA);
+    expect(tp.schemaVersion).toBe(TEMPLATE_RUN_EXTRAS);
     expect(tp.runRequests).toHaveLength(2);
     const refs = new Set(tp.items.map((i) => i.ref));
     expect(tp.runRequests!.every((r) => r.from.every((x) => refs.has(x)))).toBe(true);
@@ -1034,7 +1034,7 @@ describe('documents (ADR-209)', () => {
   beforeEach(() => setPrintLang('ro'));
 
   it('a project at the shared version 21 with every new field validates; older versions refuse the new fields', () => {
-    expect(PROJECT_SCHEMA).toBe(22);
+    expect(PROJECT_SCHEMA).toBe(23);
     const { p, wt } = kitchen();
     const [a, b] = p.items.map((i) => i.id);
     const full: Project = {

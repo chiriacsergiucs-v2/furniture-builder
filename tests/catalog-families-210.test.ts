@@ -24,7 +24,7 @@ import { projectEstimate } from '../src/core/projectEstimate';
 import {
   projectFromTemplate,
   templateFromProject,
-  TEMPLATE_SCHEMA,
+  TEMPLATE_RUN_EXTRAS,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
 import { repairsFor, settle } from '../src/core/repairs';
@@ -422,10 +422,10 @@ describe('project seller items (ADR-210, G-313)', () => {
     expect(back?.sellerItems).toEqual([leg, pin]);
   });
 
-  it(`travel in project templates (template ${TEMPLATE_SCHEMA}); template files without them load`, () => {
+  it(`travel in project templates (template ${TEMPLATE_RUN_EXTRAS}); template files without them load`, () => {
     const p = withItems();
     const t = templateFromProject(p, 'With items');
-    expect(t.schemaVersion).toBe(TEMPLATE_SCHEMA);
+    expect(t.schemaVersion).toBe(TEMPLATE_RUN_EXTRAS);
     expect(t.sellerItems).toEqual([leg, pin]);
     expect(validateProjectTemplate(JSON.parse(JSON.stringify(t)))).toEqual([]);
     const q = projectFromTemplate(t);
@@ -433,13 +433,13 @@ describe('project seller items (ADR-210, G-313)', () => {
     expect(q.schemaVersion).toBe(PROJECT_SCHEMA);
     expect(validateProject(q)).toEqual([]);
     // Below the template version: refused.
-    expect(validateProjectTemplate({ ...t, schemaVersion: TEMPLATE_SCHEMA - 1 })).toContain(
-      `Seller items need template schemaVersion ${TEMPLATE_SCHEMA}`,
+    expect(validateProjectTemplate({ ...t, schemaVersion: TEMPLATE_RUN_EXTRAS - 1 })).toContain(
+      `Seller items need template schemaVersion ${TEMPLATE_RUN_EXTRAS}`,
     );
     // A template without them, at the current and an older version, still loads and makes a project without them.
     const plain = templateFromProject(project([{ d: tpl('base-door'), x: 0 }]), 'Plain');
     expect(plain.sellerItems).toBeUndefined();
-    for (const v of [1, TEMPLATE_SCHEMA])
+    for (const v of [1, TEMPLATE_RUN_EXTRAS])
       expect(validateProjectTemplate({ ...plain, schemaVersion: v }), `v${v}`).toEqual([]);
     expect(projectFromTemplate(plain).sellerItems).toBeUndefined();
   });

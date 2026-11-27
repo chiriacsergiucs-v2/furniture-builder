@@ -97,6 +97,7 @@ export const DIAGNOSTIC_CODES = [
   'joint-unplaced',
   'knee-narrow',
   'leg-inset',
+  'list-value',
   'material-missing',
   'material-sheet-conflict',
   'mattress-size',
