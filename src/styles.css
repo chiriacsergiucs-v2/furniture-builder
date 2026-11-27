@@ -8084,26 +8084,26 @@ fieldset.group-locked {
 .catalog-page.finder .finder-head > .btn {
   flex: none;
 }
-.catalog-page.finder .finder-filters {
+.finder-filters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
 }
-.catalog-page.finder .finder-filters > * {
+.finder-filters > * {
   flex: none;
 }
 /* Source tabs on their own row and the filters on one row below them, so none sits off-screen on a phone (G-585):
    the two selects share the width the Ready to open chip leaves; a long option shows in the open list. */
-.catalog-page.finder .finder-filters > [role='tablist'] {
+.finder-filters > [role='tablist'] {
   flex-basis: 100%;
 }
-.catalog-page.finder .finder-filters > select {
+.finder-filters > select {
   flex: 1 1 0;
   min-width: 0;
   max-width: 16rem;
 }
-.catalog-page.finder .finder-filters select,
+.finder-filters select,
 .chip-toggle {
   min-height: var(--control-h);
   padding-inline: var(--s-3);
@@ -8115,18 +8115,19 @@ fieldset.group-locked {
   font-size: var(--fs-sm);
   cursor: pointer;
 }
-.catalog-page.finder .finder-filters select.on,
+.finder-filters select.on,
 .chip-toggle.on {
   border-color: var(--primary);
   background: var(--primary-soft);
 }
 .chip-toggle:focus-visible,
-.catalog-page.finder .finder-filters select:focus-visible,
+.finder-filters select:focus-visible,
 .finder-tile:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
-.catalog-page.finder .finder-count {
+.catalog-page.finder .finder-count,
+.finder-start .finder-count {
   margin: 0;
 }
 .finder-grid {
@@ -8167,6 +8168,12 @@ fieldset.group-locked {
 }
 .finder-tile .chip {
   justify-self: start;
+}
+/* Start from in the finder's grid (G-584): the item's name and its lines stack under the picture. */
+.finder-start .finder-tile > span {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
 }
 .item .tile .verb {
   justify-self: start;

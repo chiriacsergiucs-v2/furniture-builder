@@ -4093,6 +4093,18 @@ highest id in either file.
 - Impact: Medium-high
 - Necessity: Medium
 
+### G-584: Start from dialog and the Materials seller-band select keep the old layout
+
+- Status: Done (N416)
+- Origin: ADR-291 scope
+- Missing: New › Start from (Catalog.tsx StartFrom) and project Add a piece keep their own grouped list; the Materials dialog still offers seller bands as a select (MaterialDialog.tsx:486), a second band picker.
+- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
+- Questions: Bring Start from and the Materials band select into the finder too?
+- Suggested pick: Yes: Start from reuses the finder grid; the Materials select opens the product picker
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+
 ### G-585: Finder filter row scrolls sideways on a phone
 
 - Status: Done (N386, 2026-11-26: Source tabs on their own row, Room, Type and Ready to open on one row below, src/styles.css; tools/catalog-finder/find-it.mjs 40 of 40 on the production preview)
