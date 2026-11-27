@@ -14,7 +14,7 @@ import {
   type FastenerChoice,
   type FastenerCount,
 } from './fasteners';
-import { pt, type PrintKey } from '@furniture-builder/i18n/print';
+import { printBoardName, pt, type PrintKey } from '@furniture-builder/i18n/print';
 import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
 import { materialKey, runPartKey } from './project';
 import type { ShopLine, ShopSection, ShopUnit } from './shopping-types';
@@ -186,6 +186,10 @@ export function shoppingList(input: {
       lines.push({
         section: 'boards',
         label: name,
+        // Read in the print language at print time (ADR-202); a built-in name translates, a typed one prints as typed (G-537).
+        get printLabel() {
+          return printBoardName(name);
+        },
         quantity: metres,
         unit: 'm',
         detail: t('solid stock, {n} parts', { n: list.reduce((n, r) => n + r.quantity, 0) }),
@@ -200,6 +204,9 @@ export function shoppingList(input: {
     lines.push({
       section: 'boards',
       label: name,
+      get printLabel() {
+        return printBoardName(name);
+      },
       quantity: n ?? m2,
       unit: n !== null ? 'sheet' : 'm2',
       detail: sheet

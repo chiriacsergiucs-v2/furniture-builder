@@ -1623,18 +1623,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-537: Print path does not translate built-in material name 'Worktop 38' (bug-hunt M-1 follow-up)
-
-- Status: Open
-- Origin: bug-hunt 2026-11-17 M-1
-- Missing: Russian entry added for the UI (data-parts.ts). Print paths still show the English name: src/core/ro.ts:408, src/ui/PrintSheet.tsx:103,301,323, src/core/shopping.ts:162; print.ts:49-53 says print never looks up names
-- Request: Translate built-in material names on print
-- Questions: Translate built-in names in print and CSV, or keep them as stored?
-- Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-
 ### G-539: Russian key conflicts with different wording (reuse H1)
 
 - Status: Open
