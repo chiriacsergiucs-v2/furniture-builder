@@ -4369,6 +4369,18 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-589: Phone capture of room, 3D, results, Gaps and Research states
+
+- Status: Done (N443)
+- Origin: N379 UI review 2026-11-23
+- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
+- Request: Scheduled UI review: capture every department at 390 and 1280 px
+- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
+- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
+- Work: Medium
+- Impact: Low-medium
+- Note: 2026-11-27 (N443): `tools/capture/flows3.mjs` now runs on the app's real phone default (the canvas editor, `launchBrowser({ appDefault: true })`) and its phone steps follow the chip rail: the catalog finder tiles in Add a piece, Close for the Settings card (Escape leaves it open), a tap on the plan piece for piece-selected, the chip rail's "Edit <project>" for the Room card (a flat `.room-fold` there), the Information page's Gaps button. Run with `CAPTURE_DARK=1` and the placeholder-backend build: 96 states captured (24 per width and scheme, light and dark, 390 and 1280), 0 texts below AA of 10,900, no sideways scroll, 4 blocked requests (the share-link fetch). Research: no Research page exists (#227), so the state still logs its absence; removing it stays the gap's open question. Found on the way (not fixed, outside this gap): at 390 px the 3D view's ⋯ menu (`More 3D actions`: Export for AR, Export scene) opens but is clipped by the tool row, whose phone rule sets `overflow-x: auto` (`src/styles.css` `.three-tools`, audit F-30); `elementFromPoint` on the open panel returns the canvas, see `3d-more-menu-390-*.png`.
+
 ### G-590: Appearance: tests for − / + and ±5% controls
 
 - Status: Done (N399)

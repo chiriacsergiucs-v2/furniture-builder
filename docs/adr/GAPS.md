@@ -1790,17 +1790,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Low
 
-### G-589: Phone capture of room, 3D, results, Gaps and Research states
-
-- Status: Open
-- Origin: N379 UI review 2026-11-23
-- Missing: tools/capture/flows3.mjs at 390 px reaches the phone canvas project, piece list and populated Settings, but piece-selected, room-_, 3d-_, results-parts, copy-code, info and gaps time out after them (stale phone selectors); Research has no entry anywhere. Those departments were reviewed at 1280 px and from code only.
-- Request: Scheduled UI review: capture every department at 390 and 1280 px
-- Questions: Should the Research capture state be removed, since no Research entry exists in the app?
-- Suggested pick: Update flows3 phone steps to the canvas chip rail in the next review run
-- Work: Medium
-- Impact: Low-medium
-
 ### G-591: Room divider: Open both sides on corner units
 
 - Status: Acknowledged (2026-11-27)
