@@ -92,7 +92,7 @@ import {
   SelectTip,
   TurnHandle,
   useSpaceInRoom,
-} from './Project';
+} from './RoomDrawingParts';
 
 /** Screen point → room mm on the plan (x along the back wall, z away from it). */
 function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {

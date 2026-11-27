@@ -39,6 +39,7 @@ import {
   type Room,
 } from './room';
 import { setRooms, type VariableSet } from './setRoom';
+import type { Placement } from './placement';
 import { variableDiagnostics, type Binding, type ProjectVariable } from './variables';
 import { bandFor, bandText } from './materials';
 import { DEFAULT_KERF, DEFAULT_MOUNT_HEIGHT, newId, sheetOf, upgradeDesign } from './design';
@@ -100,18 +101,7 @@ import { t, tr, type Key } from '@furniture-builder/i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
-/**
- * How a piece is placed (ADR-031). The stored `position` is kept in step with it by `resolvePlacements`:
- *  - floor: stands on the floor (height 0), moved freely along the walls;
- *  - wall: hung on the wall, its underside `height` mm above the floor;
- *  - above: sits on another piece (gap 0) or hangs `gap` mm above it, back faces aligned, `offsetX` mm from its
- *    left edge; it follows that piece when it moves.
- * Absent = free: `position` is used as stored (projects saved before placement existed).
- */
-export type Placement =
-  | { kind: 'floor' }
-  | { kind: 'wall'; height: Mm }
-  | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm };
+export type { Placement } from './placement';
 
 /** An outside size a lock can hold (ADR-171). */
 export type SizeAxis = 'width' | 'height' | 'depth';

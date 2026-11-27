@@ -3642,6 +3642,18 @@ highest id in either file.
 - Fix: User decision 2026-11-07: "Accept 73.8%, ship". Shipped with a 96 × 34 picture and the shortened meta line (kind chip, size without " mm", parts, checks; "default" on the picture): 135 of 183 cards (73.8 %) show More at 390 px, 39 of 183 (21.3 %) at 1280 px; page 29 772 px; one meta line per card.
 - Closed 2026-11-16 (N322): not a defect under the user-accepted rule 'More on at most 73.8 % of cards'. Ran `tools/catalog-flows/find-it.mjs` on the production build: 113 of 183 cards (61.7 %) show More at 390 px, 37 of 183 (20.2 %) at 1280 px; one meta line per card (0 on two lines); More shows on exactly the cut cards (0 off). The measured share is below 73.8 %, so the accepted decision holds and nothing is changed.
 
+### G-485: Import cycles in core and ui are not broken or linted
+
+- Status: Done (N419)
+- Origin: ADR-219 Out of scope, 2026-11-07 (architecture review I-01, section 2)
+- Missing: ADR-219 enforces layer directions only. The 9-file core cycle around project.ts (arrange, common, compat, connections, groupMove, selection, sizeLock, variables), the shopping/fasteners/prices type cycle and the UI cycles (Dialogs, CountStepper/Inspector, Project/Settings) stay, and no import/no-cycle rule guards them.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Should the core cycle be broken (anti-candidate in review section 6: project.ts and its cycle are the model layer) and an import/no-cycle rule added?
+- Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
+- Note: Done 2026-11-27 (N419): ui cycles broken by moving shared pieces into Dialog.tsx, selectionLabel.ts, RoomDrawingParts.tsx and PieceSettings.tsx, and the Viewer3D/ViewerScene cycle by sceneGeometry.tsx; the shopping type cycle was already gone (ADR-236). No import/no-cycle plugin is a dependency, so the guard is a test in tests/core-boundary.test.ts that fails on any cycle not in its allow-list: the project.ts unit (13 files) and the type-only unit types.ts, diagnosticCodes.ts, catalog/types.ts (moving those types changes types.ts, ADR-011).
+
 ### G-489: Restoring a backup writes rows without a transaction
 
 - Status: Done (N390)
@@ -3933,6 +3945,19 @@ highest id in either file.
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Can the live check run from your computer, or should the desktop browser be linked to a session?
 - Suggested pick: Run the browser scripts of the logged rows against the live URL after the pull request is deployed
+
+### G-530: Value cycle build, variables, project in core
+
+- Status: Done (N420)
+- Origin: architect-review 2026-11-17
+- Missing: src/core/build.ts imports ./variables (build.ts:11), variables.ts:22 imports ./project, project.ts:8 imports ./build: a value-import cycle through a model file. ADR-219 and tests/core-boundary.test.ts only block a direct ./project import from model files, so the cycle passes. 20 more value cycles exist (14 around project.ts, i18n/print and ro, 5 in ui, Viewer3D and ViewerScene).
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: Break the cycle in the code (move the shared pieces out of variables.ts) or widen the ADR-219 rule to cover transitive imports?
+- Suggested pick: Decide with a new ADR; the model files are build.ts, cabinet.ts and the others listed in eslint.config.js
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check). Done 2026-11-27 (N420): the formulas, binding targets and a piece's own variables moved to src/core/variableCore.ts (re-exported by variables.ts) and the Placement type to src/core/placement.ts; build.ts imports variableCore, and tests/core-boundary.test.ts checks that no model file reaches project.ts or the other upward modules through any path.
 
 ### G-531: Stale numbers and line references in architecture.md
 

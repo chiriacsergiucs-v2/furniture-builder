@@ -1339,17 +1339,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low-medium
 
-### G-485: Import cycles in core and ui are not broken or linted
-
-- Status: Open
-- Origin: ADR-219 Out of scope, 2026-11-07 (architecture review I-01, section 2)
-- Missing: ADR-219 enforces layer directions only. The 9-file core cycle around project.ts (arrange, common, compat, connections, groupMove, selection, sizeLock, variables), the shopping/fasteners/prices type cycle and the UI cycles (Dialogs, CountStepper/Inspector, Project/Settings) stay, and no import/no-cycle rule guards them.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Should the core cycle be broken (anti-candidate in review section 6: project.ts and its cycle are the model layer) and an import/no-cycle rule added?
-- Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
-- Work: Medium
-- Impact: Low-medium
-
 ### G-486: The CI build job does not cache Vite build output
 
 - Status: Acknowledged (2026-11-23)
@@ -1558,19 +1547,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Run it (catch-up of the burst debt, all in 1 PR, cover every gap added on the way)
 - Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
 - Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
-
-### G-530: Value cycle build, variables, project in core
-
-- Status: Open
-- Origin: architect-review 2026-11-17
-- Missing: src/core/build.ts imports ./variables (build.ts:11), variables.ts:22 imports ./project, project.ts:8 imports ./build: a value-import cycle through a model file. ADR-219 and tests/core-boundary.test.ts only block a direct ./project import from model files, so the cycle passes. 20 more value cycles exist (14 around project.ts, i18n/print and ro, 5 in ui, Viewer3D and ViewerScene).
-- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
-- Questions: Break the cycle in the code (move the shared pieces out of variables.ts) or widen the ADR-219 rule to cover transitive imports?
-- Suggested pick: Decide with a new ADR; the model files are build.ts, cabinet.ts and the others listed in eslint.config.js
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check).
 
 ### G-534: Architecture checks the review could not cover
 
