@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { t } from '@furniture-builder/i18n';
 import { FEATURES, type Feature, type FeatureDomain } from './info/features';
 import { OVERVIEW } from './CanvasEditor';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * Find an action (ADR-289): one search over what the canvas editor can open here (the selection's blocks and the
@@ -141,11 +142,7 @@ const STEP_COUNT = 3;
 
 /** True until the first-run hints were finished or skipped on this device. */
 function coachDue(): boolean {
-  try {
-    return localStorage.getItem(COACH_KEY) !== 'done';
-  } catch {
-    return false;
-  }
+  return readLocal(COACH_KEY, (v) => v !== 'done', false);
 }
 
 /** First-run hints for the canvas editor (ADR-289): three steps, once per device, skippable. */
@@ -163,11 +160,7 @@ export function CanvasHints({ on }: { on: boolean }) {
     } else if (!show && d.open) d.close();
   }, [show]);
   const finish = () => {
-    try {
-      localStorage.setItem(COACH_KEY, 'done');
-    } catch {
-      /* private mode: shown again next time */
-    }
+    writeLocal(COACH_KEY, 'done'); // private mode: shown again next time
     setDue(false);
   };
   const titles = [t('Tap to select'), t('Sizes and handles'), t('Edit opens the editor')];

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { createListeners } from './deviceValue';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * The 3D view's look (ADR-067): 'simple' is the plain preview, 'realistic' adds room light, soft shadows and
@@ -19,11 +20,7 @@ export function parseLook(v: string | null): Look | null {
 }
 
 function stored(): Look | null {
-  try {
-    return parseLook(localStorage.getItem(KEY));
-  } catch {
-    return null;
-  }
+  return readLocal(KEY, parseLook, null);
 }
 let chosen: Look | null = stored();
 
@@ -33,11 +30,7 @@ function currentLook(): Look {
 
 export function setLook(l: Look) {
   chosen = l;
-  try {
-    localStorage.setItem(KEY, l);
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, l);
   notify();
 }
 

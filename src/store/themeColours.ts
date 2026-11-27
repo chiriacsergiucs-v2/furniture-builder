@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '@furniture-builder/i18n';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * Brand colours the user can change in the Appearance dialog (G-588): the accent and the primary colour, separately for
@@ -112,11 +113,7 @@ export function themeColourCss(values: ColourValues): string {
 
 const listeners = new Set<() => void>();
 function load() {
-  try {
-    return parseThemeColours(localStorage.getItem(KEY));
-  } catch {
-    return { values: empty(), ignored: 0 };
-  }
+  return readLocal(KEY, parseThemeColours, { values: empty(), ignored: 0 });
 }
 let state = load();
 
@@ -138,13 +135,12 @@ export function applyThemeColours(): void {
 
 function save(values: ColourValues) {
   state = { values, ignored: 0 };
-  try {
-    if (Object.keys(values.light).length || Object.keys(values.dark).length)
-      localStorage.setItem(KEY, JSON.stringify(values));
-    else localStorage.removeItem(KEY);
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(
+    KEY,
+    Object.keys(values.light).length || Object.keys(values.dark).length
+      ? JSON.stringify(values)
+      : null,
+  );
   applyThemeColours();
 }
 

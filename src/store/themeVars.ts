@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '@furniture-builder/i18n';
 import { clamp } from '../core/clamp';
+import { readLocal, writeLocal } from '../persist/localPrefs';
 
 /**
  * Theme variables the user can change (Appearance dialog): font sizes, line height, spacing, corner radii and the two
@@ -138,11 +139,7 @@ export function parseThemeVars(raw: string | null): {
 
 const listeners = new Set<() => void>();
 function load() {
-  try {
-    return parseThemeVars(localStorage.getItem(KEY));
-  } catch {
-    return { values: {}, ignored: 0 };
-  }
+  return readLocal(KEY, parseThemeVars, { values: {}, ignored: 0 });
 }
 let state = load();
 
@@ -159,12 +156,7 @@ export function applyThemeVars(): void {
 
 function save(values: Record<string, number>) {
   state = { values, ignored: 0 };
-  try {
-    if (Object.keys(values).length) localStorage.setItem(KEY, JSON.stringify(values));
-    else localStorage.removeItem(KEY);
-  } catch {
-    /* private mode: the choice lasts for this page only */
-  }
+  writeLocal(KEY, Object.keys(values).length ? JSON.stringify(values) : null);
   applyThemeVars();
 }
 
