@@ -23,6 +23,7 @@ import {
   type DirectionalLight,
   Float32BufferAttribute,
   FrontSide,
+  type Group,
   type Intersection,
   type Material,
   Mesh,
@@ -118,20 +119,16 @@ import {
   edgesMounted,
   occlusionMounted,
   orbitFrame,
-  orbitMoved,
-  orbitReleased,
   orbitSkipsOcclusion,
   orbitStartDpr,
   orbitThinEdges,
-  pressDown,
-  pressMoved,
   pressWasDrag,
-  sameSignature,
   setOrbiting,
   shadowSignature,
   useCameraMoving,
   useOrbiting,
 } from './orbiting';
+import { trackPresses, useShadowFreeze, useThinTwins } from './dragGlue';
 import { type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, Panel, Yaw } from '../core/types';
@@ -1256,38 +1253,12 @@ function RoomFloor({ room }: { room: Room }) {
 export function Fit({ bounds }: { bounds: Box }) {
   const { camera, size: view } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
-  const pressed = useRef(false);
-  // The pointers down on the view: the controls also start and end on each mouse-wheel notch, which is not a drag.
-  const pointers = useRef(new Set<number>());
+  // The presses on the view, for turning and for whether a click ends a drag (dragGlue.ts).
+  const [presses] = useState(trackPresses);
   const canvasEl = useThree((s) => s.gl.domElement);
-  useEffect(() => {
-    // The canvas the controls and the R3F events listen on (re-review of ADR-295, N2: the controls' own element may
-    // not be connected yet when this runs).
-    const el = controls.current?.domElement ?? canvasEl;
-    const down = (e: PointerEvent) => {
-      // A first finger or the mouse starts afresh: a pointer whose up was never delivered is forgotten.
-      if (e.isPrimary) {
-        pointers.current.clear();
-        pressDown(e.clientX, e.clientY, e.pointerType);
-      }
-      pointers.current.add(e.pointerId);
-    };
-    // How far the press travelled: a press that went further than a tap ends in no selection (pressWasDrag).
-    const move = (e: PointerEvent) => {
-      if (e.isPrimary && pointers.current.has(e.pointerId)) pressMoved(e.clientX, e.clientY);
-    };
-    const up = (e: PointerEvent) => pointers.current.delete(e.pointerId);
-    el.addEventListener('pointerdown', down, true);
-    el.addEventListener('pointermove', move, true);
-    window.addEventListener('pointerup', up, true);
-    window.addEventListener('pointercancel', up, true);
-    return () => {
-      el.removeEventListener('pointerdown', down, true);
-      el.removeEventListener('pointermove', move, true);
-      window.removeEventListener('pointerup', up, true);
-      window.removeEventListener('pointercancel', up, true);
-    };
-  }, [canvasEl]);
+  // The canvas the controls and the R3F events listen on (re-review of ADR-295, N2: the controls' own element may not
+  // be connected yet when this runs).
+  useEffect(() => presses.attach(controls.current?.domElement ?? canvasEl), [canvasEl, presses]);
   const target = useMemo(
     () => [boxCentre(bounds).x * S, boxCentre(bounds).y * S, boxCentre(bounds).z * S] as const,
     [bounds],
@@ -1333,12 +1304,9 @@ export function Fit({ bounds }: { bounds: Box }) {
       // While the view is turned, camera-independent work pauses (OrbitQuality, FloorShadow, Occlusion). Turning
       // starts with the first camera move while a pointer is pressed, so a tap (no move) and a wheel notch (no
       // pointer) change nothing.
-      onStart={() => (pressed.current = true)}
-      onChange={() => orbitMoved(pressed.current && pointers.current.size > 0)}
-      onEnd={() => {
-        pressed.current = false;
-        orbitReleased();
-      }}
+      onStart={presses.onStart}
+      onChange={presses.onChange}
+      onEnd={presses.onEnd}
     />
   );
 }
@@ -1383,45 +1351,8 @@ export function OrbitQuality() {
 export function FloorShadow(props: ComponentProps<typeof ContactShadows>) {
   const moving = useCameraMoving();
   const get = useThree((s) => s.get);
-  const [frozen, setFrozen] = useState(false);
-  if (moving && !frozen) setFrozen(true);
-  const atFreeze = useRef<number[] | null>(null);
-  const afterFrame = useRef<(() => void) | null>(null);
-  // Set when the pieces moved while frozen: the frame after the thaw commits redraws the shadow (frames is not a host
-  // prop, so the commit alone asks for no frame).
-  const redraw = useRef(false);
-  useLayoutEffect(() => {
-    if (frozen) atFreeze.current = shadowSignature(get().scene);
-  }, [frozen, get]);
-  useEffect(() => {
-    if (frozen || !redraw.current) return;
-    redraw.current = false;
-    invalidate();
-  }, [frozen]);
-  useEffect(() => {
-    if (moving || !frozen) return;
-    let done = false;
-    const thaw = () => {
-      if (done) return;
-      done = true;
-      redraw.current = !sameSignature(atFreeze.current, shadowSignature(get().scene));
-      setFrozen(false);
-    };
-    // After the still frame the end of a drag draws (OrbitQuality), or a moment later when none comes (a wheel notch).
-    afterFrame.current = () => setTimeout(thaw);
-    const late = setTimeout(thaw, 100);
-    return () => {
-      done = true;
-      afterFrame.current = null;
-      clearTimeout(late);
-    };
-  }, [moving, frozen, get]);
-  useFrame(() => {
-    const f = afterFrame.current;
-    if (!f) return;
-    afterFrame.current = null;
-    f();
-  });
+  const { frozen, frame } = useShadowFreeze(moving, () => shadowSignature(get().scene), invalidate);
+  useFrame(frame);
   return <ContactShadows {...props} frames={frozen ? 0 : Infinity} />;
 }
 
@@ -1755,16 +1686,17 @@ function PanelEdges({ items, deps }: { items: EdgeItem[]; deps: readonly unknown
   }, [lines, size]);
   useEffect(() => edgesMounted(), []);
 
-  // A slow drag draws the plain edges as thin GL lines (orbiting.ts): the same 1-pixel lines, far cheaper to draw.
-  useFrame(() => merged.setThin(orbitThinEdges()));
+  // A slow drag draws the plain edges as thin GL lines (orbiting.ts): far cheaper to draw. Built in an effect, so a
+  // StrictMode remount builds them again (G-605).
+  const twinsGroup = useRef<Group>(null);
+  const twins = useThinTwins(lines, twinsGroup, invalidate);
+  useFrame(() => twins.current?.setThin(orbitThinEdges()));
   return (
     <>
       {lines.map((l) => (
         <primitive key={l.uuid} object={l} />
       ))}
-      {[...merged.thin, ...merged.warm].map((l) => (
-        <primitive key={l.uuid} object={l} />
-      ))}
+      <group ref={twinsGroup} />
     </>
   );
 }

@@ -2157,18 +2157,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
-
-- Status: Open
-- Origin: ADR-295, code-reviewer re-review of c61d8d0
-- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
-- Request: User 2026-11-26: review reports no open issues
-- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
-- Suggested pick: Add jsdom tests for the glue; build twins in an effect
-- Work: Low-medium
-- Impact: Low
-- Necessity: Medium
-
 ### G-606: Four diagnostic codes still cover more than one wording
 
 - Status: Acknowledged (2026-11-23)
