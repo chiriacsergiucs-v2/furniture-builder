@@ -21,7 +21,7 @@ import { validOwned } from './owned';
 import { ROOMS } from './catalog/types';
 import { KIT_EDITS } from './types';
 import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
-import { isObj } from './guards';
+import { isInt as isIntIn, isObj } from './guards';
 
 type PedestalSide = 'left' | 'right';
 
@@ -766,7 +766,8 @@ const MAX_MM = 100_000;
 const MAX_DRAWERS = 20;
 export const MAX_LOOSE = 100;
 
-const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min;
+/** A safe integer of `min` or more, no upper bound (callers check their own maximum). */
+const isInt = (v: unknown, min = 0) => isIntIn(v, min, Number.MAX_SAFE_INTEGER);
 const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 500;
 
 const validSize = (z: unknown) =>

@@ -1,4 +1,5 @@
 import { t } from '@furniture-builder/i18n';
+import { isInt } from './guards';
 import { inPlaneAxes } from './geometry';
 import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types';
 
@@ -80,8 +81,8 @@ export function defaultTile(w: number, h: number): { tileLength: Mm; tileWidth: 
   return { tileLength: DEFAULT_TILE_LENGTH, tileWidth };
 }
 
-const isTile = (v: unknown) =>
-  typeof v === 'number' && Number.isSafeInteger(v) && v >= 1 && v <= MAX_TILE;
+/** A picture size: whole mm from 1 to `MAX_TILE`. */
+export const isTile = (v: unknown) => isInt(v, 1, MAX_TILE);
 
 /** Problems with a stored picture reference (design validation). */
 export function materialImageProblems(img: unknown): string[] {

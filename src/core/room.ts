@@ -6,10 +6,10 @@
  * behind a piece, is a warning. Optional on a project: absent = no room checks, as before.
  */
 import { footprintOf } from './geometry';
-import { MAX_TILE } from './surface';
+import { isTile, MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
 import { t, tr } from '@furniture-builder/i18n';
-import { isObj, isInt } from './guards';
+import { isHexColour, isObj, isInt } from './guards';
 import type { Pt } from './outline';
 
 export type { Pt };
@@ -160,9 +160,6 @@ export function keepWallFinishes(walls: WallFinish[] | undefined, outline: Pt[])
   const kept = walls?.filter((f) => f.wall < outline.length);
   return kept?.length ? { walls: kept } : {};
 }
-
-const HEX = /^#[0-9a-f]{6}$/i;
-const isTile = (v: unknown) => isInt(v, 1) && (v as number) <= MAX_TILE;
 
 export type RoomShape = 'rectangle' | 'l-shape' | 'u-shape' | 'alcove';
 /** Shape sizes: width and depth of the room, then the cut-out (L), notch (U) or alcove: its width, depth and offset. */
@@ -991,7 +988,7 @@ export function validateRoom(r: unknown): string[] {
           seen.has(f.wall as number) ||
           (Array.isArray(r.outline) && (f.wall as number) >= r.outline.length) ||
           typeof f.colour !== 'string' ||
-          !HEX.test(f.colour) ||
+          !isHexColour(f.colour) ||
           (img !== undefined &&
             !(
               isObj(img) &&
@@ -1012,7 +1009,7 @@ export function validateRoom(r: unknown): string[] {
   }
   if (r.floor !== undefined) {
     const f = r.floor;
-    if (!isObj(f) || typeof f.colour !== 'string' || !HEX.test(f.colour) || !validImage(f.image))
+    if (!isObj(f) || typeof f.colour !== 'string' || !isHexColour(f.colour) || !validImage(f.image))
       errs.push(t('Invalid floor background'));
   }
   if (r.outletDistances !== undefined) {

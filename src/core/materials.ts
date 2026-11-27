@@ -1,4 +1,5 @@
 import { t } from '@furniture-builder/i18n';
+import { isHexColour } from './guards';
 import type {
   EdgeBand,
   EdgeBandKind,
@@ -285,7 +286,7 @@ export function parseDecorList(
           ? t('no name')
           : !(Number.isSafeInteger(thickness) && thickness >= 1 && thickness <= 200)
             ? t('thickness "{v}" is not whole mm from 1 to 200', { v: get('thickness') })
-            : !/^#[0-9a-fA-F]{6}$/.test(color)
+            : !isHexColour(color)
               ? t('color "{v}" is not #rrggbb', { v: color })
               : null;
     if (why) {
@@ -463,7 +464,7 @@ export function parseBandList(text: string, list: string): { bands: Band[]; prob
                     v: widthText,
                     max: BAND_MAX_WIDTH,
                   })
-                : !/^#[0-9a-fA-F]{6}$/.test(color)
+                : !isHexColour(color)
                   ? t('color "{v}" is not #rrggbb', { v: color })
                   : null;
     if (why || thickness === null) {
@@ -515,8 +516,7 @@ export function validateDecor(v: unknown): v is Decor {
     typeof d.name === 'string' &&
     Number.isSafeInteger(d.thickness) &&
     (d.thickness as number) >= 1 &&
-    typeof d.color === 'string' &&
-    /^#[0-9a-fA-F]{6}$/.test(d.color) &&
+    isHexColour(d.color) &&
     typeof d.list === 'string'
   );
 }
@@ -553,9 +553,7 @@ export const bandFromList = (b: Band): EdgeBand => ({
 });
 
 const rgb = (hex: string) =>
-  /^#[0-9a-f]{6}$/i.test(hex)
-    ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-    : [128, 128, 128];
+  isHexColour(hex) ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) : [128, 128, 128];
 const colourDistance = (a: string, b: string) => {
   const [x, y] = [rgb(a), rgb(b)];
   return x.reduce((s, v, i) => s + (v - y[i]) ** 2, 0);
