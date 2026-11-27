@@ -156,22 +156,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid (github.io unreachable from this environment). Absorbs G-048: touch and 3D were checked only in Chromium emulation; one guided session on the user's phone covers both.
 
-### G-049: G ids on pre-ADR-082 notes
-
-- Status: Open
-- Origin: ADR-082, 2026-10-25; agent scoped it out
-- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
-- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
-- Questions: Add G ids to the old backlog Gap notes and Open questions too?
-- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
-- Work: Low-medium
-- Impact: Low
-- Necessity: Low
-- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
-- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
-- Conflicts: none
-- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
-
 ### G-055: Count stepper only for cabinet spaces
 
 - Status: Acknowledged (2026-10-25)
@@ -550,21 +534,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Angled pieces are left out of runs: no shared worktop, plinth, fillers or trims.
 - Fix: Leave angled pieces out of runs; run parts are straight boards along a wall.
-- Conflicts: none
-
-### G-201: Pictures and 3D models in design codes
-
-- Status: Open
-- Origin: ADR-124 (scope)
-- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
-- Request: Accept default, /batch all ready
-- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
-- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
-- Fix: Keep codes document-only; the project file carries pictures and models.
 - Conflicts: none
 
 ### G-202: Replace and the outer size
@@ -1394,18 +1363,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Fix tests/find-it/accounts.test.tsx and the browser scripts for the new navbar in a separate change?
 - Suggested pick: Update the accounts find-it test to the merged Account button, then run pnpm regress against main (not built here: the cause is the navbar change, not this pull request)
 
-### G-534: Architecture checks the review could not cover
-
-- Status: Open
-- Origin: architect-review 2026-11-17
-- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
-- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
-- Questions: None
-- Suggested pick: Run each check and record its result in a dated report under docs/research
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-536: Seller pictures load by default against the written network rule (bug-hunt H-1)
 
 - Status: Open
@@ -1657,6 +1614,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Origin: Retro 2026-11-20 (P4, P10); agent scoped it out: the gates exempt rows below N361/F19/D04 and ADRs numbered below 281
 - Note: 2026-11-20 (N362): the backlog part is done. All 86 old Done rows had merge evidence on main (a merged PR or the ADR's ship commit), so they stay Done with that evidence appended, the old wording reads "at build time", every old burst marker names its blocker and cost, and the backlog exemption is gone. Left: the ADR part.
 - Note: 2026-11-20 (N363, user pick "Re-check each box"): 22 of the 35 boxes are met by runs today; the per-box record is `docs/research/2026-11-20-g573-adr-box-recheck.md`. The 13 left: ADR-080 popovers close on outside tap or Esc, plan and front view both visible at 390 px in a project, a Width change redraws, a Settings-for change shows after reopening, "not clamped"; ADR-081 the switch in a project, Front removes the canvas; ADR-129 the first-sign-in question; ADR-137 "Save to account"; ADR-142 switch account and back (each needs a new check, cost S); ADR-201 needs the first core-only pull request; ADR-208 needs a browser with a WebGPU adapter, and the user's phones for AR.
+- Note: 2026-11-27 (N440, user 2026-11-27 "Also do the medium work", suggested pick): the backlog rows of the 22 listed ADRs were checked against main (GitHub commits API, the local clone is shallow): N75 (PR #55, ae82326), N110 (PR #112, 6c9097a) and N113, N115, N118, N119 (PR #110, b219c93) already cited a merge commit on main; N76 (98eca7bc), N130 to N145 (e4caf62d) and the Partially done N206 and N213 (827a9688) now cite their ship commit on main. No row lost Done. The 41 commits the 2026-11-20 check (N362) cited are all ancestors of main. The legacy cut-off stays: dropping `LEGACY_ADR_BELOW` in scripts/ledger_gates.py would fail docs:check on 35 unchecked boxes in those 22 implemented ADRs (ADR-080 7, ADR-081 5, ADR-116 2, ADR-120 2, ADR-208 2, one each in ADR-111, 129 to 131, 133 to 144 and 201), and implemented ADRs are not edited. Still open: the 13 boxes N363 lists.
 - Missing: 22 implemented ADRs with unchecked Done-when items and no G id (ADR-080 7, ADR-081 5, ADR-111, 116, 120, 129-144, 201, 208); implemented ADRs are not edited, so they stay exempt (ADRs numbered below 281)
 - Request: User picked 'P4/P10 docs:check gates' from the retro 2026-11-20
 - Questions: Statuses change only with evidence: re-verify each row (merged PR, CI run) or turn it Partially done? Which ADR boxes get a G id versus a re-check?

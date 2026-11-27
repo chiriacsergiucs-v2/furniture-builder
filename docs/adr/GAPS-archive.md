@@ -610,6 +610,23 @@ highest id in either file.
 - Suggested pick: Same as the row above: one session on your phone, guided by a checklist. (estimate: effort +3%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-047 (the same real-phone session).
 
+### G-049: G ids on pre-ADR-082 notes
+
+- Status: Done (N437)
+- Note: 2026-11-27 (N437): one pass over docs/backlog.md rows F01 to N76 and the Dropped rows: 54 old gap notes on 44 rows now carry their G id (G-005, G-032, G-034, G-035, G-037, G-039, G-040, G-044, G-047), and 25 rows whose ADR is the origin of a seed gap end with "Gaps from the ADR-082 seed: G-…". No seed gap matches the old notes on N15 (_Differs from original_), N17 (real manual, OCR), N21 (mattress, RHS bench, per-panel materials), N28 (drawers in a frame, arm rests), N30 (printed tiles on paper), N33 (PDF papers) or N34 (legs under a carcass), so they stay without a G id; G-015 (Egger import) has no backlog row; G-045 is an obsolete umbrella. Statuses unchanged. Pending ADR open questions were not edited (backlog only).
+- Origin: ADR-082, 2026-10-25; agent scoped it out
+- Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
+- Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
+- Questions: Add G ids to the old backlog Gap notes and Open questions too?
+- Suggested pick: Yes: one pass adding the matching G id next to each old Gap note and open question, so every gap is findable from both sides (estimate: effort +15%, value +10%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Gap notes and open questions written before the gaps ledger do not link to their G ids.
+- Fix: One pass adding the matching G id beside each old backlog gap note and open question.
+- Conflicts: none
+- Note: 2026-11-06: ADR-212 shipped without this item; the one pass adding G ids to old backlog gap notes and pending ADR open questions was skipped, so the gap is open again.
+
 ### G-050: No gaps page in the app
 
 - Status: Done (ADR-101)
@@ -1682,6 +1699,22 @@ highest id in either file.
 - Request: Accept default, /batch all ready
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
+
+### G-201: Pictures and 3D models in design codes
+
+- Status: Done (N438)
+- Note: 2026-11-27 (N438, user 2026-11-27 "Also do the medium work", suggested pick "Document-only"): codes stay document-only. The Code dialog's info tip already says "Pictures and 3D models stay on this device; a project file carries them." (`src/ui/ShareCode.tsx:54-58`, Russian entry `packages/i18n/src/ru/account.ts:142-143`); docs/architecture.md now explains it; `tests/share-code.test.ts` proves a picture travels only as its id reference.
+- Origin: ADR-124 (scope)
+- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
+- Request: Accept default, /batch all ready
+- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
+- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Design codes carry only the document; board pictures and 3D models stay on the device.
+- Fix: Keep codes document-only; the project file carries pictures and models.
+- Conflicts: none
 
 ### G-203: Wizard and template pieces and the project settings
 
@@ -4153,6 +4186,19 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 - Necessity: Low
+
+### G-534: Architecture checks the review could not cover
+
+- Status: Done (N439)
+- Note: 2026-11-27 (N439): every listed check was run or read and recorded in `docs/research/2026-11-27-architecture-checks.md`: 160 rounding calls in src/core classified (159 conform; defect D1: diagonal corner doors at `src/core/corner.ts`:341 leave up to n − 1 mm unshared, e.g. width 901 with two doors gives 238 + 238 on a 477 mm opening; described, not fixed); build.ts checks present (no committed test fires `non-integer` or `zero-size`); FUZZ_N=30000 9/9 pass; ADR-085 card within its exception (count-stepper find-it 44/44); CSP and service worker tests pass on a fresh build; assistant function read (no defect); 3D chunks load only when 3D is shown, at 1280 and 390 px.
+- Origin: architect-review 2026-11-17
+- Missing: Not checked: integer millimetres across the 161 Math.round, floor and trunc calls in src/core (ADR-003); the integer, size and thickness checks in src/core/build.ts above line 150 (ADR-008); the 30000-case fuzz run; the quick-count card exception (ADR-085); the service worker and content security policy; supabase/functions/assistant; runtime lazy mount of the 3D view.
+- Request: Recotd to gaps, the fix all items (architect-review run 2026-11-17)
+- Questions: None
+- Suggested pick: Run each check and record its result in a dated report under docs/research
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
 
 ### G-535: F-29 half fixed: the Gaps page marks no current place
 
