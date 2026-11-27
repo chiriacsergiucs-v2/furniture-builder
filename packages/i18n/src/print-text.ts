@@ -555,6 +555,41 @@ export const PRINT_RU = {
   'Pin, masiv': 'Сосна, массив',
   'Larice, masiv (exterior)': 'Лиственница, массив (для улицы)',
   'Blat 38': 'Столешница 38',
+  // Built-in hardware names (G-521, print.ts printHardwareName); a typed name prints as typed.
+  'glisiere cu extragere totală potrivite pentru un sertar sub chiuvetă; sifonul stabilește decupajul':
+    'направляющие полного выдвижения для ящика под мойкой; вырез задаёт сифон',
+  'sistem extractibil pentru coșul de gunoi': 'система выдвижного мусорного ведра',
+  'cuptor — introduceți dimensiunea nișei din desenul de montaj':
+    'духовка — введите размер ниши по монтажному чертежу',
+  'cadru extractibil': 'выдвижная рама',
+  'cuptor și cuptor cu microunde — introduceți dimensiunile nișelor din desenele de montaj':
+    'духовка и микроволновка — введите размеры ниш по монтажным чертежам',
+  'frigider — introduceți dimensiunea nișei din desenul de montaj':
+    'холодильник — введите размер ниши по монтажному чертежу',
+  'suporți de agățare pe perete (corpurile de colț nu îi primesc automat)':
+    'навесы для крепления к стене (угловым модулям они не добавляются автоматически)',
+  'șine pentru dosare suspendate': 'рейки для подвесных папок',
+  'șine pentru dosare suspendate și glisiere cu extragere totală pentru greutatea dosarelor':
+    'рейки для подвесных папок и направляющие полного выдвижения, рассчитанные на папки',
+  'șine transversale pentru dosare suspendate': 'поперечные рейки для подвесных папок',
+  'tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    'обивка (поролон, ремни или пружины, ткань) — покупная, не кроится',
+  'tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește; console de legătură între module':
+    'обивка (поролон, ремни или пружины, ткань) — покупная, не кроится; стяжные кронштейны модулей',
+  'mecanism de rabatare (stabilește dimensiunile interioare ale cadrului); tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    'механизм реклайнера (задаёт внутренние размеры каркаса); обивка (поролон, ремни или пружины, ткань) — покупные, не кроятся',
+  'mecanism de rabatare cu legătură pentru suportul de picioare (stabilește pozițiile și dimensiunile interioare ale cadrului); tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    'механизм реклайнера с приводом подставки для ног (задаёт положения и внутренние размеры каркаса); обивка (поролон, ремни или пружины, ткань) — покупные, не кроятся',
+  'pistonul cu gaz, mecanismul sincron și baza cu 5 brațe se cumpără; acest cadru are în schimb picioare fixe':
+    'газлифт, синхромеханизм и крестовина покупные; у этого каркаса вместо них неподвижные ножки',
+  'pistonul cu gaz, mecanismul sincron, baza cu 5 brațe și bara de susținere a spătarului se cumpără':
+    'газлифт, синхромеханизм, крестовина и опорная планка спинки покупные',
+  'suport reglabil pentru spătar și roți': 'регулируемый упор спинки и колёса',
+  'balamale și suport pentru spătar': 'петли спинки и упор',
+  'mecanism de pliere pentru futon': 'механизм складывания футона',
+  // A piece name with its number when two pieces share a name (G-521, project.ts pieceName).
+  '{name} (piesa {n})': '{name} (изделие {n})',
+  '{name}: {message}': '{name}: {message}',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -1082,4 +1117,38 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Pin, masiv': 'Pine, solid',
   'Larice, masiv (exterior)': 'Larch, solid (outdoor)',
   'Blat 38': 'Worktop 38',
+  // Built-in hardware names (G-521): the English names of the catalog data.
+  'glisiere cu extragere totală potrivite pentru un sertar sub chiuvetă; sifonul stabilește decupajul':
+    'full-extension runners suited to a sink drawer; the siphon/trap sets the notch',
+  'sistem extractibil pentru coșul de gunoi': 'waste pull-out system',
+  'cuptor — introduceți dimensiunea nișei din desenul de montaj':
+    'oven — enter its niche size from the installation drawing',
+  'cadru extractibil': 'pull-out frame',
+  'cuptor și cuptor cu microunde — introduceți dimensiunile nișelor din desenele de montaj':
+    'oven and microwave — enter their niche sizes from the installation drawings',
+  'frigider — introduceți dimensiunea nișei din desenul de montaj':
+    'fridge — enter its niche size from the installation drawing',
+  'suporți de agățare pe perete (corpurile de colț nu îi primesc automat)':
+    'wall hanging brackets (corner units do not get them automatically)',
+  'șine pentru dosare suspendate': 'hanging-file rails',
+  'șine pentru dosare suspendate și glisiere cu extragere totală pentru greutatea dosarelor':
+    'hanging-file rails and full-extension runners rated for files',
+  'șine transversale pentru dosare suspendate': 'lateral hanging-file rails',
+  'tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    'upholstery (foam, webbing or springs, fabric) — bought, not cut',
+  'tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește; console de legătură între module':
+    'upholstery (foam, webbing or springs, fabric) — bought, not cut; module connector brackets',
+  'mecanism de rabatare (stabilește dimensiunile interioare ale cadrului); tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    "reclining mechanism (it sets the frame's inside sizes); upholstery (foam, webbing or springs, fabric) — bought, not cut",
+  'mecanism de rabatare cu legătură pentru suportul de picioare (stabilește pozițiile și dimensiunile interioare ale cadrului); tapițerie (burete, chingi sau arcuri, stofă) — cumpărată, nu se croiește':
+    "reclining mechanism with footrest linkage (it sets the positions and the frame's inside sizes); upholstery (foam, webbing or springs, fabric) — bought, not cut",
+  'pistonul cu gaz, mecanismul sincron și baza cu 5 brațe se cumpără; acest cadru are în schimb picioare fixe':
+    'gas lift, synchro mechanism and 5-star base are bought; this frame has fixed legs instead',
+  'pistonul cu gaz, mecanismul sincron, baza cu 5 brațe și bara de susținere a spătarului se cumpără':
+    'gas lift, synchro mechanism, 5-star base and back support bar are bought',
+  'suport reglabil pentru spătar și roți': 'adjustable backrest prop and wheels',
+  'balamale și suport pentru spătar': 'backrest hinges and prop',
+  'mecanism de pliere pentru futon': 'futon fold mechanism',
+  '{name} (piesa {n})': '{name} (piece {n})',
+  '{name}: {message}': '{name}: {message}',
 };

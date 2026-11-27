@@ -3886,6 +3886,18 @@ highest id in either file.
 - Impact: Medium
 - Necessity: Medium
 
+### G-521: Warnings on the cut sheet: piece, board and hardware names inside a warning stay in the app language
+
+- Status: Done (N425)
+- Origin: G-516 fix, 2026-11-16 (N324)
+- Missing: G-516 prints part labels in the print language. A piece name ({name}), a board name ({board}) and a hardware name inside a warning still print as the app made them: a piece name needs its Design (printPieceName), board and hardware names have no print entries.
+- Request: Print each cut-sheet warning in the print language (ADR-265).
+- Questions: Should board and hardware names get Romanian, Russian and English print entries (a judgement on names, ADR-010)?
+- Suggested pick: Pass the Design with the warning and add print entries for built-in board and hardware names.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+
 ### G-522: F-04 Move and Adjust reasons not proved in a real browser
 
 - Status: Done (N329)

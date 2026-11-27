@@ -233,4 +233,8 @@ export const WARNING_RO = {
     'potrivire adâncime: corpurile de podea alăturate trebuie să aibă aceeași adâncime',
   'height match: base units under one worktop should be equally high':
     'potrivire înălțime: corpurile de bază sub același blat trebuie să aibă aceeași înălțime',
+  // Not a warning: a piece name inside one, numbered when two pieces share a name (project.ts pieceName, G-521).
+  '{name} (piece {n})': '{name} (piesa {n})',
+  // A piece's own warning carried to the project, named by the piece (project.ts, ADR-258; G-521).
+  '{name}: {message}': '{name}: {message}',
 } as const satisfies Record<string, PrintKey>;
