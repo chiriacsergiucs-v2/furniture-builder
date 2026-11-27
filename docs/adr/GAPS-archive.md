@@ -4045,6 +4045,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low
 
+### G-576: Staggered rows not refreshed on project-level resizes
+
+- Status: Done (N414)
+- Origin: ADR-282
+- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
+- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
+- Questions: Rewrite staggered rows on project-level resizes too?
+- Suggested pick: Yes, apply refreshStagger in the project commit
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+
 ### G-577: Canvas-native editor: slices 2-7 have no ADR yet
 
 - Status: Done (ADR-289)

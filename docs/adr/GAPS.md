@@ -1951,18 +1951,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-576: Staggered rows not refreshed on project-level resizes
-
-- Status: Open
-- Origin: ADR-282
-- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
-- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
-- Questions: Rewrite staggered rows on project-level resizes too?
-- Suggested pick: Yes, apply refreshStagger in the project commit
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-
 ### G-579: Canvas-native editor study: device and user checks not run
 
 - Status: Open
