@@ -161,6 +161,10 @@ site_url = "https://chiriacsergiucs-v2.github.io/furniture-builder/"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+# Local development only (G-544, security health L-6): this file is read by the Supabase CLI's local stack
+# (`supabase start`); no workflow pushes it to the hosted project (deploy-assistant.yml runs only `functions deploy`).
+# The hosted project's redirect list is set in the dashboard with the GitHub Pages URL alone (docs/supabase-setup.md).
+# Never run `supabase config push` with the localhost entry below.
 additional_redirect_urls = ["https://chiriacsergiucs-v2.github.io/furniture-builder/", "http://localhost:5173/furniture-builder/"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
