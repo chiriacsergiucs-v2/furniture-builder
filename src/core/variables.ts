@@ -38,7 +38,7 @@ import {
   type ProjectVariable,
 } from './variableCore';
 
-import { dropListValues, listDiagnostics, listValues } from './defLists';
+import { dropListValues, listDiagnostics, listValues } from './listValues';
 
 export * from './variableCore';
 
@@ -61,7 +61,7 @@ export function scopeFor(
  * The cache key of an item's scope: one per value set, one per definition list without piece overrides; null when the
  * piece has its own overrides (its scope is its own).
  */
-export function scopeKey(item: Pick<ProjectItem, 'set' | 'list'>): string | null {
+function scopeKey(item: Pick<ProjectItem, 'set' | 'list'>): string | null {
   if (item.set) return `set:${item.set.id}`;
   if (!item.list) return '';
   return item.list.values && Object.keys(item.list.values).length ? null : `list:${item.list.id}`;

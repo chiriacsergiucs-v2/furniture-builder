@@ -10,6 +10,7 @@ import { roleBoard } from './finish';
 import { materialKey, type Project, type ProjectItem, type ProjectSettings } from './project';
 import type { Design, FrontStyle, Handle, Material, Mm } from './types';
 import { isObj } from './guards';
+import { listOf } from './listValues';
 
 export type SettingKey = keyof ProjectSettings;
 export const SETTING_KEYS: SettingKey[] = [
@@ -123,10 +124,6 @@ export function withSettings(d: Design, s: ProjectSettings | undefined): Design 
 }
 
 export type Follows = 'follows' | 'own' | 'n/a';
-
-/** The definition list a piece is linked to (ADR-303), if it still exists. */
-export const listOf = (project: Project, item: Pick<ProjectItem, 'list'>) =>
-  item.list ? project.definitionLists?.find((l) => l.id === item.list!.id) : undefined;
 
 /** The settings a piece follows (ADR-303): its definition list's, then the project's for keys the list does not set. */
 export function effectiveSettings(
