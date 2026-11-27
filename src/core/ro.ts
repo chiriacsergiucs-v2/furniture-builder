@@ -5,7 +5,13 @@
  */
 import { baseLabel, boardBandText, type CutRow } from './cutlist';
 import { dataSource, recordedMessage } from '@furniture-builder/i18n';
-import { getPrintLang, pt, WARNING_RO, type PrintKey } from '@furniture-builder/i18n/print';
+import {
+  getPrintLang,
+  printBoardName,
+  pt,
+  WARNING_RO,
+  type PrintKey,
+} from '@furniture-builder/i18n/print';
 import { tenthsText } from './materials';
 import { csvCell } from './prices';
 import type { EdgeBand, EdgeBandKind, HardwareItem } from './types';
@@ -407,7 +413,7 @@ export function cutlistCsvRo(rows: CutRow[], pieceNames?: ReadonlyMap<string, st
     csvHeaders(),
     ...rows.map((r) => [
       [...new Set(r.labels.map(label))].join(' / '),
-      r.materialName,
+      printBoardName(r.materialName),
       r.thickness,
       r.length,
       r.width,

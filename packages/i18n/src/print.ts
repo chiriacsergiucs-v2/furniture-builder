@@ -57,3 +57,26 @@ export function pt(ro: PrintKey, params?: Params): string {
   const text = tables ? (printLang === 'ru' ? tables.PRINT_RU[ro] : tables.PRINT_EN[ro]) : ro;
   return format(text, params, printLang === 'ru' ? 'ru' : 'en');
 }
+
+/**
+ * Built-in board names (src/core/design.ts `defaultMaterials` and `solidMaterials`, src/core/project.ts
+ * `worktopMaterial`) by their stored English name, with their Romanian print key (G-537, user 2026-11-27: "Translate on
+ * print"). Only an exact stored name is looked up; a name the user typed or changed prints as typed.
+ */
+const BUILT_IN_BOARD_RO = new Map<string, PrintKey>([
+  ['PAL 18 white', 'PAL 18 alb'],
+  ['PAL 18 oak', 'PAL 18 stejar'],
+  ['PAL 16 white', 'PAL 16 alb'],
+  ['MDF 18 painted', 'MDF 18 vopsit'],
+  ['HDF 3', 'HDF 3'],
+  ['Beech, solid', 'Fag, masiv'],
+  ['Pine, solid', 'Pin, masiv'],
+  ['Larch, solid (outdoor)', 'Larice, masiv (exterior)'],
+  ['Worktop 38', 'Blat 38'],
+]);
+
+/** A board's name on the printed sheets and in the CSVs: a built-in name in the print language, any other as typed. */
+export function printBoardName(name: string): string {
+  const ro = BUILT_IN_BOARD_RO.get(name);
+  return ro === undefined ? name : pt(ro);
+}
