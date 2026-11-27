@@ -4833,6 +4833,29 @@ button.tile:hover {
   box-shadow: 0 0 0 1px var(--on-primary);
 }
 
+/* The narrow desktop layout (761 to 1199 px, a phone in landscape among them): the places keep their icons and lose
+   their visible labels (still their accessible names), and the save status keeps its dot, as on a phone, so the bar's
+   tools stay inside the screen (G-610: at 844×390 the bar made the page 1035 px wide and cut off redo). */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .bar .pages.places a {
+    padding-inline: var(--s-2);
+  }
+  .bar .pages.places a > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .bar .status .txt {
+    display: none;
+  }
+  .bar .status.failed .txt {
+    display: inline;
+  }
+}
+
 /* Editor modes: Compose · Configure · Build & Preview (ADR-079) */
 .modes {
   padding: var(--s-1) var(--s-4);

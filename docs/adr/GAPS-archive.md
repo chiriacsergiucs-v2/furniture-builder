@@ -4549,6 +4549,18 @@ highest id in either file.
 - Impact: Low
 - Necessity: Low-medium
 
+### G-610: Project editor 1035 px wide at 844x390 on a phone
+
+- Status: Done (N447)
+- Origin: G-601 build (N415), 2026-11-27
+- Missing: In the project editor at 844x390 with mobile emulation the page is 1035 px wide; the top bar runs off the right edge and redo is cut off. tools/mobile-middle/find-it.mjs compares against innerWidth, which the emulation widens, so its no-sideways-scroll check passes
+- Request: User 2026-11-27: "Also do the medium work"
+- Questions: Fix the phone landscape top bar so it fits 844 px?
+- Suggested pick: Wrap or collapse the top bar tools at short landscape widths, and make the script compare against the viewport meta width
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium
+
 ### G-616: Diagonal corner doors are not an exact split
 
 - Status: Done (N445)
