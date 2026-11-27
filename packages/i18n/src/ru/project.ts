@@ -195,6 +195,16 @@ export const ru_project = {
   'Add obstacle': 'Добавить препятствие',
   'Add pipe': 'Добавить трубу',
   'Add outlet': 'Добавить розетку',
+  // ADR-299: the outlet distances the user sets.
+  'Outlet distances (your rule)': 'Расстояния от розеток (ваше правило)',
+  'Your own rule: an outlet nearer than this gives a warning. Empty = no check; the app has no built-in distances.':
+    'Ваше собственное правило: розетка ближе этого даёт предупреждение. Пусто = без проверки; встроенных расстояний в приложении нет.',
+  'Outlet to a sink': 'Розетка — мойка',
+  'Outlet to a hob': 'Розетка — варочная панель',
+  'Outlet to a pipe': 'Розетка — труба',
+  'No check': 'Без проверки',
+  'A whole number of 1 mm or more, or empty for no check.':
+    'Целое число от 1 мм или пусто, чтобы не проверять.',
   'Remove the room? The pieces stay.': 'Убрать комнату? Изделия останутся.',
   'Remove the room': 'Убрать комнату',
   // ADR-160: the side panel reordered by use.

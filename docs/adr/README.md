@@ -360,3 +360,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-296](../adr-done/ADR-296-split-outside-room-and-room-island-diagnostic-codes.md) | Split outside-room and room-island diagnostic codes | ADR-225 | ✅ Implemented |
 | [ADR-297](../adr-done/ADR-297-move-the-desktop-mode-switch-into-the-top-bar.md) | Move the desktop mode switch into the top bar | ADR-079 | ✅ Implemented |
 | [ADR-298](../adr-done/ADR-298-highlights-tab-and-kits-highlighted-catalog-items-and-locked.md) | Highlights tab and kits: highlighted catalog items and locked build templates | ADR-032, ADR-034, ADR-282, ADR-292 | ✅ Implemented |
+| [ADR-299](../adr-done/ADR-299-outlet-distances-the-user-sets-checked-against-sinks-hobs-an.md) | Outlet distances the user sets, checked against sinks, hobs and pipes | ADR-072, ADR-205 | ✅ Implemented |

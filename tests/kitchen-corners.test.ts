@@ -986,7 +986,7 @@ describe('documents (ADR-011, ADR-205)', () => {
   });
 
   it('project schemaVersion 21 stores worktopJoints, hobs and backCuts; version 20 loads and refuses them', () => {
-    expect(PROJECT_SCHEMA).toBe(21);
+    expect(PROJECT_SCHEMA).toBe(22);
     expect(PROJECT_SCHEMAS).toContain(20);
     const p0 = joint(withParts('left'), 'butt', 'a');
     const p: Project = {

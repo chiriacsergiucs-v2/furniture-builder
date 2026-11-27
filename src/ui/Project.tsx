@@ -43,6 +43,8 @@ import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { useCanvas } from './CanvasEditor';
 import { WallBackground } from './WallBackground';
 import { RoomFeatures } from './RoomFeatures';
+import { OutletDistanceFields } from './OutletDistances';
+import { turnedFootprint, type TurnGesture } from '../shared/planDrag';
 import { MoveToButtons } from './MoveTo';
 import { keepSheetClosedOnce, useUi } from '../store/uiStore';
 import { CompatRules } from './CompatRules';
@@ -1913,6 +1915,9 @@ function RoomSection() {
                 {t('Draw the room again')}
               </button>
               <RoomFeatures room={room} onChange={setRoom} />
+              {room.features.some((f) => f.kind === 'outlet') && (
+                <OutletDistanceFields room={room} onChange={setRoom} />
+              )}
               <button
                 type="button"
                 className="danger-link"

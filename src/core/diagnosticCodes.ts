@@ -94,6 +94,7 @@ export const DIAGNOSTIC_CODES = [
   'opening-blocked',
   'openings-clash',
   'outlet-hidden',
+  'outlet-near',
   'outside',
   'outside-room',
   'overhang',

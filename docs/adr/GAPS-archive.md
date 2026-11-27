@@ -122,7 +122,6 @@ highest id in either file.
 ### G-011: Handle projection and exact swing arcs in the check
 
 - Status: Done (N421)
-- Note: Built 2026-11-27 (N421): a hinged door's clearance carries its quarter circle about the hinge edge (`arc` in `src/core/clearance.ts`, turned with the piece in `placeItem`), and `opening-blocked` counts only pieces, run parts and obstacles that reach into it (squared distances). The handle schedule (ADR-024) holds no handle depth, so no projection is added (ADR-010). Still the box: two pieces' swings meeting (`openings-clash`), a swing through a wall (room outline check), a piece typed at an angle and the tilted diagonal corner door.
 - Origin: ADR-057, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: No handle projection; door swings are not exact arcs in the check (drawn arcs were fixed, the check still uses a box).
 - Request: Opening clearance for doors, drawers, flaps (context, not a quote)
@@ -3357,6 +3356,22 @@ highest id in either file.
 - Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
 - Conflicts: none
 
+### G-406: Electrical rules for outlets
+
+- Status: Done (N426)
+- Origin: ADR-205, 2026-11-06; remainder of G-030 (not in its suggested pick)
+- Missing: No electrical rules: distances of outlets from sinks, hobs or water are not checked.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Which rules, and from which regulation? The app must not invent them (ADR-010).
+- Suggested pick: Only the distances the user enters, checked as warnings and labelled as the user's rule. (estimate: effort +20%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Outlets are not checked against sinks, hobs or water.
+- Fix: Add distances that the user enters, checked as warnings, with no built-in values.
+- Note: Built by ADR-299 (N426): `Room.outletDistances` (project schemaVersion 22), warning `outlet-near` labelled "(your rule)", empty = no check; evidence `tests/outlet-distances.test.ts` and `tests/find-it/outlet-distances.test.tsx`.
+- Conflicts: none
+
 ### G-407: Typed position for sink and hob cut-outs
 
 - Status: Done (ADR-209)
@@ -3464,7 +3479,6 @@ highest id in either file.
 - Fix: Let groupRuns read side and corner connections.
 - Conflicts: none
 - Note: Re-checked 2026-11-07 on main 9f4e59b (code read, no browser): Missing text updated to the current code.
-- Note: Built 2026-11-27 (N423): `groupRunLegs`/`groupRuns` in src/core/project.ts read the stored side and corner connections that still hold; Suggest run parts, run handles and "the run" scope use them; tests/run-connections.test.ts.
 
 ### G-436: Reverse-the-hinge repair
 
@@ -3499,7 +3513,6 @@ highest id in either file.
 ### G-439: Drilling positions for joints other than carcass joints
 
 - Status: Done (N424)
-- Note: 2026-11-27, N424: back fixings now get drilling positions round each back's perimeter from the user's own "In from each edge (mm)" and "Largest spacing (mm)" (Settings › Fasteners › Back fixing, both empty until typed, guidance; `backFixingPositions` in `src/core/fasteners.ts`, tests `tests/back-fixings.test.ts` and `tests/find-it/back-fixings.test.tsx`). Hanging points, worktop fixings and feet still have none; no request asked for them yet.
 - Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
 - Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
 - Request: “Hardware and fastener completeness”.
@@ -3670,7 +3683,6 @@ highest id in either file.
 - Suggested pick: Break the ui cycles and the shopping type cycle (ADR-236) and keep the project.ts cycle as one unit, closest to the review's anti-candidate note (estimate: effort +15 %, value +5 %)
 - Work: Medium
 - Impact: Low-medium
-- Note: Done 2026-11-27 (N419): ui cycles broken by moving shared pieces into Dialog.tsx, selectionLabel.ts, RoomDrawingParts.tsx and PieceSettings.tsx, and the Viewer3D/ViewerScene cycle by sceneGeometry.tsx; the shopping type cycle was already gone (ADR-236). No import/no-cycle plugin is a dependency, so the guard is a test in tests/core-boundary.test.ts that fails on any cycle not in its allow-list: the project.ts unit (13 files) and the type-only unit types.ts, diagnosticCodes.ts, catalog/types.ts (moving those types changes types.ts, ADR-011).
 
 ### G-489: Restoring a backup writes rows without a transaction
 
@@ -3987,7 +3999,7 @@ highest id in either file.
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium
-- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check). Done 2026-11-27 (N420): the formulas, binding targets and a piece's own variables moved to src/core/variableCore.ts (re-exported by variables.ts) and the Placement type to src/core/placement.ts; build.ts imports variableCore, and tests/core-boundary.test.ts checks that no model file reaches project.ts or the other upward modules through any path.
+- Note: User 2026-11-27: "Break it in code" (no ADR; add a transitive-cycle check).
 
 ### G-531: Stale numbers and line references in architecture.md
 
