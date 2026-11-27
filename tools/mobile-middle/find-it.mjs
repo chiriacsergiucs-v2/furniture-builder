@@ -5,6 +5,8 @@
 // index, Results, Settings and Material by role and visible text, counts the taps to every control, and compares the
 // quick-count card box with its host in 3D. Writes `<out dir>/mobile-middle-taps.json` and screenshots
 // `<out dir>/mm-<w>x<h>-<step>.png`. Exit 1 when any check fails; a failing step is a FAIL, never a crash.
+// Sideways-scroll checks compare with the layout viewport (`document.documentElement.clientWidth`): under mobile
+// emulation `innerWidth` grows with a page wider than the screen, so a check against it always passed (G-610).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { launchBrowser, makeChecker, outDir, previewUrl } from '../lib/harness.mjs';
 
@@ -428,7 +430,7 @@ const counters = async (vp) => {
           ...b(e),
         }))
         .filter((k) => k.w > 0 && k.h > 0);
-      return { cb, hb, hostName, kids, vw: innerWidth, vh: innerHeight };
+      return { cb, hb, hostName, kids, vw: document.documentElement.clientWidth, vh: innerHeight };
     });
     const e = 0.5;
     const inside = (c, o) => c.x >= o.x - e && c.y >= o.y - e && c.r <= o.r + e && c.b <= o.b + e;
@@ -493,7 +495,8 @@ const editorFlow = async (vp) => {
       );
       check(w, 'Compose side panel is visible', await visible(panel(page)));
       const sx = await page.evaluate(() => {
-        const page = document.documentElement.scrollWidth <= innerWidth + 1;
+        const page =
+          document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1;
         const stage = document.querySelector('main.work') ?? document.body;
         const bad = [...stage.querySelectorAll('*')]
           .filter((e) => {
@@ -678,7 +681,7 @@ const narrowBar = async () => {
       );
       const out = btns.filter((b) => {
         const x = b.getBoundingClientRect();
-        return x.left < -1 || x.right > innerWidth + 1;
+        return x.left < -1 || x.right > document.documentElement.clientWidth + 1;
       });
       const small = btns.filter((b) => {
         const x = b.getBoundingClientRect();
@@ -687,7 +690,7 @@ const narrowBar = async () => {
       return {
         n: btns.length,
         own: bar.scrollWidth <= bar.clientWidth + 1,
-        page: document.documentElement.scrollWidth <= innerWidth + 1,
+        page: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
         out: out.map((b) => b.getAttribute('aria-label') || b.textContent.trim()),
         small: small.map((b) => b.getAttribute('aria-label') || b.textContent.trim()),
       };
@@ -738,10 +741,19 @@ const roomDrawings = async () => {
       await hints.getByRole('button', { name: 'Skip' }).click();
     await page.getByRole('button', { name: 'Add a piece', exact: true }).first().click();
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
-    await dlg.locator('.start-group .row-btn').first().click();
+    // The catalog finder's tiles (the default since G-582), or the grouped rows when the finder is off.
+    await dlg.locator('.finder-tile, .start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
     await page.waitForTimeout(400);
     const r = await page.evaluate(() => {
+      const cw = document.documentElement.clientWidth;
+      // G-610: every top bar control inside the screen (redo was cut off at 844×390).
+      const barOut = [...document.querySelectorAll('header.bar :is(a, button, summary, input)')]
+        .filter((e) => {
+          const x = e.getBoundingClientRect();
+          return x.width > 0 && (x.left < -1 || x.right > cw + 1);
+        })
+        .map((e) => e.getAttribute('aria-label') || e.textContent.trim() || e.tagName);
       const box = (label) => {
         const e = document.querySelector(`[aria-label="${label}"]`);
         if (!e) return null;
@@ -754,7 +766,9 @@ const roomDrawings = async () => {
       return {
         plan: box('Room plan, seen from above. Select a piece.'),
         front: box('Room seen from the front. Select a piece.'),
-        page: document.documentElement.scrollWidth <= innerWidth + 1,
+        page: document.documentElement.scrollWidth <= cw + 1,
+        sw: document.documentElement.scrollWidth,
+        barOut,
       };
     });
     // G-601: each drawing keeps a usable height (it was 20 px); the work column scrolls instead.
@@ -783,7 +797,13 @@ const roomDrawings = async () => {
       inside(r.front),
       JSON.stringify(r.front),
     );
-    check(w, 'room drawings: no horizontal page scroll', r.page);
+    check(w, 'room drawings: no horizontal page scroll', r.page, `page ${r.sw} px wide`);
+    check(
+      w,
+      'project editor: every top bar control is inside the screen (G-610)',
+      r.barOut.length === 0,
+      r.barOut.join(', '),
+    );
     await shot(page, vp, 'room-drawings');
     check(w, 'room drawings: no script errors', errors.length === 0, errors.join(' | '));
   } finally {
