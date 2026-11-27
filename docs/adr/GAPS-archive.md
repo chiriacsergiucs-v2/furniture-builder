@@ -3945,10 +3945,10 @@ highest id in either file.
 - Request: Translate built-in material names on print
 - Questions: Translate built-in names in print and CSV, or keep them as stored?
 - Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
-- Note: User 2026-11-27: "Translate on print". Built (N408): `printBoardName` (packages/i18n/src/print.ts) maps the nine exact built-in board names to Romanian print keys with Russian and English entries (print-text.ts); the parts CSV (ro.ts), the printed sheet (PrintSheet.tsx) and the shopping list board lines (`printLabel`, shopping.ts) use it; a typed name prints as typed (tests/print-board-names.test.tsx)
 - Work: Medium
 - Impact: Low
 - Necessity: Low
+- Note: User 2026-11-27: "Translate on print".
 
 ### G-538: Box-centre arithmetic left in UI and viewer sites with a different formula (bug-hunt L-2 skipped sites)
 
