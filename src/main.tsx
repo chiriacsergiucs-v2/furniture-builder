@@ -18,11 +18,13 @@ import './styles.css';
 import { t } from '@furniture-builder/i18n';
 import { applyTheme } from './store/useTheme';
 import { applyThemeVars } from './store/themeVars';
+import { applyThemeColours } from './store/themeColours';
 import { installCutTitles } from './ui/cutTitle';
 import { registerSW } from 'virtual:pwa-register';
 
 applyTheme();
 applyThemeVars();
+applyThemeColours();
 installCutTitles();
 
 /**

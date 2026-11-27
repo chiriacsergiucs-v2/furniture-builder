@@ -8226,6 +8226,15 @@ fieldset.group-locked {
 .appearance-row .appearance-inc {
   grid-area: inc;
 }
+.appearance-row input[type='color'] {
+  grid-area: slider;
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+}
 .appearance-scale {
   display: flex;
   align-items: center;
