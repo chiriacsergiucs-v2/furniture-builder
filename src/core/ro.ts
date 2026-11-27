@@ -8,6 +8,8 @@ import { dataSource, recordedMessage } from '@furniture-builder/i18n';
 import {
   getPrintLang,
   printBoardName,
+  printBuiltInName,
+  printHardwareName,
   pt,
   WARNING_RO,
   type PrintKey,
@@ -445,20 +447,34 @@ const isMessageParam = (key: string, name: string): boolean =>
  * English text and printed in the print language (G-516). A message with no entry is printed as it is, in the
  * app language; `tests/warning-print.test.ts` keeps that from happening for the warnings the core makes.
  */
-export function warningText(message: string): string {
+export function warningText(message: string, pieceNames?: ReadonlyMap<string, string>): string {
   const rec = recordedMessage(message);
   if (!rec || !Object.hasOwn(WARNING_RO, rec.key)) return message;
   const params = rec.params
     ? Object.fromEntries(
         Object.entries(rec.params).map(([k, v]) => [
           k,
-          typeof v !== 'string'
-            ? v
-            : isMessageParam(rec.key, k)
-              ? warningText(v)
-              : partRo(dataSource(v)),
+          typeof v !== 'string' ? v : printedParam(v, isMessageParam(rec.key, k), pieceNames),
         ]),
       )
     : undefined;
   return pt(WARNING_RO[rec.key as keyof typeof WARNING_RO], params);
+}
+
+/**
+ * One param of a warning in the print language (G-521). A message inside it (a reason, a numbered piece name) is printed
+ * the same way. A message param that is a built-in hardware name (`{what}` of hardware-to-choose) gets its print entry.
+ * A data param is taken back to its English text and printed as a piece (`pieceNames`: stored name → printed name,
+ * `printPieceNames`), a built-in board, a built-in hardware name or a part label; a name the user typed prints as typed.
+ */
+function printedParam(
+  v: string,
+  message: boolean,
+  pieceNames: ReadonlyMap<string, string> | undefined,
+): string {
+  const rec = recordedMessage(v);
+  if (rec && Object.hasOwn(WARNING_RO, rec.key)) return warningText(v, pieceNames);
+  const s = dataSource(v);
+  if (message) return printHardwareName(s);
+  return pieceNames?.get(s) ?? printBuiltInName(s) ?? partRo(s);
 }

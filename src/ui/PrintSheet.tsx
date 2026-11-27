@@ -25,6 +25,9 @@ export function PrintSheet() {
     () => (project ? printPieceNames(project.items.map((i) => i.design)) : undefined),
     [project],
   );
+  // A piece name inside a warning prints as the pieces table names it (G-521).
+  const design = useDesign((s) => s.design);
+  const warnNames = useMemo(() => pieceNames ?? printPieceNames([design]), [pieceNames, design]);
   const rows = view.cutRows;
   const bands = useMemo(() => bandMetersFromRows(rows), [rows]);
   const hw = view.hardware;
@@ -180,7 +183,7 @@ export function PrintSheet() {
           <h2>{pt('De verificat')}</h2>
           <ul className="pr-warn">
             {warnings.map((w, i) => (
-              <li key={i}>{warningText(w.message)}</li>
+              <li key={i}>{warningText(w.message, warnNames)}</li>
             ))}
           </ul>
         </section>
