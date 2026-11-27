@@ -1908,6 +1908,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: User 2026-11-26: drag >=50 fps with 4x CPU throttle and no long task >50 ms over a 3 s drag
 - Questions: None
 - Suggested pick: Draw drag frames into a reduced-size render target allocated once and copied to the canvas, so a drag never resizes the canvas
+- Note: Tried 2026-11-27 (N434), not landed: drag frames drawn in a share of the canvas's own drawing buffer, copied into a FramebufferTexture of the buffer's size (allocated on mount and resize) and stretched back with a full-screen quad, so the canvas kept its size and pixel ratio (mid-drag screenshot correct). `node tools/mobile-middle/drag-perf.mjs` (SwiftShader, 390 x 844, machine load average 6.6-8.6 on 2 cores shared with other agents), 6 runs each, runs 4-6 interleaved: drag 4x fps before 32.3/35.1/17.4/38.5/43.9/33.8 (mean 33.5), after 31.4/50.0/31.5/23.7/23.9/32.8 (mean 32.2); first long task (first 300 ms after the press, new `firstLongTask` field) before 79/0/67/106/0/64 ms, after 149/0/0/79/76/93 ms; main ms per frame before mean 30.9, after 31.4; drag 1x fps before 53.8-56.1, after 48.6-55.3. No gain, slightly worse (the full-size quad draw and the full-size canvas composite each frame cost what the avoided resize saved), so the change was reverted. A retry needs a quiet machine or a real phone GPU to tell the 11 ms resize apart from the noise.
 - Work: Medium
 - Impact: Low-medium
 - Necessity: Medium
