@@ -132,7 +132,7 @@ type RowTable = Exclude<BackupTable, 'designs' | 'projects' | 'templates'>;
  * Problems of a stored row read from a backup, against its table's shape (G-542). Empty = it may be restored. The
  * retired research tables have no shape in the code (nothing reads them), so only their key is checked.
  */
-export function rowProblems(table: RowTable, row: Record<string, unknown>): string[] {
+function rowProblems(table: RowTable, row: Record<string, unknown>): string[] {
   switch (table) {
     case 'images':
       return imageRowProblems(row);

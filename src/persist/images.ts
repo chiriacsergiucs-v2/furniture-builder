@@ -26,7 +26,7 @@ export type ImportResult =
 const hex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
 
 /** A picture decoded and drawn again as JPEG, at most the texture size, with its average colour. */
-export type EncodeResult =
+type EncodeResult =
   | { ok: true; bytes: ArrayBuffer; type: string; width: number; height: number; color: string }
   | { ok: false; problem: string };
 /**
