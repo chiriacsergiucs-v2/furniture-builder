@@ -10,7 +10,7 @@ import { loadImage } from '../store/libraryStore';
 import { importImage } from '../persist/images';
 import { imageKey, useImageUrls } from '../store/useImageUrls';
 import { useDesign } from '../store/designStore';
-import { MmField, Select, Toggle } from './controls';
+import { ErrorAlert, MmField, Select, Toggle } from './controls';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 import { pictureKey, useWallPictureUrls } from '../store/wallPictures';
@@ -288,12 +288,7 @@ export function FloorBackground({ room }: { room: Room }) {
           {img && <span className="hint">{img.name}</span>}
         </div>
       )}
-      {problem && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{problem}</span>
-        </p>
-      )}
+      <ErrorAlert message={problem} />
     </div>
   );
 }
@@ -391,12 +386,7 @@ export function PlanPictureSection() {
           </button>
         </>
       )}
-      {problem && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{problem}</span>
-        </p>
-      )}
+      <ErrorAlert message={problem} />
     </section>
   );
 }

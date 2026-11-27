@@ -3,7 +3,7 @@ import { t } from '@furniture-builder/i18n';
 import { codeLink, decodeCode, encodeCode, LINK_KEY } from '../core/shareCode';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { InfoTip } from './controls';
+import { ErrorAlert, InfoTip } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { importDocument, type ImportResult } from './shell/importFile';
@@ -194,12 +194,7 @@ export function OpenFromCode({
               }}
             />
           </label>
-          {error && (
-            <p className="alert error" role="alert">
-              <Icon name="alert-circle" className="sm" />
-              <span>{error}</span>
-            </p>
-          )}
+          <ErrorAlert message={error} />
         </Dialog>
       )}
     </>

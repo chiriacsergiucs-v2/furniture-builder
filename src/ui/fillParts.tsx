@@ -105,17 +105,6 @@ export function ResultProblems({
   );
 }
 
-/** Why the chosen mix could not be saved. */
-export function SaveError({ message }: { message: string | null }) {
-  if (!message) return null;
-  return (
-    <p className="alert error" role="alert">
-      <Icon name="alert-circle" className="sm" />
-      <span>{message}</span>
-    </p>
-  );
-}
-
 /** Back, Cancel and the step's primary action, which is the form's submit so Enter does it (ADR-193). */
 export function FillFooter({
   backDisabled,

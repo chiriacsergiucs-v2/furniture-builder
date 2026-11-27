@@ -13,6 +13,7 @@ import type { Material, ProductRef } from '../core/types';
 import { importImage } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import { ProductPicker } from './ProductPicker';
+import { ErrorAlert } from './controls';
 import { Icon } from './icons';
 
 /** "Seller product: <name>" with a way to drop the link (the board or band keeps its values). */
@@ -120,12 +121,7 @@ export function BandProduct({ m, front }: { m: Material; front?: boolean }) {
           }}
         />
       )}
-      {msg && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{msg}</span>
-        </p>
-      )}
+      <ErrorAlert message={msg} />
       <ProductPicker
         open={open}
         title={t('Edge band from a seller for {name}', { name: tr(m.name) })}

@@ -50,7 +50,7 @@ import { t, tr } from '@furniture-builder/i18n';
 import { listDecors, saveDesign } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
+import { Counter, ErrorAlert, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useUi, type WizardDraft } from '../store/uiStore';
@@ -984,12 +984,7 @@ function Wizard({
                 </div>
                 <ProblemList problems={c.problems} />
               </section>
-              {saveError && (
-                <p className="alert error" role="alert">
-                  <Icon name="alert-circle" className="sm" />
-                  <span>{saveError}</span>
-                </p>
-              )}
+              <ErrorAlert message={saveError} />
             </>
           )}
         </div>

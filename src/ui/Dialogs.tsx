@@ -28,7 +28,7 @@ import {
   saveProject,
 } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
-import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { ErrorAlert, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { BoardBand } from './BoardBand';
 import { BoardProduct } from './SellerLinks';
@@ -154,12 +154,7 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
-      {saveError && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{saveError}</span>
-        </p>
-      )}
+      <ErrorAlert message={saveError} />
       {onFillWall && (
         <button type="button" className="row-btn" onClick={onFillWall}>
           <span className="glyph">
@@ -828,12 +823,7 @@ function MaterialPicture({ m }: { m: Material }) {
           </span>
         </p>
       )}
-      {problem && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{problem}</span>
-        </p>
-      )}
+      <ErrorAlert message={problem} />
       {img && (
         <div className="sheet-fields">
           <MmField

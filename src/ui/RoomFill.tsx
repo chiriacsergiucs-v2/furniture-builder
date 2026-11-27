@@ -42,7 +42,7 @@ import {
   type ShapeSizes,
 } from '../core/room';
 import { useDesign } from '../store/designStore';
-import { Segmented, Steps } from './controls';
+import { ErrorAlert, Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { RoomFeatures } from './RoomFeatures';
@@ -55,7 +55,6 @@ import {
   RowAndTallChoices,
   Problems,
   ResultProblems,
-  SaveError,
   num,
   opt,
 } from './fillParts';
@@ -646,7 +645,7 @@ function RoomFill({
               ))}
             </ul>
           )}
-          <SaveError message={saveError} />
+          <ErrorAlert message={saveError} />
         </section>
       )}
       <FillFooter

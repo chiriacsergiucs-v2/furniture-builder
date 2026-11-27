@@ -14,6 +14,7 @@ import { saveDesign, saveTemplate } from '../store/libraryStore';
 import { online, useAccount } from '../store/accountStore';
 import { useDesign } from '../store/designStore';
 import { Dialog } from './Dialogs';
+import { ErrorAlert } from './controls';
 import { Icon } from './icons';
 import { ViewOverride, type ViewData } from '../store/useView';
 
@@ -122,12 +123,7 @@ export function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; 
             );
           })
         )}
-        {error && (
-          <p className="alert error" role="alert">
-            <Icon name="alert-circle" className="sm" />
-            <span>{error}</span>
-          </p>
-        )}
+        <ErrorAlert message={error} />
         <button
           type="button"
           className={`btn${busy ? ' loading' : ''}`}
@@ -257,12 +253,7 @@ export function SharedItemFor({ opening, onOpened }: { opening: string; onOpened
       }
     >
       <div className="shared-preview">
-        {saveError && (
-          <p className="alert error" role="alert">
-            <Icon name="alert-circle" className="sm" />
-            <span>{saveError}</span>
-          </p>
-        )}
+        <ErrorAlert message={saveError} />
         {!state ? (
           <p className="loading">{t('Opening the link…')}</p>
         ) : state.error ? (

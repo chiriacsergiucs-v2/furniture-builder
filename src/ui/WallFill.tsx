@@ -22,7 +22,7 @@ import {
 } from '../core/wallfill';
 import { saveProject } from '../store/libraryStore';
 import { useDesign } from '../store/designStore';
-import { Steps } from './controls';
+import { ErrorAlert, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import {
   FillFooter,
@@ -33,7 +33,6 @@ import {
   RowAndTallChoices,
   Problems,
   ResultProblems,
-  SaveError,
   num,
   opt,
 } from './fillParts';
@@ -308,7 +307,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               ))}
             </ul>
           )}
-          <SaveError message={saveError} />
+          <ErrorAlert message={saveError} />
         </section>
       )}
       <FillFooter

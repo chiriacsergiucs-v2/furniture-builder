@@ -16,8 +16,7 @@ import {
 import { t, tr } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerList } from '../store/fastenerStore';
-import { GuidanceTip, Group, InfoTip } from './controls';
-import { Icon } from './icons';
+import { ErrorAlert, Group, GuidanceTip, InfoTip } from './controls';
 
 /** Counts for what the result tabs show: the piece being edited, or the whole open project (like useView). */
 export function useFastenerCounts(): FastenerCount[] {
@@ -54,12 +53,7 @@ export function FastenersPanel() {
         </InfoTip>
       }
     >
-      {error && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{error}</span>
-        </p>
-      )}
+      <ErrorAlert message={error} />
       {/* Rows mount once the saved list is read, so they start from it and keep focus while typing. */}
       <ul className="fasteners">
         {ready &&
