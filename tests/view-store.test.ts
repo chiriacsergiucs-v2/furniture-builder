@@ -26,7 +26,10 @@ describe('view store (ADR-230)', () => {
     const src = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
     // The viewer's code is Viewer3D.tsx and the scene parts moved out of it (cleanup audit 2026-11-09, item 13).
     const viewer = src('viewer/Viewer3D.tsx') + src('viewer/ViewerScene.tsx');
-    const app = src('ui/App.tsx');
+    // The app shell and the parts split out of it (G-500).
+    const app = ['ui/App.tsx', 'ui/shell/EditorWork.tsx', 'ui/shell/ViewerSlot.tsx']
+      .map(src)
+      .join('\n');
     for (const text of [viewer, app]) {
       expect(text).not.toMatch(/document\.body\.dataset/);
       expect(text).not.toMatch(/fb:fit/);

@@ -3771,6 +3771,18 @@ highest id in either file.
 - Work: Low
 - Impact: Low
 
+### G-500: App.tsx is one 815-line component with no memoised children
+
+- Status: Done (N430)
+- Note: 2026-11-27, N430: App.tsx (1440 lines) split into the shell (196 lines) and `src/ui/shell/` parts: `AppBar`, `EditorWork`, `SaveStatus` (reopen and autosave), `PrintHost`, `EstimateChip`, `ViewerSlot`, `useCardHistory`, `useEditorShortcuts`, `usePage`, `checkCounts`; the editor's Inspector, project panel, plan, front drawing and results are memoised. Measured by `tests/app-render-count.test.tsx`: before, a notice and a rename each rendered the Compose panel, the front drawing and the results again from App (1 each); after, 0. App no longer calls `useView()` (its cut list was built only for the error counts). Find-it jsdom set: 113 files, 474 tests passed before and after.
+- Origin: ADR-236 Out of scope, 2026-11-07 (architecture review section 3 and Skipped)
+- Missing: Splitting App.tsx (27 store subscriptions, 11 effects) and memo of RoomPlan/Panels are not built.
+- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
+- Questions: Split App.tsx and memoise the heavy children?
+- Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
+- Work: Medium
+- Impact: Low-medium
+
 ### G-501: The catalog PDF extractor tests run nowhere
 
 - Status: Done (PR #329, N388)

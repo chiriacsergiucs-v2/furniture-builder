@@ -1387,17 +1387,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Conflicts: ADR-161: the seller catalog is an offline snapshot
 
-### G-500: App.tsx is one 815-line component with no memoised children
-
-- Status: Open
-- Origin: ADR-236 Out of scope, 2026-11-07 (architecture review section 3 and Skipped)
-- Missing: Splitting App.tsx (27 store subscriptions, 11 effects) and memo of RoomPlan/Panels are not built.
-- Request: current code structure/architecture modularity and overall design analysis ... complete code quality critique and suggest architectural improvements ... No regressions shall be introduced, ensure before and after testing tdd style
-- Questions: Split App.tsx and memoise the heavy children?
-- Suggested pick: Split along the existing pages after ADR-222 makes them lazy (estimate: effort +20 %, value +5 %)
-- Work: Medium
-- Impact: Low-medium
-
 ### G-503: The Gaps page still imports the gaps ledger with ?raw
 
 - Status: Acknowledged (2026-11-23)
