@@ -25,7 +25,7 @@ const CORE = [
 // prettier-ignore
 const MODEL = ['geometry', 'cabinet', 'build', 'panel', 'panelset', 'frame', 'shape', 'corner', 'desk', 'rules', 'clearance', 'cutlist', 'materials'];
 const MODEL_UP = (design) => ({
-  regex: `^\\./(project|room${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)|^@furniture-builder/(nesting(/|$)|i18n/print$)`,
+  regex: `^\\./(project\\w*|room${design ? '|design' : ''})$|^\\./(catalog|nesting|wizard|sellers)(/|$)|^@furniture-builder/(nesting(/|$)|i18n/print$)`,
   message: 'The model files import only the document, i18n and each other (ADR-219).',
 });
 // @furniture-builder/nesting declares no dependencies: its files import only each other (ADR-219, ADR-279).

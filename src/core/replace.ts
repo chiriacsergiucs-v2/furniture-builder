@@ -10,14 +10,10 @@ import { insertable, insertVariant, startFamilies } from './catalog';
 import type { CatalogFamily, CatalogVariant } from './catalog/types';
 import { upgradeDesign } from './design';
 import { putRoleBoard, roleBoard, type FinishRole } from './finish';
-import {
-  isWallHung,
-  placedOutline,
-  runPartKey,
-  type Project,
-  type ProjectItem,
-  type ProjectModel,
-} from './project';
+import { isWallHung, type Project, type ProjectItem } from './projectDoc';
+import { placedOutline } from './projectPlace';
+import { runPartKey } from './projectWorktops';
+import { type ProjectModel } from './projectModel';
 import { sameProblem } from './repairs';
 import type { Design, Diagnostic, Mm } from './types';
 

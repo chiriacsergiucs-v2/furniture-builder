@@ -9,6 +9,8 @@
 //   piece moves it alone and the pair is no longer Connected.
 // - ADR-259: the 3D view's one ⋯ "More 3D actions" menu holds Export for AR (.usdz), Export scene (.glb) and View in
 //   AR (a stand-in WebXR that offers immersive AR), and Export for AR says "Saved ….usdz.".
+// - G-619: each ⋯ item is inside the window and is the element under its own centre (at 390 px the tool row scrolls
+//   sideways and clipped the menu).
 // Not part of `pnpm test`.
 import { launchBrowser, previewUrl, outDir, WIDTHS, makeChecker } from '../lib/harness.mjs';
 import { goBuild, goCompose, showPieces } from '../lib/steps.mjs';
@@ -83,7 +85,8 @@ for (const width of WIDTHS) {
     await sheet(true);
     await click(btn('Add a piece'));
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
-    await dlg.locator('.start-group .row-btn').first().click();
+    // The catalog finder's tiles (the default since G-582), or the grouped rows when the finder is off.
+    await dlg.locator('.finder-tile, .start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
     const place = btn('Place to the right');
     await place.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
@@ -258,6 +261,26 @@ for (const width of WIDTHS) {
       `⋯ More 3D actions holds "${name}"`,
       await more.getByRole('button', { name, exact: true }).isVisible(),
     );
+  // G-619: visible is not enough; each item must be inside the window and be the element under its own centre (at
+  // 390 px the tool row scrolls sideways and clipped the menu).
+  for (const name of ['Export for AR (.usdz)', 'Export scene (.glb)', 'View in AR']) {
+    const hit = await more
+      .getByRole('button', { name, exact: true })
+      .evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const x = r.left + r.width / 2,
+          y = r.top + r.height / 2;
+        const inside =
+          r.left >= 0 &&
+          r.right <= document.documentElement.clientWidth &&
+          r.top >= 0 &&
+          r.bottom <= innerHeight;
+        const top = document.elementFromPoint(x, y);
+        return { ok: inside && !!top && el.contains(top), at: `${Math.round(x)},${Math.round(y)}` };
+      })
+      .catch((e) => ({ ok: false, at: e.message }));
+    check(width, `"${name}" can be seen and tapped (G-619)`, hit.ok, hit.at);
+  }
   check(
     width,
     'only one ⋯ menu over the 3D view',

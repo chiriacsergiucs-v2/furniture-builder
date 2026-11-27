@@ -6,7 +6,9 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { modelBox, type ModelItem, type ModelPlacement } from './model3d';
-import { DRAG_STEP, type PlacedPiece, type Project } from './project';
+import { DRAG_STEP } from './projectMove';
+import { type PlacedPiece } from './projectPlace';
+import { type Project } from './projectDoc';
 import { mountOf, pieceConnectors, roomConnectors, SNAP_RANGE, type Axis } from './snap';
 import type { Box, Mm } from './types';
 

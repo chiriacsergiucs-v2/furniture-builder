@@ -7,7 +7,7 @@ import { DEFAULT_MOUNT_HEIGHT, defaultMaterials, defaultSheetFor, fr, mm, newId 
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
 import { boardLabel } from '../boards';
 import { MAX_DIVIDERS } from '../counts';
-import { materialKey } from '../project';
+import { materialKey } from '../projectModel';
 import { t, type Key } from '@furniture-builder/i18n';
 import type {
   CabinetParams,

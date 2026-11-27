@@ -8,7 +8,8 @@
 import { t } from '@furniture-builder/i18n';
 import { defaultMaterials, mapProductSpace, productRoots } from './design';
 import { applyFinish, finishTargets, roleBoard, type FinishScope } from './finish';
-import { materialKey, type Project } from './project';
+import { materialKey } from './projectModel';
+import { type Project } from './projectDoc';
 import type { Design, Handle, Material, Product, Space } from './types';
 
 type HandleKind = Handle['kind'];

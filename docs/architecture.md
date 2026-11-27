@@ -73,8 +73,23 @@ package imports only its own files and the packages its `package.json` declares 
 - Built: `i18n` (ADR-280): `.` exports `t`, `tr` and the UI language, `./print` exports `pt`, the print language
   and the print and warning tables, `./ru/*` exports one Russian table. `warningText` stays in `src/core/ro.ts`
   next to `partRo`, so the package imports nothing from the app.
-- Next, one ADR each (G-549): kernel (after the `types.ts` and `project.ts` split, G-548), catalog, model,
-  cutlist, hardware, room, shopping, then persist, online and viewer.
+- Next, one ADR each (G-549): kernel (the `types.ts` and `project.ts` split is done, G-548, ADR-306), catalog,
+  model, cutlist, hardware, room, shopping, then persist, online and viewer.
+
+### Type and project files (G-548, ADR-306)
+
+- `src/core/types.ts` only re-exports. The kernel is `kernelTypes.ts` (`Mm`, `Axis`, `Box`, `Yaw`, `Face`; imports
+  nothing). Domains: `materialTypes.ts` (boards, edge bands, seller products), `modelTypes.ts` (panels, hardware,
+  openings, `FurnitureModel`), `productTypes.ts` (spaces, fronts, product params, `Product`) and `designTypes.ts` (the
+  design document, `CatalogMeta`, assembly steps, wizard answers, the catalog's `Room`). `Severity` and `Diagnostic`
+  live in `diagnosticCodes.ts` next to the codes. No type file is in an import cycle (G-613).
+- `src/core/project.ts` only re-exports: `projectDoc` (the project types, schema versions, `newProject`, pruning),
+  `projectPlace` (quarter turns, `placeItem`, outlines, `makeItem`), `projectMove` (placement, drag, turn, locks,
+  removal), `projectRuns` (gaps, run parts, handles, sinks, cut-outs), `projectModel` (`buildProjectModel`,
+  clearances, opening checks), and `projectValidate`, `projectProfiles`, `projectWorktops`. The parts import each
+  other one way (Doc ← Place ← Move ← Runs ← Model).
+- Code outside `src/core` imports the two barrels; files in `src/core` import the file that defines a name, never
+  `project.ts` (`tests/core-boundary.test.ts`). The model rule (ADR-219) covers every `project*` file.
 
 ## Domains (proposed 2026-11-15; ADR-279 turns them into packages)
 
@@ -85,7 +100,7 @@ domains (`shopping`, `connections`, `rules`, `gaps`, `variables`) are settled fr
 `src/core`:
 
 1. **cabinet**: `cabinet`, `panel`, `panelset`, `frame`, `corner`, `desk`, `shape`, `geometry`, `build`, `assembly`, `explode`, `outline`, `surface`, `styles`, `finish`, `pieceSize`, `sizeLock`, `groupSize`, `varLimits`, `variables`
-2. **design**: `design`, `types`, `selection`, `selectPath`, `history`, `snap`, `align`, `arrange`, `replace`, `merge`, `moveTo`, `groupMove`, `height`, `pieceLocks`, `linked`, `sets`, `ownEdits`, `snapshot`, `drag3d`
+2. **design**: `design`, `types` (with `kernelTypes`, `materialTypes`, `modelTypes`, `productTypes`, `designTypes`), `selection`, `selectPath`, `history`, `snap`, `align`, `arrange`, `replace`, `merge`, `moveTo`, `groupMove`, `height`, `pieceLocks`, `linked`, `sets`, `ownEdits`, `snapshot`, `drag3d`
 3. **cutlist**: `cutlist`, `boards`, `materials`, `counts`, `roles`, `ro`, `fusion`, `nesting/*`
 4. **hardware**: `fasteners`, `connections`, `clearance`, `compat`, `envelopes`, `rules`
 5. **checks**: `diagnosticCodes`, `repairs`, `gaps`

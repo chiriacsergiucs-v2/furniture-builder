@@ -7,13 +7,9 @@
 import { t as tx } from '@furniture-builder/i18n';
 import { fr, mm, newId, SCHEMA_VERSION } from './design';
 import { mergeConnections } from './connections';
-import {
-  placeItem,
-  type Placement,
-  type Project,
-  type ProjectItem,
-  type QuarterTurn,
-} from './project';
+import { placeItem } from './projectPlace';
+import { type Placement } from './placement';
+import { type Project, type ProjectItem, type QuarterTurn } from './projectDoc';
 import { sizeOn, startOn } from './geometry';
 import type { Box, CabinetParams, Design, Material, Mm } from './types';
 

@@ -6,16 +6,8 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { buildModel } from './build';
-import {
-  carriedBy,
-  isLocked,
-  isTurnLocked,
-  pieceName,
-  SIZE_AXES,
-  type Project,
-  type ProjectItem,
-  type SizeAxis,
-} from './project';
+import { carriedBy, isLocked, isTurnLocked, pieceName } from './projectMove';
+import { SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './projectDoc';
 import type { Design } from './types';
 
 /** The hint shown where a size-locked piece's size would be changed. */

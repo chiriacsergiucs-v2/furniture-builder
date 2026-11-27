@@ -9,7 +9,8 @@
  */
 import { t } from '@furniture-builder/i18n';
 import { groupOf, movedTo } from './selection';
-import { moveBlocked, boundsOf, pieceName, type Project, type ProjectItem } from './project';
+import { moveBlocked, boundsOf, pieceName } from './projectMove';
+import { type Project, type ProjectItem } from './projectDoc';
 import { endOn, sizeOn, startOn } from './geometry';
 import type { Box } from './types';
 

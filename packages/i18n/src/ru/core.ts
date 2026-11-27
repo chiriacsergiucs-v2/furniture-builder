@@ -1,6 +1,6 @@
 /** Russian text for core (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_core = {
-  // Project checks and notes (src/core/project.ts)
+  // Project checks and notes (src/core/project*.ts)
   'Locked — unlock to move': 'Закреплено — снимите закрепление, чтобы переместить',
   '{name} (piece {n})': '{name} (изделие {n})',
   '{name} is locked — unlock it to move it.':
