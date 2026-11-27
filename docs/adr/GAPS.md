@@ -1866,18 +1866,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Note: Suggested pick accepted (research only if the finder becomes the default); auto-accepted 2026-11-27.
 
-### G-584: Start from dialog and the Materials seller-band select keep the old layout
-
-- Status: Open
-- Origin: ADR-291 scope
-- Missing: New › Start from (Catalog.tsx StartFrom) and project Add a piece keep their own grouped list; the Materials dialog still offers seller bands as a select (MaterialDialog.tsx:486), a second band picker.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Bring Start from and the Materials band select into the finder too?
-- Suggested pick: Yes: Start from reuses the finder grid; the Materials select opens the product picker
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-
 ### G-588: Appearance dialog: colours and control height not editable
 
 - Status: Open

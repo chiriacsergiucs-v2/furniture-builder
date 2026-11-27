@@ -1,5 +1,5 @@
 import { useMediaQuery } from '../store/useMediaQuery';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { boardChoices, projectBands } from '../core/boards';
 import { bandKey } from '../core/cutlist';
 import { buildModel } from '../core/build';
@@ -16,7 +16,13 @@ import {
 } from '../core/finish';
 import { t, tr } from '@furniture-builder/i18n';
 import { BAND_KINDS, bandProblems, bandText, parseTenths, type Decor } from '../core/materials';
-import { bandFromOffer, bandOffers, loadSellerCatalogs, type SellerCatalog } from '../core/sellers';
+import {
+  bandFromOffer,
+  bandOffers,
+  loadSellerCatalogs,
+  type Offer,
+  type SellerCatalog,
+} from '../core/sellers';
 import { materialKey, runOf } from '../core/project';
 import type { Design, EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { listDecors } from '../store/libraryStore';
@@ -25,6 +31,9 @@ import { InfoTip, MmField, rovingKeys, rovingTab, Select } from './controls';
 import { Dialog } from './Dialogs';
 import { StyleSuggestions } from './History';
 import { useUi } from '../store/uiStore';
+import { useCatalogFinder } from '../store/useCatalogFinder';
+import { Icon } from './icons';
+import { ProductPicker } from './ProductPicker';
 
 const ROLE_LABEL: Record<MaterialRole, () => string> = {
   front: () => t('Fronts@@role'),
@@ -47,6 +56,8 @@ const RUN_LABEL: Record<RunRole, () => string> = {
 };
 const KEEP = '';
 const OWN = 'own';
+/** The band picked in the product picker (G-584). */
+const PICKED = 'picked';
 const ROLE_ORDER: MaterialRole[] = [
   'front',
   'body',
@@ -150,8 +161,13 @@ function MaterialFields() {
     width: 22,
     code: '',
   });
+  // With the catalog finder on (ADR-291, G-584) a seller's band is picked in the product picker, not listed in the select.
+  const [finder] = useCatalogFinder();
+  const [picker, setPicker] = useState(false);
+  const [picked, setPicked] = useState<{ b: EdgeBand; name: string } | null>(null);
   const [cats, setCats] = useState<SellerCatalog[]>([]);
   useEffect(() => {
+    if (finder) return;
     let live = true;
     loadSellerCatalogs()
       .then((c) => live && setCats(c))
@@ -159,7 +175,7 @@ function MaterialFields() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [finder]);
 
   const run = useMemo(
     () => (inProject && itemId ? runOf(project, itemId) : null),
@@ -232,7 +248,7 @@ function MaterialFields() {
   );
   const sellerBands = useMemo(
     () =>
-      chosen
+      chosen && !finder
         ? bandOffers(cats, chosen.board)
             .slice(0, 20)
             .flatMap((o) => {
@@ -240,7 +256,7 @@ function MaterialFields() {
               return b ? [{ b, name: o.p.n }] : [];
             })
         : [],
-    [cats, chosen],
+    [cats, chosen, finder],
   );
   const badThickness = own.thickness.trim() !== '' && parseTenths(own.thickness) === null;
   const ownBand: EdgeBand | null = (() => {
@@ -259,9 +275,16 @@ function MaterialFields() {
       ? undefined
       : bandChoice === OWN
         ? ownBand
-        : bandChoice.startsWith('seller:')
-          ? sellerBands[Number(bandChoice.slice(7))]?.b
-          : bands.find((b) => `band:${bandKey(b)}` === bandChoice);
+        : bandChoice === PICKED
+          ? picked?.b
+          : bandChoice.startsWith('seller:')
+            ? sellerBands[Number(bandChoice.slice(7))]?.b
+            : bands.find((b) => `band:${bandKey(b)}` === bandChoice);
+  const board = chosen?.board;
+  const pickerOffers = useCallback(
+    (c: SellerCatalog[], q: string) => (board ? bandOffers(c, board, q) : []),
+    [board],
+  );
   const needsItem = scope !== 'project' && inProject && !item;
   const canApply =
     !!chosen &&
@@ -487,6 +510,17 @@ function MaterialFields() {
             value: `seller:${i}`,
             label: t('{band} (seller: {name})', { band: bandText(s.b), name: s.name }),
           })),
+          ...(picked
+            ? [
+                {
+                  value: PICKED,
+                  label: t('{band} (seller: {name})', {
+                    band: bandText(picked.b),
+                    name: picked.name,
+                  }),
+                },
+              ]
+            : []),
           { value: OWN, label: t('Your own band…') },
         ]}
         onChange={(v) => {
@@ -494,6 +528,35 @@ function MaterialFields() {
           setMsg(null);
         }}
       />
+      {finder && board && (
+        <div className="seller-row">
+          <button type="button" className="btn sm outline" onClick={() => setPicker(true)}>
+            <Icon name="search" className="sm" />
+            {t('Band from a seller')}
+          </button>
+          <ProductPicker
+            open={picker}
+            title={t('Edge band from a seller for {name}', { name: tr(board.name) })}
+            hint={t(
+              'Bands at least {n} mm wide, the same decor code first. The pick sets type, thickness, width and code.',
+              { n: board.thickness },
+            )}
+            offers={pickerOffers}
+            onClose={() => setPicker(false)}
+            onPick={(o: Offer) => {
+              const b = bandFromOffer(o);
+              setPicker(false);
+              if (!b) {
+                setMsg(t('The seller states no thickness or width for this band.'));
+                return;
+              }
+              setPicked({ b, name: o.p.n });
+              setBandChoice(PICKED);
+              setMsg(null);
+            }}
+          />
+        </div>
+      )}
       {bandChoice === OWN && (
         <div className="own-band" role="group" aria-label={t('Your own band')}>
           <Select<EdgeBandKind>
