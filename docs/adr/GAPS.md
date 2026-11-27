@@ -239,21 +239,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep the Romanian names; write an editor-layout ADR for findings 8 and 9 when the user wants it.
 - Conflicts: none
 
-### G-079: Drop a catalog item into the 3D view
-
-- Status: Open
-- Origin: ADR-094 (2026-10-26, Claude: not asked for)
-- Missing: Dropping a catalog item into the 3D view.
-- Request: "New adr 6" (2026-10-26)
-- Questions: Drop into 3D too, once ADR-093 exists?
-- Suggested pick: Drop onto the 3D floor plane with ADR-093's projection (about +30 % of ADR-094's work, +15 % value; estimates).
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low
-- Issue: Catalog items can be dropped onto the plan but not into the 3D view.
-- Fix: Drop onto the 3D floor plane using the 3D Move mode's pointer projection and snapping.
-- Conflicts: ADR-093: overrides 3D select-only for moving and turning pieces only, not adding them
-
 ### G-092: User-written compatibility rules
 
 - Status: Open

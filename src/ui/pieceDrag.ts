@@ -3,13 +3,14 @@ import type { Design } from '../core/types';
 import { makeItem, placeItem } from '../core/project';
 import { dropNewPiece } from '../core/snap';
 import { useDesign } from '../store/designStore';
-import { usePieceList, type NewPieceDrag } from '../store/pieceListStore';
+import { usePieceList, viewDropHit, type NewPieceDrag } from '../store/pieceListStore';
 import { DRAG_THRESHOLD_PX } from '../shared/planDrag';
 import { snapIsOn } from '../store/useSnap';
 
 /**
  * The piece list beside the plan (ADR-094): **Add a piece** in Compose opens it (closed by default) — a side panel
- * next to the plan on desktop, a bottom sheet on a phone. An item is dragged onto the plan (press and drag with a
+ * next to the plan on desktop, a bottom sheet on a phone. An item is dragged onto the plan or the 3D view's floor
+ * (ADR-303) (press and drag with a
  * mouse; long-press, 300 ms, on touch, which folds the sheet away) or tapped, which keeps ADR-056's "Tap the plan to
  * place". Pointer Events throughout; nothing is added until a release over the plan, and Esc drops the drag.
  */
@@ -23,6 +24,9 @@ let planHit: PlanHit | null = null;
 export function registerPlanHit(f: PlanHit | null) {
   planHit = f;
 }
+/** The room point under the pointer: on the plan, else on the 3D view's floor plane (ADR-303), else null. */
+const dropHit = (clientX: number, clientY: number) =>
+  planHit?.(clientX, clientY) ?? viewDropHit(clientX, clientY);
 
 /** Where the dragged piece lands with the plan's Snap toggle and Alt as they are (ADR-070). */
 export function newPieceTarget(d: NewPieceDrag) {
@@ -85,7 +89,7 @@ function onMove(e: PointerEvent) {
   }
   const d = usePieceList.getState().drag;
   if (!d) return;
-  const room = planHit?.(e.clientX, e.clientY) ?? null;
+  const room = dropHit(e.clientX, e.clientY);
   // Unchanged: no new state, so the plan does not redraw and re-snap for nothing.
   if (room?.x === d.room?.x && room?.z === d.room?.z && e.altKey === d.alt) return;
   usePieceList.getState().setDrag({ ...d, room, alt: e.altKey });
@@ -94,9 +98,9 @@ function onMove(e: PointerEvent) {
 function onUp(e: PointerEvent) {
   if (!pending || e.pointerId !== pending.pointerId) return;
   const d = usePieceList.getState().drag;
-  // Only a drag that reached the plan drops: a long-press released where it started (the sheet folded away from
-  // under the finger, so the plan may be there now) adds nothing.
-  const room = d?.room ? (planHit?.(e.clientX, e.clientY) ?? null) : null;
+  // Only a drag that reached the plan or the 3D view drops: a long-press released where it started (the sheet folded
+  // away from under the finger, so the plan may be there now) adds nothing.
+  const room = d?.room ? dropHit(e.clientX, e.clientY) : null;
   const t = d && room ? newPieceTarget({ ...d, room, alt: e.altKey }) : null;
   const touch = pending.touch;
   endPieceDrag();

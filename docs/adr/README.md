@@ -363,3 +363,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-299](../adr-done/ADR-299-outlet-distances-the-user-sets-checked-against-sinks-hobs-an.md) | Outlet distances the user sets, checked against sinks, hobs and pipes | ADR-072, ADR-205 | ✅ Implemented |
 | [ADR-300](../adr-done/ADR-300-merge-an-assembly-step-with-the-next-one.md) | Merge an assembly step with the next one | ADR-207 | ✅ Implemented |
 | [ADR-301](../adr-done/ADR-301-band-tolerances-and-edgebander-settings-typed-by-the-user.md) | Band tolerances and edgebander settings typed by the user | ADR-077, ADR-212 | ✅ Implemented |
+| [ADR-303](../adr-done/ADR-303-drop-a-catalog-item-from-the-piece-list-onto-the-3d-view.md) | Drop a catalog item from the piece list onto the 3D view | ADR-014, ADR-093, ADR-094 | ✅ Implemented |
