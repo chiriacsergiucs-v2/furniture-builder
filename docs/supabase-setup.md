@@ -24,8 +24,9 @@ the row-level security rules and the functions the app calls. The same rules are
 
 ## 3. Sign-in settings (Authentication)
 
-- **URL configuration:** Site URL `https://chiriacsergiucs-v2.github.io/furniture-builder/`; add the same URL (and
-  `http://localhost:5173/furniture-builder/` for development) to the redirect URLs.
+- **URL configuration:** Site URL `https://chiriacsergiucs-v2.github.io/furniture-builder/`; add the same URL, and only
+  that URL, to the redirect URLs. Do not add `http://localhost:5173/furniture-builder/`: it is allowed only by the local
+  stack (`supabase/config.toml`, G-544 L-6).
 - **Email provider:** on. Turn **Confirm email off** (G-254: no email verification).
 - **Google provider:** on, with a Google Cloud OAuth client (G-248): create an OAuth client of type _Web application_
   in Google Cloud Console, add Supabase's callback URL shown on the provider page as an authorised redirect URI,
