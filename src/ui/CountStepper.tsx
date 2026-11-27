@@ -4,7 +4,7 @@ import { findInProduct } from '../core/design';
 import { t, tr } from '@furniture-builder/i18n';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
-import { selectionLabel } from './Inspector';
+import { selectionLabel } from './selectionLabel';
 import { askConfirm } from './Confirm';
 
 // Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.

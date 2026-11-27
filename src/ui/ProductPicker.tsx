@@ -9,7 +9,7 @@ import {
   type SellerCatalog,
 } from '../core/sellers';
 import type { SellerProduct } from '../core/sellers/types';
-import { Dialog } from './Dialogs';
+import { Dialog } from './Dialog';
 import { Toggle } from './controls';
 import { Icon } from './icons';
 import { useCatalogFinder } from '../store/useCatalogFinder';

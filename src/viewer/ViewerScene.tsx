@@ -143,7 +143,7 @@ import {
   PictureGeometry,
   profileGeometry,
   useTextures,
-} from './Viewer3D';
+} from './sceneGeometry';
 
 /**
  * The 3D toolbar's ⋯ menu (ADR-208): View in AR when this device offers immersive AR, and Export for AR (.usdz). The
