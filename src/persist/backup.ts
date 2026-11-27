@@ -18,6 +18,7 @@ import type { Design } from '../core/types';
 import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
 import { db, getSetting, savedRows, setSetting } from './db';
+import { encodePicture, type PictureEncoder } from './images';
 import { onSavedChange, takeDirty } from './events';
 import { t } from '@furniture-builder/i18n';
 
@@ -365,6 +366,12 @@ async function existing() {
         (await db.table(name).toArray()).map((r: Record<string, unknown>) => String(r[key])),
       );
   return {
+    // Every stored id, unreadable rows included: a restored item keeps its id only when it is free (G-282).
+    ids: {
+      designs: new Set(designs.map((r) => r.id)),
+      projects: new Set(projects.map((r) => r.id)),
+      templates: new Set(templates.map((r) => r.id)),
+    },
     designs: designs.map((r) => r.design).filter((d) => !validateDesign(d).length) as Design[],
     projects: projects.map((r) => r.project).filter((p) => !validateProject(p).length) as Project[],
     templates: templates
@@ -374,7 +381,7 @@ async function existing() {
   };
 }
 
-/** Restore files read from a folder or a .zip: new copies only, nothing overwritten (G-244). */
+/** Restore files read from a folder or a .zip: copies only, nothing overwritten (G-244, G-282). */
 /** A restore the device's storage stopped part-way (ADR-263): `done` items were restored before it. */
 export class RestoreStopped extends Error {
   constructor(readonly done: number) {
@@ -382,8 +389,37 @@ export class RestoreStopped extends Error {
   }
 }
 
-export async function restoreFiles(files: BackupFile[]): Promise<RestorePlan> {
+export async function restoreFiles(
+  files: BackupFile[],
+  encode: PictureEncoder = encodePicture,
+): Promise<RestorePlan> {
   const plan = planRestore(files, await existing());
+  // Pictures are decoded and drawn again before they are stored, as a picked picture is (G-542); one that cannot be
+  // is listed with the reason. Done before the transaction, which cannot wait on the browser's decoder.
+  const kept: typeof plan.actions = [];
+  for (const a of plan.actions) {
+    if (a.table !== 'images') {
+      kept.push(a);
+      continue;
+    }
+    const r = a.row;
+    const pic = await encode(r.bytes as ArrayBuffer, r.type as string, r.name as string);
+    if (!pic.ok) plan.skipped.push({ path: a.path, reason: pic.problem });
+    else
+      kept.push({
+        ...a,
+        row: {
+          id: r.id,
+          name: r.name,
+          type: pic.type,
+          width: pic.width,
+          height: pic.height,
+          bytes: pic.bytes,
+          createdAt: r.createdAt,
+        },
+      });
+  }
+  plan.actions = kept;
   if (!plan.actions.length) return plan;
   // One transaction over the restored tables (G-489): a row the storage refuses rolls the whole restore back, so the
   // library is never left half restored; nothing was restored before the stop, so `done` is 0.

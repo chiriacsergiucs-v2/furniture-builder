@@ -218,13 +218,6 @@ interface CarryResult {
   notKept: string[];
 }
 
-/** Outer size: the new item's own on Replace (the list was chosen by size, ADR-098). */
-export const SIZE_SKIP: Record<string, string> = {
-  width: "the new item's size is used",
-  height: "the new item's size is used",
-  depth: "the new item's size is used",
-};
-
 /**
  * `target` with the edits applied one by one: a path it does not have, or one that would add an error, is not
  * kept. `skip` paths are listed as not kept with their reason. `checked: false` applies every edit the design has a

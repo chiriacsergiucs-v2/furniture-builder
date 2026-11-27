@@ -480,7 +480,8 @@ export const data_catalog: Record<string, string> = {
   'Seat on four legs with rails and a footrest ring of stretchers.':
     'Сиденье на четырёх ножках с царгами и кольцом проножек для ног.',
   'Seat on rails': 'Сиденье на царгах',
-  Seating: 'Мебель для сидения',
+  // A stored category (G-547): one wording for the catalog, the wizard and every other place.
+  Seating: 'Сиденья',
   'Seats 2–4': 'Мест 2–4',
   'Second mattress below': 'Второй матрас внизу',
   Sectional: 'Модульный диван',
@@ -518,7 +519,8 @@ export const data_catalog: Record<string, string> = {
   'Slatted top with drainage gaps on legs and rails, in outdoor timber.':
     'Столешница из реек с зазорами для стока воды на ножках и царгах, из древесины для улицы.',
   'Slatted top, H-stretcher': 'Столешница из реек, Н-образная проножка',
-  'Sleeping and lying': 'Для сна и отдыха',
+  // A stored category (G-547): one wording everywhere.
+  'Sleeping and lying': 'Сон и отдых',
   'Sliding 2 doors': '2 раздвижные дверцы',
   'Sliding doors': 'Раздвижные дверцы',
   'Small bed with tall ends and closed sides on a fixed stand.':

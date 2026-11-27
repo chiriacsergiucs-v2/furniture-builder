@@ -11,6 +11,9 @@ import {
 } from '../src/core/backup';
 import { daysSince, deviceNoticeShown, reminderDue } from '../src/core/backupReminder';
 import { templates } from '../src/core/design';
+import { newProject } from '../src/core/project';
+import { makeVersion } from '../src/core/projectVersion';
+import { templateFromProject } from '../src/core/projectTemplate';
 import { unzipStore, zipStore } from '../src/core/zip';
 import { db, getSetting, saveDesign, setSetting } from '../src/persist/db';
 import {
@@ -63,7 +66,7 @@ describe('folder backup plan (ADR-133)', () => {
 });
 
 describe('restore plan (ADR-133, G-244)', () => {
-  it('never overwrites or deletes: identical items skipped, others become new copies', () => {
+  it('never overwrites or deletes: identical items skipped, others restored (new id when theirs is taken)', () => {
     const a = design(0);
     const b = design(1);
     const files = planBackup({
@@ -76,10 +79,10 @@ describe('restore plan (ADR-133, G-244)', () => {
     const p = planRestore(files, { designs: [changedA], projects: [], templates: [], keys: {} });
     expect(p.identical).toBe(0);
     expect(p.actions).toHaveLength(2);
-    for (const act of p.actions) {
-      if (act.table !== 'designs') throw new Error('designs only');
-      expect([a.id, b.id]).not.toContain(act.design.id); // new ids (ADR-011)
-    }
+    const ids = p.actions.map((act) => (act.table === 'designs' ? act.design.id : ''));
+    // a's id is taken on this device: a new copy with a new id; b's is free: it keeps it (G-282).
+    expect(ids).not.toContain(a.id);
+    expect(ids).toContain(b.id);
     const again = planRestore(files, { designs: [a], projects: [], templates: [], keys: {} });
     expect(again.identical).toBe(1);
     expect(again.actions).toHaveLength(1);
@@ -98,6 +101,34 @@ describe('restore plan (ADR-133, G-244)', () => {
     });
     expect(second.actions).toHaveLength(0);
     expect(second.identical).toBe(1);
+  });
+
+  it('a restored item keeps its id when nothing on the device uses it, else gets a new one (G-282)', () => {
+    const a = design(0);
+    const b = design(1);
+    const c = design(2);
+    const twin = { ...a, name: 'Same id, other content' };
+    const files = [
+      ...planBackup({ designs: [{ id: a.id, design: a }] }),
+      { path: 'designs/twin.json', text: encodeRow(twin) },
+      ...planBackup({ designs: [{ id: b.id, design: b }], templates: [] }),
+      ...planBackup({ designs: [{ id: c.id, design: c }] }),
+    ];
+    // b is taken by a saved row the app cannot read: never overwritten (ADR-012), so b gets a new id too.
+    const p = planRestore(files, {
+      designs: [],
+      projects: [],
+      templates: [],
+      keys: {},
+      ids: { designs: new Set([b.id]) },
+    });
+    const got = p.actions.map((act) => (act.table === 'designs' ? act.design : null)!);
+    expect(got.map((d) => d.name)).toEqual([a.name, twin.name, b.name, c.name]);
+    expect(got[0].id).toBe(a.id); // free: kept, so versions and template links find it again
+    expect(got[1].id).not.toBe(a.id); // taken earlier in the same restore
+    expect(got[2].id).not.toBe(b.id); // taken by an unreadable row
+    expect(got[3].id).toBe(c.id);
+    expect(new Set(got.map((d) => d.id)).size).toBe(4);
   });
 
   it('invalid files are listed by name and nothing throws', () => {
@@ -122,8 +153,8 @@ describe('restore plan (ADR-133, G-244)', () => {
   it('other rows are added only when their key is free', () => {
     const files = planBackup({
       prices: [
-        { id: 'p1', price: 1 },
-        { id: 'p2', price: 2 },
+        { id: 'p1', unit: 'piece', amount: 1 },
+        { id: 'p2', unit: 'piece', amount: 2 },
       ],
     });
     const p = planRestore(files, {
@@ -132,7 +163,97 @@ describe('restore plan (ADR-133, G-244)', () => {
       templates: [],
       keys: { prices: new Set(['p1']) },
     });
-    expect(p.actions).toEqual([{ table: 'prices', row: { id: 'p2', price: 2 } }]);
+    expect(p.actions).toEqual([
+      { table: 'prices', row: { id: 'p2', unit: 'piece', amount: 2 }, path: 'prices/p2.json' },
+    ]);
+  });
+});
+
+// G-542: every non-design row is checked against its table's shape before it is restored; a bad row is listed, never
+// stored, and the rows already saved are untouched.
+describe('restore checks each row against its table (G-542)', () => {
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]).buffer;
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]).buffer;
+  const empty = { designs: [], projects: [], templates: [], keys: {} };
+  const p = newProject('Kept');
+  const good: Record<string, Record<string, unknown>> = {
+    prices: { id: 'board:x', unit: 'sheet', amount: 1200 },
+    gapMarks: { gapId: 'G-001', decision: null, note: '', updatedAt: '2026-11-27' },
+    images: {
+      id: 'img-1',
+      name: 'oak.jpg',
+      type: 'image/jpeg',
+      width: 2,
+      height: 1,
+      bytes: jpeg,
+      createdAt: '2026-11-27',
+    },
+    models: {
+      id: 'm1',
+      name: 'Fridge',
+      format: 'glb',
+      bytes: new Uint8Array([1, 2, 3]).buffer,
+      size: { w: 600, h: 1800, d: 650 },
+      triangles: 12,
+      thumb: png,
+      createdAt: '2026-11-27',
+    },
+    decors: {
+      id: 'egger:H1145:18',
+      maker: 'egger',
+      makerText: 'Egger',
+      kind: 'pal',
+      code: 'H1145',
+      name: 'Natural Bardolino Oak',
+      thickness: 18,
+      color: '#a07850',
+      list: 'egger.csv',
+    },
+    projectVersions: { ...makeVersion(p, 'manual'), id: 'v1' },
+    projectTemplates: (() => {
+      const tpl = templateFromProject(p, 'Kit');
+      return { id: tpl.id, name: tpl.name, updatedAt: tpl.updatedAt, template: tpl };
+    })(),
+    researchMarks: { id: 'r1' },
+  };
+  const bad: [string, Record<string, unknown>][] = [
+    ['prices', { id: 'board:y', unit: 'barrel', amount: 1 }],
+    ['gapMarks', { gapId: 'G-002', decision: 'maybe', note: '', updatedAt: '' }],
+    ['images', { ...good.images, id: 'img-2', type: 'image/png' }], // JPEG bytes declared as PNG
+    ['images', { ...good.images, id: 'img-3', bytes: 'not bytes' }],
+    ['images', { ...good.images, id: 'img-4', width: 99999 }],
+    ['models', { ...good.models, id: 'm2', format: 'obj' }],
+    ['models', { ...good.models, id: 'm3', thumb: jpeg }],
+    ['decors', { ...good.decors, id: 'egger:H2:18', thickness: -1 }],
+    ['projectVersions', { ...good.projectVersions, id: 'v2', project: { junk: true } }],
+    ['projectTemplates', { ...good.projectTemplates, id: 't2', template: { kind: 'x' } }],
+  ];
+  const file = (table: string, row: Record<string, unknown>) => ({
+    path: `${table}/${String(row.gapId ?? row.id)}.json`,
+    text: encodeRow(row),
+  });
+
+  it('a row of the right shape is restored', () => {
+    const plan = planRestore(
+      Object.entries(good).map(([t, r]) => file(t, r)),
+      empty,
+    );
+    expect(plan.skipped).toEqual([]);
+    expect(plan.actions.map((a) => a.table).sort()).toEqual(Object.keys(good).sort());
+  });
+
+  it('a row of the wrong shape is listed with its reason and not restored', () => {
+    const plan = planRestore(
+      bad.map(([t, r]) => file(t, r)),
+      empty,
+    );
+    expect(plan.actions).toEqual([]);
+    expect(plan.skipped.map((s) => s.path)).toEqual(bad.map(([t, r]) => file(t, r).path));
+    for (const s of plan.skipped) expect(s.reason.length).toBeGreaterThan(0);
+    const reason = (path: string) => plan.skipped.find((s) => s.path === path)!.reason;
+    expect(reason('images/img-2.json')).toMatch(/do not match its type/);
+    expect(reason('images/img-3.json')).toMatch(/picture bytes missing/);
+    expect(reason('models/m3.json')).toMatch(/thumbnail/);
   });
 });
 
@@ -157,6 +278,25 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     const rows = await db.designs.toArray();
     expect(rows).toHaveLength(2);
     expect(rows.find((r) => r.id === a.id)?.name).toBe('Edited'); // never overwritten
+  });
+
+  it('a restore keeps a free id and never overwrites an unreadable row under a taken one (G-282)', async () => {
+    const a = design(0);
+    const b = design(1);
+    await db.designs.put({ id: b.id, name: 'x', updatedAt: '2026', design: {} as never });
+    await restoreFiles(
+      planBackup({
+        designs: [
+          { id: a.id, design: a },
+          { id: b.id, design: b },
+        ],
+      }),
+    );
+    expect((await db.designs.get(a.id))?.design.name).toBe(a.name);
+    expect((await db.designs.get(b.id))?.design).toEqual({}); // the unreadable row stays as it was
+    const rows = await db.designs.toArray();
+    expect(rows).toHaveLength(3);
+    expect(rows.some((r) => r.id !== b.id && r.design.name === b.name)).toBe(true);
   });
 
   it('restore writes nothing for an invalid file and reports it', async () => {

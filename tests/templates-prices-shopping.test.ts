@@ -229,7 +229,7 @@ describe('project templates: bad input, removed run parts, pictures (review of A
       type: 'image/jpeg',
       width: 2,
       height: 1,
-      bytes: new Uint8Array([4, 5, 6]).buffer,
+      bytes: new Uint8Array([0xff, 0xd8, 0xff, 4, 5, 6]).buffer,
       createdAt: '',
     });
     const d = p0.items[0].design;
@@ -249,13 +249,23 @@ describe('project templates: bad input, removed run parts, pictures (review of A
     const file = JSON.parse(JSON.stringify(await projectTemplateFile(tpl)));
     expect(file.pictures).toHaveLength(1);
     await deleteImages(['img-tpl1']); // "another device"
-    const r = await readProjectTemplateFile(file);
+    // The browser's decode and re-encode (G-542) stands in as a pass-through: Node has no picture decoder.
+    const r = await readProjectTemplateFile(file, db, async (bytes, type) => ({
+      ok: true,
+      bytes,
+      type,
+      width: 2,
+      height: 1,
+      color: '#000000',
+    }));
     if (!r.ok) throw new Error(r.error);
     expect(r.problems).toEqual([]);
     expect('pictures' in r.template).toBe(false);
     expect(r.template.id).not.toBe(tpl.id);
     expect(validateProjectTemplate(r.template)).toEqual([]);
-    expect(new Uint8Array((await loadImage('img-tpl1'))!.bytes)).toEqual(new Uint8Array([4, 5, 6]));
+    expect(new Uint8Array((await loadImage('img-tpl1'))!.bytes)).toEqual(
+      new Uint8Array([0xff, 0xd8, 0xff, 4, 5, 6]),
+    );
     // A template without pictures exports unchanged.
     const plain = templateFromProject(kitchen(), 'Plain');
     expect(await projectTemplateFile(plain)).toEqual(plain);

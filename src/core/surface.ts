@@ -7,6 +7,12 @@ import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types'
  * each face of a part. Pure: no DOM, no storage, no three.js.
  */
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
+type ImageType = (typeof IMAGE_TYPES)[number];
+/**
+ * Most pictures one imported design, project or template file may carry (G-565, not a physical fact); pictures past it
+ * are skipped and reported.
+ */
+export const MAX_FILE_PICTURES = 200;
 /** Larger files are refused before decoding (phones run out of memory on huge photos). */
 export const MAX_IMAGE_BYTES = 30 * 1024 * 1024;
 /** Longest edge kept after import; larger pictures are scaled down, keeping their proportions. */
@@ -208,6 +214,36 @@ export function pictureFileProblems(x: unknown): string[] {
     !/^[A-Za-z0-9+/]+=*$/.test(p.data)
   )
     errs.push(t('picture data must be base64'));
+  return errs;
+}
+
+/** The picture type the bytes start with (PNG, JPEG or WebP signature), or undefined (G-565). Never throws. */
+export function sniffPictureType(bytes: ArrayBuffer): ImageType | undefined {
+  const u = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 12));
+  const at = (sig: number[], from = 0) => sig.every((b, i) => u[from + i] === b);
+  if (at([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return 'image/png';
+  if (at([0xff, 0xd8, 0xff])) return 'image/jpeg';
+  if (at([0x52, 0x49, 0x46, 0x46]) && at([0x57, 0x45, 0x42, 0x50], 8)) return 'image/webp';
+  return undefined;
+}
+
+/**
+ * Problems of a stored picture row read from a backup (G-542): the shape the images table keeps, with bytes that are
+ * the declared picture type. Empty = usable. Never throws.
+ */
+export function imageRowProblems(x: unknown): string[] {
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return [t('picture must be an object')];
+  const r = x as Record<string, unknown>;
+  const errs = pictureFileProblems({ ...r, data: 'AAAA' });
+  if (typeof r.createdAt !== 'string') errs.push(t('picture date missing'));
+  if (
+    !(r.bytes instanceof ArrayBuffer) ||
+    r.bytes.byteLength === 0 ||
+    r.bytes.byteLength > MAX_IMAGE_BYTES
+  )
+    errs.push(t('picture bytes missing'));
+  else if (sniffPictureType(r.bytes) !== r.type)
+    errs.push(t('picture bytes do not match its type'));
   return errs;
 }
 

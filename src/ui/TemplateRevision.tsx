@@ -101,7 +101,7 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
       return;
     const d = insertVariant(source.family, source.variant);
     if (!d) return;
-    const report = useDesign.getState().replaceItem(item.id, d, { families, keepSize: true });
+    const report = useDesign.getState().replaceItem(item.id, d, { families });
     if (report) useUi.getState().setNotice({ ok: !report.problems.length, text: report.text });
     // Refused (a size-locked piece, ADR-122): say why.
     else if (useDesign.getState().notice)

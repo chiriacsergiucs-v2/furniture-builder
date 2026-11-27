@@ -271,6 +271,55 @@ describe('replacing in the store: run parts follow, one undo step (ADR-098, ADR-
     expect(report.text).toMatch(/\d+ problems?: /);
   });
 
+  const resized = (id: string, size: { width?: number; height?: number }) => {
+    const p = s().project!;
+    s().openProject({
+      ...p,
+      items: p.items.map((i) =>
+        i.id === id
+          ? ({
+              ...i,
+              design: {
+                ...i.design,
+                updatedAt: 'later',
+                product: {
+                  ...i.design.product,
+                  params: { ...i.design.product.params, ...size },
+                },
+              },
+            } as ProjectItem)
+          : i,
+      ),
+    });
+  };
+  const size = () =>
+    s().project!.items[2].design.product.params as { width: number; height: number };
+
+  it('a piece resized after it was added keeps its own outer size on Replace (G-202)', () => {
+    const last = s().project!.items[2];
+    resized(last.id, { width: 700, height: 760 });
+    const report = s().replaceItem(last.id, drawers800())!;
+    expect(s().project!.items[2].design.catalog?.origin?.variantId).toBe('drawers-800');
+    expect(size().width).toBe(700);
+    expect(size().height).toBe(760);
+    expect(report.text).toMatch(/Kept: .*width/);
+    expect(report.text).toMatch(/Kept: .*height/);
+  });
+
+  it('a kept size the new piece cannot take is not clamped: the new size stays and it is listed (G-202)', () => {
+    const last = s().project!.items[2];
+    resized(last.id, { width: 1 });
+    const report = s().replaceItem(last.id, drawers800())!;
+    expect(size().width).toBe(800);
+    expect(report.text).toMatch(/Not kept: .*width — /);
+  });
+
+  it('a piece at its catalog size takes the new item size (nothing of its own to carry)', () => {
+    const last = s().project!.items[2];
+    s().replaceItem(last.id, drawers800());
+    expect(size().width).toBe(800);
+  });
+
   it('nothing open or a missing piece: no change, no report', () => {
     const steps = s().projectPast.length;
     expect(s().replaceItem('nope', drawers3())).toBeNull();

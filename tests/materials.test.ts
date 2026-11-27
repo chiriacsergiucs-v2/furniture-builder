@@ -15,7 +15,17 @@ import {
   saveImage,
   unusedImageIds,
 } from '../src/persist/db';
-import { takePictures, withPictures } from '../src/persist/images';
+import { takePictures, withPictures, type PictureEncoder } from '../src/persist/images';
+
+// The browser's decode and re-encode (G-542) stands in as a pass-through: Node has no picture decoder.
+const passThrough: PictureEncoder = async (bytes, type) => ({
+  ok: true,
+  bytes,
+  type,
+  width: 2,
+  height: 1,
+  color: '#000000',
+});
 
 const patch = (d: Design, id: string, p: Partial<Material>): Design => ({
   ...d,
@@ -140,7 +150,7 @@ describe('pictures inside exported files (ADR-048)', () => {
     type: 'image/jpeg',
     width: 2,
     height: 1,
-    bytes: new Uint8Array([9, 8, 7]).buffer,
+    bytes: new Uint8Array([0xff, 0xd8, 0xff, 9, 8, 7]).buffer,
     createdAt: '',
   });
   it('base64 round trip', () => {
@@ -156,10 +166,12 @@ describe('pictures inside exported files (ADR-048)', () => {
     expect(file.pictures).toHaveLength(1);
     expect(validateDesign(file)).toEqual([]);
     await deleteImages(['img-exp1']); // "another device"
-    const { data, problems } = await takePictures(file);
+    const { data, problems } = await takePictures(file, db, passThrough);
     expect(problems).toEqual([]);
     expect(data).toEqual(JSON.parse(JSON.stringify(d)));
-    expect(new Uint8Array((await loadImage('img-exp1'))!.bytes)).toEqual(new Uint8Array([9, 8, 7]));
+    expect(new Uint8Array((await loadImage('img-exp1'))!.bytes)).toEqual(
+      new Uint8Array([0xff, 0xd8, 0xff, 9, 8, 7]),
+    );
   });
   it('a design without pictures exports unchanged; a bad picture is skipped and reported', async () => {
     const d = templates[0].create();

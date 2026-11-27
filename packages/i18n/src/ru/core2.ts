@@ -125,8 +125,10 @@ export const ru_core2 = {
     'Над пеналами {gap} мм — слишком мало для антресоли, это место оставлено открытым.',
   'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.':
     'При одинаковых фасадах наполнение настраивается потом, поэтому нижние «Не меньше» не применяются.',
-  'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row; lower the wall cabinet height to show a wall row.':
-    'Навесные шкафы высотой {wh} мм при высоте {h} мм зайдут на {over} мм в нижний ряд; уменьшите высоту навесных шкафов, чтобы показать верхний ряд.',
+  'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row, and the room above it is only {room} mm, under the catalog minimum of {min} mm; raise the height or lower the base height to show a wall row.':
+    'Навесные шкафы высотой {wh} мм при высоте {h} мм зайдут на {over} мм в нижний ряд, а места над ним всего {room} мм — меньше минимума каталога {min} мм; увеличьте высоту или уменьшите высоту нижних шкафов, чтобы показать верхний ряд.',
+  'Wall cabinets shortened from {from} to {h} mm to fit the room above the base row (catalog minimum {min} mm).':
+    'Навесные шкафы укорочены с {from} до {h} мм, чтобы поместиться над нижним рядом (минимум каталога {min} мм).',
   'No wall row fits these mixes with pieces {min}–{max} mm wide.':
     'Ни один верхний ряд не подходит к этим вариантам с изделиями шириной {min}–{max} мм.',
   'The wall ({w} mm) is narrower than the min piece width, {min} mm.':
@@ -710,4 +712,20 @@ export const ru_core2 = {
     'Ряд {i} не соответствует ширинам {a}, {b} и {c} мм: никакое их сочетание не заполняет {w} мм. Измените ширины или оставьте ряд заданным вручную.',
   'A divider in row {i} lines up with one in the row above.':
     'Перегородка в ряду {i} совпадает с перегородкой в ряду выше.',
+  'not a valid decor': 'неверный декор',
+  'not a valid gap mark': 'неверная отметка пробела',
+  'Missing template id or name': 'Нет id или названия шаблона',
+  '3D model row must be an object': 'Строка 3D-модели должна быть объектом',
+  '3D model name missing': 'Нет названия 3D-модели',
+  '3D model format must be glb or gltf': 'Формат 3D-модели должен быть glb или gltf',
+  '3D model file missing or too large': 'Файл 3D-модели отсутствует или слишком большой',
+  '3D model size must be whole mm': 'Размер 3D-модели должен быть в целых мм',
+  '3D model triangle count invalid': 'Неверное число треугольников 3D-модели',
+  '3D model thumbnail must be a PNG': 'Миниатюра 3D-модели должна быть PNG',
+  '3D model date missing': 'Нет даты 3D-модели',
+  'picture date missing': 'нет даты картинки',
+  'picture bytes missing': 'нет данных картинки',
+  'picture bytes do not match its type': 'данные картинки не соответствуют её типу',
+  'The file holds {n} pictures; {over} over the limit of {max} were skipped.':
+    'В файле {n} картинок; {over} сверх предела {max} пропущено.',
 } satisfies Record<string, string>;

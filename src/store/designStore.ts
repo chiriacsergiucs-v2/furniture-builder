@@ -50,7 +50,7 @@ import {
 } from '../core/selection';
 import { replaceItem, replaceReport } from '../core/replace';
 import { catalogFamilies } from '../core/catalog';
-import { carryEdits, carryText, ownEdits, SIZE_SKIP, syncRef } from '../core/ownEdits';
+import { carryEdits, carryText, ownEdits, syncRef } from '../core/ownEdits';
 import { setProjectSetting, SETTING_LABEL, withSettings } from '../core/projectSettings';
 import { countRows, countSubject, stepCount } from '../core/counts';
 import { deepestAt, drill, drillIn, insidePiece, type Selection } from '../core/selectPath';
@@ -113,6 +113,22 @@ const keepSelection = (d: Design, sel: Selection): Selection =>
   sel && !findInProduct(d.product, sel) ? null : sel;
 
 const HISTORY = 100;
+
+/**
+ * Staggered rows (ADR-282) written for the size each piece has after a project change (group size, project
+ * variable, linked copy; G-576). Same project back when no row changes.
+ */
+const restagger = (p: Project): Project => {
+  let changed = false;
+  const items = p.items.map((i) => {
+    if (!hasStagger(i.design.product)) return i;
+    const design = refreshStagger(i.design, buildModel(i.design));
+    if (design === i.design) return i;
+    changed = true;
+    return { ...i, design };
+  });
+  return changed ? { ...p, items } : p;
+};
 
 /** "Change all copies" survives a reload on this device (ADR-245); on unless the user turned it off. */
 const LINK_ALL_KEY = 'fb:link-all-off';
@@ -340,13 +356,15 @@ export const useDesign = create<State>((rawSet, get) => {
     const synced = applyPieceBindings(syncSets(linked));
     const bound = remakeAskedParts(synced, applyBindings(synced));
     const held = heldByBinding(base, linked, bound);
+    // Staggered rows follow the size the change gave each piece (ADR-282, G-576).
+    const restaggered = restagger(bound);
     // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
       ...pruneWorktopEdges(
         pruneWorktopJoints(
           refreshRunParts(
             resolvePlacements(
-              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(restaggered))))),
             ),
           ),
         ),
@@ -698,9 +716,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const { project: p, projectModel: pm } = get();
       const item = p?.items.find((i) => i.id === id);
       if (!p || !pm || !item) return null;
-      // The piece's own edits go onto the new design where it has them (ADR-124, G-160).
+      // The piece's own edits go onto the new design where it has them (ADR-124, G-160), its own outer size too
+      // (G-202): a size the new design cannot take is listed as not kept, never clamped (ADR-008).
       const edits = ownEdits(item, opts?.families ?? catalogFamilies);
-      const carry = carryEdits(design, edits, opts?.keepSize ? {} : SIZE_SKIP);
+      const carry = carryEdits(design, edits);
       if (
         commitProject(
           replaceItem(p, id, carry.design),

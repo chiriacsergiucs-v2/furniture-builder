@@ -4,7 +4,7 @@ import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
 import { t } from '@furniture-builder/i18n';
-import { getPrintLang, PRINT_DATE_LOCALE, pt } from '@furniture-builder/i18n/print';
+import { getPrintLang, PRINT_DATE_LOCALE, printBoardName, pt } from '@furniture-builder/i18n/print';
 import { warningText } from '../core/ro';
 import { boardBandRo, drillingRo, hardwareRo, partRo, printedPartLabel } from '../core/ro';
 import { useDesign } from '../store/designStore';
@@ -101,7 +101,7 @@ export function PrintSheet() {
           return (
             <table key={mid} className="pr-table">
               <caption>
-                {list[0].materialName} — {areaM2(rows, mid).toFixed(2)} m²
+                {printBoardName(list[0].materialName)} — {areaM2(rows, mid).toFixed(2)} m²
                 {bands.get(mid) ? `, ${pt('cant {m} m', { m: bands.get(mid)!.toFixed(1) })}` : ''}
                 {list[0].grain ? `, ${pt('fibră pe lungime')}` : ''}
                 {boardBandRo(list) ? `; ${boardBandRo(list)}` : ''}
@@ -299,7 +299,7 @@ export function PrintSheet() {
               return (
                 <tr key={r.materialId}>
                   <td className="n">{r.valid ? r.stats.sheetsUsed : '—'}</td>
-                  <td>{layouts.jobs[i].materialName}</td>
+                  <td>{printBoardName(layouts.jobs[i].materialName)}</td>
                   <td className="n">
                     {layouts.jobs[i].sheet.length} × {layouts.jobs[i].sheet.width}
                   </td>
@@ -321,7 +321,7 @@ export function PrintSheet() {
               {r.sheets.map((s) => (
                 <div key={s.index} className="pr-sheet">
                   <h3>
-                    {layouts.jobs[i].materialName} —{' '}
+                    {printBoardName(layouts.jobs[i].materialName)} —{' '}
                     {pt('placa {i} din {n}', { i: s.index + 1, n: r.sheets.length })}
                   </h3>
                   <SheetSvg

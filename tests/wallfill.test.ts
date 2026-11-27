@@ -13,8 +13,10 @@ import {
   MAX_CANDIDATES,
   MAX_PIECES,
   WALL_HEIGHT,
+  WALL_MIN_HEIGHT,
   WALL_VARIANTS,
   wallRowFor,
+  wallRowHeight,
   MIXES_FIRST,
   exactSplit,
   mixProject,
@@ -240,11 +242,41 @@ describe('wall row (ADR-104)', () => {
     expect(model.diagnostics.filter((d) => d.code === 'shelf-span')).toEqual([]);
   });
 
-  it('a wall row that would reach into the base row is not offered, and the wizard says why', () => {
+  it('a wall row that would reach into the base row is shortened to the room above it, labelled on the card (G-124)', () => {
+    // 1400 − 820 (base) = 580 mm left above the base row: the 720 mm wall cabinets become 580 mm.
+    expect(wallRowHeight(wall({ height: 1400 }))).toEqual({ height: 580, from: WALL_HEIGHT });
+    expect(wallRowHeight(wall())).toEqual({ height: WALL_HEIGHT });
     const always = suggestMixes(wall({ height: 1400, wallRow: 'always' }));
-    expect(always.mixes).toEqual([]);
-    expect(always.problems[0].message).toMatch(/reach 140 mm into the base row/);
+    expect(always.mixes.length).toBeGreaterThan(0);
+    for (const m of always.mixes) {
+      expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+      const row = m.wall!.filter((x) => x.variant !== 'top-box');
+      expect(row.length).toBeGreaterThan(0);
+      for (const x of row) expect(x.height).toBe(580);
+      const label = m.warnings.find((w) => w.code === 'wall-row-short');
+      expect(label?.message).toMatch(/shortened from 720 to 580 mm/);
+      // The wall cabinets sit on the base row, not in it: their bottoms at 820 mm.
+      const walls = m.model.pieces.slice(m.slots.length).filter((p) => p.bounds.h === 580);
+      expect(walls.length).toBe(row.length);
+      for (const p of walls) expect(p.bounds.y).toBe(820);
+    }
+    expect(always.problems.map((p) => p.code)).not.toContain('wall-row-low');
+    // Mixes without a wall row carry no such label.
     const any = suggestMixes(wall({ height: 1400, wallRow: 'any' }));
+    for (const m of any.mixes)
+      expect(m.warnings.some((w) => w.code === 'wall-row-short')).toBe(!!m.wall);
+  });
+
+  it('never below the catalog minimum: when even that does not fit, no wall row and the wizard says why (G-124)', () => {
+    // 1100 − 820 = 280 mm left, under the 300 mm catalog minimum.
+    expect(WALL_MIN_HEIGHT).toBe(300);
+    expect(wallRowHeight(wall({ height: 1100 }))).toBeNull();
+    expect(wallRowHeight(wall({ height: 1120 }))).toEqual({ height: 300, from: WALL_HEIGHT });
+    const always = suggestMixes(wall({ height: 1100, wallRow: 'always' }));
+    expect(always.mixes).toEqual([]);
+    expect(always.problems[0].code).toBe('wall-row-low');
+    expect(always.problems[0].message).toMatch(/only 280 mm.*catalog minimum of 300 mm/);
+    const any = suggestMixes(wall({ height: 1100, wallRow: 'any' }));
     expect(any.mixes.length).toBeGreaterThan(0);
     expect(any.mixes.every((m) => !m.wall)).toBe(true);
     expect(any.problems.some((p) => p.code === 'wall-row-low')).toBe(true);

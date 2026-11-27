@@ -545,6 +545,16 @@ export const PRINT_RU = {
     'одинаковая глубина: напольные модули бок о бок должны быть одной глубины',
   'potrivire înălțime: corpurile de bază sub același blat trebuie să aibă aceeași înălțime':
     'одинаковая высота: нижние модули под одной столешницей должны быть одной высоты',
+  // Built-in board names (G-537, print.ts printBoardName); a typed name prints as typed.
+  'PAL 18 alb': 'ЛДСП 18 белая',
+  'PAL 18 stejar': 'ЛДСП 18 дуб',
+  'PAL 16 alb': 'ЛДСП 16 белая',
+  'MDF 18 vopsit': 'МДФ 18 крашеная',
+  'HDF 3': 'ХДФ 3',
+  'Fag, masiv': 'Бук, массив',
+  'Pin, masiv': 'Сосна, массив',
+  'Larice, masiv (exterior)': 'Лиственница, массив (для улицы)',
+  'Blat 38': 'Столешница 38',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -1062,4 +1072,14 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
     'depth match: floor units side by side should be equally deep',
   'potrivire înălțime: corpurile de bază sub același blat trebuie să aibă aceeași înălțime':
     'height match: base units under one worktop should be equally high',
+  // Built-in board names (G-537): the stored English names.
+  'PAL 18 alb': 'PAL 18 white',
+  'PAL 18 stejar': 'PAL 18 oak',
+  'PAL 16 alb': 'PAL 16 white',
+  'MDF 18 vopsit': 'MDF 18 painted',
+  'HDF 3': 'HDF 3',
+  'Fag, masiv': 'Beech, solid',
+  'Pin, masiv': 'Pine, solid',
+  'Larice, masiv (exterior)': 'Larch, solid (outdoor)',
+  'Blat 38': 'Worktop 38',
 };

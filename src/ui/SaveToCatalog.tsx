@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FUNCTION_LABEL, FUNCTIONS, ROOM_LABEL, ROOMS } from '../core/catalog';
+import { functionLabel, FUNCTIONS, ROOM_LABEL, ROOMS } from '../core/catalog';
 import type { FunctionGroup, Room } from '../core/catalog/types';
 import type { LocalTemplate } from '../core/catalog/local';
 import type { ProjectItem } from '../core/project';
@@ -117,7 +117,7 @@ export function CatalogSaveForm({
       <Select<FunctionGroup>
         label={t('Type')}
         value={fn}
-        options={FUNCTIONS.map((f) => ({ value: f, label: tr(FUNCTION_LABEL[f]) }))}
+        options={FUNCTIONS.map((f) => ({ value: f, label: functionLabel(f) }))}
         onChange={setFn}
       />
       {error && (

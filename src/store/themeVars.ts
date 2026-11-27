@@ -7,7 +7,8 @@ import { clamp } from '../core/clamp';
  * side-panel widths. A change is a CSS custom property set on <html>, so every screen follows at once. The values are
  * kept on this device only (localStorage, like the theme, no telemetry — ADR-002); no Dexie table, no design-document
  * field. `def` is the value in `src/styles.css` `:root` (`tests/theme-vars.test.ts` keeps the two equal). Not here:
- * `--control-h` (touch targets stay 44 px on a touch screen, ADR-114) and colours (the dark set overrides them).
+ * `--control-h` (touch targets stay 44 px on a touch screen, ADR-114) and colours (per light and dark set in
+ * `themeColours.ts`, G-588).
  */
 type ThemeVar = {
   name: string;

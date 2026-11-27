@@ -7,7 +7,9 @@ import {
   fitWithin,
   imageFileProblem,
   imageIdsOf,
+  MAX_FILE_PICTURES,
   pictureFileProblems,
+  sniffPictureType,
   type PictureFile,
 } from '../core/surface';
 import type { MaterialImage } from '../core/types';
@@ -23,14 +25,28 @@ export type ImportResult =
 
 const hex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
 
-export async function importImage(file: File): Promise<ImportResult> {
-  const problem = imageFileProblem(file);
-  if (problem) return { ok: false, problem };
+/** A picture decoded and drawn again as JPEG, at most the texture size, with its average colour. */
+type EncodeResult =
+  | { ok: true; bytes: ArrayBuffer; type: string; width: number; height: number; color: string }
+  | { ok: false; problem: string };
+/**
+ * Decodes picture bytes and draws them again (G-542): only pixels reach storage, whatever else the file carried. Every
+ * picture takes this path: one the user picks, one inside an imported file and one in a backup.
+ */
+export type PictureEncoder = (
+  bytes: ArrayBuffer,
+  type: string,
+  name: string,
+) => Promise<EncodeResult>;
+
+export const encodePicture: PictureEncoder = async (bytes, type, name) => {
+  if (typeof createImageBitmap !== 'function' || typeof document === 'undefined')
+    return { ok: false, problem: t('This browser cannot prepare pictures.') };
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(file);
+    bitmap = await createImageBitmap(new Blob([bytes], { type }));
   } catch {
-    return { ok: false, problem: t('{name} could not be read as a picture.', { name: file.name }) };
+    return { ok: false, problem: t('{name} could not be read as a picture.', { name }) };
   }
   try {
     const { w, h } = fitWithin(bitmap.width, bitmap.height);
@@ -49,26 +65,54 @@ export async function importImage(file: File): Promise<ImportResult> {
     const px = c1?.getImageData(0, 0, 1, 1).data;
     const color = px ? `#${hex(px[0])}${hex(px[1])}${hex(px[2])}` : '#cccccc';
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
-    if (!blob)
-      return { ok: false, problem: t('{name} could not be prepared.', { name: file.name }) };
+    if (!blob) return { ok: false, problem: t('{name} could not be prepared.', { name }) };
+    return {
+      ok: true,
+      bytes: await blob.arrayBuffer(),
+      type: blob.type || 'image/jpeg',
+      width: w,
+      height: h,
+      color,
+    };
+  } catch {
+    return { ok: false, problem: t('{name} could not be prepared.', { name }) };
+  } finally {
+    bitmap.close();
+  }
+};
+
+export async function importImage(file: File): Promise<ImportResult> {
+  const problem = imageFileProblem(file);
+  if (problem) return { ok: false, problem };
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await file.arrayBuffer();
+  } catch {
+    return { ok: false, problem: t('{name} could not be read as a picture.', { name: file.name }) };
+  }
+  const pic = await encodePicture(bytes, file.type, file.name);
+  if (!pic.ok) return pic;
+  try {
     const id = `img-${newId()}${newId()}`;
     await saveImage({
       id,
       name: file.name,
-      type: blob.type || 'image/jpeg',
-      width: w,
-      height: h,
-      bytes: await blob.arrayBuffer(),
+      type: pic.type,
+      width: pic.width,
+      height: pic.height,
+      bytes: pic.bytes,
       createdAt: new Date().toISOString(),
     });
-    return { ok: true, image: { id, name: file.name, ...defaultTile(w, h) }, color };
+    return {
+      ok: true,
+      image: { id, name: file.name, ...defaultTile(pic.width, pic.height) },
+      color: pic.color,
+    };
   } catch {
     return {
       ok: false,
       problem: t('{name} could not be saved on this device.', { name: file.name }),
     };
-  } finally {
-    bitmap.close();
   }
 }
 
@@ -98,18 +142,29 @@ export async function withPictures<T extends object>(
 
 /**
  * Stores the pictures carried by an imported file (skipping ids already on this device) and returns the file without
- * them. A bad picture is skipped and reported; its material then shows the plain colour. Never throws.
+ * them. Each picture's bytes must be its declared type and are decoded and drawn again before they are stored (G-542,
+ * G-565); at most MAX_FILE_PICTURES are read. A bad picture is skipped and reported; its material then shows the plain
+ * colour. Never throws.
  */
 export async function takePictures(
   data: unknown,
   database = db,
+  encode: PictureEncoder = encodePicture,
 ): Promise<{ data: unknown; problems: string[] }> {
   if (!data || typeof data !== 'object' || !('pictures' in data)) return { data, problems: [] };
   const { pictures, ...rest } = data as Record<string, unknown>;
   const problems: string[] = [];
   if (!Array.isArray(pictures))
     return { data: rest, problems: [t('The pictures in the file could not be read.')] };
-  for (const p of pictures) {
+  if (pictures.length > MAX_FILE_PICTURES)
+    problems.push(
+      t('The file holds {n} pictures; {over} over the limit of {max} were skipped.', {
+        n: pictures.length,
+        over: pictures.length - MAX_FILE_PICTURES,
+        max: MAX_FILE_PICTURES,
+      }),
+    );
+  for (const p of pictures.slice(0, MAX_FILE_PICTURES)) {
     const errs = pictureFileProblems(p);
     if (errs.length) {
       problems.push(t('A picture was skipped: {problems}.', { problems: errs.join(', ') }));
@@ -118,14 +173,28 @@ export async function takePictures(
     const f = p as PictureFile;
     try {
       if (await database.images.get(f.id)) continue;
+      const bytes = base64ToBytes(f.data);
+      if (sniffPictureType(bytes) !== f.type) {
+        problems.push(
+          t('A picture was skipped: {problems}.', {
+            problems: t('picture bytes do not match its type'),
+          }),
+        );
+        continue;
+      }
+      const pic = await encode(bytes, f.type, f.name);
+      if (!pic.ok) {
+        problems.push(pic.problem);
+        continue;
+      }
       await saveImage(
         {
           id: f.id,
           name: f.name,
-          type: f.type,
-          width: f.width,
-          height: f.height,
-          bytes: base64ToBytes(f.data),
+          type: pic.type,
+          width: pic.width,
+          height: pic.height,
+          bytes: pic.bytes,
           createdAt: new Date().toISOString(),
         },
         database,

@@ -1,4 +1,4 @@
-import { FUNCTION_LABEL } from '../core/catalog';
+import { functionLabel } from '../core/catalog';
 import { COMPAT_RULES, type CompatRule } from '../core/compat';
 import { t, tr } from '@furniture-builder/i18n';
 import { InfoTip } from './controls';
@@ -25,7 +25,7 @@ function appliesText(r: CompatRule): string {
       ? a.productKinds.map((k) => KIND_LABEL[k] ?? k).join(t(' and '))
       : t('any piece'),
     a.functions
-      ? t('in {list}', { list: a.functions.map((f) => tr(FUNCTION_LABEL[f])).join(', ') })
+      ? t('in {list}', { list: a.functions.map((f) => functionLabel(f)).join(', ') })
       : '',
     a.placements ? a.placements.map((p) => PLACEMENT_LABEL[p]).join(t(' or ')) : '',
     a.when ? tr(a.when) : '',

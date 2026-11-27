@@ -428,21 +428,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep the 40-piece limit; longer runs are better split into several walls.
 - Conflicts: none
 
-### G-124: Fill a wall: wall row reaching into the base row
-
-- Status: Open
-- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
-- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
-- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
-- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
-- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
-- Work: Low-medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Wall rows that would reach into the base row are dropped, so low walls get no wall row.
-- Fix: Shorten wall cabinets to the room above the base row, never below catalog minimum, labelled on the card.
-- Conflicts: ADR-104: decided overlapping wall rows are not offered and nothing is clamped; user chose height field
-
 ### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
 
 - Status: Acknowledged (2026-11-23)
@@ -615,21 +600,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Keep codes document-only; the project file carries pictures and models.
 - Conflicts: none
 
-### G-202: Replace and the outer size
-
-- Status: Open
-- Origin: ADR-124 (found while building)
-- Missing: Replace never carries the piece's own outer width, height or depth; this narrows the accepted G-160 pick 'every changed setting'
-- Request: Accept default, /batch all ready
-- Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
-- Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: Replace never carries the piece's own outer width, height or depth to the new item.
-- Fix: Carry the piece's own size on Replace too; resulting overlaps show as diagnostics.
-- Conflicts: ADR-124: Decision says outer sizes are the new item's and listed as not kept.
-
 ### G-276: Reset emails and the built-in sender
 
 - Status: Open
@@ -725,21 +695,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Switching accounts signs out and asks for the other account's password; not a one-tap switch.
 - Fix: Keep sign-out-and-sign-in; several simultaneous Supabase sessions would cost about 25 % more.
 - Conflicts: none
-
-### G-282: Restored copies lose version and template links
-
-- Status: Open
-- Origin: ADR-133, 2026-10-28; found while building (Claude)
-- Missing: Restore gives every restored piece, project and template a new id (G-244), so kept project versions and template links in the backup point at the old ids and stay apart from the restored copies.
-- Request: Answer G-244: “New copies (Recommended)”
-- Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
-- Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-- Issue: Restored items get new ids, so backed-up versions and template links no longer point at them.
-- Fix: On restore, keep the item's old id when nothing on this device already uses it.
-- Conflicts: ADR-133: restore makes new copies with new ids, per user answer G-244.
 
 ### G-287: Lens distortion of wall photos
 
@@ -1641,19 +1596,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Medium
 - Necessity: Medium
 
-### G-537: Print path does not translate built-in material name 'Worktop 38' (bug-hunt M-1 follow-up)
-
-- Status: Open
-- Origin: bug-hunt 2026-11-17 M-1
-- Missing: Russian entry added for the UI (data-parts.ts). Print paths still show the English name: src/core/ro.ts:408, src/ui/PrintSheet.tsx:103,301,323, src/core/shopping.ts:162; print.ts:49-53 says print never looks up names
-- Request: Translate built-in material names on print
-- Questions: Translate built-in names in print and CSV, or keep them as stored?
-- Suggested pick: Call-site change across PrintSheet, ro.ts, shopping.ts (user decides)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: User 2026-11-27: "Translate on print".
-
 ### G-539: Russian key conflicts with different wording (reuse H1)
 
 - Status: Open
@@ -1691,19 +1633,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 
-### G-542: Picture and row validation on file import and restore (security M-1, M-4)
-
-- Status: Open
-- Origin: security health 2026-11-18 M-1, M-4, .tmp/current/security-scan-report.md
-- Missing: File pictures stored without decoding or re-encoding (src/persist/images.ts:128); backup restore inserts non-design rows with only a string check (src/core/backup.ts:211-219)
-- Request: Route file pictures through the decode/re-encode path; validate rows per table
-- Questions: Approach for stricter picture and row validation on import and restore?
-- Suggested pick: User approves approach (ADR-011 implication)
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Note: User 2026-11-27: re-encode file pictures through the decode path and validate restored rows per table.
-
 ### G-543: Hosted Supabase auth settings: confirmations and password length (security M-5)
 
 - Status: Open
@@ -1739,19 +1668,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
-
-### G-547: H1 leftovers: Seating, Sleeping and lying, stored Wardrobe name (context-key pass)
-
-- Status: Open
-- Origin: reuse health 2026-11-18 H1, context-key pass
-- Missing: FUNCTION_LABEL (src/core/catalog/types.ts:23-24) is stored in designs as catalog.category (src/core/wizard/steps.ts:358-362); stored Wardrobe names (storage.ts:56, registry.ts:136). Plain keys Seating and Sleeping and lying keep two Russian wordings in data-catalog and data-wizard
-- Request: Separate stored labels from display labels, then tag
-- Questions: Change stored category labels, or keep them as they are?
-- Suggested pick: User decides (stored data)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: User 2026-11-27: "Display-only mapping" (stored values unchanged).
 
 ### G-548: The types.ts and project.ts hubs are not split
 
@@ -1849,19 +1765,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Note: Suggested pick accepted (revisit when a new capability lands); auto-accepted 2026-11-27.
 
-### G-565: Re-encode or sniff pictures inside imported files
-
-- Status: Open
-- Origin: Security health check round 1, 2026-11-19 (L-2)
-- Missing: src/persist/images.ts:105-135 stores pictures from imported design or project files without matching declared type to bytes and without a picture-count cap (suspicion, not exploited)
-- Request: /health-security, loop prompt; user approved Medium only
-- Questions: Is a picture-count cap acceptable, and what value (not a physical fact)?
-- Suggested pick: Sniff magic bytes and cap the count (Work Medium, Value Low)
-- Work: Medium
-- Impact: Low
-- Necessity: Low
-- Note: Covered with G-542 by the user's 2026-11-27 pick (re-encode, which also sniffs and caps).
-
 ### G-569: Share find-it helpers in tools/lib/harness.mjs
 
 - Status: Open
@@ -1926,18 +1829,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low-medium
 - Necessity: Low
 
-### G-576: Staggered rows not refreshed on project-level resizes
-
-- Status: Open
-- Origin: ADR-282
-- Missing: Staggered rows are rewritten on edits of the piece itself; a width change made from the project (group size, project variable) leaves the rows stale until the piece is next edited, flagged by the stagger-fill check
-- Request: configure each span or set a rule for all the shelves to have three types of spans and be able to randomize them
-- Questions: Rewrite staggered rows on project-level resizes too?
-- Suggested pick: Yes, apply refreshStagger in the project commit
-- Work: Low-medium
-- Impact: Low-medium
-- Necessity: Low-medium
-
 ### G-579: Canvas-native editor study: device and user checks not run
 
 - Status: Open
@@ -1974,30 +1865,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 - Note: Suggested pick accepted (research only if the finder becomes the default); auto-accepted 2026-11-27.
-
-### G-584: Start from dialog and the Materials seller-band select keep the old layout
-
-- Status: Open
-- Origin: ADR-291 scope
-- Missing: New › Start from (Catalog.tsx StartFrom) and project Add a piece keep their own grouped list; the Materials dialog still offers seller bands as a select (MaterialDialog.tsx:486), a second band picker.
-- Request: Ui rework the catalog part, something seems like verybad ui/ux, replace it with something absolutely different, same toggle approach. / Run it, catalog scope is both
-- Questions: Bring Start from and the Materials band select into the finder too?
-- Suggested pick: Yes: Start from reuses the finder grid; the Materials select opens the product picker
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-
-### G-588: Appearance dialog: colours and control height not editable
-
-- Status: Open
-- Origin: N378, PR #317, 2026-11-22
-- Missing: Colour tokens and --control-h are not in the Appearance dialog: the dark set overrides colours, touch targets stay 44 px (ADR-114)
-- Request: Make the entire website variables for theming are cobfigurable in ui, font size, gaps, paddings and other relevant info
-- Questions: Should colours be editable per light and dark set? Allow --control-h below 44 px on touch screens?
-- Suggested pick: Add editable accent and primary colours for light and dark, keep --control-h fixed
-- Work: Medium
-- Impact: Medium
-- Necessity: Low
 
 ### G-589: Phone capture of room, 3D, results, Gaps and Research states
 
@@ -2096,18 +1963,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Repair each script to the current navigation, or retire the ones whose screens were redesigned (ui-polish, control-rule)?
 - Suggested pick: Repair gaps, editor-nav and wall-background; retire ui-polish and control-rule checks that the newer scripts cover
 
-### G-601: Project room drawings collapse to 20 px high at short landscape (844x390)
-
-- Status: Open
-- Origin: N385 / ADR-295, G-604 check (tools/mobile-middle/find-it.mjs); same on main
-- Missing: At 844x390 the work area is 275 px high and split stage/output (max-width 1180 px rule); the stage tools and the place banner leave the plan and front view 20 px each, and the plan's tool row overlaps the output tabs
-- Request: User 2026-11-26: the 3D view and controls must fit at 390x844 and 844x390
-- Questions: In short landscape, should the output (Cut List) panel leave the stage column, or should the work area scroll with a minimum stage height?
-- Suggested pick: Short landscape: give the stage a minimum height and let the work column scroll
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-
 ### G-602: 3D drag: first frame of a drag is a 52-56 ms long task under SwiftShader
 
 - Status: Open
@@ -2131,18 +1986,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
-
-### G-605: 3D drag review leftovers: FloorShadow and press-tracking glue untested, StrictMode twins, thin-line width
-
-- Status: Open
-- Origin: ADR-295, code-reviewer re-review of c61d8d0
-- Missing: No test for the FloorShadow freeze/thaw, the orbitEvents buttons filter or the Fit press wiring; in dev StrictMode the thin twins are emptied by the simulated unmount; the thin twin is 1 device px while the fat line is 1 CSS px
-- Request: User 2026-11-26: review reports no open issues
-- Questions: None (touch slop answered 2026-11-26: a wobbling touch tap still selects; built, mouse-only slop)
-- Suggested pick: Add jsdom tests for the glue; build twins in an effect
-- Work: Low-medium
-- Impact: Low
-- Necessity: Medium
 
 ### G-606: Four diagnostic codes still cover more than one wording
 

@@ -2,7 +2,7 @@
 // MIN_ORBIT_DPR, pauses not counted, ratio raised back when frames are fast; the camera-independent work it skips.
 import { BoxGeometry, Group, Mesh, Vector3, Matrix4 } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MergedEdges } from '../src/viewer/panelResources';
+import { MergedEdges, ThinTwins } from '../src/viewer/panelResources';
 import {
   FAST_FRAME_MS,
   FULL_BUDGET,
@@ -190,46 +190,50 @@ describe('thin twins of the panel edges', () => {
     const edges = new MergedEdges();
     const lines = edges.update(['a'], () => [item(false), item(true)]);
     expect(lines).toHaveLength(2);
-    expect(edges.thin).toHaveLength(1);
-    expect(edges.warm).toHaveLength(1);
-    expect(Array.from(edges.thin[0].geometry.getAttribute('position').array)).toEqual([
+    const twins = new ThinTwins(lines);
+    expect(twins.thin).toHaveLength(1);
+    expect(twins.warm).toHaveLength(1);
+    expect(Array.from(twins.thin[0].geometry.getAttribute('position').array)).toEqual([
       0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
     ]);
     const plain = lines.find((l) => l.material.linewidth === 1)!;
     const selected = lines.find((l) => l.material.linewidth !== 1)!;
-    expect([plain.visible, edges.thin[0].visible]).toEqual([true, false]);
-    edges.setThin(true);
-    expect([plain.visible, selected.visible, edges.thin[0].visible]).toEqual([false, true, true]);
-    edges.setThin(false);
-    expect([plain.visible, edges.thin[0].visible]).toEqual([true, false]);
+    expect([plain.visible, twins.thin[0].visible]).toEqual([true, false]);
+    twins.setThin(true);
+    expect([plain.visible, selected.visible, twins.thin[0].visible]).toEqual([false, true, true]);
+    twins.setThin(false);
+    expect([plain.visible, twins.thin[0].visible]).toEqual([true, false]);
     // The unseen warm-up segment shares the twin's material and points, and sits far outside the view.
-    expect(edges.warm[0].material).toBe(edges.thin[0].material);
-    expect(edges.warm[0].geometry.getAttribute('position')).toBe(
-      edges.thin[0].geometry.getAttribute('position'),
+    expect(twins.warm[0].material).toBe(twins.thin[0].material);
+    expect(twins.warm[0].geometry.getAttribute('position')).toBe(
+      twins.thin[0].geometry.getAttribute('position'),
     );
-    expect(edges.warm[0].geometry.drawRange.count).toBe(2);
-    expect(edges.warm[0].position.y).toBeLessThan(-1000);
-    expect(edges.warm[0].frustumCulled).toBe(false);
-    const twinGeometry = vi.spyOn(edges.thin[0].geometry, 'dispose');
-    const warmGeometry = vi.spyOn(edges.warm[0].geometry, 'dispose');
-    edges.dispose();
+    expect(twins.warm[0].geometry.drawRange.count).toBe(2);
+    expect(twins.warm[0].position.y).toBeLessThan(-1000);
+    expect(twins.warm[0].frustumCulled).toBe(false);
+    const twinGeometry = vi.spyOn(twins.thin[0].geometry, 'dispose');
+    const warmGeometry = vi.spyOn(twins.warm[0].geometry, 'dispose');
+    twins.setThin(true);
+    twins.dispose();
     expect(twinGeometry).toHaveBeenCalledOnce();
     expect(warmGeometry).toHaveBeenCalledOnce();
-    expect(edges.thin).toHaveLength(0);
+    expect(twins.thin).toHaveLength(0);
+    // Disposing the twins shows the fat line again.
+    expect(plain.visible).toBe(true);
   });
 
-  it('a rebuild with new deps replaces the twins instead of adding to them', () => {
+  it('twins built again from the same lines (a StrictMode remount) work as the first ones', () => {
     const edges = new MergedEdges();
-    edges.update(['a'], () => [item(false)]);
-    const first = edges.thin[0];
-    edges.update(['a'], () => [item(false)]);
-    expect(edges.thin[0]).toBe(first);
-    edges.update(['b'], () => [item(false)]);
-    expect(edges.thin).toHaveLength(1);
-    expect(edges.warm).toHaveLength(1);
-    expect(edges.thin[0]).not.toBe(first);
-    edges.setThin(true);
-    expect(edges.thin[0].visible).toBe(true);
-    expect(first.visible).toBe(false);
+    const lines = edges.update(['a'], () => [item(false)]);
+    expect(edges.update(['a'], () => [item(false)])).toBe(lines);
+    const first = new ThinTwins(lines);
+    first.dispose();
+    const again = new ThinTwins(lines);
+    expect(again.thin).toHaveLength(1);
+    expect(again.thin[0]).not.toBe(first.thin[0]);
+    again.setThin(true);
+    expect([lines[0].visible, again.thin[0].visible]).toEqual([false, true]);
+    // New deps build new lines.
+    expect(edges.update(['b'], () => [item(false)])[0]).not.toBe(lines[0]);
   });
 });

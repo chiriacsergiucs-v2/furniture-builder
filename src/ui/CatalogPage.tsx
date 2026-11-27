@@ -4,7 +4,8 @@ import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from '../store/useMediaQuery';
 import {
   catalogFamilies,
-  FUNCTION_LABEL,
+  categoryLabel,
+  functionLabel,
   FUNCTIONS,
   insertable,
   insertVariant,
@@ -46,6 +47,7 @@ import { Icon } from './icons';
 import { AccountBadge, AccountRowActions } from './Account';
 import {
   CatalogActions,
+  FinderFilters,
   groupFamilies,
   GroupToggle,
   ItemPicture,
@@ -57,15 +59,10 @@ import {
   useCatalog,
   useGrouping,
   waitsFor,
+  type FinderChoice,
 } from './Catalog';
 import { familyGlyph, templateGlyph } from './Templates';
-import {
-  finderFamilies,
-  finderRooms,
-  finderTypes,
-  NO_FILTER,
-  type FinderFilter,
-} from './catalogFinder';
+import { finderFamilies, finderRooms, finderTypes, NO_FILTER } from './catalogFinder';
 /**
  * Paging (N311). The catalog was 15 000 px (desktop) to 27 000 px (phone) tall because every card was in the page. A group
  * lists its first GROUP_PAGE families and each tap adds GROUP_STEP; a flat list (saved designs, a brand's decors and
@@ -440,12 +437,8 @@ export function CatalogPage({
         </p>
       ) : (
         highlightGroups.map((g) => (
-          <section
-            key={g.fn}
-            className="catalog-group highlights"
-            aria-label={tr(FUNCTION_LABEL[g.fn])}
-          >
-            <h2 className="group-head">{tr(FUNCTION_LABEL[g.fn])}</h2>
+          <section key={g.fn} className="catalog-group highlights" aria-label={functionLabel(g.fn)}>
+            <h2 className="group-head">{functionLabel(g.fn)}</h2>
             {g.families.map((family) => (
               <FamilyBlock
                 key={family.id}
@@ -496,7 +489,7 @@ export function CatalogPage({
                       {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
                     </strong>
                     <span className="sub">
-                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
+                      {e.design.catalog!.category ? categoryLabel(e.design.catalog!.category) : ''}
                       {e.design.catalog!.articleNumber
                         ? ` · ${e.design.catalog!.articleNumber}`
                         : ''}
@@ -1366,7 +1359,7 @@ function TemplateEditor({
         >
           {FUNCTIONS.map((fn) => (
             <option key={fn} value={fn}>
-              {tr(FUNCTION_LABEL[fn])}
+              {functionLabel(fn)}
             </option>
           ))}
         </select>
@@ -1579,7 +1572,7 @@ function FinderPage({
   actions: ReactNode;
   children: ReactNode;
 }) {
-  const [filter, setFilter] = useState<Omit<FinderFilter, 'q'>>(NO_FILTER);
+  const [filter, setFilter] = useState<FinderChoice>(NO_FILTER);
   const [openId, setOpenId] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [pageState, setPageState] = useState({ key: '', n: FINDER_PAGE });
@@ -1639,47 +1632,16 @@ function FinderPage({
       </div>
       <div className="catalog-toolbar finder-bar">
         {source === 'templates' && search}
-        <div className="finder-filters" role="group" aria-label={t('Filters')}>
+        <FinderFilters
+          rooms={rooms}
+          types={types}
+          value={filter}
+          onChange={setFilter}
+          filters={source === 'templates'}
+          ready
+        >
           {sources}
-          {source === 'templates' && (
-            <>
-              <select
-                className={filter.room ? 'on' : ''}
-                aria-label={t('Room')}
-                value={filter.room}
-                onChange={(e) => setFilter({ ...filter, room: e.target.value as Room | '' })}
-              >
-                <option value="">{t('All rooms')}</option>
-                {rooms.map((r) => (
-                  <option key={r} value={r}>
-                    {tr(ROOM_LABEL[r])}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={filter.fn ? 'on' : ''}
-                aria-label={t('Type')}
-                value={filter.fn}
-                onChange={(e) => setFilter({ ...filter, fn: e.target.value as FunctionGroup | '' })}
-              >
-                <option value="">{t('All types')}</option>
-                {types.map((fn) => (
-                  <option key={fn} value={fn}>
-                    {tr(FUNCTION_LABEL[fn])}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className={`chip-toggle ${filter.ready ? 'on' : ''}`}
-                aria-pressed={filter.ready}
-                onClick={() => setFilter({ ...filter, ready: !filter.ready })}
-              >
-                {t('Ready to open')}
-              </button>
-            </>
-          )}
-        </div>
+        </FinderFilters>
       </div>
       {children}
       {source === 'templates' && !editing && (

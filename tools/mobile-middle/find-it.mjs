@@ -716,7 +716,8 @@ const narrowBar = async () => {
   }
 };
 
-// G-604: a project's room drawings (plan and front) at short landscape fit the screen with no sideways page scroll.
+// G-604: a project's room drawings (plan and front) at short landscape fit the screen with no sideways page scroll;
+// G-601: each drawing is at least 80 px high.
 const roomDrawings = async () => {
   const vp = LANDSCAPE;
   const w = tag(vp);
@@ -745,7 +746,10 @@ const roomDrawings = async () => {
         const e = document.querySelector(`[aria-label="${label}"]`);
         if (!e) return null;
         const b = e.getBoundingClientRect();
-        return { left: b.left, right: b.right, width: b.width, height: b.height };
+        // The drawing itself: the tallest svg in the figure (the others are info icons).
+        const svgs = [...e.querySelectorAll('svg')].map((s) => s.getBoundingClientRect().height);
+        const svg = Math.round(Math.max(0, ...svgs));
+        return { left: b.left, right: b.right, width: b.width, height: b.height, svg };
       };
       return {
         plan: box('Room plan, seen from above. Select a piece.'),
@@ -753,6 +757,18 @@ const roomDrawings = async () => {
         page: document.documentElement.scrollWidth <= innerWidth + 1,
       };
     });
+    // G-601: each drawing keeps a usable height (it was 20 px); the work column scrolls instead.
+    const MIN_DRAWING = 80;
+    for (const [name, b] of [
+      ['plan', r.plan],
+      ['front', r.front],
+    ])
+      check(
+        w,
+        `room ${name} drawing is at least ${MIN_DRAWING} px high`,
+        (b?.svg ?? 0) >= MIN_DRAWING,
+        `${b?.svg ?? 0} px`,
+      );
     const inside = (b) =>
       !!b && b.width > 0 && b.height > 0 && b.left >= -1 && b.right <= vp.width + 1;
     check(

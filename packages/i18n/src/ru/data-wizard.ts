@@ -67,8 +67,7 @@ export const data_wizard: Record<string, string> = {
   'Headboard height': 'Высота изголовья',
 
   // Options
-  Seating: 'Сиденья',
-  'Sleeping and lying': 'Сон и отдых',
+  // Seating and Sleeping and lying live in data-catalog.ts (G-547: one wording for a stored category).
   'PAL 18 white (18 mm)': 'ЛДСП 18 белая (18 мм)',
   'PAL 18 oak (18 mm)': 'ЛДСП 18 дуб (18 мм)',
   'PAL 16 white (16 mm)': 'ЛДСП 16 белая (16 мм)',

@@ -1,10 +1,32 @@
 // The catalog finder's pure rules (ADR-291): which families the flat grid shows, and which seller products a kind chip
 // keeps. No React, so they are unit-tested on their own.
-import { FUNCTIONS, insertable, ROOMS, type FunctionGroup, type Room } from '../core/catalog';
+import { tr } from '@furniture-builder/i18n';
+import {
+  FUNCTIONS,
+  insertable,
+  ROOMS,
+  type CatalogVariant,
+  type FunctionGroup,
+  type Room,
+} from '../core/catalog';
 import type { ViewFamily } from '../core/catalog/local';
+import { VARIANT_RO } from '../core/catalog/ro';
 import type { Offer } from '../core/sellers';
 import type { ProductKind } from '../core/sellers/types';
-import { matches } from './Catalog';
+
+/** An item matches the search when its family or item name, Romanian name or an alias holds the text. */
+export const matches = (f: ViewFamily, v: CatalogVariant, q: string) =>
+  !q ||
+  [
+    f.name,
+    f.nameRo,
+    ...f.aliases,
+    v.name,
+    VARIANT_RO[v.id] ?? '',
+    tr(f.name),
+    tr(v.name),
+    ...f.aliases.map((a) => tr(a)),
+  ].some((s) => s.toLowerCase().includes(q));
 
 export interface FinderFilter {
   /** The search text, trimmed and lower-cased. */

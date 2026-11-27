@@ -9,6 +9,7 @@ import { clamp } from './clamp';
 import { overlaps } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
 import { isObj, isInt } from './guards';
+import { sniffPictureType } from './surface';
 
 /** Default limits (ADR-076, open question: the user may change them). */
 export const MODEL_LIMITS = { bytes: 30 * 1024 * 1024, triangles: 500_000 } as const;
@@ -347,6 +348,36 @@ export function checkGltf(
 // ---------------------------------------------------------------------------
 
 /** Problems with a project's `models` list; `ids` are the piece ids already taken (ids are unique across both). */
+/**
+ * Problems of a stored 3D model row read from a backup (G-542): the shape the models table keeps, within the file
+ * limits, with a PNG thumbnail when it has one. Empty = usable. Never throws.
+ */
+export function modelRowProblems(x: unknown): string[] {
+  if (!isObj(x)) return [t('3D model row must be an object')];
+  const errs: string[] = [];
+  if (typeof x.name !== 'string') errs.push(t('3D model name missing'));
+  if (x.format !== 'glb' && x.format !== 'gltf')
+    errs.push(t('3D model format must be glb or gltf'));
+  if (
+    !(x.bytes instanceof ArrayBuffer) ||
+    x.bytes.byteLength === 0 ||
+    x.bytes.byteLength > MODEL_LIMITS.bytes
+  )
+    errs.push(t('3D model file missing or too large'));
+  const s = x.size;
+  if (!isObj(s) || !isInt(s.w, 1) || !isInt(s.h, 1) || !isInt(s.d, 1))
+    errs.push(t('3D model size must be whole mm'));
+  if (!isInt(x.triangles, 0, MODEL_LIMITS.triangles))
+    errs.push(t('3D model triangle count invalid'));
+  if (
+    x.thumb !== undefined &&
+    !(x.thumb instanceof ArrayBuffer && sniffPictureType(x.thumb) === 'image/png')
+  )
+    errs.push(t('3D model thumbnail must be a PNG'));
+  if (typeof x.createdAt !== 'string') errs.push(t('3D model date missing'));
+  return errs;
+}
+
 export function validateModelItems(list: unknown, ids: Set<string>): string[] {
   if (!Array.isArray(list)) return [t('Invalid 3D models')];
   const errs: string[] = [];
