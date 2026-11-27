@@ -85,8 +85,9 @@ describe.each(WIDTHS)('keep project pieces safe at %ipx (find-it, ADR-203)', (wi
     expect(await db.db.projectVersions.get(`bad-${drop.id}`)).toBeDefined();
     expect(await rows(esc.id)).toBe(3);
     expect(await rows(keep.id)).toBe(3);
+    // Gone from the projects list; it waits in Recently deleted (ADR-302).
     await waitFor(() =>
-      expect(screen.getByRole('main', { name: 'Projects' }).textContent).not.toMatch(
+      expect(screen.getByRole('list', { name: 'Projects' }).textContent).not.toMatch(
         /Drop project/,
       ),
     );

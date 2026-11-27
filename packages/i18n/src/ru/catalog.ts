@@ -174,9 +174,30 @@ export const ru_catalog = {
   'Saved work could not be read from this browser.':
     'Не удалось прочитать сохранённые работы из этого браузера.',
   'New project': 'Новый проект',
-  'Delete project “{name}”? This cannot be undone.':
-    'Удалить проект «{name}»? Это нельзя отменить.',
-  'Delete “{name}”? This cannot be undone.': 'Удалить «{name}»? Это нельзя отменить.',
+  'Delete project “{name}”? It stays in Recently deleted for 30 days.':
+    'Удалить проект «{name}»? Он останется в «Недавно удалённых» на 30 дней.',
+  'Delete “{name}”? It stays in Recently deleted for 30 days.':
+    'Удалить «{name}»? Оно останется в «Недавно удалённых» на 30 дней.',
+  // Recently deleted (ADR-302)
+  'Recently deleted': 'Недавно удалённые',
+  'Recently deleted ({n})': 'Недавно удалённые ({n})',
+  'About Recently deleted': 'О недавно удалённых',
+  'Projects and pieces you delete stay here for 30 days. Older ones are removed when the app starts.':
+    'Удалённые проекты и изделия хранятся здесь 30 дней. Более старые убираются при запуске приложения.',
+  'Single piece': 'Отдельное изделие',
+  'deleted {date}': 'удалено {date}',
+  'Restore {name}': 'Восстановить {name}',
+  'Delete {name} forever': 'Удалить {name} навсегда',
+  'Delete forever': 'Удалить навсегда',
+  'Delete “{name}” forever? This cannot be undone.':
+    'Удалить «{name}» навсегда? Это нельзя отменить.',
+  '“{name}” could not be restored.': 'Не удалось восстановить «{name}».',
+  '“{name}” could not be restored: an item with the same id is saved again.':
+    'Не удалось восстановить «{name}»: элемент с тем же идентификатором снова сохранён.',
+  '“{name}” could not be deleted from this browser’s storage.':
+    'Не удалось удалить «{name}» из хранилища этого браузера.',
+  '{n|# item deleted more than 30 days ago was|# items deleted more than 30 days ago were} removed from Recently deleted.':
+    '{n|# элемент, удалённый более 30 дней назад, убран|# элемента, удалённых более 30 дней назад, убраны|# элементов, удалённых более 30 дней назад, убраны} из «Недавно удалённых».',
   'Open now': 'Открыт сейчас',
   'Settings for {name}': 'Настройки: {name}',
   Settings: 'Настройки',

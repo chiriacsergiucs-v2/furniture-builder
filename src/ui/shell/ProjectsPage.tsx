@@ -3,12 +3,11 @@ import { newProject } from '../../core/project';
 import {
   copyDesign,
   copyProject,
-  deleteDesign,
-  deleteProject,
   deleteProjectVersions,
   listDesigns,
   listProjectVersions,
   listProjects,
+  moveToRecentlyDeleted,
   saveProject,
   type DesignListing,
   type ProjectListing,
@@ -28,6 +27,7 @@ import { updatedText } from '../TemplateRevision';
 import { useUi } from '../../store/uiStore';
 import { OrphanVersions } from '../History';
 import { DeviceOnlyNotice } from '../SavedData';
+import { RecentlyDeletedList } from './RecentlyDeleted';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
 import { useMediaQuery } from '../../store/useMediaQuery';
@@ -68,6 +68,8 @@ export function ProjectsPage({
   const lastSync = useAccount((s) => s.sync?.lastSyncAt);
   const [pieces, setPieces] = useState<DesignListing[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Read Recently deleted again after a delete (ADR-302).
+  const [deletedRead, setDeletedRead] = useState(0);
   const unreadable = t('Saved work could not be read from this browser.');
   // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
   // Worked out once per list (not per render); nothing until this device's templates are read.
@@ -149,8 +151,10 @@ export function ProjectsPage({
     if (
       !(await askConfirm(
         kind === 'project'
-          ? t('Delete project “{name}”? This cannot be undone.', { name: r.name })
-          : t('Delete “{name}”? This cannot be undone.', { name: r.name }),
+          ? t('Delete project “{name}”? It stays in Recently deleted for 30 days.', {
+              name: r.name,
+            })
+          : t('Delete “{name}”? It stays in Recently deleted for 30 days.', { name: r.name }),
         { confirmLabel: t('Delete'), danger: true },
       ))
     )
@@ -169,9 +173,9 @@ export function ProjectsPage({
             cancelFirst: true,
           },
         ));
-      // A failed delete is said; the list is read again either way (ADR-261).
+      // A failed delete is said; the list is read again either way (ADR-261). It moves to Recently deleted (ADR-302).
       try {
-        await deleteProject(r.id);
+        await moveToRecentlyDeleted('projects', r.id);
       } catch {
         setMsg({
           ok: false,
@@ -188,13 +192,14 @@ export function ProjectsPage({
           }),
         );
     } else
-      await deleteDesign(r.id).catch(() =>
+      await moveToRecentlyDeleted('designs', r.id).catch(() =>
         setMsg({
           ok: false,
           text: t('The piece could not be deleted from this browser’s storage.'),
         }),
       );
     refresh();
+    setDeletedRead((n) => n + 1);
   };
   const when = (iso: string) => new Date(iso).toLocaleDateString();
   const row = (
@@ -387,6 +392,7 @@ export function ProjectsPage({
           </>
         )}
         {/* Versions of deleted projects stay reachable with no project open (G-454). */}
+        <RecentlyDeletedList reload={deletedRead} onRestored={refresh} />
         <OrphanVersions reload={0} />
         <ProjectTemplateList onOpened={onOpened} />
       </section>

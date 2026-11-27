@@ -384,7 +384,7 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(12);
+    expect(nw.verno).toBe(13);
     expect((await nw.designs.get(d.id))?.design).toEqual(d);
     expect(await nw.designs.get('bad')).toBeDefined();
     expect(await nw.settings.count()).toBe(0);

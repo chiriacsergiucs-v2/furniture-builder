@@ -14,6 +14,7 @@ import {
   lastProjectId,
   loadDesign,
   loadProject,
+  purgeRecentlyDeleted,
   rememberLast,
   rememberLastProject,
   saveDesign,
@@ -598,6 +599,21 @@ export function App() {
   useEffect(() => {
     const offs = [startAutoBackup(), startChangeClock()];
     return () => offs.forEach((off) => off());
+  }, []);
+  // The 30-day purge of Recently deleted runs once at start, and says how many it removed (ADR-302).
+  useEffect(() => {
+    purgeRecentlyDeleted()
+      .then((n) => {
+        if (n)
+          useUi.getState().setNotice({
+            ok: true,
+            text: t(
+              '{n|# item deleted more than 30 days ago was|# items deleted more than 30 days ago were} removed from Recently deleted.',
+              { n },
+            ),
+          });
+      })
+      .catch(() => {});
   }, []);
   // A remembered account shows at once; the session is checked when the online part loads (ADR-134).
   useEffect(() => {
