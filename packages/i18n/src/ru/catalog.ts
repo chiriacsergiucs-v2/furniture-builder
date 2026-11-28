@@ -203,7 +203,6 @@ export const ru_catalog = {
   Settings: 'Настройки',
   'Duplicate {name}': 'Дублировать {name}',
   'Delete {name}': 'Удалить {name}',
-  'Open something else first': 'Сначала откройте что-нибудь другое',
   Projects: 'Проекты',
   'About projects': 'О проектах',
   'Everything you design is saved on this device only. Start a project, a single piece, or open what you made before.':
@@ -221,7 +220,6 @@ export const ru_catalog = {
   '{kind} · edited {date}': '{kind} · изменено {date}',
   'Actions for {name}': 'Действия: {name}',
   Actions: 'Действия',
-  'open something else first': 'сначала откройте что-нибудь другое',
   'The piece is no longer in the project.': 'Этого изделия больше нет в проекте.',
   'Give the template a name.': 'Дайте шаблону название.',
   'This piece cannot be saved as a template. {why}':
