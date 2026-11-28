@@ -159,6 +159,18 @@ export function ProjectsPage({
       ))
     )
       return;
+    // The open item is replaced first by a new empty project, so nothing keeps editing it and autosave cannot write
+    // it back; opening resets the undo history (open-delete). The list stays in view.
+    if (r.id === currentId) {
+      const fresh = newProject();
+      try {
+        await saveProject(fresh);
+      } catch {
+        setMsg({ ok: false, text: t('The project could not be saved in this browser’s storage.') });
+        return;
+      }
+      openProject(fresh);
+    }
     if (kind === 'project') {
       // Its kept versions (ADR-123) are asked about apart; Keep (also Esc) deletes none (ADR-203, G-190, ADR-012).
       const versions = await listProjectVersions(r.id).catch(() => []);
@@ -242,7 +254,6 @@ export function ProjectsPage({
         {narrow ? (
           <RowMenu
             name={name}
-            isOpen={r.id === currentId}
             onSettings={settings}
             onDuplicate={() => void duplicate(r, kind)}
             onDelete={() => void remove(r, kind)}
@@ -270,9 +281,8 @@ export function ProjectsPage({
             <button
               type="button"
               className="btn sm icon danger"
-              disabled={r.id === currentId}
               aria-label={t('Delete {name}', { name })}
-              title={r.id === currentId ? t('Open something else first') : t('Delete')}
+              title={t('Delete')}
               onClick={() => void remove(r, kind)}
             >
               <Icon name="trash" className="sm" />
@@ -407,13 +417,11 @@ export function ProjectsPage({
  */
 function RowMenu({
   name,
-  isOpen,
   onSettings,
   onDuplicate,
   onDelete,
 }: {
   name: string;
-  isOpen: boolean;
   onSettings: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -460,10 +468,9 @@ function RowMenu({
           <Icon name="copy" />
           {t('Duplicate')}
         </button>
-        <button type="button" disabled={isOpen} onClick={() => run(onDelete)}>
+        <button type="button" onClick={() => run(onDelete)}>
           <Icon name="trash" />
           {t('Delete')}
-          {isOpen && <small>{t('open something else first')}</small>}
         </button>
       </div>
     </details>
